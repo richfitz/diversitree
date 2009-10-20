@@ -1,0 +1,8 @@
+2009-10-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* New formula-based constraint interface (through function
+	constrain())
+
+	* Subplex available to do ML searches
+
+	* Standard error estimates on ML estimates
