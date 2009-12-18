@@ -168,31 +168,31 @@ node.depth.edgelength <- function(x) {
 }
 
 ## Tweaked phylogram.plot function
-new.phylogram.plot <- function(x, Ntip, Nnode, xx, yy,
+new.phylogram.plot <- function(x, n.tip, n.node, xx, yy,
                                edge.color, edge.width) {
   edge <- x$edge
-  nodes <- (Ntip + 1):(Ntip + Nnode)
+  nodes <- (n.tip + 1):(n.tip + n.node)
   x0v <- xx[nodes]
-  y0v <- y1v <- numeric(Nnode)
+  y0v <- y1v <- numeric(n.node)
   for (i in nodes) {
     j <- edge[which(edge[, 1] == i), 2]
-    y0v[i - Ntip] <- min(yy[j])
-    y1v[i - Ntip] <- max(yy[j])
+    y0v[i - n.tip] <- min(yy[j])
+    y1v[i - n.tip] <- max(yy[j])
   }
-  sq <- if (Nnode == 1) 
-    1:Ntip
-  else c(1:Ntip, nodes[-1])
+  sq <- if (n.node == 1) 
+    1:n.tip
+  else c(1:n.tip, nodes[-1])
   y0h <- yy[sq]
   x1h <- xx[sq]
   pos <- match(sq, edge[, 2])
   x0h <- xx[edge[pos, 1]]
   e.w <- unique(edge.width)
   if (length(e.w) == 1) 
-    width.v <- rep(e.w, Nnode)
+    width.v <- rep(e.w, n.node)
   else {
-    width.v <- rep(1, Nnode)
-    for (i in 1:Nnode) {
-      br <- edge[which(edge[, 1] == i + Ntip), 2]
+    width.v <- rep(1, n.node)
+    for (i in 1:n.node) {
+      br <- edge[which(edge[, 1] == i + n.tip), 2]
       width <- unique(edge.width[br])
       if (length(width) == 1) 
         width.v[i] <- width
@@ -200,11 +200,11 @@ new.phylogram.plot <- function(x, Ntip, Nnode, xx, yy,
   }
   e.c <- unique(edge.color)
   if (length(e.c) == 1) 
-    color.v <- rep(e.c, Nnode)
+    color.v <- rep(e.c, n.node)
   else {
-    color.v <- rep("black", Nnode)
-    for (i in 1:Nnode) {
-      br <- which(edge[, 1] == i + Ntip)
+    color.v <- rep("black", n.node)
+    for (i in 1:n.node) {
+      br <- which(edge[, 1] == i + n.tip)
       color <- unique(edge.color[br])
       if (length(color) == 1) 
         color.v[i] <- color

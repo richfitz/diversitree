@@ -1,5 +1,6 @@
 \name{protect}
 \alias{protect}
+\alias{invert}
 
 \title{Protect Function Evaluations}
 
@@ -7,13 +8,12 @@
   evaluation.}
 
 \usage{
-protect(f, fail.value, finite=TRUE)
+protect(f)
+invert(f)
 }
 
 \arguments{
   \item{f}{A function.}
-  \item{fail.value}{Value to use on failure (error).}
-  \item{finite}{Should the function always return a finite value?}
 }
 
 \details{
@@ -34,20 +34,20 @@ protect(f, fail.value, finite=TRUE)
 
 \examples{
 f <- function(x) log(x)
-g <- protect(f, -999)
+g <- protect(f)
 f(0) # -Inf
-g(0) # -999
+g(0, fail.value=-999) # -999
 
 f <- function(x) {
   if ( x < 1 )
     stop("dummmy error")
   x
 }
-g <- protect(f, -999)
+g <- protect(f)
 \dontrun{
 f(0) # error
 }
-g(0) # -999
+g(0, fail.value=-999) # -999
 }
 
 \keyword{programming}

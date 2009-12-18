@@ -1,3 +1,51 @@
+2009-12-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/simulation.R (tree.bisse): Fix to tree simulation code to
+	store node states.  This requires fix to ape's drop.tip function.
+
+2009-12-01  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/util.R (invert): New function invert for returning the inverse
+	of the log-likelihood.
+
+	* R/model-bd.R: Simple birth-death process estimation.  This does
+	not yet allow for sampling fractions or unresolved clades, but
+	these will be added soon.  MLE routines are also included.
+
+	* R/model-mkn.R: Simple Mk2/Mk-n discrete character evolution.
+	This directly duplicates the 'ace' function in ape, but should
+	allow some additional flexibility.
+
+	* R/find.mle.R (find.mle.bisse): Removed default 'lower'
+	specificiation as this was causing more confusion than helping
+	anybody.  Using fail.value will get around more problems,
+	including invalid models because of invalid lower/upper.  This may
+	cause some problems where a hard lower bound is preferred to get
+	exact solutions.
+
+2009-11-30  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/mcmc.R (mcmc): Added checking that the initial position has
+	positive probability.  Also added 'verbose' flag to make MCMC
+	searches quieter.
+
+	* R/model-bisse.R (branches.bisse): Recursive algorithm to reduce
+	the probability of numerical underflow along unlikely branches.
+	This will overflow the stack sometimes though.
+
+	* General: rewrite of the calculation functions to allow new
+	models to be more easily developed.  This may cause a slight
+	slowdown, unfortunately.
+
+2009-10-22  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/util.R (protect): Switch from trySilent to try(...,
+	silent=TRUE) in anticipation of R 2.10's deprecation of
+	trySilent.
+
+	* R/util.R (make.ode): Fixed bug that caused integration to fail
+	with deSolve version 1.5 (added 'flist' parameter).
+
 2009-10-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* New formula-based constraint interface (through function

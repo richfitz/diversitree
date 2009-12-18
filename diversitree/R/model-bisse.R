@@ -1,0 +1,289 @@
+## Models should provide:
+##   1. make
+##   2. print
+##   3. argnames / argnames<-
+##   4. find.mle
+## Generally, make will require:
+##   5. make.cache (also initial.tip, root)
+##   6. ll
+##   7. initial.conditions
+##   8. branches
+##   9. branches.unresolved
+
+## 1: make
+make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
+                       nt.extra=10) {
+  cache <- make.cache.bisse(tree, states, unresolved=unresolved,
+                            sampling.f=sampling.f, nt.extra=10)
+  f <- protect(function(pars, ...) ll.bisse(cache, pars, ...))
+  class(f) <- c("bisse", "function")
+  f
+}
+
+## 2: print
+print.bisse <- function(x, ...) {
+  cat("BiSSE likelihood function:\n")
+  print(unclass(x))
+}
+
+## 3: argnames / argnames<-
+argnames.bisse <- function(x, ...) {
+  ret <- attr(x, "argnames")
+  if ( is.null(ret) )
+    c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10")
+  else
+    ret
+}
+`argnames<-.bisse` <- function(x, value) {
+  if ( length(value) != 6 )
+    stop("Invalid names length")
+  attr(x, "argnames") <- value
+  x  
+}
+
+## 4: find.mle
+find.mle.bisse <- function(func, x.init, method,
+                           fail.value=NA, ...) {
+  if ( missing(method) )
+    method <- "optim"
+  NextMethod("find.mle", method=method, class.append="fit.mle.bisse")
+}
+
+## Make requires the usual functions:
+## 5: make.cache (initial.tip, root)
+make.cache.bisse <- function(tree, states, unresolved=NULL,
+                             sampling.f=NULL, nt.extra=10) {
+  if ( is.null(names(states)) )
+    stop("The states vector must contain names")
+
+  ## Check 'sampling.f'
+  if ( !is.null(sampling.f) && !is.null(unresolved) )
+    stop("Cannot specify both sampling.f and unresolved")
+  else if ( is.null(sampling.f) )
+    sampling.f <- c(1, 1)
+  else if ( length(sampling.f) != 2 )
+    stop("sampling.f must be of length 2 (or NULL)")
+  else if ( max(sampling.f) > 1 || min(sampling.f) < 0 )
+    stop("sampling.f must be on range [0,1]")
+  
+  ## Check 'unresolved' (there is certainly room to streamline this in
+  ## the future).
+  if ( !is.null(unresolved) && nrow(unresolved) == 0 ) {
+    unresolved <- NULL
+    warning("Ignoring empty 'unresolved' argument")
+  }
+  if ( inherits(tree, "clade.tree") ) {
+    if ( !is.null(unresolved) )
+      stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
+    unresolved <- make.unresolved(tree$clades, states)
+  }
+  if ( !is.null(unresolved) ) {
+    required <- c("tip.label", "Nc", "n0", "n1")
+    if ( !all(required %in% names(unresolved)) )
+      stop("Required columns missing from unresolved clades")
+    if ( !all(unresolved$tip.label %in% tree$tip.label) )
+      stop("Unknown tip species in 'unresolved'")
+    unresolved$k   <- unresolved$n1
+    unresolved$nsc <- unresolved$n0 + unresolved$n1
+    unresolved$i   <- match(unresolved$tip.label, tree$tip.label)
+    unresolved <- as.list(unresolved)
+    unresolved$nt.extra <- nt.extra
+  }
+  
+  ## Check that we know about all required species (this requires
+  ## processing the unresolved clade information).
+  known <- names(states)
+  if ( !is.null(unresolved) )
+    known <- unique(c(known, as.character(unresolved$tip.label)))
+  if ( !all(tree$tip.label %in% known) )
+    stop("Not all species have state information")
+  states <- states[tree$tip.label]
+  names(states) <- tree$tip.label
+
+  cache <- make.cache(tree)
+  cache$tip.state  <- states
+  cache$unresolved <- unresolved
+  cache$sampling.f <- sampling.f
+  cache$nt.extra   <- nt.extra
+  cache$y <- initial.tip.bisse(cache)
+  cache
+}
+
+## Initial conditions at the tips are given by their tip states:
+## There are three types of initial condition in bisse:
+##   state0: c(f_0, 0,   1-f_0, 1-f_1)
+##   state1: c(0,   f_1, 1-f_0, 1-f_1)
+##   state?: c(f_0, f_1, 1-f_0, 1-f_1)
+## Build this small matrix of possible initial conditions (y), then
+## work out which of the three types things are (i).  Note that y[i,]
+## gives the full initial conditions.  The element 'types' contains
+## the different possible conditions.
+initial.tip.bisse <- function(cache) {
+  f <- cache$sampling.f
+  y <- rbind(c(1-f, f[1], 0),
+             c(1-f, 0, f[2]),
+             c(1-f, f))
+  i <- cache$tip.state + 1
+  if ( !is.null(cache$unresolved) )
+    i <- i[-cache$unresolved$i]
+  i[is.na(i)] <- 3
+  list(y=y, i=i, types=sort(unique(i)))
+}
+
+## 6: ll
+ll.bisse <- function(cache, pars, prior=NULL, root=ROOT.OBS,
+                     condition.surv=TRUE, root.p=NULL,
+                     intermediates=FALSE,
+                     root.p0=NA, root.p1=NA) {
+  if ( any(pars < 0) || any(!is.finite(pars)) || length(pars) != 6 )
+    return(-Inf)
+
+  if ( !is.na(root.p0) ) {
+    warning("root.p0 is deprecated: please use root.p instead")
+    root.p <- c(root.p0, 1-root.p0)
+  } else if ( !is.na(root.p1) ) {
+    warning("root.p1 is deprecated: please use root.p instead")
+    root.p <- c(1-root.p1, root.p1)
+  }
+  if ( !is.null(root.p) &&  root != ROOT.GIVEN )
+    warning("Ignoring specified root state")
+
+  branches <- make.branches(branches.bisse, 3:4)
+
+  xxsse.ll(pars, cache, initial.conditions.bisse,
+           branches, branches.unresolved.bisse,
+           condition.surv, root, root.p,
+           prior, intermediates)
+}
+
+## 7: initial.conditions:
+initial.conditions.bisse <- function(init, pars, t, is.root=FALSE) {
+  e <- init[1,c(1,2)]
+  d <- init[1,c(3,4)] * init[2,c(3,4)]
+  if ( !is.root )
+    d <- d * pars[c(1,2)]
+  c(e, d)
+}
+
+## 8: branches
+branches.bisse <- function(y, len, pars, t0) {
+  RTOL <- ATOL <- 1e-8
+  t(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+}
+
+## 9: branches.unresolved
+branches.unresolved.bisse <- function(pars, len, unresolved) {
+  Nc <- unresolved$Nc
+  k <- unresolved$k
+  nsc <- unresolved$nsc
+  t <- len
+  nt <- max(Nc) + unresolved$nt.extra
+  
+  lambda0 <- pars[1]
+  lambda1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+  ret <- bucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, t,
+          Nc, nsc, k)[,c(3,4,1,2)]
+  q <- ret[cbind(seq_along(len), as.integer(ret[,3] > ret[,4]) + 3)]
+  ret[,3:4] <- ret[,3:4] / q
+  cbind(log(q), ret, deparse.level=0)
+}
+
+## Additional functions
+bisse.stationary.freq <- function(pars) {
+  .Deprecated("stationary.freq.bisse")
+  stationary.freq.bisse(pars)
+}
+stationary.freq.bisse <- function(pars) {
+  lambda0 <- pars[1]
+  lambda1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+
+  g <- (lambda0 - mu0) - (lambda1 - mu1)
+  eps <- (lambda0 + mu0 + lambda1 + mu1)*1e-14
+  if ( abs(g) < eps ) {
+    if ( q01 + q10 == 0 )
+      0.5
+    else
+      q10/(q01 + q10)
+  } else {
+    roots <- quadratic.roots(g, q10+q01-g, -q10)
+    roots <- roots[roots >= 0 & roots <= 1]
+    if ( length(roots) > 1 )
+      NA
+    else
+      roots
+  }
+}
+
+starting.point.bisse <- function(tree, q.div=5) {
+ fit <- suppressWarnings(birthdeath(tree))
+ r <- fit$para[2]
+ e <- fit$para[1]
+ p <- rep(c(r/(1-e), r*e/(1-e), r/q.div), each=2)
+ names(p) <- c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10")
+ p
+}
+starting.point <- bisse.starting.point <- function(tree, q.div=5) {
+  .Deprecated("starting.point.bisse")
+  starting.point.bisse(tree, q.div)
+}
+
+## This is here for reference, but not exported yet.  It should be
+## tweaked in several ways
+##   1. Starting parameter guessing should be done internally, at
+##      least as an option.
+##   2. Better listing of arguments
+##   3. Automatic parsing of results into some sort of table; this
+##      proabably requires classing this.
+all.models.bisse <- function(f, p, ...) {
+  f3 <- constrain(f, lambda1 ~ lambda0, mu1 ~ mu0, q01 ~ q10)
+  f4.lm <- constrain(f, lambda1 ~ lambda0, mu1 ~ mu0)
+  f4.lq <- constrain(f, lambda1 ~ lambda0, q01 ~ q10)
+  f4.mq <- constrain(f, mu1 ~ mu0, q01 ~ q10)
+  f5.l <- constrain(f, lambda1 ~ lambda0)
+  f5.m <- constrain(f, mu1 ~ mu0)
+  f5.q <- constrain(f, q01 ~ q10)
+
+  ## Fit six and three parameter models
+  if ( length(p) != 3 )
+    stop("Starting point must be of length 3 (lambda, mu, q)")
+  ans3 <- find.mle(f3, p, ...)
+
+  ## Using the values from the 3p model, fit the 4p and 5p models:
+  l <- ans3$par[1]
+  m <- ans3$par[2]
+  q <- ans3$par[3]
+
+  ## Start the searches from the best model of the previous type.
+  ans4.lm <- find.mle(f4.lm, c(l, m, q, q), ...)
+  ans4.lq <- find.mle(f4.lq, c(l, m, m, q), ...)
+  ans4.mq <- find.mle(f4.mq, c(l, l, m, q), ...)
+
+  p.l <- if ( ans4.lm$lnLik > ans4.lq$lnLik )
+    ans4.lm$par[c(1:2,2:4)] else ans4.lq$par[c(1:4,4)]
+  p.m <- if ( ans4.lm$lnLik > ans4.mq$lnLik )
+    ans4.lm$par[c(1,1:4)] else ans4.mq$par[c(1:4,4)]
+  p.q <- if ( ans4.lq$lnLik > ans4.mq$lnLik )
+    ans4.lq$par[c(1,1:4)] else ans4.mq$par[c(1:3,3:4)]
+  ans5.l  <- find.mle(f5.l, p.l, ...)
+  ans5.m  <- find.mle(f5.m, p.m, ...)
+  ans5.q  <- find.mle(f5.q, p.q, ...)
+
+  tmp <- list(ans5.l, ans5.m, ans5.q)
+  i <- which.max(sapply(tmp, "[[", "lnLik"))
+  p6 <- tmp[[i]]$par
+  j <- list(c(1, 1:5), c(1:2, 2:5), c(1:5, 5))
+  ans6 <- find.mle(f, p6[j[[i]]], ...)
+
+  list(ans6=ans6,
+       ans5.l =ans5.l,  ans5.m =ans5.m,  ans5.q =ans5.q,
+       ans4.lm=ans4.lm, ans4.lq=ans4.lq, ans4.mq=ans4.mq,
+       ans3=ans3)
+}

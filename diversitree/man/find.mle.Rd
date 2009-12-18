@@ -1,9 +1,15 @@
 \name{find.mle}
 \alias{find.mle}
+
+%% TODO: I need a demonstration of both of these in examples
+\alias{logLik.fit.mle}
+\alias{anova.fit.mle}
+
+%% TODO: This all needs moving into its own file.
 \alias{find.mle.bisse}
-\alias{logLik.mle.bisse}
-\alias{starting.point}
-\alias{anova.mle.bisse}
+\alias{starting.point.bisse}
+\alias{starting.point} % DEP
+\alias{bisse.starting.point} % DEP
 
 \title{Maximimum Likelihood Inference}
 
@@ -11,14 +17,13 @@
   optimisation.}
 
 \usage{
-find.mle(func, x.init, ...)
-\method{find.mle}{bisse}(func, x.init,
-               method=c("L-BFGS-B", "Nelder-Mead", "subplex"),
-               control=list(), lower=NULL, upper=NULL,
-               fail.value=NULL, hessian=FALSE, ...)
+find.mle(func, x.init, method, ...)
+\method{find.mle}{bisse}(func, x.init, method, fail.value=NA, ...)
+starting.point.bisse(tree, q.div=5)
+bisse.starting.point(tree, q.div=5)
 starting.point(tree, q.div=5)
-\method{logLik}{mle.bisse}(object, ...)
-\method{anova}{mle.bisse}(object, ...)
+\method{logLik}{fit.mle}(object, ...)
+\method{anova}{fit.mle}(object, ...)
 }
 
 \arguments{
@@ -26,20 +31,17 @@ starting.point(tree, q.div=5)
     likelihood (see Details).  The function must take a vector of
     parameters as the first argument.}
   \item{x.init}{Initial starting point for the optimisation.}
-  \item{method}{Algorithm used for the optimisation.  \code{L-BFGS-B}
+  \item{method}{WARNING: this is out of date, and applies only to
+    bisse.
+    Algorithm used for the optimisation.  \code{L-BFGS-B}
     (the default) and \code{Nelder-Mead} use \code{\link{optim}}.
     Because \code{L-BFGS-B} uses finite-differencing to approximate the
     gradient, it is prone to getting stuck where the likelihood surface
     is fairly flat.  Both of these algorithms are strict hill-climbers.
     The method \code{subplex} is much slower (possibly 10x the number of
     evaluations) but tends explores more of parameter space.}
-  \item{control}{List of options to \code{\link{optim}} or
-    \code{subplex}}
-  \item{lower}{Lower limits for the parameters.  If omitted, the
-    \code{bisse} method adds sensible lower limits in the absence of
-    additional information (see Details).}
-  \item{upper}{Upper limits for the parameters. If omitted, no upper
-    bound is assumed (this is usually fine).}
+%   \item{control}{List of options to \code{\link{optim}} or
+%     \code{subplex}}
   \item{fail.value}{Value to use if the likelihood calculation fails.
     \code{\link{optim}} requires finite values for all evaluations, so if you
     have a problem with failed evaluations set this
@@ -47,10 +49,10 @@ starting.point(tree, q.div=5)
     numbers).  For \code{subplex}, it is better to leave this
     alone, as undefined likelihoods are treated as impossibly likely by
     \code{subplex} already.}
-  \item{hessian}{Logical, indicating if the hessian should be computed;
-    this uses the algorithm in the \code{numDeriv} package and can add a
-    significant number of function evaluations to approximate the
-    hessian (however, the answer tends to be fairly accurate).}
+%   \item{hessian}{Logical, indicating if the hessian should be computed;
+%     this uses the algorithm in the \code{numDeriv} package and can add a
+%     significant number of function evaluations to approximate the
+%     hessian (however, the answer tends to be fairly accurate).}
   \item{...}{For \code{find.mle}, arguments passed to the function
     \code{f}.  For \code{logLik} this is ignored.  For \code{anova},
     this is one or more models to compare against the model
@@ -65,22 +67,16 @@ starting.point(tree, q.div=5)
   Arguments for constrained BiSSE models are processed a little
   differently.  Constrained BiSSE models have fewer than six parameters;
   if a constrained model is detected and \code{x.init} has six
-  arguments, then the arguments \code{lower} and \code{x.init} are
-  subset so that only the appropriate elements are used.  This does not
-  work for other vectorised arguments to \code{\link{optim}} (e.g.,
-  \code{upper}).
+  arguments, it is subseted so that only the appropriate elements are
+  used.  This does not work for other vectorised arguments to
+  \code{\link{optim}} (e.g., \code{upper}).
 
-  Lower limits are required for optimisation to work well.  Being rates,
-  all parameters have a natural lower limit of zero, but the likelihood
-  will be undefined with polymorphic state data if both \code{q} values
-  are zero, and undefined if both \code{lambda} values are zero.  The
-  lower limit is set to be \code{1e-4} for both \code{lambda} and
-  \code{q} values.  A warning will be given if the final point lies on
-  any given constraint; it would be worth rerunning the analysis with
-  contraints relaxed if this warning is given.
-
-  \code{starting.point} produces a poor starting point to start from,
-  based on the character-independent birth-death model.
+  \code{starting.point.bisse} produces a heuristic starting point to
+  start from, based on the character-independent birth-death model.  You
+  can probably do better than this; see the vignette, for example.
+  \code{bisse.starting.point} is the same code, but deprecated in favour
+  of \code{startng.point.bisse} - it will be removed in a future
+  version.
 
   See \code{\link{find.mle}} for an example of \code{anova}.
 }
@@ -102,10 +98,10 @@ f(pars)
 ## tried parameters that do not produce valid likelihoods.
 \dontrun{
 fit.mle <- find.mle(f, pars)
-fit.mle
+fit.mle[1:2]
 
 ## Subplex can sometimes find better solutions, though not this time:
 fit.mle.subplex <- find.mle(f, pars, method="subplex")
-fit.mle.subplex$lnLik - fit.mle$lnLik
+logLik(fit.mle.subplex) - logLik(fit.mle)
 }
 }

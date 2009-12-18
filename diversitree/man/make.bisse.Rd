@@ -11,13 +11,11 @@
 }
 
 \usage{
-make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, ...)
+make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{\link[read.tree]{phylo}}
-    (package: \code{ape}) or \code{\link[phylo4-class]{phylo4}} format
-    (package: \code{phylobase}).}
+  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
   \item{states}{A vector of character states, each of which must be 0 or
     1.  This vector must have names that correspond to the tip labels in
     the phylogenetic tree (\code{tree$tip.label}).  For tips
@@ -29,15 +27,13 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, ...)
     A value of \code{c(0.5, 0.75)} means that half of species in state 0
     and three quarters of species in state 1 are included in the
     phylogeny.  By default all species are assumed to be known}
-  \item{...}{Additional arguments, currently ignored (but see Details,
-    below).}
+  \item{nt.extra}{The number of species modelled in unresolved clades
+    (this is in addition to the largest observed clade).}
 }
-
 
 \details{
   \code{make.bisse} returns a function of class \code{bisse}.  This
   function has argument list (and default values)
-  
 
   \preformatted{
     f(pars, prior=NULL, root=ROOT.OBS,
@@ -71,8 +67,6 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, ...)
 	\item \code{diversitree:::ROOT.GIVEN}: Root will be in state 0
 	with probability \code{root.p0}, or in state 1 with probability
 	\code{root.p1}.  Specify either of these, but just one.
-	Specifying either \code{root.p0} or \code{root.p1} automatically
-	selects \code{ROOT.GIVEN}.
 	\item \code{diversitree:::ROOT.BOTH}: Don't do anything at the root,
  	and return both values.  (Note that this will not give you a
  	likelihood!).
@@ -117,9 +111,6 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, ...)
   for ML parameter estimation, \code{\link{mcmc}} for MCMC integration.
 }
 
-\author{Richard G. FitzJohn}
-\keyword{models}
-
 \examples{
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(2)
@@ -130,4 +121,7 @@ plot(phy)
 f <- make.bisse(phy, phy$tip.state)
 f(pars)
 }
+
+\author{Richard G. FitzJohn}
+\keyword{models}
 

@@ -6,13 +6,13 @@
   independent updating of each variable.}
 
 \usage{
-mcmc(f, x0, y0, nsteps, w, lower, upper, type=TYPE.LOG, ...)
+mcmc(f, x0, nsteps, w, lower, upper, type=TYPE.LOG, fail.value=-Inf,
+     print.every=1, ...)
 }
 
 \arguments{
   \item{f}{Function to run MCMC on.}
   \item{x0}{Initial x location (vector).}
-  \item{y0}{Function value at \code{x0}.}
   \item{nsteps}{Number of MCMC steps to take.}
   \item{w}{(Approximate) width of the high probability region; this is
     the step size.  Must be same length as \code{x0}.}
@@ -22,6 +22,14 @@ mcmc(f, x0, y0, nsteps, w, lower, upper, type=TYPE.LOG, ...)
     default is to assume it returns a log-value, \code{bisse:::TYPE.RAW}
     assumes a raw probability and \code{bisse:::TYPE.NLOG} assumes a
     negative log-probability.}
+  \item{fail.value}{Value to use where function evaluation fails.  The
+    default (negative infinity) corresponds to zero probability.  Most
+    values that fail are invalid for a given model (negative rates, etc)
+    or have negligble probability, so this is reasonable.  Set to
+    \code{NULL} to turn off checking.}
+  \item{print.every}{The position and its probability will be printed
+    every \code{print.every} generations.  Set this to 0 to prevent
+    printing.}
   \item{...}{Arguments passed to the function \code{f}}
 }
 

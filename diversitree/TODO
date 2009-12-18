@@ -1,0 +1,22 @@
+-*-org-*-
+
+* simulation: 
+Add support for evolving mk2 conditional on a tree
+
+Track exact change positions for use with the stochastic character
+mapping.
+
+Tidy up the clade tree stuff
+
+* documentation:
+Examples for most things need adding / tweaking - some run too long,
+others are not implemented
+
+find.mle has changed a lot and the documentation is lagging: there are
+a *lot* of ... arguments that need describing.  The 'hessian' argument
+should be added, I think.
+
+* musse
+find.mle.musse - not yet written
+
+

@@ -8,21 +8,23 @@ TYPE.RAW <- 1
 TYPE.LOG <- 2
 TYPE.NLOG <- 3
 
-mcmc <- function(f, x0, y0, nsteps, w, lower, upper, type=TYPE.LOG,
-                 ...) {
-  fn <- function(x) f(x, ...)
+mcmc <- function(f, x0, nsteps, w, lower, upper, type=TYPE.LOG,
+                 fail.value=-Inf, print.every=1, ...) {
+  fn <- function(x) f(x, ..., fail.value=fail.value)
 
-  if ( missing(y0) )
-    y0 <- fn(x0)
+  y0 <- try(f(x0, ...))
+  if ( inherits(y0, "try-error") )
+    stop("The above error occured when testing the starting position")
+  if ( !is.finite(y0) )
+    stop("Starting point must have finite probability")
 
   hist <- vector("list", nsteps)
   for ( i in seq_len(nsteps) ) {
     hist[[i]] <- tmp <- slice.nd(fn, x0, y0, w, lower, upper, type)
-    x0 <- tmp[[1]]
-    y0 <- tmp[[2]]
-    cat(sprintf("%d: {%s} -> %2.5f\n", i,
-                paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
-                tmp[[2]]))
+    if ( print.every > 0 && i %% print.every == 0 )
+      cat(sprintf("%d: {%s} -> %2.5f\n", i,
+                  paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
+                  tmp[[2]]))
   }
 
   hist <- cbind(i=seq_along(hist),

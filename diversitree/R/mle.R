@@ -1,87 +1,169 @@
-## I should use stats4:::mle, but this does not work well for me with
-## computing the variance-covariance matrix.
-find.mle <- function(func, x.init, ...) {
+## Currently, I have added interfaces to several different optimisers:
+##   'optim' (L-BFGS-B, Nelder-Mead, BFGS, CG, SANN)
+##   'subplex'
+##   'nlminb'
+##   'nlm'
+## These now have a similar interface, though not identical.
+
+## TODO: consider making stats4 mle objects, rather than those below:
+## new("mle", call = call, coef = coef, fullcoef = unlist(fullcoef), 
+##     vcov = vcov, min = min, details = oout, minuslogl = minuslogl, 
+##     method = method)
+
+find.mle <- function(func, x.init, method, ...) {
   UseMethod("find.mle")
 }
 
-## TODO: Bug here (see 20091019 email with Andy Wilson) where
-##   find.mle(f, x, nosucharg=1)
-## will return nonsense, because the fail.value kicks in.  Check that
-## ... arguments!
-## I think that I have fixed this now, but need to check.
-find.mle.bisse <- function(func, x.init,
-                           method=c("L-BFGS-B", "Nelder-Mead", "subplex"),
-                           control=list(), lower=NULL, upper=NULL,
-                           fail.value=NULL, hessian=FALSE, ...) {
-  method <- match.arg(method)
-  names <- argnames(func)
-  npar <- length(names)
+find.mle.default <- function(func, x.init, method,
+                             fail.value=NA, class.append=NULL, ...) {
+  if ( inherits(func, "constrained") )
+    x.init <- guess.constrained.start(func, x.init)
 
-  if ( inherits(func, c("constrained", "fixed")) ) {
-    ## Identify the parameters we do have:
-    arg.idx <- match(names, argnames(environment(func)$f))
-    if ( length(x.init) == 6 ) x.init <- x.init[arg.idx]
-    if ( length(lower) == 6 )  lower <- lower[arg.idx]
-    if ( length(upper) == 6 )  upper <- upper[arg.idx]
-  } else {
-    arg.idx <- 1:6
-  }
+  ans <- do.mle.search(func, x.init, method, fail.value, ...)
+  class(ans) <- c(class.append, class(ans))
+  ans
+}
 
-  if ( is.null(names(x.init)) )
-    names(x.init) <- names
 
-  if ( method == "subplex" ) {
-    if ( !require(subplex) )
-      stop("The subplex package is required")
-    if ( is.null(lower) ) lower <- rep(0, npar)
-    if ( is.null(upper) ) upper <- rep(Inf, npar)
-    if ( is.null(fail.value) || is.na(fail.value) )
-      fail.value <- -Inf
-    control <- modifyList(list(reltol=.Machine$double.eps^0.25),
-                          control)
 
-    func2 <- function(x) {
-      if ( any(x < lower | x > upper) )
-        -fail.value
-      else
-        -func(x, ..., fail.value=fail.value)
-    }
-    ans <- subplex(x.init, func2, control=control)
-    ans$value <- -ans$value
-    ans$hessian <- NULL
-  } else {
-    if ( is.null(lower) )
-      lower <- c(1e-4, 1e-4, 0, 0, 1e-4, 1e-4)[arg.idx]
-    if ( is.null(fail.value) || is.na(fail.value) )
-      fail.value <- func(x.init, ...) - 1000
-    dx <- 1e-5
-    control <- modifyList(list(fnscale=-1, ndeps=rep(dx, npar)),
-                          control)
-    ans <- optim(x.init, func, control=control, lower=lower,
-                 method="L-BFGS-B", fail.value=fail.value,
-                 ...)
-  }
-  
+do.mle.search.optim <- function(func, x.init, fail.value=NA,
+                                control=list(), lower=-Inf, upper=Inf,
+                                dx=1e-5, optim.method="L-BFGS-B",
+                                ...) {
+  if ( is.null(fail.value) || is.na(fail.value) )
+    fail.value <- func(x.init, ...) - 1000
+  control <- modifyList(list(fnscale=-1,
+                             ndeps=rep(dx, length(x.init))), control)
+  ans <- optim(x.init, func, fail.value=fail.value,
+               control=control, lower=lower, upper=upper,
+               method=optim.method, ...)
   names(ans)[names(ans) == "value"] <- "lnLik"
-  if ( ans$convergence != 0 )
-    warning("Convergence problems in find.mle: ",
-            tolower(ans$message))
-  class(ans) <- "mle.bisse"
 
-  at.edge <- ans$par - lower == 0 & lower > 0
-  if ( any(at.edge) )
-    warning(sprintf("Parameter(s) %s at edge of parameter space",
-                    paste(names[at.edge], collapse=", ")))
+  if ( ans$convergence != 0 )
+    warning("Convergence problems in find.mle (optim): ",
+            tolower(ans$message))
+
+  ans$method <- "optim"
+  ans$optim.method <- optim.method
+  ans
+}
+
+do.mle.search.subplex <- function(func, x.init, fail.value=NA,
+                                  control=list(), ...) {
+  if ( !require(subplex) )
+    stop("The subplex package is required")
+  if ( is.null(fail.value) || is.na(fail.value) )
+    fail.value <- -Inf
+  ## By default, a less agressive tolerance that is more likely to be
+  ## met.
+  control <- modifyList(list(reltol=.Machine$double.eps^0.25),
+                        control)
+  ans <- subplex(x.init, invert(func), fail.value=fail.value,
+                 control=control, ...)
+  ans$value <- -ans$value
+  names(ans)[names(ans) == "value"] <- "lnLik"
+
+  if ( ans$convergence != 0 )
+    warning("Convergence problems in find.mle (subplex): ",
+            tolower(ans$message))
+  
+  ans$method <- "subplex"  
+  ans
+}
+
+do.mle.search.nlminb <- function(func, x.init, fail.value=NA,
+                                 control=list(), lower=-Inf,
+                                 upper=Inf, ...) {
+  if ( is.null(fail.value) || is.na(fail.value) )
+    fail.value <- -Inf
+  ans <- nlminb(x.init, invert(func), fail.value=fail.value,
+                control=control, lower=lower, upper=upper, ...)
+  names(ans)[names(ans) == "objective"] <- "lnLik"
+  names(ans)[names(ans) == "evaluations"] <- "counts"
+  ans$lnLik <- -ans$lnLik
+  ans <- ans[c("par", "lnLik", "counts", "convergence", "message",
+               "iterations")]
+  if ( ans$convergence != 0 )
+    warning("Convergence problems in find.mle (nlminb): ",
+            tolower(ans$message))
+  ans$method <- "nlminb"
+  ans
+}
+
+do.mle.search.nlm <- function(func, x.init, fail.value=NA,
+                              control=list(), lower=-Inf,
+                              upper=Inf, ...) {
+  if ( is.null(fail.value) || is.na(fail.value) )
+    fail.value <- func(x.init, ...) - 1000    
+
+  ans <- nlm(invert(func), x.init, fail.value=fail.value, ...)
+
+  names(ans)[names(ans) == "estimate"] <- "par"
+  names(ans)[names(ans) == "minimum"] <- "lnLik"
+  names(ans)[names(ans) == "iterations"] <- "counts"
+  ans$lnLik <- -ans$lnLik 
+  names(ans$par) <- names(x.init)
+  ans <- ans[c("par", "lnLik", "counts", "code", "gradient")]
+  
+  if ( ans$code > 2 )
+    warning("Convergence problems in find.mle: code = ",
+            ans$code, " (see ?nlm for details)")  
+
+  ans$method <- "nlm"
+  ans
+}
+
+do.mle.search <- function(func, x.init, method, fail.value=NA,
+                          hessian=FALSE, ...) {
+  method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm"))
+
+  if ( is.null(names(x.init)) ) {
+    names.v <- try(argnames(func), silent=TRUE)
+    if ( !inherits(names.v, "try-error") ) {
+      if ( length(names.v) != length(x.init) )
+        stop("Invalid parameter names length: expected ",
+             length(names.v), ", got ", length(x.init))
+      names(x.init) <- names.v
+    }
+  }
+
+  mle.search <- get(sprintf("do.mle.search.%s", method))
+  ans <- mle.search(func, x.init, fail.value, ...)
+
   if ( hessian ) {
     if ( !require(numDeriv) )
       stop("The package numDeriv is required to compute the hessian")
     ans$hessian <- hessian(func, ans$par, ...)
   }
 
+  class(ans) <- "fit.mle"
   ans
 }
 
-logLik.mle.bisse <- function(object, ...) {
+## For want of a better name, this does the initial parameter
+## guessing.
+## This can 
+guess.constrained.start <- function(func, x.init) {
+  f.orig <- environment(func)$f
+  names.orig <- argnames(f.orig)
+  names.cons <- argnames(func)
+  n.orig <- length(names.orig)
+  n.cons <- length(names.cons)
+  arg.idx <- match(names.cons, names.orig)
+
+  if ( length(x.init) == n.cons ) {
+    x.init
+  } else if  ( length(x.init) == n.orig && !any(is.na(arg.idx)) ) {
+    warning("Guessing parameters while constraining model - may do badly")
+    x.init <- x.init[arg.idx]
+  } else {
+    stop("Could not guess reduced parameter set from those given")
+  }
+
+  x.init
+}
+
+logLik.fit.mle <- function(object, ...) {
   ll <- object$lnLik
   attr(ll, "df") <- length(object$par)
   class(ll) <- "logLik"
@@ -89,7 +171,7 @@ logLik.mle.bisse <- function(object, ...) {
 }
 
 ## Code based on MASS:::anova.negbin and ape:::anova.ace
-anova.mle.bisse <- function(object, ...) {
+anova.fit.mle <- function(object, ...) {
   mlist <- c(list(object), list(...))
   if ( length(mlist) == 1L )
     stop("Need to specify more than one model")

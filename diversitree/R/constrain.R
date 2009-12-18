@@ -9,19 +9,6 @@ argnames <- function(x, ...)
 ##   attr(x, "argnames") <- value
 ##   x
 ## }
-argnames.bisse <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10")
-  else
-    ret
-}
-`argnames<-.bisse` <- function(x, value) {
-  if ( length(value) != 6 )
-    stop("Invalid names length")
-  attr(x, "argnames") <- value
-  x  
-}
 `argnames<-.constrained` <- function(x, value) {
   stop("Cannot set argnames on constrained function")
 }
@@ -68,9 +55,15 @@ constrain.parse <- function(formula, names.lhs, names.rhs) {
     stop("Invalid target on LHS of formula" )
   if ( is.language(rhs) ) {
     vars <- all.vars(rhs)
-    if ( !all(vars %in% names.rhs) )
-      stop("Some elements of the RHS were not found in names.rhs:\n\t",
-           paste(setdiff(vars, names.rhs), collapse=", "))
+    if ( !all(vars %in% names.rhs) ) {
+      if ( length(vars) == 1 && exists(vars) )
+        ## TODO: Check that 'vars' is not really already in the
+        ## function names.
+        rhs <- get(vars)
+      else
+        stop("Some elements of the RHS were not found in names.rhs:\n\t",
+             paste(setdiff(vars, names.rhs), collapse=", "))
+    }
     if ( as.character(lhs) %in% vars )
       stop("LHS cannot appear in RHS")
   } else if ( !is.numeric(rhs) ) {
@@ -128,60 +121,6 @@ constrain <- function(f, ..., names=argnames(f)) {
   }
   class(g) <- c("constrained", class(f))
   g
-}
-
-constrain2 <- function(f, ..., names=argnames(f)) {
-  if ( inherits(f, "constrained") )
-    warning("It is probaably not a good idea to constrain a constrained function")
-  formulae <- list(...)
-  names.lhs <- names.rhs <- names
-  rels <- list()
-  for ( formula in formulae ) {
-    res <- constrain.parse(formula, names.lhs, names.rhs)
-    names.lhs <- setdiff(names.lhs, unlist(lapply(res, all.vars)))
-    names.rhs <- setdiff(names.rhs, as.character(res[[1]]))
-    rels <- c(rels, structure(res[2], names=as.character(res[[1]])))
-  }
-
-  npar <- length(names.rhs)
-  free.i <- match(names.rhs, names)
-  target.i <- match(names(rels), names)
-  pars <- rep(NA, length(names))
-  names(pars) <- names
-
-  ## Fixed numeric values
-  i.num <- sapply(rels, is.numeric)
-  if ( any(i.num) ) pars[target.i[i.num]] <- unlist(rels[i.num])
-
-  ## Paired variables
-  i.pair <- sapply(rels, is.name)
-  p.target <- target.i[i.pair]
-  p.source <- sapply(rels[i.pair], function(x)
-                     match(as.character(x), names))
-  do.pair <- any(i.pair)
-
-  ## Expressions
-  i.expr <- !(i.num | i.pair)
-  do.expr <- any(i.expr)
-  
-  g <- function(x, ...) {
-    if ( length(x) != npar )
-      stop("x of wrong length")
-    pars[free.i] <- x
-    if ( do.pair )
-      pars[p.target] <- pars[p.source]
-    if ( do.expr )
-      pars[target.i] <-
-        unlist(lapply(rels, eval, as.list(pars[free.i])))
-    f(pars, ...)
-  }
-  class(g) <- c("constrained", class(f))
-  g
-}
-
-print.bisse <- function(x, ...) {
-  cat("BiSSE likelihood function:\n")
-  print(unclass(x))
 }
 
 print.constrained <- function(x, ...) {
