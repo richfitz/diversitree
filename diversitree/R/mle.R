@@ -10,6 +10,11 @@
 ##     vcov = vcov, min = min, details = oout, minuslogl = minuslogl, 
 ##     method = method)
 
+## TODO: These all assume that the function is "protectable" by
+## passing in 'fail.value' - this is not always the case.  However, if
+## I move the "protect" call *inside* of find.mle/mcmc this infelicity
+## goes away.
+
 find.mle <- function(func, x.init, method, ...) {
   UseMethod("find.mle")
 }

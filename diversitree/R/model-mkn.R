@@ -178,11 +178,11 @@ branches.mk2 <- function(y, len, pars, t0) {
     x <- exp(-(q01+q10)*len) * (y[1] - y[2])
     z <- q10 * y[1] + q01 * y[2]
     ret <- cbind(z + x * q01, z - x * q10) / (q01 + q10)
-  } else {
+  } else { # Special case...
     ret <- matrix(rep(y, length(len)), length(len), 2, TRUE)
   }
 
-  q <- apply(ret, 1, min)
+  q <- rowSums(ret)
   i <- q > 0
   ret[i,] <- ret[i,] / q[i]
   lq <- q
@@ -192,33 +192,37 @@ branches.mk2 <- function(y, len, pars, t0) {
 
 ## The n-state version is not much different:
 make.branches.mkn <- function(k) {
-  if ( k == 2 )
-    warning("Two states is faster with Mk2")
-  make.ode <- diversitree:::make.ode
-  mkn.ode <- make.ode("derivs_mkn", "diversitree", "initmod_mkn", k, FALSE)
   RTOL <- ATOL <- 1e-8
   eps <- 0
   
-  function(y, len, pars, t0) {
-    ret <- t(mkn.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
-    if ( all(ret >= eps) ) {
-      q <- apply(ret, 1, min)
-      i <- q > 0
-      ret[i,] <- ret[i,] / q[i]
-      lq <- q
-      lq[i] <- log(q[i])
-      cbind(lq, ret, deparse.level=0)
-    } else {
-      ti <- len[length(len)]/2
-      len1 <- c(len[len <= ti], ti)
-      len2 <- len[len > ti] - ti
-      n1 <- length(len1)
-      ret1 <- Recall(y, len1, pars, t0)
-      ret2 <- Recall(ret1[n1,-1], len2, pars, t0 + ti)
-      ret2[,1] <- ret2[,1] + ret1[n1,1]
-      rbind(ret1[-n1,], ret2)
-    }
-  }
+  if ( k == 2 )
+    warning("Two states is faster with Mk2")
+  mkn.ode <- make.ode("derivs_mkn", "diversitree", "initmod_mkn", k, FALSE)
+
+  branches.mkn <- function(y, len, pars, t0)
+    t(mkn.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+  make.branches(branches.mkn, 1:k)
+  
+##   function(y, len, pars, t0) {
+##     ret <- t(mkn.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+##     if ( all(ret >= eps) ) {
+##       q <- apply(ret, 1, min)
+##       i <- q > 0
+##       ret[i,] <- ret[i,] / q[i]
+##       lq <- q
+##       lq[i] <- log(q[i])
+##       cbind(lq, ret, deparse.level=0)
+##     } else {
+##       ti <- len[length(len)]/2
+##       len1 <- c(len[len <= ti], ti)
+##       len2 <- len[len > ti] - ti
+##       n1 <- length(len1)
+##       ret1 <- Recall(y, len1, pars, t0)
+##       ret2 <- Recall(ret1[n1,-1], len2, pars, t0 + ti)
+##       ret2[,1] <- ret2[,1] + ret1[n1,1]
+##       rbind(ret1[-n1,], ret2)
+##     }
+##   }
 }
 
 ## 9: branches.unresolved

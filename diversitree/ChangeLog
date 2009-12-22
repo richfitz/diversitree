@@ -1,3 +1,29 @@
+2009-12-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* Too many little changes to list
+
+	* R/plot-alt.R: New plotting functions, partially duplicating
+	ape's plot function to allow stochastic character map type plots
+	to be drawn.  I am attempting to retain as much compatibility with
+	ape as possible and only using these commands within high-level
+	plots.
+
+	* R/history.R: Functions for storing and plotting phylogenetic
+	histories.  The simulation code now stores exactly when changes
+	occured and can plot the full character history.
+
+	* R/find.mle.R: Continuing to revamp the find.mle code.  Different
+	back ends now abstracted (though new ones cannot be added without
+	recompileing the package).  Further changes coming though.
+
+	* R/model-mkn.R: Uses the general log-compensation feature now.
+
+	* R/util.R: New function discretize, which is useful for binning
+	continuous characters into discrete characters (possibly for
+	making colour codes).  Probably will change soon.
+
+	* man/plot.history.Rd: Documentation for histories
+
 2009-12-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/simulation.R (tree.bisse): Fix to tree simulation code to

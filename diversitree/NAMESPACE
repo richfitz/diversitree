@@ -54,3 +54,7 @@ export(prune)
 export(polytomies.to.clades)
 export(make.clade.tree)
 S3method(plot, clade.tree)
+
+## History objects
+S3method(plot, history)
+export(history.from.sim.discrete)
