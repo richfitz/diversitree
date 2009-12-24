@@ -15,9 +15,9 @@ make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
                        nt.extra=10) {
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=10)
-  f <- protect(function(pars, ...) ll.bisse(cache, pars, ...))
-  class(f) <- c("bisse", "function")
-  f
+  ll <- function(pars, ...) ll.bisse(cache, pars, ...)
+  class(ll) <- c("bisse", "function")
+  ll
 }
 
 ## 2: print

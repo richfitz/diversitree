@@ -119,8 +119,14 @@ do.mle.search.nlm <- function(func, x.init, fail.value=NA,
 }
 
 do.mle.search <- function(func, x.init, method, fail.value=NA,
-                          hessian=FALSE, ...) {
+                          hessian=FALSE, verbose=0,
+                          ...) {
   method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm"))
+
+  if ( verbose > 0 )
+    func2 <- big.brother(protect(func), verbose)
+  else
+    func2 <- protect(func)
 
   if ( is.null(names(x.init)) ) {
     names.v <- try(argnames(func), silent=TRUE)
@@ -133,7 +139,7 @@ do.mle.search <- function(func, x.init, method, fail.value=NA,
   }
 
   mle.search <- get(sprintf("do.mle.search.%s", method))
-  ans <- mle.search(func, x.init, fail.value, ...)
+  ans <- mle.search(func2, x.init, fail.value, ...)
 
   if ( hessian ) {
     if ( !require(numDeriv) )

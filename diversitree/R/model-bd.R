@@ -26,9 +26,9 @@ make.bd <- function(tree, times=branching.times(tree),
   N <- length(x)
   cache <- list(N=N, x=x)
 
-  f <- protect(function(pars, ...) bd.ll(cache, pars, ...))
-  class(f) <- c("bd", "function")
-  f
+  ll <- function(pars, ...) bd.ll(cache, pars, ...)
+  class(ll) <- c("bd", "function")
+  ll
 }
 
 ## 2: print

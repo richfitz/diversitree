@@ -18,10 +18,10 @@
 ## 1: make
 make.mk2 <- function(tree, states) {
   cache <- make.cache.mkn(tree, states + 1, 2)
-  f <- protect(function(pars, ...) ll.mk2(cache, pars, ...))
-  class(f) <- c("mkn", "function")
-  attr(f, "k") <- 2
-  f
+  ll <- function(pars, ...) ll.mk2(cache, pars, ...)
+  class(ll) <- c("mkn", "function")
+  attr(ll, "k") <- 2
+  ll
 }
 
 make.mkn <- function(tree, states, k) {
@@ -49,10 +49,10 @@ make.mkn <- function(tree, states, k) {
     ##     loglik
   }
 
-  f <- protect(function(pars, ...) ll.mkn(cache, pars, ...))
-  class(f) <- c("mkn", "function")
-  attr(f, "k") <- k  
-  f
+  ll <- function(pars, ...) ll.mkn(cache, pars, ...)
+  class(ll) <- c("mkn", "function")
+  attr(ll, "k") <- k  
+  ll
 }
 
 ## 2: print
