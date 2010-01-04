@@ -123,3 +123,4 @@ discretize <- function(x, n, r=range(x)) {
   at <- seq(r[1], r[2], length=n+1)
   as.integer(cut(x, at, include.lowest=TRUE, labels=FALSE))
 }
+

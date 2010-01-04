@@ -19,7 +19,7 @@
 \usage{
 find.mle(func, x.init, method, ...)
 \method{find.mle}{bisse}(func, x.init, method, fail.value=NA, ...)
-starting.point.bisse(tree, q.div=5)
+starting.point.bisse(tree, q.div=5, yule=FALSE)
 bisse.starting.point(tree, q.div=5)
 starting.point(tree, q.div=5)
 \method{logLik}{fit.mle}(object, ...)

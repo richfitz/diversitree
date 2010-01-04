@@ -1,3 +1,18 @@
+2010-01-04  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/simulate-bd.R (tree.yule): New Yule tree simulation function
+	that uses the existing tree.bd with mu = 0.  Required changes also
+	to R/simulation.R and man/simulation.Rd.
+
+	* R/mle.R, R/mcmc.R and all likeihood functions: Shifted protect()
+	from within every likelihood functions into the new mle interface
+	and MCMC functions directly.  This removes significant code
+	duplication, simplifies creation of new likelihood functions, and
+	means we can always depend on fail.value existing.
+
+	* R/model-bd.R (find.mle.yule): Added support for Yule models.
+	These are nice as the ML parameters are findable analytically.
+
 2009-12-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* Too many little changes to list
@@ -14,7 +29,7 @@
 
 	* R/find.mle.R: Continuing to revamp the find.mle code.  Different
 	back ends now abstracted (though new ones cannot be added without
-	recompileing the package).  Further changes coming though.
+	recompiling the package).  Further changes coming though.
 
 	* R/model-mkn.R: Uses the general log-compensation feature now.
 

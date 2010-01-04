@@ -10,7 +10,7 @@ TYPE.NLOG <- 3
 
 mcmc <- function(f, x0, nsteps, w, lower, upper, type=TYPE.LOG,
                  fail.value=-Inf, print.every=1, ...) {
-  fn <- function(x) f(x, ..., fail.value=fail.value)
+  fn <- protect(f)
 
   y0 <- try(f(x0, ...))
   if ( inherits(y0, "try-error") )

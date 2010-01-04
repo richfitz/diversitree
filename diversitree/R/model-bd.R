@@ -15,19 +15,19 @@
 ##   9. branches.unresolved
 
 ## 1: make
-make.bd <- function(tree, times=branching.times(tree),
-                            sampling.f=NULL, unresolved=NULL) {
-  if ( !is.null(sampling.f) ) .NotYetUsed("sampling.f")
-  if ( !is.null(unresolved) ) .NotYetUsed("unresolved")
-
-  if ( !missing(times) && !missing(tree) )
-    stop("times cannot be specified if tree given")
-  x <- c(NA, times)
-  N <- length(x)
-  cache <- list(N=N, x=x)
-
+make.bd <- function(tree, times=NULL,
+                    sampling.f=NULL, unresolved=NULL) {
+  cache <- make.cache.bd(tree, times, sampling.f, unresolved)
   ll <- function(pars, ...) bd.ll(cache, pars, ...)
   class(ll) <- c("bd", "function")
+  ll
+}
+
+make.yule <- function(tree, times=NULL,
+                      sampling.f=NULL, unresolved=NULL) {
+  cache <- make.cache.bd(tree, times, sampling.f, unresolved)
+  ll <- function(pars, ...) bd.ll(cache, c(pars, 0), ...)
+  class(ll) <- c("yule", "bd", "function")
   ll
 }
 
@@ -36,6 +36,12 @@ print.bd <- function(x, ...) {
   cat("Constant rate birth-death likelihood function:\n")
   print(unclass(x))
 }
+
+print.yule <- function(x, ...) {
+  cat("Constant rate Yule model likelihood function:\n")
+  print(unclass(x))
+}
+
 
 ## 3: argnames / argnames<-
 argnames.bd <- function(x, ...) {
@@ -52,21 +58,97 @@ argnames.bd <- function(x, ...) {
   x  
 }
 
+argnames.yule <- function(x, ...) {
+  ret <- attr(x, "argnames")
+  if ( is.null(ret) )
+    "lambda"
+  else
+    ret
+}
+`argnames<-.yule` <- function(x, value) {
+  if ( length(value) != 1 )
+    stop("Invalid names length")
+  attr(x, "argnames") <- value
+  x  
+}
+
 ## 4: find.mle
 find.mle.bd <- function(func, x.init, method,
                         fail.value=NA, ...) {
   ## I really should use parameters estimated from the Yule model
-  ## here.  Currently using parameters from nowhere.
-  if ( missing(x.init) )
+  ## here.  Currently using parameters from nowhere, as doing this is
+  ## slightly less trivial than one would hope (need to get access to
+  ## the cache, which might be hidden by a constraint...
+  if ( missing(x.init) ) {
+    ## tmp <- find.mle.yule(func, ...)
+    ## x.init <- structure(c(tmp$par, 0), names=argnames(func))
     x.init <- structure(c(.2, .1), names=argnames(func))
+  }
   if ( missing(method) )
     method <- "nlm"
-  NextMethod("find.mle", method=method, class.append="fit.mle.bd")
+  find.mle.default(func, x.init, method, fail.value,
+                   class.append="fit.mle.bd", ...)
+  ## NextMethod("find.mle", x.init=x.init, method=method,
+  ##           class.append="fit.mle.bd")
+}
+
+find.mle.yule <- function(func, x.init, method, fail.value=NA,
+                          ...) {
+  ## TODO: I think this will fail after constraining, which should not
+  ## be done.
+  ## TODO: This is only true for certain cases (no funny business with
+  ## sampling.f/unresolved - this might require moving to
+  ## numeric solutions?)
+  cache <- environment(func)$cache
+  condition.surv <- list(...)$condition.surv
+  if ( is.null(condition.surv) )
+    condition.surv <- TRUE
+
+  n.node <- if ( condition.surv ) cache$n.node - 1 else cache$n.node
+  lambda <- n.node / cache$tot.len
+  obj <- list(par=c(lambda=lambda),
+              lnLik=func(lambda, ...),
+              counts=NA,
+              code=0,
+              gradient=NA,
+              method="analytic")
+  class(obj) <- c("fit.mle.yule", "fit.mle")
+  obj
+}
+
+## 5: make.cache
+make.cache.bd <- function(tree=NULL, times=NULL,
+                          sampling.f=NULL, unresolved=NULL) {
+  if ( !is.null(times) && !is.null(tree) )
+    stop("times cannot be specified if tree given")
+  else if ( is.null(times) && is.null(tree) )
+    stop("Either times or tree must be specified")
+  else if ( is.null(times) )
+    times <- as.numeric(sort(branching.times(tree), decreasing=TRUE))
+  else
+    times <- as.numeric(sort(times, decreasing=TRUE))
+  
+  if ( !is.null(sampling.f) ) .NotYetUsed("sampling.f")
+  if ( !is.null(unresolved) ) .NotYetUsed("unresolved")
+
+  x <- c(NA, times)
+  N <- length(x)
+
+  if ( is.null(tree) ) {
+    tot.len <- sum(diff(times[1] - c(times, 0)) *
+                   2:(length(times) + 1))
+    n.node <- length(times)
+  } else {
+    tot.len <- sum(phy$edge.length)
+    n.node <- phy$Nnode
+  }
+
+  list(N=N, x=x, tot.len=tot.len, n.node=n.node)
 }
 
 ## make here only requires the ll function.  It cannot use cleanup
 ## though, as the normal cache structure is not generated.
-bd.ll <- function(cache, pars, prior=NULL) {
+bd.ll <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   N <- cache$N
   x <- cache$x
 
@@ -79,8 +161,14 @@ bd.ll <- function(cache, pars, prior=NULL) {
   if ( a < 0 || xor(a > 1, r < 0) )
     return(-Inf)
 
-  loglik <- lfactorial(N - 1) + (N - 2) * log(abs(r)) + r * sum(x[3:N]) +
-    N * log(abs(1 - a)) - 2*sum(log(abs(exp(r * x[2:N]) - a)))
+  if ( condition.surv )
+    loglik <- lfactorial(N - 1) + (N - 2) * log(abs(r)) + r * sum(x[3:N]) +
+      N * log(abs(1 - a)) - 2*sum(log(abs(exp(r * x[2:N]) - a)))
+  else
+    loglik <- lfactorial(N - 1) + (N - 2) * log(abs(r)) + r * sum(x[3:N]) +
+      N * log(abs(1 - a)) - 2*sum(log(abs(exp(r * x[2:N]) - a))) +
+        2*log(abs((1-a)/(1-a*exp(-r * x[2])))) + log(r/(1-a))
+
 
   ## Copied from cleanup
   if ( is.null(prior) )

@@ -1,5 +1,6 @@
 \name{make.bd}
 \alias{make.bd}
+\alias{make.yule}
 
 \title{Constant Rate Birth-Death Models}
 
@@ -15,6 +16,8 @@
 \usage{
 make.bd(tree, times=branching.times(tree),
         sampling.f=NULL, unresolved=NULL)
+make.yule(tree, times=branching.times(tree),
+          sampling.f=NULL, unresolved=NULL)
 }
 
 \arguments{
@@ -76,6 +79,21 @@ profiles.plot(samples[c("lambda", "mu", "r")], col.line=col, las=1,
              ylab="Probability density", xlab="Parameter estimate")
 legend("topright", c("lambda", "mu", "r"), fill=col)
 abline(v=0, lty=2)
+
+## Special case methods are worked out for the Yule model, for which
+## analytic solutions are available:
+lik.yule <- make.yule(phy)
+lik.mu0 <- constrain(lik, mu ~ 0)
+
+## The same to a reasonable tolerance:
+fit.yule.1 <- find.mle(lik.yule)
+fit.mu0.1 <- find.mle(lik.mu0, .1)
+all.equal(fit.yule.1[1:2], fit.mu0.1[1:2], tolerance=1e-6)
+
+## Without conditioning on survival
+fit.yule.2 <- find.mle(lik.yule, condition.surv=FALSE)
+fit.mu0.2 <- find.mle(lik.mu0, .1, condition.surv=FALSE)
+all.equal(fit.yule.2[1:2], fit.mu0.2[1:2], tolerance=1e-6)
 }
   
  

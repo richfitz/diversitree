@@ -2,6 +2,7 @@
 \alias{trees}
 \alias{tree.bisse}
 \alias{tree.bd}
+\alias{tree.yule}
 
 \title{Evolve Birth-Death Trees}
 
@@ -13,11 +14,12 @@
 }
 
 \usage{
-trees(pars, type=c("bisse", "bd"), n=1, max.taxa=Inf,
+trees(pars, type=c("bisse", "bd", "yule"), n=1, max.taxa=Inf,
       max.t=Inf, include.extinct=FALSE, ...)
 tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA, ...)
 tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
+tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
 }
 
 \arguments{

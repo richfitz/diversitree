@@ -103,3 +103,15 @@ tree.bd <- function(pars, max.taxa=Inf, max.t=Inf,
   else
     prune(phy)
 }
+
+tree.yule <- function(pars, max.taxa=Inf, max.t=Inf,
+                      include.extinct=FALSE, ...) {
+  if ( length(pars) != 1 )
+    stop("pars must be of length 1")
+  info <- make.tree.bd(c(pars, 0), max.taxa, max.t)
+  phy <- me.to.ape.bd(info[-1,])
+  if ( include.extinct || is.null(phy) )
+    phy
+  else
+    prune(phy)
+}
