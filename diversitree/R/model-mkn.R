@@ -19,7 +19,7 @@
 make.mk2 <- function(tree, states) {
   cache <- make.cache.mkn(tree, states + 1, 2)
   ll <- function(pars, ...) ll.mk2(cache, pars, ...)
-  class(ll) <- c("mkn", "function")
+  class(ll) <- c("mk2", "mkn", "function")
   attr(ll, "k") <- 2
   ll
 }
@@ -66,16 +66,30 @@ argnames.mkn <- function(x, ...) {
   ret <- attr(x, "argnames")
   if ( is.null(ret) ) {
     k <- attr(x, "k")
-    if ( k == 2 )
-      c("q01", "q10")
-    else
-      sprintf("q%d%d", rep(1:k, each=k-1),
-              unlist(lapply(1:k, function(i) (1:k)[-i])))
+    sprintf("q%d%d", rep(1:k, each=k-1),
+            unlist(lapply(1:k, function(i) (1:k)[-i])))
   } else {
     ret
   }
 }
 
+argnames.mkn <- function(x, ...) {
+  ret <- attr(x, "argnames")
+  if ( is.null(ret) ) {
+    k <- attr(x, "k")
+    sprintf("q%d%d", rep(1:k, each=k-1),
+            unlist(lapply(1:k, function(i) (1:k)[-i])))
+  } else {
+    ret
+  }
+}
+argnames.mk2 <- function(x, ...) {
+  ret <- attr(x, "argnames")
+  if ( is.null(ret) )
+    c("q01", "q10")
+  else
+    ret
+}
 `argnames<-.mkn` <- function(x, value) {
   k <- environment(x)$cache$k  
   if ( length(value) != k*(k-1) )

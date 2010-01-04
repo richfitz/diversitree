@@ -82,6 +82,7 @@ find.mle.bd <- function(func, x.init, method,
   if ( missing(x.init) ) {
     ## tmp <- find.mle.yule(func, ...)
     ## x.init <- structure(c(tmp$par, 0), names=argnames(func))
+    warning("Guessing initial parameters - may do badly")
     x.init <- structure(c(.2, .1), names=argnames(func))
   }
   if ( missing(method) )
