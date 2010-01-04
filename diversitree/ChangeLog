@@ -1,5 +1,8 @@
 2010-01-04  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
+	* R/model-mkn.R (argnames.mk2): Fixed logic around argument names
+	for mk2 and two-state mkn (latter now returns q12, q21)
+
 	* R/simulate-bd.R (tree.yule): New Yule tree simulation function
 	that uses the existing tree.bd with mu = 0.  Required changes also
 	to R/simulation.R and man/simulation.Rd.

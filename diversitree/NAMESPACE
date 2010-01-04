@@ -36,6 +36,7 @@ export(argnames)
 S3method(argnames, bisse)
 S3method(argnames, bd)
 S3method(argnames, yule)
+S3method(argnames, mk2)
 S3method(argnames, mkn)
 S3method(argnames, constrained)
 
