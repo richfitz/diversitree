@@ -38,6 +38,8 @@ trees <- function(pars, type=c("bisse", "bd", "yule"), n=1,
   trees
 }
 
+## My dodgy tree format to ape's tree format.  The 'bisse' suffix is
+## only here for historical reasons.
 me.to.ape.bisse <- function(x, root.state) {
   if ( nrow(x) == 0 )
     return(NULL)
