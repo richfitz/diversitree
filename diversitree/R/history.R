@@ -45,7 +45,6 @@ history.from.sim.discrete <- function(phy, states) {
   ## contained in the phylogeny's history store, we know what time the
   ## event occured at (t), what time the branch started at (x0) and
   ## what time along the branch the change occured at (tc=t-x0).
-  hist <- phy$hist
   h.c <- lapply(split(hist, hist$name2), function(x)
                 cbind(c(0, x$tc), c(x$from[1], x$to)))
   h[names(h.c)] <- h.c
@@ -136,23 +135,25 @@ plot.history.coords <- function(phy, xy, hist) {
 
   ## Find the branches with more than one state; 'i' is their index
   ## and 'n' is the number of states.
-  ## TODO: Error where no changes have occured down here somewhere?
   n <- sapply(h, nrow)
   i <- which(n > 1)
-  n <- n[i]
+  if ( length(i) > 0 ) {
+    n <- n[i]
 
-  ## Construct a new bit of plotting for this branch:
-  tmp <- obj[rep(i + phy$Nnode, n),]
-  rownames(tmp) <- NULL
-  new <- do.call(rbind, h[i])
-  tmp$x0 <- tmp$x0 + new[,1]
-  j <- unlist(lapply(n, function(i) rep(c(FALSE, TRUE), c(1, i-1))))
-  tmp$x1[which(j)-1] <- tmp$x0[j]
-  tmp$state <- new[,2]
+    ## Construct a new bit of plotting for this branch:
+    tmp <- obj[rep(i + phy$Nnode, n),]
+    rownames(tmp) <- NULL
+    new <- do.call(rbind, h[i])
+    tmp$x0 <- tmp$x0 + new[,1]
+    j <- unlist(lapply(n, function(i) rep(c(FALSE, TRUE), c(1, i-1))))
+    tmp$x1[which(j)-1] <- tmp$x0[j]
+    tmp$state <- new[,2]
 
-  ## Add this into the plotting object
-  obj[c(i + phy$Nnode, seq_len(sum(n-1)) + nrow(obj)),] <- tmp
-  rownames(obj) <- NULL
+    ## Add this into the plotting object
+    obj[c(i + phy$Nnode, seq_len(sum(n-1)) + nrow(obj)),] <- tmp
+    rownames(obj) <- NULL
+  }
+
   obj
 }
 

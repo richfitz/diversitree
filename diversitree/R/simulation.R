@@ -75,7 +75,8 @@ me.to.ape.bisse <- function(x, root.state) {
   if ( !is.null(hist) ) {
     hist$idx2 <- x$idx2[match(hist$idx, x$idx)]
     hist$name2 <- x$name2[match(hist$idx, x$idx)]
-    hist <- hist[order(hist$idx2),]
+    if ( nrow(hist) > 0 )
+      hist <- hist[order(hist$idx2),]
   }
 
   phy <- reorder(structure(list(edge=cbind(x$parent2, x$idx2),
@@ -118,8 +119,8 @@ prune <- function(phy, to.drop=NULL) {
 ## node needs to be joined.
 prune.hist <- function(phy, phy2) {
   hist <- phy$hist
-  if ( is.null(hist) )
-    return(NULL)
+  if ( is.null(hist) || nrow(hist) == 0 )
+    return(hist)
 
   ## More interesting is to collect up all of the names and look at the
   ## branches that terminate
@@ -162,8 +163,11 @@ prune.hist <- function(phy, phy2) {
     }
   }
 
-  ## Prune out the extinct species and nodes that lead to them:
-  hist <- hist[hist$name2 %in% phy2.names,]
+  ## Prune out the extinct species and nodes that lead to them.  Note
+  ## that the root must be excluded as history objects that lead to
+  ## the new root (if it has changed) should not be allowed.
+  phy2.names.noroot <- phy2.names[phy2.names != phy2$node.label[1]]
+  hist <- hist[hist$name2 %in% phy2.names.noroot,]
 
   ## Remake idx2 to point at the new tree.
   hist$idx2 <- match(hist$name2, phy2.names)
