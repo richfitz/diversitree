@@ -132,8 +132,8 @@ initial.tip.bisse <- function(cache) {
 }
 
 ## 6: ll
-ll.bisse <- function(cache, pars, branches, prior=NULL, root=ROOT.OBS,
-                     condition.surv=TRUE, root.p=NULL,
+ll.bisse <- function(cache, pars, branches, prior=NULL,
+                     condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
                      intermediates=FALSE,
                      root.p0=NA, root.p1=NA) {
   if ( any(pars < 0) || any(!is.finite(pars)) || length(pars) != 6 )

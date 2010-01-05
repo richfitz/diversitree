@@ -18,7 +18,7 @@
 make.bd <- function(tree, times=NULL,
                     sampling.f=NULL, unresolved=NULL) {
   cache <- make.cache.bd(tree, times, sampling.f, unresolved)
-  ll <- function(pars, ...) bd.ll(cache, pars, ...)
+  ll <- function(pars, ...) ll.bd(cache, pars, ...)
   class(ll) <- c("bd", "function")
   ll
 }
@@ -26,7 +26,7 @@ make.bd <- function(tree, times=NULL,
 make.yule <- function(tree, times=NULL,
                       sampling.f=NULL, unresolved=NULL) {
   cache <- make.cache.bd(tree, times, sampling.f, unresolved)
-  ll <- function(pars, ...) bd.ll(cache, c(pars, 0), ...)
+  ll <- function(pars, ...) ll.bd(cache, c(pars, 0), ...)
   class(ll) <- c("yule", "bd", "function")
   ll
 }
@@ -149,7 +149,7 @@ make.cache.bd <- function(tree=NULL, times=NULL,
 
 ## make here only requires the ll function.  It cannot use cleanup
 ## though, as the normal cache structure is not generated.
-bd.ll <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
+ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   N <- cache$N
   x <- cache$x
 

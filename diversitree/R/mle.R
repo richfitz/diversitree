@@ -29,7 +29,38 @@ find.mle.default <- function(func, x.init, method,
   ans
 }
 
+do.mle.search <- function(func, x.init, method, fail.value=NA,
+                          hessian=FALSE, verbose=0,
+                          ...) {
+  method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm"))
 
+  if ( verbose > 0 )
+    func2 <- big.brother(protect(func), verbose)
+  else
+    func2 <- protect(func)
+
+  if ( is.null(names(x.init)) ) {
+    names.v <- try(argnames(func), silent=TRUE)
+    if ( !inherits(names.v, "try-error") ) {
+      if ( length(names.v) != length(x.init) )
+        stop("Invalid parameter names length: expected ",
+             length(names.v), ", got ", length(x.init))
+      names(x.init) <- names.v
+    }
+  }
+
+  mle.search <- get(sprintf("do.mle.search.%s", method))
+  ans <- mle.search(func2, x.init, fail.value, ...)
+
+  if ( hessian ) {
+    if ( !require(numDeriv) )
+      stop("The package numDeriv is required to compute the hessian")
+    ans$hessian <- hessian(func, ans$par, ...)
+  }
+
+  class(ans) <- "fit.mle"
+  ans
+}
 
 do.mle.search.optim <- function(func, x.init, fail.value=NA,
                                 control=list(), lower=-Inf, upper=Inf,
@@ -118,39 +149,6 @@ do.mle.search.nlm <- function(func, x.init, fail.value=NA,
   ans
 }
 
-do.mle.search <- function(func, x.init, method, fail.value=NA,
-                          hessian=FALSE, verbose=0,
-                          ...) {
-  method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm"))
-
-  if ( verbose > 0 )
-    func2 <- big.brother(protect(func), verbose)
-  else
-    func2 <- protect(func)
-
-  if ( is.null(names(x.init)) ) {
-    names.v <- try(argnames(func), silent=TRUE)
-    if ( !inherits(names.v, "try-error") ) {
-      if ( length(names.v) != length(x.init) )
-        stop("Invalid parameter names length: expected ",
-             length(names.v), ", got ", length(x.init))
-      names(x.init) <- names.v
-    }
-  }
-
-  mle.search <- get(sprintf("do.mle.search.%s", method))
-  ans <- mle.search(func2, x.init, fail.value, ...)
-
-  if ( hessian ) {
-    if ( !require(numDeriv) )
-      stop("The package numDeriv is required to compute the hessian")
-    ans$hessian <- hessian(func, ans$par, ...)
-  }
-
-  class(ans) <- "fit.mle"
-  ans
-}
-
 ## For want of a better name, this does the initial parameter
 ## guessing.
 ## This can 
@@ -179,6 +177,10 @@ logLik.fit.mle <- function(object, ...) {
   attr(ll, "df") <- length(object$par)
   class(ll) <- "logLik"
   ll
+}
+
+coef.fit.mle <- function(object, ...) {
+  object$par
 }
 
 ## Code based on MASS:::anova.negbin and ape:::anova.ace
