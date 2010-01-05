@@ -192,7 +192,8 @@ branches.unresolved.bisse <- function(pars, len, unresolved) {
   q10 <- pars[6]
   ret <- bucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, t,
           Nc, nsc, k)[,c(3,4,1,2)]
-  q <- ret[cbind(seq_along(len), as.integer(ret[,3] > ret[,4]) + 3)]
+
+  q <- rowSums(ret[,3:4,drop=FALSE])
   ret[,3:4] <- ret[,3:4] / q
   cbind(log(q), ret, deparse.level=0)
 }
