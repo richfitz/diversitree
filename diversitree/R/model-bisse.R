@@ -12,10 +12,11 @@
 
 ## 1: make
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
-                       nt.extra=10) {
+                       nt.extra=10, safe=FALSE) {
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=10)
-  ll <- function(pars, ...) ll.bisse(cache, pars, ...)
+  branches <- make.branches.bisse(safe)
+  ll <- function(pars, ...) ll.bisse(cache, pars, branches, ...)
   class(ll) <- c("bisse", "function")
   ll
 }
@@ -131,7 +132,7 @@ initial.tip.bisse <- function(cache) {
 }
 
 ## 6: ll
-ll.bisse <- function(cache, pars, prior=NULL, root=ROOT.OBS,
+ll.bisse <- function(cache, pars, branches, prior=NULL, root=ROOT.OBS,
                      condition.surv=TRUE, root.p=NULL,
                      intermediates=FALSE,
                      root.p0=NA, root.p1=NA) {
@@ -147,8 +148,6 @@ ll.bisse <- function(cache, pars, prior=NULL, root=ROOT.OBS,
   }
   if ( !is.null(root.p) &&  root != ROOT.GIVEN )
     warning("Ignoring specified root state")
-
-  branches <- make.branches(branches.bisse, 3:4)
 
   xxsse.ll(pars, cache, initial.conditions.bisse,
            branches, branches.unresolved.bisse,
@@ -166,9 +165,15 @@ initial.conditions.bisse <- function(init, pars, t, is.root=FALSE) {
 }
 
 ## 8: branches
-branches.bisse <- function(y, len, pars, t0) {
+make.branches.bisse <- function(safe=FALSE) {
   RTOL <- ATOL <- 1e-8
-  t(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+  eps <- 0
+
+  bisse.ode <- make.ode("derivs", "diversitree", "initmod", 4, safe)
+  branches <- function(y, len, pars, t0)
+    t(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+  
+  make.branches(branches, 3:4)
 }
 
 ## 9: branches.unresolved

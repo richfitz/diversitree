@@ -11,7 +11,8 @@
 }
 
 \usage{
-make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10)
+make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
+           safe=FALSE)
 }
 
 \arguments{
@@ -29,6 +30,8 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10)
     phylogeny.  By default all species are assumed to be known}
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
+  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
+    crashes are happening.}
 }
 
 \details{

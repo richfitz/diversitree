@@ -33,8 +33,8 @@ big.brother <- function(f, interval=1) {
   }
 }
 
-## This is updated for deSolve version 1.5, but now includes a "safe"
-## argument that tries to avoid doing any silly business.
+## Known to work on 1.3-1.6
+## TODO: fall back on "safe" with a warning if the an unknown version.
 make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
   if (!is.character(func)) 
     stop("`func' must be a character vector")
@@ -43,12 +43,12 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
 
   if ( safe ) {
     function(y, times, parms, rtol, atol)
-      lsoda(y, times, parms, rtol=rtol, atol=atol,
-            initfunc=initfunc, func=func, dllname=dllname)
+      t(lsoda(y, times, parms, rtol=rtol, atol=atol,
+              initfunc=initfunc, func=func, dllname=dllname))
   } else {
-    ModelInit <- getNativeSymbolInfo(initfunc, PACKAGE=dllname)$address
-    Func <- getNativeSymbolInfo(func, PACKAGE=dllname)$address
-    JacFunc <- NULL
+    initfunc <- getNativeSymbolInfo(initfunc, PACKAGE=dllname)$address
+    derivfunc <- getNativeSymbolInfo(func, PACKAGE=dllname)$address
+    jacfunc <- NULL
 
     maxordn <- 12
     maxords <- 5
@@ -72,38 +72,81 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
 
     ## "Forcings" are new to deSolve version 1.5; this is the required
     ## argument where they are not used (I am not using them)
-    flist <- list(fmat=0, tmat=0, imat=0, ModelForc=NULL)  
-    
-    function(y, times, parms, rtol, atol) {
+    flist <- list(fmat=0, tmat=0, imat=0, ModelForc=NULL)
+
+    elist <- list()
+    eventfunc <- NULL
+
+    vers <- packageDescription("deSolve")$Version
+    vers <- strsplit(vers, "-")[[c(1,1)]]
+
+    f.1.5 <- function(y, times, parms, rtol, atol) {
       if (!is.numeric(y)) 
         stop("`y' must be numeric")
       if (!is.numeric(times)) 
         stop("`times' must be numeric")
       storage.mode(y) <- storage.mode(times) <- "double"
-      .Call("call_lsoda", y, times, Func, parms, rtol, atol,
-            NULL,    # rho: environment
-            NULL,    # tcrit: critical times
-            JacFunc,
-            ModelInit,
-            INTZERO, # verbose (false)
-            INTONE,  # itask (no idea)
+
+      .Call("call_lsoda", y, times, derivfunc, parms, rtol, atol,
+            NULL,      # rho: environment
+            NULL,      # tcrit: critical times
+            jacfunc, 
+            initfunc,
+            INTZERO,   # verbose (false)
+            INTONE,    # itask
             rwork,
             iwork,
-            INTTWO,  # jt: Jacobian type (fullint)
-            INTZERO, # Nglobal (no global variables)
-            lrw,     # size of workspace (real)
-            liw,     # size of workspace (int)
-            INTONE,  # 'IN' (no idea)
-            NULL,    # ?
-            INTZERO, # ?
-            0,       # rpar: no extra real parameters
-            INTZERO, # ipar: no extra integer parameters
-            INTZERO, # ?
-            flist,   # New for deSolve 1.5
+            INTTWO,    # jT: Jacobian type (fullint)
+            INTZERO,   # nOut (no global variables)
+            lrw,       # size of workspace (real)
+            liw,       # size of workspace (int)
+            INTONE,    # Solver
+            NULL,      # rootfunc
+            INTZERO,   # nRoot
+            0,         # rpar: no extra real parameters
+            INTZERO,   # ipar: no extra integer parameters
+            INTZERO,   # Type
+            flist,     # [New in 1.5]
             PACKAGE="deSolve")
     }
+    f.1.6 <- function(y, times, parms, rtol, atol) {
+      if (!is.numeric(y)) 
+        stop("`y' must be numeric")
+      if (!is.numeric(times)) 
+        stop("`times' must be numeric")
+      storage.mode(y) <- storage.mode(times) <- "double"
+
+      .Call("call_lsoda", y, times, derivfunc, parms, rtol, atol,
+            NULL,      # rho: environment
+            NULL,      # tcrit: critical times
+            jacfunc, 
+            initfunc,
+            eventfunc, # [New in 1.6]
+            INTZERO,   # verbose (false)
+            INTONE,    # itask
+            rwork,
+            iwork,
+            INTTWO,    # jT: Jacobian type (fullint)
+            INTZERO,   # nOut (no global variables)
+            lrw,       # size of workspace (real)
+            liw,       # size of workspace (int)
+            INTONE,    # Solver
+            NULL,      # rootfunc
+            INTZERO,   # nRoot
+            0,         # rpar: no extra real parameters
+            INTZERO,   # ipar: no extra integer parameters
+            INTZERO,   # Type
+            flist,     # [New in 1.5]
+            elist,     # [New in 1.6]
+            PACKAGE="deSolve")
+    }
+    switch(vers,
+           "1.5"=f.1.5, "1.5-1"=f.1.5, "1.6"=f.1.6,
+           stop("Cannot use diversitree with deSolve version ", vers))
   }
 }
+
+
 
 quadratic.roots <- function(a, b, c)
   (-b + c(-1, 1) * sqrt(b*b - 4*a*c))/(2 * a)

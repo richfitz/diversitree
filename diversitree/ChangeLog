@@ -1,5 +1,20 @@
 2010-01-04  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
+	* R/model-bisse.R (make.branches.bisse): make.ode for the branch
+	integration is now done during make.bisse.  Added new "safe"
+	argument to make.bisse that selects how this should be done.
+	Eventually all lsoda based likelihood functions will get a "safe"
+	argument.
+
+	* man/make.bisse.Rd: Added "safe" argument.
+
+	* R/zzz.R: Removed .onLoad function; no longer needed with
+	make.ode moved inside of make.bisse.
+
+	* R/util.R (make.ode): Updated make.ode to work with deSolve
+	version 1.6 (two new additional arguments).  The "safe" version
+	now returns same data format as the unsafe version.
+
 	* R/model-mkn.R (argnames.mk2): Fixed logic around argument names
 	for mk2 and two-state mkn (latter now returns q12, q21)
 
