@@ -5,7 +5,7 @@
   runs}
 
 \usage{
-profiles.plot(y, col.line, col.fill, xlim=NULL, ...)
+profiles.plot(y, col.line, col.fill, xlim=NULL, n.br=50, ...)
 }
 
 \arguments{
@@ -15,13 +15,14 @@ profiles.plot(y, col.line, col.fill, xlim=NULL, ...)
   \item{col.fill}{Vector of colours for the fill of the 95\% most
     probable region of the distribution.  If ommited, this will be a
     semi-transparent version of \code{col.line}.}
-  \item{xlim}{X-axis limits - calculated automatically if ommited.}
+  \item{xlim}{X-axis limits - calculated automatically if omitted.}
+  \item{n.br}{Number of breaks along the range of the data.}
   \item{...}{Additional arguments passed through to \code{\link{plot}}.}
 }
 
 \usage{
-## For usage, see \code{\link{make.bd}}
+## For usage, see the example in \code{\link{make.bd}}
 }
 
-\author{Richard G. FitzJohn}
 \keyword{hplot}
+\author{Richard G. FitzJohn}

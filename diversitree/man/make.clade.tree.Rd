@@ -12,7 +12,7 @@
 
 \usage{
 make.clade.tree(tree, clades)
-polytomies.to.clades
+polytomies.to.clades(tree)
 }
 
 \arguments{
@@ -36,3 +36,4 @@ polytomies.to.clades
 }
 
 \keyword{manip}
+\author{Richard G. FitzJohn}

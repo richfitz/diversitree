@@ -17,4 +17,12 @@ big.brother(f, interval=1)
   \item{interval}{Interval between printed evaluations}
 }
 
-\keyword{programming}
+\section{Warning}{
+  Using this directly on the likelihood functions may lead to unintended
+  consequences as it affects the class attribute of the likelihood
+  function and stop it causing the correct MLE function being
+  dispatched.  Probably best to leave this alone.
+}
+
+\keyword{internal}
+\author{Richard G. FitzJohn}

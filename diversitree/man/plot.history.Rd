@@ -1,21 +1,51 @@
 \name{plot.history}
-\alias{plot.history.discrete}
+\alias{plot.history}
 \title{Plot Character History}
 
 \description{Both stochastic character mapping and simulation may create
   character histories.  This function plots these histories}
 
 \usage{
-\method{plot}{history.discrete}(x, phy, cols=c("blue", "red"),
-                      xlim=NULL, ylim=NULL, show.tip.label=TRUE,
-                      show.node.label=FALSE, show.tip.state=TRUE,
-                      show.node.state=TRUE, cex=1, font=3, srt=0,
-                      adj=0, label.offset=NULL, ...)
+\method{plot}{history}(x, phy, cols=seq_along(states),
+             states=x$states,
+             xlim=NULL, ylim=NULL, show.tip.label=TRUE,
+             show.node.label=FALSE, show.tip.state=TRUE,
+             show.node.state=TRUE, cex=1, font=3, srt=0,
+             adj=0, label.offset=0, ...)
 }
 
 \arguments{
   \item{x}{An object of class \code{history.discrete} containing a
-    discrete character history}
+    discrete character history.  This could be made by
+    \code{\link{history.from.sim.discrete}}.}
+  \item{phy}{The phylogeny used to generate the history.  Few checks are
+    made to make sure that this is really correct, and all manner of
+    terrible things might happen if these are not compatible.  This may
+    change in future.}
+  \item{cols}{A vector of colours.}
+  \item{states}{The different state types.  Probably best to leave
+    alone.}
+  \item{xlim}{Plot x-limits (optional).}
+  \item{ylim}{Plot y-limits (optional).}
+  \item{show.tip.label}{Logical: show the species tip labels?}
+  \item{show.node.label}{Logical: show the species node labels?}
+  \item{show.tip.state}{Logical: draw a symbol at the tips to indicate
+    tip state?}
+  \item{show.node.state}{Logical: draw a symbol at the nodes to indicate
+    node state?}
+  \item{cex}{Font and symbol scaling factor.}
+  \item{font}{Font used for tip and node labels (see
+    \code{\link{par}}).}
+  \item{srt}{String rotation for tip and node labels.}
+  \item{adj}{Label \code{adj}ustment (see \code{\link{par}}).}
+  \item{label.offset}{Horizontal offset of tip and node labels, in
+    branch length units.}
+  \item{...}{Additional arguments (currently ignored)}
+}
+
+\details{
+  This attempts to be as compatible with \code{ape}'s plotting functions
+  as possible, but currently implements only right-facing cladegrams.
 }
 
 \examples{
@@ -34,5 +64,8 @@ phy2 <- prune(phy)
 
 ## The history must be recreated for this pruned tree:
 h2 <- history.from.sim.discrete(phy2, 0:1)
-plot(h2, phy2, cex=.7, font=1)
+plot(h2, phy2, cex=.7)
 }
+
+\keyword{hplot}
+\author{Richard G. FitzJohn}

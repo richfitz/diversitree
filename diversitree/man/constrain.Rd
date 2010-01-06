@@ -20,7 +20,8 @@ constrain(f, ..., names=argnames(f))
     (see Details and Examples).}
   \item{names}{Character vector of names, the same length as the number
     of parameters in \code{x}.  Use this only if \code{\link{argnames}}
-    does not return a vector for your function.}
+    does not return a vector for your function.  Generally this should
+    not be used.}
 }
 
 \details{
@@ -64,35 +65,36 @@ constrain(f, ..., names=argnames(f))
 }
 
 \examples{
-## Same example likelihood function as for \link{find.mle}:
+## Same example likelihood function as for \link{find.mle} - BiSSE on a
+## tree with 203 species, generated with an asymmetry in the speciation
+## rates.
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(2)
 phy <- tree.bisse(pars, max.t=60, x0=0)
-f <- make.bisse(phy, phy$tip.state)
+lik <- make.bisse(phy, phy$tip.state)
 
-argnames(f) # Canonical argument names (set by default)
+argnames(lik) # Canonical argument names
 
-## Equal speciation rates
-g <- constrain(f, lambda0 ~ lambda1)
-f(c(.1, .1, pars[3:6])) == g(c(.1, pars[3:6]))
+## Specify equal speciation rates
+lik.2 <- constrain(lik, lambda0 ~ lambda1)
+argnames(lik.2) # Note lambda0 now missing
 
-## More complicated:
-h <- constrain(f, lambda0 ~ lambda1 / 2, mu0 ~ mu1, q01 ~ 0)
-argnames(h) # lambda1, mu1, q10
-f(c(.1, .2, .03, .03, 0, .01)) == h(c(.2, .03, .01))
-h(c(.2, .03, .01), pars.only=TRUE)
+## On constrained functions, use the "pars.only" argument to see what
+## the full argument list would be:
+lik.2(c(.1, pars[3:6]), pars.only=TRUE)
 
-\dontrun{
-## find.mle knows how to do a search on these reduced models.  Do a
-## likelihood search on both the full model and the equal-lambda model:
-fit.full <- find.mle(f, pars)
-logLik(fit.full) # -659.92
-fit.lambda <- find.mle(g, pars)
-logLik(fit.lambda) # -663.40
+## Check this works:
+lik(c(.1, .1, pars[3:6])) == lik.2(c(.1, pars[3:6]))
 
-## Hypothesis testing:
-anova(fit.full, equal.lambda=fit.lambda)
-}
+## For optimisation of these functions, see \link{find.mle}, which
+## includes an example.
+
+## More complicated; constrain lambda0 to half of lambda1, constrain mu0
+## to be the same mu1, and set q01 equal to zero.
+lik.3 <- constrain(lik, lambda0 ~ lambda1 / 2, mu0 ~ mu1, q01 ~ 0)
+argnames(lik.3) # lambda1, mu1, q10
+lik(c(.1, .2, .03, .03, 0, .01)) == lik.3(c(.2, .03, .01))
 }
 
 \keyword{programming}
+\author{Richard G. FitzJohn}

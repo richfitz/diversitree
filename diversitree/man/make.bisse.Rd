@@ -1,25 +1,27 @@
 \name{make.bisse}
 \alias{make.bisse}
+\alias{starting.point.bisse}
 
-\title{Binary State Speciation and Extinction}
+\title{Binary State Speciation and Extinction Model}
 
 \description{Prepare to run BiSSE (Binary State Speciation and
   Extinction) on a phylogenetic tree and character distribution.  This
   function creates a likelihood function that can be used in
   \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
-  inference.
-}
+  inference.}
 
 \usage{
 make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
            safe=FALSE)
+starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
   \item{states}{A vector of character states, each of which must be 0 or
-    1.  This vector must have names that correspond to the tip labels in
-    the phylogenetic tree (\code{tree$tip.label}).  For tips
+    1, or \code{NA} if the state is unknown.  This vector must have
+    names that correspond to the tip labels in the phylogenetic tree
+    (\code{tree$tip.label}).  For tips
     corresponding to unresolved clades, the state should be \code{NA}.}
   \item{unresolved}{Unresolved clade information: see section below for
     structure.}
@@ -32,6 +34,11 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
     (this is in addition to the largest observed clade).}
   \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
     crashes are happening.}
+  \item{q.div}{Ratio of diversification rate to character change rate.
+    Eventually this will be changed to allow for Mk2 to be used for
+    estimating q parameters.}
+  \item{yule}{Logical: should starting parameters be Yule estimates
+    rather than birth-death estimates?}
 }
 
 \details{
@@ -39,53 +46,61 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
   function has argument list (and default values)
 
   \preformatted{
-    f(pars, prior=NULL, root=ROOT.OBS,
-      condition.surv=TRUE, intermediates=FALSE,
-      root.p0=NA, root.p1=NA, fail.value=NULL)
-    }
+    f(pars, prior=NULL, condition.surv=TRUE, root=ROOT.OBS,
+    root.p=NULL, intermediates=FALSE)
+  }
   
-    The arguments are interpreted as
+  The arguments are interpreted as
+  \itemize{
+    \item \code{pars} A vector of six parameters, in the order
+    \code{lambda0}, \code{lambda1}, \code{mu0}, \code{mu1},
+    \code{q01}, \code{q10}.
+    \item \code{prior}: a valid prior.  See \code{\link{make.prior}} for
+    more information.
+    \item \code{condition.surv} (logical): should the likelihood
+    calculation condition on survival of two lineages and the speciation
+    event subtending them?  This is done by default, following Nee et
+    al. 1994.
+    \item \code{root}: Behaviour at the root (see Maddison et al. 2007,
+    FitzJohn et al. 2009).  The possible options are
     \itemize{
-      \item \code{pars} A vector of six parameters, in the order \code{lambda0},
-      \code{lambda1}, \code{mu0}, \code{mu1}, \code{q01}, \code{q10}.
-      \item \code{prior} A vector of rates for an exponential prior.  The prior
-      probability distribution has probability density
-      \deqn{r_i e^{-r_i x_i}}{r_i*exp(-r_i*x_i)}
-      where the \eqn{i} denotes the \eqn{i}th parameter.  There is no
-      ability to specify a form of prior other than an exponential
-      function here (yet), and this part of the inteface is subject to
-      change!
-      \item \code{root}: Behaviour at the root (see Maddison et al. 2007,
-      FitzJohn et al. 2009).  The possible options are
-      \itemize{
-	\item \code{diversitree:::ROOT.FLAT}: A flat prior, weighting
- 	\eqn{D_0}{D0} and \eqn{D_1}{D1} equally.
-	\item \code{diversitree:::ROOT.EQUI}: Use the equilibrium distribution
- 	of the model, as described in Maddison et al. (2007).
-	\item \code{diversitree:::ROOT.OBS}: Weight \eqn{D_0}{D0} and
- 	\eqn{D_1}{D1} by their relative probability of observing the
- 	data, following FitzJohn et al. 2009:
- 	\deqn{D = D_0*\frac{D_0}{D_0 + D_1} + D_1*\frac{D_1}{D_0 + D_1}}{
- 	  D = D0 * D0/(D0 + D1) + D1 * D1/(D0 + D1)}
-	\item \code{diversitree:::ROOT.GIVEN}: Root will be in state 0
-	with probability \code{root.p0}, or in state 1 with probability
-	\code{root.p1}.  Specify either of these, but just one.
-	\item \code{diversitree:::ROOT.BOTH}: Don't do anything at the root,
- 	and return both values.  (Note that this will not give you a
- 	likelihood!).
-      }
-      \item \code{intermediates}: Add intermediates to the returned value as
-      attributes:
-      \itemize{
-       \item \code{cache}: Cached tree traversal information.
-       \item \code{intermediates}: Mostly branch end information.
-       \item \code{vals}: Root \eqn{D} values.
-       \item \code{logComp}: Underflow compensation information.
-     }
-     At this point, you will have to poke about in the source for more
-     information on these.
-   }
- }
+      \item \code{ROOT.FLAT}: A flat prior, weighting
+      \eqn{D_0}{D0} and \eqn{D_1}{D1} equally.
+      \item \code{ROOT.EQUI}: Use the equilibrium distribution
+      of the model, as described in Maddison et al. (2007).
+      \item \code{ROOT.OBS}: Weight \eqn{D_0}{D0} and
+      \eqn{D_1}{D1} by their relative probability of observing the
+      data, following FitzJohn et al. 2009:
+      \deqn{D = D_0\frac{D_0}{D_0 + D_1} + D_1\frac{D_1}{D_0 + D_1}}{
+ 	D = D0 * D0/(D0 + D1) + D1 * D1/(D0 + D1)}
+      \item \code{ROOT.GIVEN}: Root will be in state 0
+      with probability \code{root.p[1]}, and in state 1 with
+      probability \code{root.p[1]}.
+      \item \code{ROOT.BOTH}: Don't do anything at the root,
+      and return both values.  (Note that this will not give you a
+      likelihood!).
+    }
+    \item \code{root.p}: Root weightings for use when
+    \code{root=ROOT.GIVEN}.  \code{sum(root.p)} should equal 1.
+    \item \code{intermediates}: Add intermediates to the returned value as
+    attributes:
+    \itemize{
+      \item \code{cache}: Cached tree traversal information.
+      \item \code{intermediates}: Mostly branch end information.
+      \item \code{vals}: Root \eqn{D} values.
+      \item \code{logComp}: Underflow compensation information.
+    }
+    At this point, you will have to poke about in the source for more
+    information on these.
+  }
+  
+  \code{starting.point.bisse} produces a heuristic starting point to
+  start from, based on the character-independent birth-death model.  You
+  can probably do better than this; see the vignette, for example.
+  \code{bisse.starting.point} is the same code, but deprecated in favour
+  of \code{startng.point.bisse} - it will be removed in a future
+  version.
+}
 
 \section{Unresolved clade information}{
   This must be a \code{\link{data.frame}} with at least the four columns
@@ -109,20 +124,94 @@ make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
   unresolved clades.)
 }
 
+
 \seealso{
   \code{\link{constrain}} for making submodels, \code{\link{find.mle}}
-  for ML parameter estimation, \code{\link{mcmc}} for MCMC integration.
+  for ML parameter estimation, \code{\link{mcmc}} for MCMC integration,
+  and \code{\link{make.bd}} for state-independent birth-death models.
+
+  The help pages for \code{\link{find.mle}} has further examples of ML
+  searches on full and constrained BiSSE models.
 }
 
 \examples{
+library(diversitree)
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
-set.seed(2)
+set.seed(4)
 phy <- tree.bisse(pars, max.t=30, x0=0)
 
-plot(phy)
+## Here is the 203 species tree with the true character history coded.
+## Red is state '1', which has twice the speciation rate of black (state
+## '0').
+h <- history.from.sim.discrete(phy, 0:1)
+plot(h, phy)
 
-f <- make.bisse(phy, phy$tip.state)
-f(pars)
+lik <- make.bisse(phy, phy$tip.state)
+lik(pars) # -159.72
+
+## Heuristic guess at a starting point, based on the constant-rate
+## birth-death model (uses \link{make.bd}).
+p <- starting.point.bisse(phy)
+
+%% This is code for better getting at the q's
+%% system.time(find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~
+%% q01), .1)$par)
+
+## Start an ML search from this point.  This takes some time (~7s)
+fit <- find.mle(lik, p, method="subplex")
+logLik(fit) # -158.74
+
+## The estimated parameters aren't too far away from the real ones, even
+## with such a small tree
+rbind(real=pars,
+      estimated=round(coef(fit), 2))
+
+## Test a constrained model where the speciation rates are set equal
+## (takes ~4s).
+lik.l <- constrain(lik, lambda1 ~ lambda0)
+fit.l <- find.mle(lik.l, p[-1], method="subplex")
+logLik(fit.l) # -158.74
+
+## Despite the difference in the estimated parameters, there is no
+## statistical support for this difference:
+anova(fit, equal.lambda=fit.l)
+
+## Run an MCMC.  Because we are fitting six parameters to a tree with
+## only 50 species, priors will be needed.  I will use an exponential
+## prior with rate 1/(2r), where r is the character independent
+## diversificiation rate:
+prior <- make.prior.exponential(1 / (2 * (p[1] - p[3])))
+
+## This takes quite a while to run, so is not run by default
+\dontrun{
+tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior,
+            lower=rep(0, 6), upper=rep(Inf, 6), w=rep(.1, 6))
+w <- diff(sapply(tmp[2:7], range))
+samples <- mcmc(lik, fit$par, nsteps=1000, prior=prior,
+                lower=rep(0, 6), upper=rep(Inf, 6), w=rep(.1, 6))
+
+## See \link{profiles.plot} for more information on plotting these
+## profiles.
+col <- c("blue", "red")
+profiles.plot(samples[c("lambda0", "lambda1")], col.line=col, las=1,
+              xlab="Speciation rate",
+              ylab="Posterior probability density")
+legend("topright", c("lambda0", "lambda1"), col=col, lty=1)
+}
+}
+
+\references{
+  FitzJohn R.G., Maddison W.P., and Otto S.P. 2009. Estimating
+  trait-dependent speciation and extinction rates from incompletely
+  resolved phylogenies. Syst. Biol. 58:595-611.
+  
+  Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating
+  a binary character's effect on speciation and
+  extinction. Syst. Biol. 56:701-710.
+
+  Nee S., May R.M., and Harvey P.H. 1994. The reconstructed
+  evolutionary process. Philos.  Trans. R. Soc. Lond. B
+  Biol. Sci. 344:305-311.
 }
 
 \author{Richard G. FitzJohn}
