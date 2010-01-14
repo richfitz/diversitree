@@ -17,7 +17,9 @@ void initmod_mkn(void (* odeparms)(int *, double *)) {
 } 
 
 /* Simplified matrix multiplication, assuming straightforward sizes
-   and zeroing the input */
+   and zeroing the input.  GEMM does:
+     Z = alpha X Y + beta Z
+*/
 void do_gemm(double *x, int nrx, int ncx,
              double *y, int nry, int ncy,
              double *z) {
