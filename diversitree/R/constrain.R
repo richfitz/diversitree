@@ -90,10 +90,10 @@ constrain.parse <- function(formula, names.lhs, names.rhs) {
 ## the "paired" parameters here to avoid using eval where
 ## unnecessary.  However, this makes the function substantially uglier
 ## for a very minor speedup.
-constrain <- function(f, ..., names=argnames(f)) {
+constrain <- function(f, ..., formulae=NULL, names=argnames(f)) {
   if ( inherits(f, "constrained") )
     warning("It is probaably not a good idea to constrain a constrained function")
-  formulae <- list(...)
+  formulae <- c(list(...), formulae)
   names.lhs <- names.rhs <- names
   rels <- list()
   for ( formula in formulae ) {
@@ -131,3 +131,4 @@ print.constrained <- function(x, ...) {
   cat(sprintf("\t%s ~ %s\n", names(rels),
               unlist(lapply(rels, deparse))))
 }
+

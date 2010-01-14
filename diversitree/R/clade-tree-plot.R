@@ -46,7 +46,7 @@ plot.clade.tree <- function(x, use.edge.length=TRUE,
     names(n.taxa) <- names(x$clades)
   }
   
-  yy <- node.height(x, n.taxa)
+  yy <- node.height2(x, n.taxa)
 
   if (is.null(x.lim)) {
     x.lim <- c(0, NA)
@@ -96,7 +96,7 @@ plot.clade.tree <- function(x, use.edge.length=TRUE,
 }
 
 ## Pure R versions of node.height/node.depth etc.
-node.height <- function(x, n.taxa=NULL) {
+node.height2 <- function(x, n.taxa=NULL) {
   n.tip <- length(x$tip.label)
   n.edge <- nrow(x$edge)
   n.node <- x$Nnode
@@ -136,35 +136,6 @@ node.height <- function(x, n.taxa=NULL) {
     }
   }
   yy
-}
-
-node.depth <- function(x) {
-  n.tip <- length(x$tip.label)
-  n.edge <- nrow(x$edge)
-  n.node <- x$Nnode
-  edge1 <- x$edge[,1]
-  edge2 <- x$edge[,2]
-
-  xx <- numeric(n.tip + n.node)
-  xx[1:n.tip] <- 1
-  for ( i in 1:n.edge)
-    xx[edge1[i]] = xx[edge1[i]] + xx[edge2[i]]
-  xx <- xx - 1
-  max(xx) - xx
-}
-
-node.depth.edgelength <- function(x) {
-  n.tip <- length(x$tip.label)
-  n.edge <- nrow(x$edge)
-  n.node <- x$Nnode
-  edge1 <- x$edge[,1]
-  edge2 <- x$edge[,2]
-  edge.length <- x$edge.length
-
-  xx <- numeric(n.tip + n.node)
-  for ( i in n.edge:1)
-    xx[edge2[i]] = xx[edge1[i]] + edge.length[i];
-  xx
 }
 
 ## Tweaked phylogram.plot function

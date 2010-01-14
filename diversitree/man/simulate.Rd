@@ -8,10 +8,10 @@
 \title{Evolve Birth-Death Trees}
 
 \description{Evolves one or more trees under the BiSSE (Binary State
-  Specialtion and Extinction) birth-death model or a simple character
+  Speciation and Extinction) birth-death model or a simple character
   independent birth-death model.  For BiSSE trees, it simultaneously
-  evolves a binary character that affects speciation and/or extinction
-  and lineages.
+  evolves a binary character that affects speciation and/or extinction,
+  and the tree itself.
 }
 
 \usage{
@@ -54,9 +54,9 @@ prune(phy, to.drop=NULL)
   The phylogeny will begin from a single lineage in state \code{x0}, but
   the final phylogeny will include only branches above the first split.
 
-  \code{bisse.tree} may return an extinct phylogeny, and
-  \code{bisse.trees} might return extinct phylogenies if
-  \code{include.extinct} is \code{TRUE}.
+  \code{tree.bisse} may return an extinct phylogeny, and \code{trees}
+  might return extinct phylogenies if \code{include.extinct} is
+  \code{TRUE}.
 }
 
 \note{
@@ -73,8 +73,6 @@ prune(phy, to.drop=NULL)
   The trees will have an element \code{tip.state} that contains the
   binary state information.
 }
-
-\author{Richard G. FitzJohn}
 
 \examples{
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)

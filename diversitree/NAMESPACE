@@ -21,6 +21,8 @@ S3method(find.mle, yule)
 S3method(find.mle, mkn)
 
 S3method(anova, fit.mle)
+S3method(coef, fit.mle)
+S3method(extractAIC, fit.mle)
 S3method(logLik, fit.mle)
 
 export(mcmc)
@@ -65,3 +67,11 @@ S3method(plot, clade.tree)
 ## History objects
 S3method(plot, history)
 export(history.from.sim.discrete)
+
+## Constants
+export(ROOT.FLAT)
+export(ROOT.EQUI)
+export(ROOT.OBS)
+export(ROOT.GIVEN)
+export(ROOT.BOTH)
+export(ROOT.ALL)

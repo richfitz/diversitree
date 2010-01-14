@@ -58,6 +58,7 @@ do.mle.search <- function(func, x.init, method, fail.value=NA,
     ans$hessian <- hessian(func, ans$par, ...)
   }
 
+  ans$func <- func
   class(ans) <- "fit.mle"
   ans
 }
@@ -86,8 +87,6 @@ do.mle.search.optim <- function(func, x.init, fail.value=NA,
 
 do.mle.search.subplex <- function(func, x.init, fail.value=NA,
                                   control=list(), ...) {
-  if ( !require(subplex) )
-    stop("The subplex package is required")
   if ( is.null(fail.value) || is.na(fail.value) )
     fail.value <- -Inf
   ## By default, a less agressive tolerance that is more likely to be
@@ -152,7 +151,7 @@ do.mle.search.nlm <- function(func, x.init, fail.value=NA,
 ## For want of a better name, this does the initial parameter
 ## guessing.
 ## This can 
-guess.constrained.start <- function(func, x.init) {
+guess.constrained.start <- function(func, x.init, warn=TRUE) {
   f.orig <- environment(func)$f
   names.orig <- argnames(f.orig)
   names.cons <- argnames(func)
@@ -163,7 +162,8 @@ guess.constrained.start <- function(func, x.init) {
   if ( length(x.init) == n.cons ) {
     x.init
   } else if  ( length(x.init) == n.orig && !any(is.na(arg.idx)) ) {
-    warning("Guessing parameters while constraining model - may do badly")
+    if ( warn )
+      warning("Guessing parameters while constraining model - may do badly")
     x.init <- x.init[arg.idx]
   } else {
     stop("Could not guess reduced parameter set from those given")
@@ -183,8 +183,12 @@ coef.fit.mle <- function(object, ...) {
   object$par
 }
 
+extractAIC.fit.mle <- function(fit, scale, k=2, ...)
+  c(length(coef(fit)), AIC(fit))
+
+
 ## Code based on MASS:::anova.negbin and ape:::anova.ace
-anova.fit.mle <- function(object, ...) {
+anova.fit.mle <- function(object, ..., sequential=FALSE) {
   mlist <- c(list(object), list(...))
   if ( length(mlist) == 1L )
     stop("Need to specify more than one model")
@@ -196,9 +200,19 @@ anova.fit.mle <- function(object, ...) {
 
   ll <- lapply(mlist, logLik)
   ll.val <- sapply(ll, as.numeric)
-  chisq <- c(NA, abs(2*(ll.val[1] - ll.val[-1])))
   df <- sapply(ll, attr, "df")
-  ddf <- c(NA, abs(df[1] - df[-1]))
+
+  if ( sequential ) {
+    ddf <- c(NA, diff(df))
+    if ( any(ddf[-1] < 1) )
+      stop("Models are not ordered correctly for sequential anova")
+    chisq <- c(NA, 2*diff(ll.val))
+    if ( any(chisq[-1] < 0 ))
+      warning("Impossible chi-square values - convergence failures?")
+  } else {
+    chisq <- c(NA, abs(2*(ll.val[1] - ll.val[-1])))
+    ddf <- c(NA, abs(df[1] - df[-1]))
+  }
   
   out <- data.frame(Df=df,
                     lnLik=sapply(ll, as.numeric),

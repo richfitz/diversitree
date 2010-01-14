@@ -29,7 +29,7 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
     extant species in state 0 and 1 that are included in the phylogeny.
     A value of \code{c(0.5, 0.75)} means that half of species in state 0
     and three quarters of species in state 1 are included in the
-    phylogeny.  By default all species are assumed to be known}
+    phylogeny.  By default all species are assumed to be known.}
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
   \item{safe}{Use a safer, slower, integrator?  Leave this alone unless

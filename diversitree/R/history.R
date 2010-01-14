@@ -170,6 +170,7 @@ history.bin <- function(obj) {
     }
   }
 
+  horiz <- obj$horiz # R CMD check NOTE avoidance
   tmp <- subset(obj, horiz)
   ret <- rbind(subset(obj, !horiz),
                 do.call(rbind, lapply(split(tmp, tmp$idx), f)))

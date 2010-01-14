@@ -25,7 +25,7 @@ make.mk2 <- function(tree, states) {
 }
 
 make.mkn <- function(tree, states, k) {
-  cache <- make.cache.mkn(tree, states)
+  cache <- make.cache.mkn(tree, states, k)
   branches <- make.branches.mkn(k)
   qmat <- matrix(0, k, k)
   idx <- cbind(rep(1:k, each=k-1),
@@ -73,10 +73,14 @@ argnames.mkn <- function(x, ...) {
   }
 }
 
-argnames.mkn <- function(x, ...) {
+argnames.mkn <- function(x, k, ...) {
   ret <- attr(x, "argnames")
   if ( is.null(ret) ) {
-    k <- attr(x, "k")
+    if ( missing(k) )
+      k <- attr(x, "k")
+    else
+      if ( !is.null(x) )
+        stop("k can only be be given if x is null")
     sprintf("q%d%d", rep(1:k, each=k-1),
             unlist(lapply(1:k, function(i) (1:k)[-i])))
   } else {

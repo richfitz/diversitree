@@ -29,11 +29,12 @@ hdr.uniroot <- function(z, p=0.95) {
   ci <- optimize(function(x) f(x + p) - f(x), c(0, 1-p))$min
   f(c(ci, ci+p))
 }
-profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ...) {
+profiles.plot <- function(y, col.line, col.fill, xlim=NULL, n.br=50,
+                          ...) {
   if ( missing(col.fill) )
     col.fill <- add.alpha(col.line, .5)
   r <- range(unlist(y))
-  br <- seq(r[1], r[2], length=50)
+  br <- seq(r[1], r[2], length=n.br)
   hh <- lapply(y, hist, br, plot=FALSE)
   ci <- lapply(y, hdr.uniroot)
 

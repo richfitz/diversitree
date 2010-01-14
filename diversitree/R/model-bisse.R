@@ -229,23 +229,21 @@ stationary.freq.bisse <- function(pars) {
 }
 
 starting.point.bisse <- function(tree, q.div=5, yule=FALSE) {
-  ## fit <- suppressWarnings(birthdeath(tree))
-  ## r <- fit$para[2]
-  ## e <- fit$para[1]
-  ## p <- rep(c(r/(1-e), r*e/(1-e), r/q.div), each=2)
-
-  ## TODO: Use qs estimated from Mk2?
+  ## TODO: Use qs estimated from Mk2?  Can be slow is the only reason
+  ## I have not set this up by default.
   ## find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~ q01), .1)$par
+  pars.yule <- c(coef(find.mle(make.yule(tree))), 0)
 
   if ( yule )
-    pars.bd <- c(find.mle(make.yule(tree))$par, 0)
+    pars.bd <- pars.yule
   else
-    pars.bd <- find.mle(make.bd(tree))$par
+    pars.bd <- coef(find.mle(make.bd(tree), pars.yule))
+
   if  ( pars.bd[1] > pars.bd[2] )
     p <- rep(c(pars.bd, (pars.bd[1] - pars.bd[2]) / q.div), each=2)
   else
     p <- rep(c(pars.bd, pars.bd[1] / q.div), each=2)
-  names(p) <- c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10")
+  names(p) <- argnames.bisse(NULL)
   p
 }
 starting.point <- bisse.starting.point <- function(tree, q.div=5) {

@@ -105,6 +105,10 @@ find.mle.yule <- function(func, x.init, method, fail.value=NA,
   if ( is.null(condition.surv) )
     condition.surv <- TRUE
 
+  if ( !is.null(environment(func)$prior) )
+    stop("Cannot yet get MAP point for Yule with prior - ",
+         "use constrained bd model instead")
+
   n.node <- if ( condition.surv ) cache$n.node - 1 else cache$n.node
   lambda <- n.node / cache$tot.len
   obj <- list(par=c(lambda=lambda),
@@ -140,8 +144,8 @@ make.cache.bd <- function(tree=NULL, times=NULL,
                    2:(length(times) + 1))
     n.node <- length(times)
   } else {
-    tot.len <- sum(phy$edge.length)
-    n.node <- phy$Nnode
+    tot.len <- sum(tree$edge.length)
+    n.node <- tree$Nnode
   }
 
   list(N=N, x=x, tot.len=tot.len, n.node=n.node)

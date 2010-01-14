@@ -4,13 +4,9 @@
 ## which is a vector of parameters.  Across a single iteration,
 ## take the input x and return a vector of parameters 'y'
 ## corresponding to a new position.
-TYPE.RAW <- 1
-TYPE.LOG <- 2
-TYPE.NLOG <- 3
-
-mcmc <- function(f, x0, nsteps, w, lower, upper, type=TYPE.LOG,
+mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
                  fail.value=-Inf, print.every=1, ...) {
-  fn <- protect(f)
+  fn <- protect(function(x) f(x, ...))
 
   y0 <- try(f(x0, ...))
   if ( inherits(y0, "try-error") )
@@ -18,9 +14,17 @@ mcmc <- function(f, x0, nsteps, w, lower, upper, type=TYPE.LOG,
   if ( !is.finite(y0) )
     stop("Starting point must have finite probability")
 
+  if ( length(lower) == 1 ) lower <- rep(lower, length(x0))
+  if ( length(upper) == 1 ) upper <- rep(upper, length(x0))
+
+  if ( is.null(names(x0)) )
+    try(names(x0) <- argnames(f), silent=TRUE)
+
   hist <- vector("list", nsteps)
   for ( i in seq_len(nsteps) ) {
-    hist[[i]] <- tmp <- slice.nd(fn, x0, y0, w, lower, upper, type)
+    hist[[i]] <- tmp <- slice.nd(fn, x0, y0, w, lower, upper)
+    x0 <- tmp[[1]]
+    y0 <- tmp[[2]]
     if ( print.every > 0 && i %% print.every == 0 )
       cat(sprintf("%d: {%s} -> %2.5f\n", i,
                   paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
@@ -35,12 +39,12 @@ mcmc <- function(f, x0, nsteps, w, lower, upper, type=TYPE.LOG,
 }
 
 ## Here, w, lower and upper are vectors
-slice.nd <- function(f, x0, y0, w, lower, upper, type=TYPE.LOG) {
+slice.nd <- function(f, x0, y0, w, lower, upper) {
   if ( is.na(y0) )
     y0 <- f(x0)
   for ( i in seq_along(x0) ) {
     xy <- slice.1d(make.g(f, x0, i), x0[i], y0, w[i], lower[i],
-                   upper[i], type)
+                   upper[i])
     x0[i] <- xy[1]
     y0 <- xy[2]
   }
@@ -48,12 +52,8 @@ slice.nd <- function(f, x0, y0, w, lower, upper, type=TYPE.LOG) {
 }
 
 ## Here, w, lower and upper are scalars
-slice.1d <- function(g, x0, y0, w, lower=0, upper=Inf,
-                     type=TYPE.LOG) {
-  if ( type %in% c(TYPE.LOG, TYPE.NLOG) )
-    z <- y0 - rexp(1)
-  else
-    z <- runif(1) * y0
+slice.1d <- function(g, x0, y0, w, lower, upper) {
+  z <- y0 - rexp(1)
   r <- isolate.step(g, x0, y0, z, w, lower, upper)
   take.sample(g, x0, z, r)
 }
