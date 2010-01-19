@@ -6,7 +6,7 @@
 ## corresponding to a new position.
 mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
                  fail.value=-Inf, print.every=1, ...) {
-  fn <- protect(function(x) f(x, ...))
+  fn <- protect(function(x) f(x, ...), fail.value)
 
   y0 <- try(f(x0, ...))
   if ( inherits(y0, "try-error") )

@@ -44,26 +44,41 @@ argnames.constrained <- function(x, ...)
 ##       r0 * e0 / (1 - e0), r1 * e1 / (1 - e1))
 
 ## TODO: Check that lhs does not appear on the rhs
-constrain.parse <- function(formula, names.lhs, names.rhs) {
+constrain.parse <- function(formula, names.lhs, names.rhs,
+                            extra=NULL) {
   formula <- as.formula(formula)
   if ( length(formula) != 3L )
     stop("Invalid formula")
   lhs <- formula[[2]]
   rhs <- formula[[3]]
-  
+
+  ## Checking the lhs is easy: is the lhs in the list of allowable
+  ## names and of length 1?  Anything that does not match this is
+  ## invalid.
   if ( !is.name(lhs) || is.na(match(as.character(lhs), names.lhs)) )
     stop("Invalid target on LHS of formula" )
+
+  ## Checking the rhs is more difficult.  We are OK if any of the
+  ## following is met:
+  ##   Numeric values (checked at the end)
+  ##   If all vars in rhs are in names.rhs
+  ##   There is a single var and it is in extra
+  ## Failing that, if the rhs is a single variable that does exist in
+  ## the calling environment.
   if ( is.language(rhs) ) {
     vars <- all.vars(rhs)
-    if ( !all(vars %in% names.rhs) ) {
-      if ( length(vars) == 1 && exists(vars) )
-        ## TODO: Check that 'vars' is not really already in the
-        ## function names.
-        rhs <- get(vars)
-      else
-        stop("Some elements of the RHS were not found in names.rhs:\n\t",
-             paste(setdiff(vars, names.rhs), collapse=", "))
+    ok <- (all(vars %in% names.rhs) ||
+           length(vars) == 1 && vars %in% extra)
+    if ( !ok && length(vars) == 1 ) {
+      e <- parent.frame()
+      if ( exists(vars, e) ) {
+        rhs <- get(vars, e)
+        ok <- TRUE
+      }
     }
+
+    if ( !ok )
+      stop("Invalid RHS of formula:\n\t", as.character(rhs))
     if ( as.character(lhs) %in% vars )
       stop("LHS cannot appear in RHS")
   } else if ( !is.numeric(rhs) ) {
@@ -74,10 +89,6 @@ constrain.parse <- function(formula, names.lhs, names.rhs) {
 
 ## First up, consider the one-shot case: don't worry about incremental
 ## updates.
-
-## OK, that's awesome.
-## constrain.parse(lambda0 ~ lambda1, "lambda0", "lambda1")
-## constrain.parse(lambda0 ~ lambda1 + mu0, "lambda0", "lambda1")
 
 ## For the first case, everything is OK on the lhs and rhs
 ## For subsequent cases:
@@ -90,38 +101,61 @@ constrain.parse <- function(formula, names.lhs, names.rhs) {
 ## the "paired" parameters here to avoid using eval where
 ## unnecessary.  However, this makes the function substantially uglier
 ## for a very minor speedup.
-constrain <- function(f, ..., formulae=NULL, names=argnames(f)) {
+
+constrain <- function(f, ..., formulae=NULL, names=argnames(f),
+                      extra=NULL) {
   if ( inherits(f, "constrained") )
     warning("It is probaably not a good idea to constrain a constrained function")
   formulae <- c(list(...), formulae)
   names.lhs <- names.rhs <- names
   rels <- list()
+  
   for ( formula in formulae ) {
-    res <- constrain.parse(formula, names.lhs, names.rhs)
+    res <- constrain.parse(formula, names.lhs, names.rhs, extra)
     names.lhs <- setdiff(names.lhs, unlist(lapply(res, all.vars)))
     names.rhs <- setdiff(names.rhs, as.character(res[[1]]))
     rels <- c(rels, structure(res[2], names=as.character(res[[1]])))
   }
 
-  npar <- length(names.rhs)
-  free.i <- match(names.rhs, names)
+  i <- match(unique(sapply(rels, as.character)), extra)
+  final <- c(extra[sort(i[!is.na(i)])], names.rhs)
+  npar <- length(final)
+
+  ## "free" are the parameters that have nothing special on their RHS
+  ## and are therefore passed directly through
+  free <- setdiff(names.rhs, names(rels))
+  free.i <- match(free, names) # index in full variables
+  free.j <- match(free, final) # index in given variables.
+
+  ## Targets are processed in the same order as given by formulae. 
   target.i <- match(names(rels), names)
+
   pars <- rep(NA, length(names))
   names(pars) <- names
-
   g <- function(x, ..., pars.only=FALSE) {
     if ( length(x) != npar )
       stop("x of wrong length")
-    pars[free.i] <- x
-    pars[target.i] <- unlist(lapply(rels, eval,as.list(pars[free.i])))
+
+    pars[free.i] <- x[free.j]
+    e <- structure(as.list(x), names=final)
+    pars[target.i] <- unlist(lapply(rels, eval, e))
+
     if ( pars.only )
       pars
     else
       f(pars, ...)
   }
+
   class(g) <- c("constrained", class(f))
+  attr(g, "argnames") <- final
+  attr(g, "formulae") <- formulae
+  attr(g, "extra") <- extra
+  attr(g, "func") <- f
   g
 }
+
+argnames.constrained <- function(x, ...)
+  attr(x, "argnames")
 
 print.constrained <- function(x, ...) {
   rels <- environment(x)$rels
@@ -132,3 +166,19 @@ print.constrained <- function(x, ...) {
               unlist(lapply(rels, deparse))))
 }
 
+update.constrained <- function(object, free, ...) {
+  func <- attr(object, "func")
+  formulae <- attr(object, "formulae")
+  extra <- attr(object, "extra")
+
+  lhs <- sapply(formulae, function(x) as.character(x[[2]]))
+  i <- match(free, lhs)
+  if ( any(is.na(i)) )
+    stop("Variable(s) ", paste(free[i], collapse=", "),
+         " are not constrained")
+  formulae <- formulae[-i]
+  if ( length(formulae) > 0 )
+    constrain(func, formulae=formulae, extra=extra)
+  else
+    func
+}

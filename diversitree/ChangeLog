@@ -1,3 +1,27 @@
+2010-01-19  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: updated to version 0.4-3
+
+	* R/constrain.R: Now allows "extra" variables to be specified,
+	allowing constraint against dummy parameters.  New "update" method
+	for removing constraints (adding constraints will come soon).
+	constrained functions now have attribute "func" containing the
+	original unconstrained function.
+
+	* R/diversitree-branches.R: New check for appropriate length for
+	root.p.
+
+	* R/mcmc.R: Better handling of fail values.
+
+	* R/mle.R: coef.fit.mle for constrained models can now return
+	coefficients for the underlying full model (with full=TRUE).
+
+	* R/model-bd.R: New starting.point.bd function
+
+	* R/model-bisse.R: starting.point.bisse uses starting.point.bd
+
+	* R/util.R: protect() now takes a default value for failure.
+
 2010-01-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Now depends on subplex

@@ -1,6 +1,7 @@
 \name{make.bd}
 \alias{make.bd}
 \alias{make.yule}
+\alias{starting.point.bd}
 
 \title{Constant Rate Birth-Death Models}
 
@@ -16,6 +17,7 @@
 \usage{
 make.bd(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
 make.yule(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
+starting.point.bd(tree, yule=FALSE)
 }
 
 \arguments{
@@ -28,6 +30,8 @@ make.yule(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
   \item{sampling.f}{(Not yet used.)  Probability of an extant species
     being included in the phylogeny (sampling fraction).  By default,
     all extant species are assumed to be included.}
+  \item{yule}{Should the starting point function return a Yule model
+    (zero extinction rate)?}
 }
 
 \details{

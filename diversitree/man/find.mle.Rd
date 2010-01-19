@@ -17,9 +17,9 @@
 
 \usage{
 find.mle(func, x.init, method, ...)
-\method{coef}{fit.mle}(object, ...)
+\method{coef}{fit.mle}(object, full=FALSE, extra=FALSE, ...)
 \method{logLik}{fit.mle}(object, ...)
-\method{anova}{fit.mle}(object, ...)
+\method{anova}{fit.mle}(object, ..., sequential=FALSE)
 %\method{find.mle}{bisse}(func, x.init, method, fail.value=NA, ...)
 %bisse.starting.point(tree, q.div=5)
 %starting.point(tree, q.div=5)
@@ -38,6 +38,15 @@ find.mle(func, x.init, method, ...)
     models to compare against the model \code{object} (either submodels
     or supermodels or the test is meaningless).}
   \item{object}{A fitted model, returned by \code{find.mle}.}
+  \item{full}{When returning the coefficients for a constrained model,
+    should be coefficients for the underlying constrained model be
+    returned?}
+  \item{extra}{When returning the coefficients for a constrained model,
+    should dummy \dQuote{extra} parameters be returned as well?}
+  \item{sequential}{Should \code{anova} treat the models as a series of
+    increasing complexity?  Currently this is a little overzealous in
+    checking and will refuse to work if the likelihood values are not
+    strictly increasing.}
 }
 
 \details{
@@ -177,6 +186,11 @@ logLik(fit.l) # 663.40
 ## significantly better than the simpler model with equal rates
 ## (p=0.008).
 anova(fit, equal.lambda=fit.l)
+
+## You can return the parameters for the full six parameter model from
+## the fitted five parameter model - this makes a good starting point
+## for a ML search.
+coef(fit.l, full=TRUE)
 }
 }
 

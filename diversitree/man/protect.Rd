@@ -8,18 +8,21 @@
   evaluation.}
 
 \usage{
-protect(f)
+protect(f, fail.value.default=NULL)
 invert(f)
 }
 
 \arguments{
   \item{f}{A function.}
+  \item{fail.value.default}{Value that will be used as on failure of
+    \code{f}, if not overridden.  The default here (\code{NULL}) will
+    allow failure.}
 }
 
 \details{
   \code{protect} returns a function with arguments
   \preformatted{
-    g(..., fail.value=NULL, finite=NULL)
+    g(..., fail.value=fail.value.default, finite=NULL)
   }
   The \code{...} arguments are all passed through to the underlying
   function \code{f}, \code{fail.value} contains the value to return in

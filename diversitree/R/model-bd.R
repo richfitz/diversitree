@@ -187,3 +187,13 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
 
   loglik
 }
+
+starting.point.bd <- function(tree, yule=FALSE) {
+  pars.yule <- c(coef(find.mle(make.yule(tree))), 0)
+  if ( yule )
+    p <- pars.yule
+  else
+    p <- coef(find.mle(make.bd(tree), pars.yule))
+  names(p) <- c("lambda", "mu")
+  p
+}

@@ -1,5 +1,5 @@
-protect <- function(f) {
-  function(..., fail.value=NULL, finite=TRUE) {
+protect <- function(f, fail.value.default=NULL) {
+  function(..., fail.value=fail.value.default, finite=TRUE) {
     if ( is.null(fail.value) )
       f(...)
     else {

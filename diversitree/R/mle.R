@@ -51,6 +51,8 @@ do.mle.search <- function(func, x.init, method, fail.value=NA,
 
   mle.search <- get(sprintf("do.mle.search.%s", method))
   ans <- mle.search(func2, x.init, fail.value, ...)
+  if ( verbose )
+    cat("\n")
 
   if ( hessian ) {
     if ( !require(numDeriv) )
@@ -179,8 +181,15 @@ logLik.fit.mle <- function(object, ...) {
   ll
 }
 
-coef.fit.mle <- function(object, ...) {
-  object$par
+coef.fit.mle <- function(object, full=FALSE, extra=FALSE, ...) {
+  func <- object$func
+  if ( full && inherits(func, "constrained") )
+    if ( extra && !is.null(extra.v <- attr(func, "extra")) )
+      c(object$par[extra.v], func(object$par, pars.only=TRUE))
+    else
+      func(object$par, pars.only=TRUE)
+  else
+    object$par
 }
 
 extractAIC.fit.mle <- function(fit, scale, k=2, ...)

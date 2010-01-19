@@ -213,9 +213,11 @@ root.xxsse <- function(vars, pars, cache, condition.surv, root.mode,
       p <- stationary.freq.bisse(pars)
     else
       stop("ROOT.EQUI only possible when k = 2")
-  else if ( root.mode == ROOT.GIVEN )
+  else if ( root.mode == ROOT.GIVEN ) {
+    if ( length(root.p) != length(d.root) )
+      stop("Invalid length for root.p")
     p <- root.p
-  else if ( root.mode != ROOT.ALL )
+  } else if ( root.mode != ROOT.ALL )
     stop("Invalid root mode")
 
   if ( condition.surv )
