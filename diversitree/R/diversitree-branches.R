@@ -144,6 +144,7 @@ make.cache <- function(tree) {
   if (inherits(tree, "phylo"))
     class(tree) <- "phylo"
   edge <- tree$edge
+  edge.length <- tree$edge.length
   idx <- seq_len(max(edge))
   n.tip <- length(tree$tip.label)
   root <- n.tip + 1
@@ -164,14 +165,16 @@ make.cache <- function(tree) {
 
   anc <- ancestors(parent, order)
   
-  ans <- list(len=tree$edge.len[match(idx, edge[,2])],
+  ans <- list(len=edge.length[match(idx, edge[,2])],
               children=children,
               parent=parent,
               order=order,
               root=root,
               n.tip=n.tip,
               depth=depth,
-              ancestors=anc)
+              ancestors=anc,
+              edge=edge,
+              edge.length=edge.length)
   ans
 }
 

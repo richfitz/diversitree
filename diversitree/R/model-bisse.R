@@ -167,8 +167,6 @@ initial.conditions.bisse <- function(init, pars, t, is.root=FALSE) {
 ## 8: branches
 make.branches.bisse <- function(safe=FALSE) {
   RTOL <- ATOL <- 1e-8
-  eps <- 0
-
   bisse.ode <- make.ode("derivs", "diversitree", "initmod", 4, safe)
   branches <- function(y, len, pars, t0)
     t(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
@@ -191,7 +189,7 @@ branches.unresolved.bisse <- function(pars, len, unresolved) {
   q01 <- pars[5]
   q10 <- pars[6]
   ret <- bucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, t,
-          Nc, nsc, k)[,c(3,4,1,2)]
+          Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
 
   q <- rowSums(ret[,3:4,drop=FALSE])
   ret[,3:4] <- ret[,3:4] / q
@@ -232,7 +230,7 @@ starting.point.bisse <- function(tree, q.div=5, yule=FALSE) {
   ## TODO: Use qs estimated from Mk2?  Can be slow is the only reason
   ## I have not set this up by default.
   ## find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~ q01), .1)$par
-  pars.bd <- starting.point.bd(tree, yule)
+  pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
   if  ( pars.bd[1] > pars.bd[2] )
     p <- rep(c(pars.bd, (pars.bd[1] - pars.bd[2]) / q.div), each=2)
   else

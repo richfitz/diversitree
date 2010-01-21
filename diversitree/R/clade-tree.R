@@ -38,17 +38,16 @@ polytomies.to.clades <- function(tree) {
   from <- tree$edge[,1]
   to   <- tree$edge[,2]
   n.taxa <- length(tree$tip.label)
+  is.node <- seq_len(max(tree$edge)) %in% from
 
   edge.counts <- tapply(to, from, length)
   poly.nodes <- as.integer(names(edge.counts[edge.counts > 2]))
 
-  ## Find who the ancestors of a node are:
-  ans <- lapply(poly.nodes, ancestors, tree)
-
-  is.node <- seq_len(max(tree$edge)) %in% from
+  ## Find who the ancestors of the polytomy nodes are:
+  ans <- lapply(poly.nodes, ancestors2, tree)
 
   ## Now, some of these are nested within one another:
-  ans1 <- mapply(setdiff, ans, poly.nodes)
+  ans1 <- mapply(setdiff, ans, poly.nodes, SIMPLIFY=FALSE)
   clades <-  lapply(ans1[!(poly.nodes %in% unlist(ans1))],
                     function(x) x[x <= n.taxa])
 
@@ -60,7 +59,7 @@ polytomies.to.clades <- function(tree) {
 
   ## Drop all but the representative species from each clade.
   clades.drop <- sort(unlist(lapply(clades, "[", -1)))
-  tree2 <- drop.tip(tree, clades.drop)
+  tree2 <- drop.tip.fixed(tree, clades.drop)
 
   make.clade.tree(tree2, clades.spp)
 }
@@ -85,7 +84,8 @@ polytomies.to.clades <- function(tree) {
 ##     anc
 ## }
 
-ancestors <- function(x, tree, tips.only=FALSE) {
+## Renamed poorly because of a clash with util.R:ancestors
+ancestors2 <- function(x, tree, tips.only=FALSE) {
   from <- tree$edge[,1]
   to   <- tree$edge[,2]
 

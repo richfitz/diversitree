@@ -1,3 +1,16 @@
+2010-01-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/clade-tree.R: Was totally broken due to overloading of
+	"ancestors2" function.  Also fixed bug when there is exactly one
+	polytomy and replaced drop.tip and drop.tip.fixed.
+
+	* R/diversitree-branches.R (make.cache): Return "edge" and
+	"edge.length" as part of the cache object.
+
+	* R/model-bisse.R: Bug in branches.unresolved.bisse due to missing
+	drop=FALSE fixed.  Also suppress warnings when finding a BiSSE
+	starting point, as these are not interesting.
+
 2010-01-19  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: updated to version 0.4-3
