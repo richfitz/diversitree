@@ -62,6 +62,19 @@ export(profiles.plot)
 export(make.prior.exponential)
 export(prune)
 
+## ASR:
+export(asr.marginal)
+export(asr.joint)
+export(asr.stoch)
+S3method(asr.marginal, constrained)
+S3method(asr.joint, constrained)
+S3method(asr.stoch, constrained)
+
+## ASR/Mkn
+S3method(asr.marginal, mkn)
+S3method(asr.joint, mkn)
+S3method(asr.stoch, mkn)
+
 ## Support for "clade.tree"s
 export(polytomies.to.clades)
 export(make.clade.tree)

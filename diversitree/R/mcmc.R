@@ -16,6 +16,8 @@ mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
 
   if ( length(lower) == 1 ) lower <- rep(lower, length(x0))
   if ( length(upper) == 1 ) upper <- rep(upper, length(x0))
+  if ( length(w) != length(x0) )
+    stop("'w' of incorrect length")
 
   if ( is.null(names(x0)) )
     try(names(x0) <- argnames(f), silent=TRUE)

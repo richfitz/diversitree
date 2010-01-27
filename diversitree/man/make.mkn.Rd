@@ -82,7 +82,6 @@ make.mkn(tree, states, k)
 }
 
 \examples{
-t0 <- proc.time()
 ## Simulate a tree and character distribution.  This is on a birth-death
 ## tree, with high rates of character evolution and an asymmetry in the
 ## character transition rates.
@@ -113,7 +112,7 @@ fit.mkn <- find.mle(lik.mkn, p)
 fit.mkn[1:2]
 
 ## These are the same (except for the naming of arguments)
-all.equal(fit.mkn, fit.mk2, check.attr=FALSE)
+all.equal(fit.mkn[-8], fit.mk2[-8], check.attr=FALSE)
 
 ## Equivalence to ape's \link{ace} function:
 model <- matrix(c(0, 2, 1, 0), 2)

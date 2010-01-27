@@ -89,6 +89,9 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
     unresolved$i   <- match(unresolved$tip.label, tree$tip.label)
     unresolved <- as.list(unresolved)
     unresolved$nt.extra <- nt.extra
+
+    if ( max(unresolved$Nc) > 200 )
+      stop("The largest unresolved clade supported has 200 species")
   }
   
   ## Check that we know about all required species (this requires

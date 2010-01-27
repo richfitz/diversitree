@@ -1,3 +1,25 @@
+2010-01-26  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/asr.R: New asr generics
+
+	* R/asr-mkn.R: New versions of the mk2 & mkn asr functions that
+	use the new mk2/mkn likelihood functions (see below).
+
+	* R/mcmc.R: Check that 'w' is correct length.
+
+	* R/model-bisse.R: Add check for largest unresolved clade (200
+	spp), preventing possible crash.
+
+	* R/model-mkn-legacy.R: Old Mk2 code that uses all.branches();
+	preserved for the next version or so.
+
+	* R/model-mkn.R: New Mk2/Mkn model that is about 20-50 times
+	faster than the old version (does all branches at once).
+
+	* man/make.mkn.R: Small fix to reflect new version
+
+	* src/mkn.c: C code required for new mkn/mk2 code.
+
 2010-01-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/clade-tree.R: Was totally broken due to overloading of
