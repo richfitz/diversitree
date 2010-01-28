@@ -1,3 +1,8 @@
+2010-01-28  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* man/asr-bisse.Rd: Added BiSSE/Mk2 equivalency section to help
+	page.
+
 2010-01-27  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE: Updated to reflect changes below

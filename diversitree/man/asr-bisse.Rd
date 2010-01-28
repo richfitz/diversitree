@@ -102,6 +102,18 @@ st.m <- asr.marginal(lik.m, coef(fit.m))
 plot(h, phy, main="Marginal ASR, BiSSE & Mk2", show.node.state=FALSE)
 nodelabels(thermo=t(st), piecol=1:2, cex=.5)
 nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
+
+## Equivalency of Mk2 and BiSSE where diversification is state
+## independent.  For any values of lambda/mu (here .1 and .03) where
+## these do not vary across character states, these two methods will
+## give essentially identical marginal ancestral state reconstructions.
+st.id <- asr.marginal(lik, c(.1, .1, .03, .03, coef(fit.m)))
+st.id.m <- asr.marginal(lik.m, coef(fit.m))
+
+## Reconstructions are identical to a relative tolerance of 1e-7
+## (0.0000001), which is similar to the expected tolerance of the BiSSE
+## calculations.
+all.equal(st.id, st.m, tolerance=1e-7)
 }
 
 \author{Richard G. FitzJohn}
