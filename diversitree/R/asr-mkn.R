@@ -2,11 +2,21 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
   k <- attr(lik, "k")
   states.idx <- seq_len(k)
   cache <- environment(lik)$cache
-  branches <- environment(lik)$branches
+  len <- cache$len
 
-  ## TODO:
-  stop("Needs rewriting to use C code - will be tricky.")
-  do.asr.marginal(pars, cache, nodes, states.idx,
+  qmat <- mkn.Q(pars)
+  res <- all.branches.mkn(qmat, cache)
+  pij <- res$pij
+
+  branches <- function(y, len.i, pars, t0) {
+    if ( length(len.i) != 1 )
+      stop("Should not happen.")
+    res <- t(matrix(pij[,match(len.i, len)], k, k) %*% y)
+    q <- rowSums(res)
+    cbind(log(q), res/q, deparse.level=0)
+  }
+  
+  do.asr.marginal(pars, cache, res, nodes, states.idx,
                   initial.conditions.mkn,
                   branches,
                   branches.unresolved.mkn)
@@ -15,6 +25,7 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
 asr.joint.mkn <- function(lik, pars, n=1, root.state=NA,
                           simplify=TRUE, intermediates=FALSE,
                           ...) {
+  ## Current:
   k <- attr(lik, "k")
   cache <- environment(lik)$cache
   node.labels <- environment(lik)$tree$node.label
@@ -22,10 +33,22 @@ asr.joint.mkn <- function(lik, pars, n=1, root.state=NA,
   li <- obj$init
   pij <- t(obj$pij)
 
+  ## Newer/better?
+  ##   k <- attr(lik, "k")
+  ##   cache <- environment(lik)$cache
+  ##   qmat <- mkn.Q(pars)
+  ##   obj <- all.branches.mkn(qmat, cache)
+  ##   li <- obj$init  
+  ##   pij <- t(obj$pij)
+
+  is.mk2 <- inherits(lik, "mk2")
+  if ( is.mk2 && !is.na(root.state) )
+    root.state <- root.state - 1
+
   x <- do.asr.joint(pars, n, root.state, cache, li, pij,
                     node.labels, simplify)
   
-  if ( inherits(lik, "mk2") ) {
+  if ( is.mk2 ) {
     if ( !simplify )
       x[] <- lapply(x, function(el) el - 1)
     else
@@ -38,20 +61,23 @@ asr.joint.mkn <- function(lik, pars, n=1, root.state=NA,
 }
 
 asr.stoch.mkn <- function(lik, pars, n=1, root.state=NA, ...) {
-  if ( !is.mk2 )
-    stop("Cannot (yet) do n>1")
-  
+  is.mk2 <- inherits(lik, "mk2")
+  k <- attr(lik, "k")
   cache <- environment(lik)$cache
   edge <- cache$edge
   edge.length <- cache$edge.length
-  is.mk2 <- inherits(lik, "mk2")
-  k <- attr(lik, "k")
 
   node.state <- asr.joint(lik, pars, n, root.state,
                           simplify=TRUE, intermediates=TRUE)
-    
-  do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
-                       edge, edge.length, k, is.mk2)
+
+  if ( n == 1 )
+    do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
+                         edge, edge.length, k, is.mk2)
+  else
+    replicate(n,
+              do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
+                                   edge, edge.length, k, is.mk2),
+              simplify=FALSE)
 }
 
 do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,

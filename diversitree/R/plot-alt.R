@@ -14,7 +14,8 @@ plot2.phylo <- function(x, xlim=NULL, ylim=NULL,
   xy <- plot.phylo.node.coords(x)
   xy.seg <- plot.phylo.coords(x, xy)
 
-  plot.phylo.prepare(x, xy, xlim, ylim, cex, show.tip.label, label.offset)
+  plot.phylo.prepare(x, xy, xlim, ylim, cex, show.tip.label,
+                     label.offset, ...)
   with(xy.seg, segments(x0, y0, x1, y1))
   if ( show.tip.label )
     plot.phylo.tiplabel(x, xy, label.offset,
@@ -73,7 +74,7 @@ plot.phylo.coords <- function(phy, xy) {
 
 ## Basic preparing.
 plot.phylo.prepare <- function(x, xy, xlim, ylim, cex,
-                               show.tip.label, label.offset) {
+                               show.tip.label, label.offset, ...) {
   n.tip <- length(x$tip.label)
   if ( is.null(xlim) ) {
     xlim <- c(0, NA)
@@ -87,7 +88,7 @@ plot.phylo.prepare <- function(x, xy, xlim, ylim, cex,
     ylim <- c(1, n.tip)
   
   plot(NA, type="n", xlim=xlim, ylim=ylim, xlab="",
-       ylab="", xaxt="n", yaxt="n", bty="n")
+       ylab="", xaxt="n", yaxt="n", bty="n", ...)
 }
 
 

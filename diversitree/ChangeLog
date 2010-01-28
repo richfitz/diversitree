@@ -1,3 +1,35 @@
+2010-01-27  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: Updated to reflect changes below
+
+	* R/asr-bisse.R: Added marginal ASR under BiSSE to diversitree.
+
+	* R/asr-mkn.R: Marginal ASR under Mk2/Mkn now works again, plus
+	various changes and bug fixes.  Works as it should now.
+
+	* R/asr.R: do.asr.marginal no longer runs all.branches(), and
+	expects this passed in.  This helps with the mk2 code.  Margnal
+	asr now takes correct node numbers (I think).
+
+	* R/diversitree-branches.R (make.prior.exponential): Normalise the
+	exponential prior, for use with computing Bayes factors, etc.,
+	following suggestion from Emma Goldberg.
+
+	* R/history.R: Wimp out from summarising multiple histories.
+
+	* R/model-mkn-legacy.R: Tidy out some commented out code, and
+	adding old asr.marginal.mkn.old function.
+
+	* R/model-mkn.R: New versions of the mk2 & mkn asr functions that
+	use the new mk2/mkn likelihood functions (forgot to add
+	yesterday).
+
+	* R/plot-alt.R: plot functions pass ... through to plot()
+
+	* man/asr-bisse.Rd: New documentation
+
+	* man/asr-mkn.Rd: New documentation
+
 2010-01-26  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/asr.R: New asr generics

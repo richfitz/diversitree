@@ -75,6 +75,10 @@ S3method(asr.marginal, mkn)
 S3method(asr.joint, mkn)
 S3method(asr.stoch, mkn)
 
+## ASR/BiSSE
+S3method(asr.marginal, bisse)
+
+
 ## Support for "clade.tree"s
 export(polytomies.to.clades)
 export(make.clade.tree)

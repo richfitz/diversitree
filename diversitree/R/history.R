@@ -75,7 +75,8 @@ plot.history <- function(x, phy, cols=seq_along(states),
 
   xy <- plot.phylo.node.coords(phy)
   obj <- plot.history.coords(phy, xy, x)
-  plot.phylo.prepare(phy, xy, xlim, ylim, cex, show.tip.label, label.offset)
+  plot.phylo.prepare(phy, xy, xlim, ylim, cex, show.tip.label,
+                     label.offset, ...)
 
   ## Improve the colour->tip mapping.  There are a couple of options -
   ## we could have data in {0,1} or {1,2,...,k}

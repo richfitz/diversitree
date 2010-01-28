@@ -53,13 +53,11 @@ asr.stoch.constrained <- function(lik, pars, n=1, root.state=NA, ...) {
 ## survival and for all models is using ROOT.OBS to combine Ds at the
 ## root.  I will probably have to allow for a "root" function to be
 ## used here to get around this this though.
-do.asr.marginal <- function(pars, cache, nodes, states.idx,
+##
+## The argument 'res' is the result of running all.branches
+do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
                             initial.conditions,
                             branches, branches.unresolved, ...) {
-  ## First, compute the D values along the branches.
-  res <- all.branches(pars, cache, initial.conditions,
-                      branches, branches.unresolved)  
-  
   ## Store these for easier calculation.
   children <- cache$children
   parent <- cache$parent
@@ -70,6 +68,8 @@ do.asr.marginal <- function(pars, cache, nodes, states.idx,
 
   if ( is.null(nodes) )
     nodes <- root:max(cache$order)
+  else
+    nodes <- nodes + cache$n.tip
 
   f <- function(nd) {
     ## Include current node but omit root:

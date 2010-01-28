@@ -115,6 +115,13 @@ all.branches <- function(pars, cache, initial.conditions, branches,
       idx <- tips[which(y$i == i)]
       t <- len[idx]
       ans <- branches(y$y[i,], sort(unique(t)), pars, 0)
+      ## TODO: tapply(x,x) is slow and error prone where there are
+      ## small (O(1e-15)) differences between otherwise identical
+      ## lengths.  Consider
+      ##   t.uniq <- sort(unique(t))
+      ##   ans <- branches(y$y[i,], t.uniq, pars, 0)
+      ##   ans[match(t, t.uniq),,drop=FALSE]
+      ## instead.
       ans <- ans[tapply(t, t),,drop=FALSE]
       lq[idx] <- ans[,1]
       branch.base[idx,] <- ans[,-1]
@@ -265,7 +272,8 @@ xxsse.ll <- function(pars, cache, initial.conditions,
 
 make.prior.exponential <- function(r) {
   function(pars)
-    -sum(pars * r)
+    ## -sum(pars * r) - un-normalised.
+    sum(log(r) - pars * r)
 }
 
 prior.default <- function(pars, r) {

@@ -15,56 +15,54 @@
 ##   8. branches
 ##   9. branches.unresolved
 
-## 1: make
-make.mk2.old <- function(tree, states) {
-  cache <- make.cache.mkn.old(tree, states + 1, 2)
-  branches <- branches.mk2 # For asr code
-  ll <- function(pars, ...) ll.mk2.old(cache, pars, ...)
-  class(ll) <- c("mk2.old", "mkn.old", "function")
-  attr(ll, "k") <- 2
+## This version does not use all.branches, but is substantially faster
+## (c.f. model-mkn-legacy, left for didactic purposes).
+make.mk2 <- function(tree, states) {
+  ll <- make.mkn(tree, states + 1, 2, TRUE)
+  class(ll) <- c("mk2", "mkn", "function")
   ll
 }
+make.mkn <- function(tree, states, k, use.mk2=TRUE) {
+  cache <- make.cache.mkn(tree, states, k, use.mk2)
 
-make.mkn.old <- function(tree, states, k) {
-  cache <- make.cache.mkn.old(tree, states, k)
-  branches <- make.branches.mkn(k)
   qmat <- matrix(0, k, k)
   idx <- cbind(rep(1:k, each=k-1),
                unlist(lapply(1:k, function(i) (1:k)[-i])))
+
+  len.uniq <- cache$len.uniq
+  len.idx <- cache$len.idx
+  n.tip <- cache$n.tip
 
   ll.mkn <- function(cache, pars, prior=NULL, root=ROOT.OBS,
                      root.p=NULL, intermediates=FALSE) {
     if ( length(pars) != k*(k-1) )
       stop("Invalid length parameters")
-    if ( any(!is.finite(pars)) )
+    if ( any(!is.finite(pars)) || any(pars < 0) )
       return(-Inf)
     qmat[idx] <- pars
     diag(qmat) <- -rowSums(qmat)
-    
-    ans <- all.branches(qmat, cache, initial.conditions.mkn.old, branches,
-                        branches.unresolved.mkn)
-    loglik <- root.mkn.old(ans$init[cache$root,], ans$lq, pars, root,
-                           root.p)
+    ans <- all.branches.mkn(qmat, cache)
+
+    loglik <- root.mkn(ans$init[cache$root,], ans$lq, pars, root, root.p)
+    if ( intermediates )
+      ans$init[seq_len(n.tip),] <- cache$y$y[cache$y$i,]
     cleanup(loglik, pars, prior, intermediates, cache, ans)
-    ##     if ( !is.null(prior) )
-    ##       loglik <- loglik + prior.mkn(pars, prior)
-    ##     loglik
   }
 
   ll <- function(pars, ...) ll.mkn(cache, pars, ...)
-  class(ll) <- c("mkn.old", "function")
+  class(ll) <- c("mkn", "function")
   attr(ll, "k") <- k  
   ll
 }
 
 ## 2: print
-print.mkn.old <- function(x, ...) {
+print.mkn <- function(x, ...) {
   cat("Mk-n likelihood function:\n")
   print(unclass(x))
 }
 
 ## 3: argnames / argnames<-
-argnames.mkn.old <- function(x, k, ...) {
+argnames.mkn <- function(x, k, ...) {
   ret <- attr(x, "argnames")
   if ( is.null(ret) ) {
     if ( missing(k) )
@@ -78,14 +76,14 @@ argnames.mkn.old <- function(x, k, ...) {
     ret
   }
 }
-argnames.mk2.old <- function(x, ...) {
+argnames.mk2 <- function(x, ...) {
   ret <- attr(x, "argnames")
   if ( is.null(ret) )
     c("q01", "q10")
   else
     ret
 }
-`argnames<-.mkn.old` <- function(x, value) {
+`argnames<-.mkn` <- function(x, value) {
   k <- environment(x)$cache$k  
   if ( length(value) != k*(k-1) )
     stop("Invalid names length")
@@ -94,20 +92,19 @@ argnames.mk2.old <- function(x, ...) {
 }
 
 ## 4: find.mle
-find.mle.mkn.old <- function(func, x.init, method,
+find.mle.mkn <- function(func, x.init, method,
                          fail.value=NA, ...) {
   ## These parameters are just pulled out of thin air
   if ( missing(x.init) )
     x.init <- structure(c(.1, .1), names=argnames(func))
   if ( missing(method) )
     method <- "nlminb"
-  NextMethod("find.mle", method=method,
-             class.append="fit.mle.mkn.old")
+  NextMethod("find.mle", method=method, class.append="fit.mle.mkn")
 }
 
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
-make.cache.mkn.old <- function(tree, states, k=2) {
+make.cache.mkn <- function(tree, states, k, use.mk2) {
   if ( is.null(names(states)) )
     stop("The states vector must contain names")
   if ( !all(tree$tip.label %in% names(states)) )
@@ -117,10 +114,27 @@ make.cache.mkn.old <- function(tree, states, k=2) {
   cache <- make.cache(tree)
   cache$k <- k
   cache$tip.state  <- states
-  cache$y <- initial.tip.mkn.old(cache)
+  ## TODO: deal with unknown states; tip calculations for unknown tip
+  ## states just return the sum of nonzero ys from the matrix
+  ## multiplication, so they can just be done separately.
+  cache$map <- t(sapply(1:k, function(i) (1:k) + (i - 1) * k))
+  cache$idx.tip <- cbind(c(cache$map[cache$tip.state,]),
+                         rep(seq_len(cache$n.tip), k))
+  cache$len.uniq <- sort(unique(cache$len))
+  cache$len.idx <- match(cache$len, cache$len.uniq)
+  cache$y <- initial.tip.mkn(cache) 
+
+  ## Alter things to make it more speedy.  The '0' denotes base zero
+  ## indices.
+  cache$children0 <- as.integer(t(cache$children-1))
+  cache$order0 <- as.integer(cache$order-1)
+  cache$use.mk2 <- use.mk2
+  cache$f.pij <- if ( k == 2 && use.mk2 )
+    pij.mk2 else make.pij.mkn(k)
+  
   cache
 }
-initial.tip.mkn.old <- function(cache) {
+initial.tip.mkn <- function(cache) {
   k <- cache$k
   tip.state <- cache$tip.state
   if ( any(tip.state < 1 | tip.state > k, na.rm=TRUE) )
@@ -132,7 +146,7 @@ initial.tip.mkn.old <- function(cache) {
   i[is.na(i)] <- k + 1
   list(y=y, i=i, types=sort(unique(i)))
 }
-root.mkn.old <- function(vals, lq, pars, root, root.p=NULL) {
+root.mkn <- function(vals, lq, pars, root, root.p=NULL) {
   k <- length(vals)
   if ( !is.null(root.p) ) {
     if ( root != ROOT.GIVEN )
@@ -144,7 +158,7 @@ root.mkn.old <- function(vals, lq, pars, root, root.p=NULL) {
   if ( root == ROOT.FLAT )
     p <- rep(1/k, k)
   else if ( root == ROOT.EQUI )
-    p <- stationary.freq.mkn.old(pars)
+    p <- stationary.freq.mkn(pars)
   else if ( root == ROOT.OBS )
     p <- vals/sum(vals)
   else if ( root == ROOT.GIVEN )
@@ -160,67 +174,42 @@ root.mkn.old <- function(vals, lq, pars, root, root.p=NULL) {
   loglik
 }
 
-## 6: ll (ll.mkn is done within make.mkn)
-ll.mk2.old <- function(cache, pars, prior=NULL, root=ROOT.OBS,
-                   root.p=NULL, intermediates=FALSE) {
-  if ( length(pars) != 2 )
-    stop("Invalid length parameters")
-  if ( any(pars < 0) || any(!is.finite(pars)) )
-    return(-Inf)
-  ans <- all.branches(pars, cache, initial.conditions.mkn.old,
-                      branches.mk2, branches.unresolved.mkn)
-  loglik <- root.mkn.old(ans$init[cache$root,], ans$lq, pars, root,
-                         root.p)
-  cleanup(loglik, pars, prior, intermediates, cache, ans)
-}
+## 6: ll (done within make.mkn)
 
 ## 7: initial.conditions:
-initial.conditions.mkn.old <- function(init, pars, t, is.root=FALSE)
+initial.conditions.mkn <- function(init, pars, t, is.root=FALSE)
   init[1,] * init[2,]
 
 ## 8: branches (separate for mk2 and mkn)
-branches.mk2 <- function(y, len, pars, t0) {
-  q01 <- pars[1]
+pij.mk2 <- function(len, pars) {
+  ## The 3,2 indices here are because pars is a Q matrix by the time
+  ## this gets called.
+  q01 <- pars[3]
   q10 <- pars[2]
-  if ( q01 + q10 > 0 ) {
-    x <- exp(-(q01+q10)*len) * (y[1] - y[2])
-    z <- q10 * y[1] + q01 * y[2]
-    ret <- cbind(z + x * q01, z - x * q10) / (q01 + q10)
-  } else { # Special case...
-    ret <- matrix(rep(y, length(len)), length(len), 2, TRUE)
-  }
-
-  q <- rowSums(ret)
-  i <- q > 0
-  ret[i,] <- ret[i,] / q[i]
-  lq <- q
-  lq[i] <- log(q[i])
-  cbind(lq, ret, deparse.level=0)
+  x <- exp(-(q01+q10)*len)
+  rbind((x*q01 + q10),
+        (1 - x)*q10,
+        (1 - x)*q01,
+        (x*q10 + q01)) / (q01 + q10)
 }
 
-## The n-state version is not much different:
-make.branches.mkn <- function(k) {
-  RTOL <- ATOL <- 1e-8
-  eps <- 0
+make.pij.mkn <- function(k) {
+  pij.ode <- make.ode("derivs_mkn_pij", "diversitree",
+                      "initmod_mkn", k*k, FALSE)
+  ATOL <- RTOL <- 1e-8
+  yi <- diag(k)
   
-  if ( k == 2 )
-    warning("Two states is faster with Mk2")
-  mkn.ode <- make.ode("derivs_mkn", "diversitree", "initmod_mkn", k, FALSE)
-
-  branches.mkn <- function(y, len, pars, t0)
-    t(mkn.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
-  make.branches(branches.mkn, 1:k)
+  function(len, pars)
+    pij.ode(yi, c(0, len), pars,
+            rtol=RTOL, atol=ATOL)[-1,-1,drop=FALSE]
 }
 
-## 9: branches.unresolved
-branches.unresolved.mkn <- function(...)
-  stop("Cannot use unresolved clades with Mk2/Mkn")
+## 9: branches.unresolved: n/a, as no option for it
 
 ## Additional functions:
-stationary.freq.mkn.old <- function(pars) {
+stationary.freq.mkn <- function(pars) {
   .NotYetImplemented()
 }
-
 mkn.Q <- function(pars, k) {
   if ( missing(k) )
     k <- (1 + sqrt(1 + 4*(length(pars))))/2
@@ -234,17 +223,43 @@ mkn.Q <- function(pars, k) {
   qmat
 }
 
-asr.marginal.mkn.old <- function(lik, pars, nodes=NULL, ...) {
-  k <- attr(lik, "k")
-  states.idx <- seq_len(k)
-  cache <- environment(lik)$cache
-  branches <- environment(lik)$branches
+## The new integrator.
+all.branches.mkn <- function(pars, cache) {
+  ## At this point, the parameters are assumed to be a Q matrix
+  k <- cache$k
 
-  res <- all.branches(pars, cache, initial.conditions.mkn,
-                      branches, branches.unresolved.mkn)
+  idx.tip <- cache$idx.tip
+  n.tip <- cache$n.tip
+  n <- length(cache$len)
+  order0 <- cache$order0
 
-  do.asr.marginal(pars, cache, res, nodes, states.idx,
-                  initial.conditions.mkn,
-                  branches,
-                  branches.unresolved.mkn)
+  len.uniq <- cache$len.uniq
+  len.idx <- cache$len.idx
+  f.pij <- cache$f.pij
+  pij <- f.pij(len.uniq, pars)[,len.idx]
+  
+  lq <- numeric(n)
+  branch.init <- branch.base <- matrix(NA, k, n)
+  storage.mode(branch.init) <- "numeric"
+
+  ## tips
+  ans <- matrix(pij[idx.tip], n.tip, k)
+  q <- rowSums(ans)
+  branch.base[,seq_len(n.tip)] <- t(ans/q)
+  lq[seq_len(n.tip)] <- log(q)
+
+  ## branches
+  ans <- .C("r_mkn_core",
+            k        = as.integer(k),
+            n        = length(order0) - 1L,
+            order    = order0,
+            children = cache$children0,
+            pij      = pij,
+            init     = branch.init,
+            base     = branch.base,
+            lq       = lq,
+            NAOK=TRUE, DUP=FALSE)
+
+  list(init=t(ans$init), base=t(ans$base), lq=ans$lq, pij=pij)
 }
+

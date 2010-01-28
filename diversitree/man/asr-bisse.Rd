@@ -1,0 +1,108 @@
+\name{asr-bisse}
+\alias{asr.marginal.bisse}
+
+\title{Ancestral State Reconstruction Under BiSSE}
+
+\description{Perform ancestral state reconstruction under BiSSE and
+  other constant rate Markov models.  Marginal reconstructions are
+  supported (c.f. \link{\code{asr-mkn}}).  Documentation is still in an
+  early stage, and mostly in terms of examples.
+}
+
+\usage{
+\method{asr.marginal}{bisse}(lik, pars, nodes=NULL, ...)
+}
+
+\arguments{
+  \item{lik}{A likelihood function, returned by \code{make.mk2} or
+    \code{make.mkn}.}
+  \item{pars}{A vector of parameters, suitable for \code{lik}.}
+  \item{nodes=NULL}{For \code{asr.marginal} only; an optional vector of
+    nodes to return ancestral states for (using ape's index).  By
+    default, all nodes are returned.}
+  \item{...}{Additional arguments passed through to future methods.
+    Currently unused.}
+}
+
+\examples{
+## Start with a simple tree evolved under a BiSSE with  with symmetric
+## character evolution but an asymmetry in the speciation rates.
+pars <- c(.1, .2, .03, .03, .03, .03)
+set.seed(1)
+phy <- trees(pars, "bisse", max.taxa=50, max.t=Inf, x0=0)[[1]]
+
+## Here is the true history.  The root node appears to be state 1 (red)
+## at the root, despite specifying a root of state 0 (x0=0, in statement
+## above).  This is because the tree started with a single lineage, but
+## had changed state by the time the first speciation event happened.
+h <- history.from.sim.discrete(phy, 0:1)
+plot(h, phy, main="True history")
+
+lik <- make.bisse(phy, phy$tip.state)
+fit <- find.mle(lik, pars, method="subplex")
+st <- asr.marginal(lik, coef(fit))
+
+plot(h, phy, main="Marginal ASR, BiSSE", show.node.state=FALSE)
+nodelabels(thermo=t(st), piecol=1:2, cex=.5)
+
+## Compare this with the ML model under Mk2:
+lik.m <- make.mk2(phy, phy$tip.state)
+fit.m <- find.mle(lik.m, pars[5:6], method="subplex")
+st.m <- asr.marginal(lik.m, coef(fit.m))
+
+## Add node labels to the left of the BiSSE ones.
+## For this tree, Mk2 seems better (both do pretty well, really).
+nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=0)
+
+\dontrun{
+## (This section will take 10 or so minutes to run.)
+## Try integrating over parameter uncertainty and comparing the BiSSE
+## with Mk2 output:
+prior <- make.prior.exponential(2)
+samples <- mcmc(lik, coef(fit), 1000, rep(1, 6), 0, prior=prior,
+                print.every=100)
+st.b <- apply(samples[2:7], 1, function(x) asr.marginal(lik, x)[2,])
+st.b.avg <- rowMeans(st.b)
+
+samples.m <- mcmc(lik.m, coef(fit.m), 1000, rep(1, 2), 0, prior=prior,
+                  print.every=100)
+st.m <- apply(samples.m[2:3], 1, function(x) asr.marginal(lik.m, x)[2,])
+st.m.avg <- rowMeans(st.m)
+
+## These end up being more striking in their similarity than their
+## differences.
+plot(h, phy, main="Marginal ASR, BiSSE", show.node.state=FALSE)
+nodelabels(thermo=1-st.b.avg, piecol=1:2, cex=.5)
+nodelabels(thermo=1-st.m.avg, piecol=1:2, cex=.5, adj=0)
+}
+
+## A different tree with a different set of results:
+pars <- c(.1, .2, .03, .06, .01, .02)
+set.seed(3)
+phy <- trees(pars, "bisse", max.taxa=50, max.t=Inf, x0=0)[[1]]
+
+## Here is the true history.  The root node appears to be state 1 (red)
+## at the root, despite specifying a root of state 0 (x0=0, in statement
+## above).  This is because the tree started with a single lineage, but
+## had changed state by the time the first speciation event happened.
+h <- history.from.sim.discrete(phy, 0:1)
+plot(h, phy, main="True history")
+
+lik <- make.bisse(phy, phy$tip.state)
+fit <- find.mle(lik, pars, method="subplex")
+st <- asr.marginal(lik, coef(fit))
+
+lik.m <- make.mk2(phy, phy$tip.state)
+fit.m <- find.mle(lik.m, pars[5:6], method="subplex")
+st.m <- asr.marginal(lik.m, coef(fit.m))
+
+## Again, Mk2 results in left bar.  This time there is far more
+## uncertainty at the root in the Mk2 case (and a few of the internal
+## nodes) than from the BiSSE reconstructions.
+plot(h, phy, main="Marginal ASR, BiSSE & Mk2", show.node.state=FALSE)
+nodelabels(thermo=t(st), piecol=1:2, cex=.5)
+nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
+}
+
+\author{Richard G. FitzJohn}
+\keyword{model}
