@@ -14,7 +14,8 @@ asr.marginal <- function(lik, pars, nodes=NULL, ...) {
   UseMethod("asr.marginal")
 }
 
-asr.joint <- function(lik, pars, n=1, root.state=NA, ...) {
+asr.joint <- function(lik, pars, n=1, root.state=NA, simplify=TRUE,
+                      ...) {
   UseMethod("asr.joint")
 }
 

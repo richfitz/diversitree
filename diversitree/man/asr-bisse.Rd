@@ -1,11 +1,12 @@
 \name{asr-bisse}
+\alias{asr.bisse}
 \alias{asr.marginal.bisse}
 
 \title{Ancestral State Reconstruction Under BiSSE}
 
 \description{Perform ancestral state reconstruction under BiSSE and
   other constant rate Markov models.  Marginal reconstructions are
-  supported (c.f. \link{\code{asr-mkn}}).  Documentation is still in an
+  supported (c.f. \code{\link{asr}}).  Documentation is still in an
   early stage, and mostly in terms of examples.
 }
 
@@ -17,7 +18,7 @@
   \item{lik}{A likelihood function, returned by \code{make.mk2} or
     \code{make.mkn}.}
   \item{pars}{A vector of parameters, suitable for \code{lik}.}
-  \item{nodes=NULL}{For \code{asr.marginal} only; an optional vector of
+  \item{nodes}{For \code{asr.marginal} only; an optional vector of
     nodes to return ancestral states for (using ape's index).  By
     default, all nodes are returned.}
   \item{...}{Additional arguments passed through to future methods.

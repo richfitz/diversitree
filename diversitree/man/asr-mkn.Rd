@@ -1,4 +1,5 @@
 \name{asr-mkn}
+\alias{asr.mkn}
 \alias{asr.marginal.mk2}
 \alias{asr.marginal.mkn}
 \alias{asr.joint.mk2}
@@ -24,9 +25,11 @@
   \item{lik}{A likelihood function, returned by \code{make.mk2} or
     \code{make.mkn}.}
   \item{pars}{A vector of parameters, suitable for \code{lik}.}
-  \item{nodes=NULL}{For \code{asr.marginal} only; an optional vector of
+  \item{nodes}{For \code{asr.marginal} only; an optional vector of
     nodes to return ancestral states for (using ape's index).  By
     default, all nodes are returned.}
+  \item{n}{The number of samples to draw from the joint distribution, or
+    number of stochastic reconstructions to make.}
   \item{root.state}{For \code{asr.marginal} and \code{asr.joint}; the
     state to start the root in.  If \code{NA} is given (the default),
     the root state is drawn from the conditional likelihoods at the

@@ -12,13 +12,15 @@
 ## time, measured from the start of the branch (t=0) and the second
 ## column is the state at that time.
 make.history <- function(phy, tip.state, node.state, history,
-                         discrete=TRUE, states=NULL) {
-  if ( length(tip.state) != length(phy$tip.label) )
-    stop("tip.state of wrong length")
-  if ( length(node.state) != phy$Nnode )
-    stop("node.state of wrong length")
-  if ( length(history) != nrow(phy$edge) )
-    stop("history of wrong length")
+                         discrete=TRUE, states=NULL, check=TRUE) {
+  if ( check ) {
+    if ( length(tip.state) != length(phy$tip.label) )
+      stop("tip.state of wrong length")
+    if ( length(node.state) != phy$Nnode )
+      stop("node.state of wrong length")
+    if ( length(history) != nrow(phy$edge) )
+      stop("history of wrong length")
+  }
   structure(list(tip.state=tip.state,
                  node.state=node.state,
                  history=history,

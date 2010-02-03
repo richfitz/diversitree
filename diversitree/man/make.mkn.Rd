@@ -17,7 +17,7 @@
 
 \usage{
 make.mk2(tree, states)
-make.mkn(tree, states, k)
+make.mkn(tree, states, k, use.mk2=FALSE)
 }
 
 \arguments{
@@ -25,6 +25,9 @@ make.mkn(tree, states, k)
   \item{states}{A vector of character states, each of which must be 0 or
     1 for \code{make.mk2} or 1 to \code{k} for \code{make.mkn}.}
   \item{k}{Number of states to model.}
+  \item{use.mk2}{Use Mk2 where \code{k==2} for a slight speedup?  This
+    is disabled by default to make likelihoods more comparable without
+    introducing approximation errors.}
 }
 
 \details{

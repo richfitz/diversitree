@@ -99,7 +99,8 @@ do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
                      state.beg[i], state.end[i], k, as.01)
 
   history <- lapply(seq_along(state.beg), f)
-  make.history(phy, tip.state, node.state, history, TRUE, states)
+  make.history(NULL, tip.state, node.state, history, TRUE, states,
+               FALSE)
 }
 
 stoch.branch.mkn <- function(pars, len, state.beg, state.end, k,

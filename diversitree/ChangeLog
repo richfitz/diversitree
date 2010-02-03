@@ -1,3 +1,26 @@
+2010-02-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bumped version number to 0.4-4
+
+	* R/asr-mkn.R: Fixed bug in use of make.history() (relied on a 'phy'
+	object in .GlobalEnv)
+
+	* R/history.R: Check on trees is optional (required for above bug
+	fix)
+
+	* R/make.mkn.R: Change default of make.mkn's use.mk2 argument to
+	FALSE so that results are numerically more consistent, if a little
+	slower.
+
+	* R/simulate-bisse.R: Swap bisse.stationary.freq ->
+	stationary.freq.bisse
+
+	* R/simulation.R: prune() throwing error on single species trees;
+	now gives up.
+
+	* man/asr-bisse.Rd, man/asr-mn.Rd, man/make.mkn.Rd, man/asr.Rd:
+	minor documentation fixes/improvements.
+
 2010-01-28  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* man/asr-bisse.Rd: Added BiSSE/Mk2 equivalency section to help

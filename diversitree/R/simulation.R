@@ -97,7 +97,7 @@ me.to.ape.bisse <- function(x, root.state) {
 prune <- function(phy, to.drop=NULL) {
   if ( is.null(to.drop) )
     to.drop <- subset(phy$orig, !split)$extinct
-  if ( all(to.drop) ) {
+  if ( sum(!to.drop) < 2 ) {
     NULL
   } else if ( any(to.drop) ) {
     phy2 <- drop.tip.fixed(phy, phy$tip.label[to.drop])

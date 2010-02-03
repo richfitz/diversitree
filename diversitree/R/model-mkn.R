@@ -22,7 +22,7 @@ make.mk2 <- function(tree, states) {
   class(ll) <- c("mk2", "mkn", "function")
   ll
 }
-make.mkn <- function(tree, states, k, use.mk2=TRUE) {
+make.mkn <- function(tree, states, k, use.mk2=FALSE) {
   cache <- make.cache.mkn(tree, states, k, use.mk2)
 
   qmat <- matrix(0, k, k)
