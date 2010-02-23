@@ -163,7 +163,7 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   ## Also, if r < 0, then a must > 1 (and vv.).  XOR captures this.
   ##   if ( a < 0 || sign(1-a) != sign(r) ) return(-Inf)
   ## Alternatively, just enforce all(pars > 0)?
-  if ( a < 0 || xor(a > 1, r < 0) )
+  if ( is.nan(a) || a < 0 || xor(a > 1, r < 0) )
     return(-Inf)
 
   if ( condition.surv )
@@ -175,7 +175,6 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
         2*log(abs((1-a)/(1-a*exp(-r * x[2])))) + log(r/(1-a))
 
 
-  ## Copied from cleanup
   if ( is.null(prior) )
     p <- loglik
   else if ( is.numeric(prior) )
@@ -185,7 +184,7 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   else
     stop("Invalid 'prior' argument")
 
-  loglik
+  p
 }
 
 starting.point.bd <- function(tree, yule=FALSE) {

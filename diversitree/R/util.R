@@ -76,6 +76,7 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
 
     elist <- list()
     eventfunc <- NULL
+    elag <- list(islag=0L)
 
     vers <- packageDescription("deSolve")$Version
     vers <- strsplit(vers, "-")[[c(1,1)]]
@@ -148,8 +149,46 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
         stop("Integration error: integration stopped prematurely")
       ret
     }
+
+    f.1.7 <- function(y, times, parms, rtol, atol) {
+      if (!is.numeric(y)) 
+        stop("`y' must be numeric")
+      if (!is.numeric(times)) 
+        stop("`times' must be numeric")
+      storage.mode(y) <- storage.mode(times) <- "double"
+
+      ret <- 
+        .Call("call_lsoda", y, times, derivfunc, parms, rtol, atol,
+              NULL,      # rho: environment
+              NULL,      # tcrit: critical times
+              jacfunc, 
+              initfunc,
+              eventfunc, # [New in 1.6]
+              INTZERO,   # verbose (false)
+              INTONE,    # itask
+              rwork,
+              iwork,
+              INTTWO,    # jT: Jacobian type (fullint)
+              INTZERO,   # nOut (no global variables)
+              lrw,       # size of workspace (real)
+              liw,       # size of workspace (int)
+              INTONE,    # Solver
+              NULL,      # rootfunc
+              INTZERO,   # nRoot
+              0,         # rpar: no extra real parameters
+              INTZERO,   # ipar: no extra integer parameters
+              INTZERO,   # Type
+              flist,     # [New in 1.5]
+              elist,     # [New in 1.6]
+              elag,      # [New in 1.7]
+              PACKAGE="deSolve")
+      if ( max(abs(ret[1,] - times)) > 1e-6 )
+        stop("Integration error: integration stopped prematurely")
+      ret
+    }
+
     switch(vers,
-           "1.5"=f.1.5, "1.5-1"=f.1.5, "1.6"=f.1.6,
+           "1.5"=f.1.5, "1.5-1"=f.1.5, "1.6"=f.1.6, "1.7"=f.1.7,
            stop("Cannot use diversitree with deSolve version ", vers))
   }
 }

@@ -42,10 +42,14 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE) {
     qmat[idx] <- pars
     diag(qmat) <- -rowSums(qmat)
     ans <- all.branches.mkn(qmat, cache)
-
-    loglik <- root.mkn(ans$init[cache$root,], ans$lq, pars, root, root.p)
-    if ( intermediates )
+    d.root <- ans$init[cache$root,]
+    root.p <- root.p.mkn(d.root, pars, root, root.p)
+    loglik <- root.mkn(d.root, ans$lq, root.p)
+    if ( intermediates ) {
       ans$init[seq_len(n.tip),] <- cache$y$y[cache$y$i,]
+      ans$root.p <- root.p
+    }
+
     cleanup(loglik, pars, prior, intermediates, cache, ans)
   }
 
@@ -146,7 +150,8 @@ initial.tip.mkn <- function(cache) {
   i[is.na(i)] <- k + 1
   list(y=y, i=i, types=sort(unique(i)))
 }
-root.mkn <- function(vals, lq, pars, root, root.p=NULL) {
+
+root.p.mkn <- function(vals, pars, root, root.p=NULL) {
   k <- length(vals)
   if ( !is.null(root.p) ) {
     if ( root != ROOT.GIVEN )
@@ -163,14 +168,20 @@ root.mkn <- function(vals, lq, pars, root, root.p=NULL) {
     p <- vals/sum(vals)
   else if ( root == ROOT.GIVEN )
     p <- root.p
-  else if ( root != ROOT.BOTH )
+  else if ( root == ROOT.BOTH )
+    p <- NULL
+  else
     stop("Invalid root mode")
 
+  p
+}
+
+root.mkn <- function(vals, lq, root.p) {
   logcomp <- sum(lq)
-  if ( root == ROOT.BOTH )
+  if ( is.null(root.p) ) # ROOT.BOTH
     loglik <- log(vals) + logcomp
   else
-    loglik <- log(sum(p * vals)) + logcomp
+    loglik <- log(sum(root.p * vals)) + logcomp
   loglik
 }
 
@@ -208,7 +219,10 @@ make.pij.mkn <- function(k) {
 
 ## Additional functions:
 stationary.freq.mkn <- function(pars) {
-  .NotYetImplemented()
+  if ( length(pars) == 2 )
+    pars[2:1] / sum(pars)
+  else
+    .NotYetImplemented()
 }
 mkn.Q <- function(pars, k) {
   if ( missing(k) )

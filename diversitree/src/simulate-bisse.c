@@ -72,13 +72,15 @@ void r_SampleOne(int *n, int *ans) {
   state that has no speciation rate with max_t = Inf.  I have not
   checked for this anywhere.
  */
-int simulate_bisse(double *pars, int max_taxa, double max_t, 
-		   int *parent, int *states, int *extinct, 
-		   int *split, double *start, double *len,
-		   int hist[][3], double *hist_t,
-		   int n_entries, int n, double *t_start) {
+void simulate_bisse(double *pars, int max_taxa, double max_t, 
+		    int *parent, int *states, int *extinct, 
+		    int *split, double *start, double *len,
+		    int hist[][3], double *hist_t,
+		    int *n_info, 
+		    int n, double *t_start, int verbose) {
   int *lineages;
-  int i, j, k, n_taxa, lineage, state, type, n_hist=0;
+  int i, j, k, n_taxa, lineage, state, type;
+  int n_entries = n_info[0], n_hist = n_info[1];
   int n_i[2], perm[3];
   double r_i[2], r_n[2], r_tot, t=*t_start, dt;
   double p[3];
@@ -119,10 +121,12 @@ int simulate_bisse(double *pars, int max_taxa, double max_t,
      no bias (if we bailed only after shorter intervals or speciation
      events, this might bias trees towards fewer late events and fewer
      speciation events without some care) */
-    if ( n_entries + 2 > n ) {
-      /*error("History has got too big; I will deal with this later.");*/
+    if ( n_entries + 2 > n || n_hist >= n ) {
       *t_start = -t;
-      return n_entries;
+
+      n_info[0] = n_entries;
+      n_info[1] = n_hist;
+      return;
     }
       
     /* Starting round */
@@ -132,10 +136,13 @@ int simulate_bisse(double *pars, int max_taxa, double max_t,
 
     /* 1: When does an event happen? */
     dt = rexp(1 / r_tot);
+    if ( verbose )
+      Rprintf("dt = %2.5f\n", dt);
     t = t + dt;
 
-    /* This is wrong... */
     if ( t > max_t ) {
+      if ( verbose )
+	Rprintf("Finishing up...\n");
       dt = dt - (t - max_t);
       t = max_t;
       for ( i = 0; i < n_taxa; i++ )
@@ -148,9 +155,18 @@ int simulate_bisse(double *pars, int max_taxa, double max_t,
 
     /* 2: What state does the event happen to? */
     state = unif_rand() > (r_n[0] / r_tot);
+    if ( verbose )
+      Rprintf("\tAffected state = %d\n", state);
+    
+    if ( verbose )
+      Rprintf("\t\t1\n");
     
     /* 3: Given this, what lineage did the event happen to? */
+    if ( verbose)
+      Rprintf("\t\t2 (%d)\n", n_i[state]);
     k = SampleOne(n_i[state]);
+    if ( verbose )
+      Rprintf("\tk = %d\n", k);
 
     /* Pick a lineage for that state */
     lineage = -1;
@@ -167,7 +183,10 @@ int simulate_bisse(double *pars, int max_taxa, double max_t,
     /* TODO: This copy is only necessary when directly using
        ProbSampleOne here */
     for ( i = 0; i < 3; i++ ) p[i] = pars[state * 3 + i];
+
     type = ProbSampleOne(3, p, perm);
+    if ( verbose )
+      Rprintf("\ttype = %d\n", type);
 
     /* Summarise the event */
     if ( type == 0 ) { /* Speciate */
@@ -217,19 +236,25 @@ int simulate_bisse(double *pars, int max_taxa, double max_t,
   }
 
   *t_start = t;
-  return n_entries;
+
+  if ( verbose )
+    Rprintf("Finishing at %2.5f with %d, %d (=%d | %d)\n", t, n_i[0], n_i[1],
+	    n_taxa, n_entries);
+
+  n_info[0] = n_entries;
+  n_info[1] = n_hist;
+  return;
 }
 
 void r_simulate_bisse(double *pars, int *max_taxa, double *max_t, 
 		      int *parent, int *states, int *extinct, 
 		      int *split, double *start, double *len,
-		      int hist[][3], double *hist_t,
-		      int *n_entries, int *n, double *t_start) {
+		      int hist[][3], double *hist_t, int *n_info, 
+		      int *n, double *t_start, int *verbose) {
   GetRNGstate();
-  *n_entries=
-    simulate_bisse(pars, *max_taxa, *max_t, parent, states, extinct, 
-		   split, start, len, hist, hist_t,
-		   *n_entries, *n, t_start);
+  simulate_bisse(pars, *max_taxa, *max_t, parent, states, extinct, 
+		 split, start, len, hist, hist_t,
+		 n_info, *n, t_start, *verbose);
   PutRNGstate();
 }
 

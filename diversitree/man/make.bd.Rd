@@ -101,7 +101,7 @@ fit.nosurv <- find.mle(lik, c(.1, .03), method="optim", lower=0,
 coef(fit.nosurv) # higher lambda than before
 
 ## Look at the marginal likelihoods, computed through MCMC (see
-## \link{mcmc} for details, and increase \code{nsteps} for smoother
+## \link{mcmc} for details, and increase nsteps for smoother
 ## plots [takes longer]).
 samples <- mcmc(lik, fit$par, nsteps=2000,
                 lower=c(-Inf, -Inf), upper=c(Inf, Inf), w=c(.1, .1),

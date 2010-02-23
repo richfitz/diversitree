@@ -159,13 +159,9 @@ ll.bisse <- function(cache, pars, branches, prior=NULL,
 }
 
 ## 7: initial.conditions:
-initial.conditions.bisse <- function(init, pars, t, is.root=FALSE) {
-  e <- init[1,c(1,2)]
-  d <- init[1,c(3,4)] * init[2,c(3,4)]
-  if ( !is.root )
-    d <- d * pars[c(1,2)]
-  c(e, d)
-}
+initial.conditions.bisse <- function(init, pars, t, is.root=FALSE)
+  c(init[1,c(1,2)],
+    init[1,c(3,4)] * init[2,c(3,4)] * pars[c(1,2)])
 
 ## 8: branches
 make.branches.bisse <- function(safe=FALSE) {

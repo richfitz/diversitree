@@ -115,7 +115,7 @@ fit.mkn <- find.mle(lik.mkn, p)
 fit.mkn[1:2]
 
 ## These are the same (except for the naming of arguments)
-all.equal(fit.mkn[-8], fit.mk2[-8], check.attr=FALSE)
+all.equal(fit.mkn[-8], fit.mk2[-8], check.attr=FALSE, tolerance=1e-7)
 
 ## Equivalence to ape's \link{ace} function:
 model <- matrix(c(0, 2, 1, 0), 2)

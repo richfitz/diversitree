@@ -206,36 +206,47 @@ ROOT.OBS   <- 3
 ROOT.GIVEN <- 4
 ROOT.BOTH  <- 5
 ROOT.ALL   <- ROOT.BOTH
-root.xxsse <- function(vars, pars, cache, condition.surv, root.mode,
-                       root.p) {
-  logcomp <- sum(vars$lq)
-  vars <- vars$init[cache$root,]
-  k <- length(vars) / 2
-  e.root <- vars[seq_len(k)]
-  d.root <- vars[(k+1):(2*k)]
 
-  if ( root.mode == ROOT.FLAT )
+root.p.xxsse <- function(vals, pars, root, root.p=NULL) {
+  k <- length(vals) / 2
+  d.root <- vals[(k+1):(2*k)]
+
+  if ( root == ROOT.FLAT )
     p <- 1/k
-  else if ( root.mode == ROOT.OBS )
-    p <- d.root / sum(d.root)
-  else if ( root.mode == ROOT.EQUI )
+  else if ( root == ROOT.EQUI )
     if ( k == 2 )
       p <- stationary.freq.bisse(pars)
     else
       stop("ROOT.EQUI only possible when k = 2")
-  else if ( root.mode == ROOT.GIVEN ) {
+  else if ( root == ROOT.OBS )
+    p <- d.root / sum(d.root)
+  else if ( root == ROOT.GIVEN ) {
     if ( length(root.p) != length(d.root) )
       stop("Invalid length for root.p")
     p <- root.p
-  } else if ( root.mode != ROOT.ALL )
-    stop("Invalid root mode")
-
-  if ( condition.surv )
-    d.root <- d.root / (1-e.root)^2
-  if ( root.mode == ROOT.BOTH )
-    loglik <- log(d.root)# + logcomp
+  } else if ( root == ROOT.ALL )
+    p <- NULL
   else
-    loglik <- log(sum(p * d.root)) + logcomp
+    stop("Invalid root mode")
+  p
+}
+
+root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
+  logcomp <- sum(lq)
+
+  k <- length(vals) / 2
+  i <- seq_len(k)
+  lambda <- pars[i]
+  e.root <- vals[i]
+  d.root <- vals[-i]
+  
+  if ( condition.surv )
+    d.root <- d.root / (lambda * (1-e.root)^2)
+
+  if ( is.null(root.p) ) # ROOT.BOTH
+    loglik <- log(d.root) + logcomp
+  else
+    loglik <- log(sum(root.p * d.root)) + logcomp
   loglik
 }
 
@@ -261,18 +272,19 @@ cleanup <- function(loglik, pars, prior=NULL, intermediates=FALSE,
 ## Which leads to an all singing, all dancing function:
 xxsse.ll <- function(pars, cache, initial.conditions,
                      branches, branches.unresolved, 
-                     condition.surv, root.mode, root.p,
+                     condition.surv, root, root.p,
                      prior, intermediates) {
   ans <- all.branches(pars, cache, initial.conditions,
                       branches, branches.unresolved)
-  loglik <- root.xxsse(ans, pars, cache, condition.surv,
-                       root.mode, root.p)
+  vals <- ans$init[cache$root,]
+  root.p <- root.p.xxsse(vals, pars, root, root.p)
+  loglik <- root.xxsse(vals, pars, ans$lq, condition.surv, root.p)
+  ans$root.p <- root.p
   cleanup(loglik, pars, prior, intermediates, cache, ans)
 }
 
 make.prior.exponential <- function(r) {
   function(pars)
-    ## -sum(pars * r) - un-normalised.
     sum(log(r) - pars * r)
 }
 

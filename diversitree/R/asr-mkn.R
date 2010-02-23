@@ -1,4 +1,5 @@
-asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
+asr.marginal.mkn <- function(lik, pars, nodes=NULL, root=ROOT.OBS,
+                             root.p=NULL, ...) {
   k <- attr(lik, "k")
   states.idx <- seq_len(k)
   cache <- environment(lik)$cache
@@ -8,6 +9,8 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
   res <- all.branches.mkn(qmat, cache)
   pij <- res$pij
 
+  root.p <- rep(1/k, k)
+
   branches <- function(y, len.i, pars, t0) {
     if ( length(len.i) != 1 )
       stop("Should not happen.")
@@ -15,48 +18,60 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
     q <- rowSums(res)
     cbind(log(q), res/q, deparse.level=0)
   }
+  root.f <- function(pars, vals, lq)
+    root.mkn(vals, lq, root.p)
   
   do.asr.marginal(pars, cache, res, nodes, states.idx,
                   initial.conditions.mkn,
                   branches,
-                  branches.unresolved.mkn)
+                  branches.unresolved.mkn,
+                  root.f)
 }
 
-asr.joint.mkn <- function(lik, pars, n=1, root.state=NA,
-                          simplify=TRUE, intermediates=FALSE,
-                          ...) {
-  ## Current:
+asr.joint.mkn <- function(lik, pars, n=1, simplify=TRUE,
+                          intermediates=FALSE, ...) {
   k <- attr(lik, "k")
   cache <- environment(lik)$cache
   node.labels <- environment(lik)$tree$node.label
-  obj <- attr(lik(pars, intermediates=TRUE), "intermediates")
+
+  obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
+
   li <- obj$init
   pij <- t(obj$pij)
+  root.p <- obj$root.p
 
-  ## Newer/better?
-  ##   k <- attr(lik, "k")
-  ##   cache <- environment(lik)$cache
-  ##   qmat <- mkn.Q(pars)
-  ##   obj <- all.branches.mkn(qmat, cache)
-  ##   li <- obj$init  
-  ##   pij <- t(obj$pij)
-
-  is.mk2 <- inherits(lik, "mk2")
-  if ( is.mk2 && !is.na(root.state) )
-    root.state <- root.state - 1
-
-  x <- do.asr.joint(pars, n, root.state, cache, li, pij,
-                    node.labels, simplify)
+  x <- do.asr.joint(pars, n, cache, li, pij, root.p, node.labels,
+                    simplify)
   
-  if ( is.mk2 ) {
-    if ( !simplify )
-      x[] <- lapply(x, function(el) el - 1)
-    else
+  if ( inherits(lik, "mk2") ) {
+    if ( simplify )
       x <- x - 1
+    else
+      x[] <- lapply(x, function(el) el - 1)
   }
 
   if ( intermediates )
     attr(x, "intermediates") <- obj
+  x
+}
+
+## This name will of course conflict with the 
+asr.joint.mean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
+  k <- attr(lik, "k")
+  cache <- environment(lik)$cache
+  node.labels <- environment(lik)$tree$node.label
+
+  obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
+
+  li <- obj$init
+  pij <- t(obj$pij)
+  root.p <- obj$root.p
+
+  x <- do.asr.joint.mean(pars, cache, li, pij, root.p, node.labels)
+  
+  if ( intermediates )
+    attr(x, "intermediates") <- obj
+
   x
 }
 

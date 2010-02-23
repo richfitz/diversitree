@@ -125,7 +125,6 @@ tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf,
     prune(phy)
 }
 
-## Here is the simple version:
 make.tree.bisse.C <- function(pars, max.taxa, max.t, x0, n=100) {
   ans <- make.tree.bisse.C.core(pars, max.taxa, max.t, x0, n)
 
@@ -171,7 +170,8 @@ make.tree.bisse.C <- function(pars, max.taxa, max.t, x0, n=100) {
 ## nonzero qs) and max.t=Inf, etc.
 ## TODO: Still need to be able to handle max.t=Inf, before changing
 ## this for the main simulation code.
-make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100) {
+make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100,
+                                   verbose=FALSE) {
   if ( any(is.na(pars) | pars < 0 ) )
     stop("pars must be non-negative and non-NA")
   if ( any(is.na(x0) | x0 < 0 | x0 > 1) )
@@ -187,18 +187,23 @@ make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100) {
   hist <- integer(3*n)
   start <- len <- hist.t <- numeric(n)
   n.entries <- as.integer(1)
+  n.entries.hist <- as.integer(0)
+  n.info <- as.integer(c(n.entries, n.entries.hist))
 
   parent[1] <- as.integer(-1)
   states[1] <- as.integer(x0)
   t <- 0.0
 
+  verbose <- as.integer(verbose)
+
   ## Because this is an exponential growth, 10 iterations gets very
-  ## large!
+  ## large!  Starting at 100 and doubling each time 
   for ( attempt in 1:10 ) {
     ans <- .C("r_simulate_bisse", pars=pars2, max.taxa=max.taxa,
               max.t=max.t, parent=parent, states=states,
               extinct=extinct, split=split, start=start, len=len,
-              hist=hist, hist.t=hist.t, n.entries=n.entries, n=n, t=t)
+              hist=hist, hist.t=hist.t, n.info=n.info,
+              n=n, t=t, verbose=verbose)
     if ( ans$t > 0 )
       break
 
@@ -218,14 +223,15 @@ make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100) {
     len[i] <- ans$len
     hist[j] <- ans$hist
     hist.t[i] <- ans$hist.t
-    n.entries <- ans$n.entries
+    n.info <- ans$n.info
     t <- -ans$t
   }
 
   if ( ans$t < 0 )
     stop("This somehow failed...")
 
-  i <- seq_len(ans$n.entries)
+  i <- seq_len(ans$n.info[1])
+  n.h <- ans$n.info[2]
   info <- list(idx=i,
                len=ans$len[i],
                parent=ans$parent[i] + 1,
@@ -233,65 +239,119 @@ make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100) {
                state=ans$states[i],
                extinct=as.logical(ans$extinct[i]),
                split=as.logical(ans$split[i]),
-               hist=ans$hist,
-               hist.t=ans$hist.t,
+               hist=ans$hist[seq_len(n.h*3)],
+               hist.t=ans$hist.t[seq_len(n.h)],
                t=ans$t)
 }
 
+make.tree.bisse.R.core <- function(pars, max.taxa=Inf, max.t=Inf,
+                                   x0) {
+  pars <- matrix(pars, 2, 3)
 
+  extinct <- FALSE
+  split   <- FALSE
+  parent <- 0
+  n.i <- c(0, 0)
+  r.i <- rowSums(pars)
+  len <- 0
+  t <- 0
+  hist <- list()
+  
+  states <- x0
+  n.taxa <- lineages <- n.i[x0+1] <- 1
+  start <- 0    
 
-make.tree.bisse.C2 <- function(pars, max.taxa, max.t, x0, n=100) {
-  if ( any(is.na(pars) | pars < 0 ) )
-    stop("pars must be non-negative and non-NA")
-  if ( any(is.na(x0) | x0 < 0 | x0 > 1) )
-    stop("x0 must be in [0,1] and non-NA")
-  if ( is.infinite(max.taxa) && is.infinite(max.t) )
-    stop("at most one of max.taxa and max.t may be infinite")
-       
-  ## Guessing 'n' will be a little hard, but a subsequent refinement
-  ## approach will probably be fine (not yet written)
-  ## n <- as.integer(max.taxa) * 6
-  ## n <- as.integer(100)
-  n <- as.integer(n)
+  while ( n.taxa <= max.taxa && n.taxa > 0 ) {
+    ## When does an event happen?
+    r.n <- r.i * n.i
+    r.tot <- sum(r.n)
+    dt <- rexp(1, r.tot)
+    t <- t + dt
 
-  parent <- states <- extinct <- split <- integer(n)
-  hist <- integer(3*n)
-  start <- len <- hist.t <- numeric(n)
-  n.entries <- as.integer(1)
+    if ( t > max.t ) {
+      dt <- dt - (t - max.t)
+      len[lineages] <- len[lineages] + dt
+      t <- max.t
+      break
+    }
 
-  ## Set a couple of special cases up:
-  parent[1] <- as.integer(-1)
-  states[1] <- as.integer(x0)
+    len[lineages] <- len[lineages] + dt
 
-  ans <- .C("r_simulate_bisse",
-            pars=t(matrix(pars, 2, 3)),
-            max.taxa=as.integer(max.taxa),
-            max.t=max.t,
-            parent=parent,
-            states=states,
-            extinct=extinct,
-            split=split,
-            start=start,
-            len=len,
-            hist=hist,
-            hist.t=hist.t,
-            n.entries=n.entries,
-            n=n,
-            t.start=numeric(1))
+    ## Proceed.  What state does an event happen to?
+    state <- as.integer(runif(1) > r.n[1]/r.tot)
+    state.i <- state + 1
 
-  i <- seq_len(ans$n.entries)
-  info <- list(idx=i,
-               len=ans$len[i],
-               parent=ans$parent[i] + 1,
-               start=ans$start[i],
-               state=ans$states[i],
-               extinct=as.logical(ans$extinct[i]),
-               split=as.logical(ans$split[i]),
-               hist=ans$hist,
-               hist.t=ans$hist.t,
-               t.start=ans$t.start)
+    ## Pick a lineage for that state:
+    j <- sample(n.i[state.i], 1)
+    ##cat(sprintf("n_i[0] = %d, n_i[1] = %d, k = %d\n", n.i[1], n.i[2], j))
+    lineage <- lineages[states[lineages] == state][j]
+
+    type <- sample(3, 1, FALSE, pars[state.i,])
+    ##type <- .C("r_ProbSampleOne", as.integer(3), pars[state.i,], integer(1))[[3]] +1
+
+    ##cat(sprintf("[%2.5f], type = %d, lineage = %d, state = %d\n",
+    ##            t, type, lineage, state));
+
+    if ( type == 1 ) {
+      ## Speciating:
+      if ( n.taxa == max.taxa )
+        ## Don't add this one.
+        break
+      new.i <- length(extinct) + 1:2
+      split[lineage] <- TRUE
+      extinct[new.i] <- split[new.i] <- FALSE
+      states[new.i] <- state
+      parent[new.i] <- lineage
+      start[new.i] <- t      
+      len[new.i] <- 0
+
+      n.i[state.i] <- n.i[state.i] + 1
+      n.taxa <- n.taxa + 1
+
+      lineages <- which(!split & !extinct)
+
+    } else if ( type == 2 ) {
+      ## Extinct
+      extinct[lineage] <- TRUE
+
+      lineages <- which(!split & !extinct)
+
+      n.i[state.i] <- n.i[state.i] - 1
+      n.taxa <- n.taxa - 1
+    } else {
+      ## Character switch:
+      n.i <- n.i + if ( state == 0 ) c(-1,1) else c(1,-1)
+      states[lineage] <- 1 - state
+      hist[[length(hist)+1]] <- c(lineage, t, state, 1-state)
+    }
+  }
+
+  info <- list(idx=seq_along(extinct),
+               len=len,
+               parent=parent,
+               start=start,
+               state=states,
+               extinct=extinct,
+               split=split,
+               hist=hist,
+               t=t)
 }
 
+make.tree.bisse.R <- function(pars, max.taxa, max.t, x0) {
+  ans <- make.tree.bisse.R.core(pars, max.taxa, max.t, x0)
 
+  info <- ans[1:7]
+  attr(info, "row.names") <- info$idx
+  class(info) <- "data.frame"
 
-
+  hist <- as.data.frame(do.call(rbind, ans$hist))
+  if ( nrow(hist) == 0 )
+    hist <- as.data.frame(matrix(NA, 0, 4))
+  names(hist) <- c("idx", "t", "from", "to")
+  hist$x0 <- info$start[match(hist$idx, info$idx)]
+  hist$tc <- hist$t - hist$x0
+  
+  attr(info, "t") <- ans$t
+  attr(info, "hist") <- hist  
+  info
+}

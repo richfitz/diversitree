@@ -1,3 +1,43 @@
+2010-02-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Depend on at least deSolve 1.5, so that correct
+	behaviour can be guaranteed.
+
+	* R/asr*.R: Half way through a fix of the asr code, particulary for
+	root states.
+
+	* R/diversitree-branches.R: root.xxsse() now takes root.p argument,
+	computed through the new function root.p.xxssse().  This allows
+	reuse of that function elsewhere.  Changes to xxsse.ll to reflect
+	this.
+
+	* R/model-bd.R: Added extra check in the bd likelihood (mu/lambda
+	where both were zero causing a to be NaN).  Fixed handling of
+	prior (was ignored before!).
+
+	* R/model-bisse.R: Fixed initial conditions (should not avoid
+	multiplying by lambda at the root (e.g. cases where lambda_i is
+	zero for some i); this now happens at the root (within
+	root.xxsse).
+
+	* R/model-mkn.R: Changed root handling to follow bisse (separating
+	calculation of the root probabilities from the root calculation).
+	Added the Mk2 equilibrium frequency for root calculations.
+
+	* R/simulate-bisse.R: make.tree.bisse.C.core now has verbose
+	argument.  Fixed crash where rates of character evolution were
+	fast relative to speciation; the history matrix could overflow.
+	This fix requires tracking the number of history entries.
+
+	* R/util.R: make.ode: Updated to deal with deSolve-1.7 (new elag
+	argument).
+
+	* man/asr-mkn.Rd, man/make.bd.Rd, man/make.mkn.Rd: Minor changes
+
+	* src/simulate-bisse.c: Changes to simulate_bisse() (and
+	corresponding changes in wrapper code) to deal with the history
+	overflow bug.
+
 2010-02-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bumped version number to 0.4-4

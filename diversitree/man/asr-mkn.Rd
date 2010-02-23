@@ -93,9 +93,7 @@ st.j2.mean <- colMeans(st.j2)
 plot(h, phy, main="Joint ASR (averaged)", show.node.state=FALSE)
 nodelabels(thermo=1-st.j2.mean, piecol=1:2, cex=.5)
 
-## They are similar, but in this case, the joint method generates
-## samples with more state '1' nodes than the marginal method.  Other
-## trees would show the opposite pattern.
+## Check the estimates against one another:
 plot(st.m[2,], st.j2.mean, xlab="Marginal", ylab="Joint", las=1)
 abline(0, 1)
 
