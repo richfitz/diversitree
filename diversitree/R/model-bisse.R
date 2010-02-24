@@ -54,6 +54,8 @@ find.mle.bisse <- function(func, x.init, method,
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse <- function(tree, states, unresolved=NULL,
                              sampling.f=NULL, nt.extra=10) {
+  if ( !inherits(tree, "phylo") )
+    stop("'tree' must be a valid phylo tree")
   if ( is.null(names(states)) )
     stop("The states vector must contain names")
 
@@ -139,7 +141,9 @@ ll.bisse <- function(cache, pars, branches, prior=NULL,
                      condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
                      intermediates=FALSE,
                      root.p0=NA, root.p1=NA) {
-  if ( any(pars < 0) || any(!is.finite(pars)) || length(pars) != 6 )
+  if ( length(pars) != 6 )
+    stop("Invalid parameter length (expected 6)")
+  if ( any(pars < 0) || any(!is.finite(pars)) )
     return(-Inf)
 
   if ( !is.na(root.p0) ) {

@@ -36,7 +36,7 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE) {
   ll.mkn <- function(cache, pars, prior=NULL, root=ROOT.OBS,
                      root.p=NULL, intermediates=FALSE) {
     if ( length(pars) != k*(k-1) )
-      stop("Invalid length parameters")
+      stop(sprintf("Invalid length parameters (expected %d)", k*(k-1)))
     if ( any(!is.finite(pars)) || any(pars < 0) )
       return(-Inf)
     qmat[idx] <- pars
@@ -109,6 +109,8 @@ find.mle.mkn <- function(func, x.init, method,
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
 make.cache.mkn <- function(tree, states, k, use.mk2) {
+  if ( !inherits(tree, "phylo") )
+    stop("'tree' must be a valid phylo tree")
   if ( is.null(names(states)) )
     stop("The states vector must contain names")
   if ( !all(tree$tip.label %in% names(states)) )

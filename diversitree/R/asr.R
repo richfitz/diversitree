@@ -14,12 +14,11 @@ asr.marginal <- function(lik, pars, nodes=NULL, ...) {
   UseMethod("asr.marginal")
 }
 
-asr.joint <- function(lik, pars, n=1, root.state=NA, simplify=TRUE,
-                      ...) {
+asr.joint <- function(lik, pars, n=1, simplify=TRUE, ...) {
   UseMethod("asr.joint")
 }
 
-asr.stoch <- function(lik, pars, n=1, root.state=NA, ...) {
+asr.stoch <- function(lik, pars, n=1, ...) {
   UseMethod("asr.stoch")
 }
 
@@ -35,13 +34,13 @@ asr.marginal.constrained <- function(lik, pars, nodes=NULL, ...) {
   NextMethod("asr.marginal")
 }
 
-asr.joint.constrained <- function(lik, pars, n=1, root.state=NA, ...) {
+asr.joint.constrained <- function(lik, pars, n=1, simplify=TRUE, ...) {
   pars <- lik(pars, pars.only=TRUE)
   lik <- attr(lik, "func")
   NextMethod("asr.joint")
 }
 
-asr.stoch.constrained <- function(lik, pars, n=1, root.state=NA, ...) {
+asr.stoch.constrained <- function(lik, pars, n=1, ...) {
   pars <- lik(pars, pars.only=TRUE)
   lik <- attr(lik, "func")
   NextMethod("asr.stoch")
@@ -91,7 +90,7 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
       branch.base <- res$base
       branch.init[nd,states.idx[-st]] <- 0
       y.in <- branch.init[nd,]
-      j <- nd # Needed for when nd == root.idx - TODO:poss no longer?
+      ## j <- nd # Needed for when nd == root.idx - TODO:poss no longer?
 
       for ( i in anc.nd ) {
         ans <- branches(y.in, len[i], pars, depth[i])
@@ -144,8 +143,7 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
 ## to nd.  Note that the sums of all rows (pij2[n,i,] for all n, i)
 ## equals 1, as a branch ends at some state with probability 1:
 ##   all(abs(apply(pij2, 1:2, sum)[-root,] - 1) < 1e-8)
-do.asr.joint <- function(pars, n, cache, li, pij, root.p,
-                         node.labels=NULL, simplify=TRUE,
+do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
                          ...) {
   parent <- cache$parent
   len <- length(cache$len)
@@ -153,31 +151,26 @@ do.asr.joint <- function(pars, n, cache, li, pij, root.p,
   tips <- seq_len(cache$n.tip)
   k <- ncol(li)
   pij2 <- array(pij, c(len, k, k))
-  
-  f <- function() {
-    anc.states <- rep(as.numeric(NA), len)
-    anc.states[root] <- sample(k, 1, FALSE, root.p)
-    for ( i in rev(cache$order)[-1] ) {
-      parent.state <- anc.states[parent[i]]
-      p <- li[i,] * pij2[i,parent.state,] # di * pij
-      anc.states[i] <- sample(k, 1, FALSE, p)
-    }
-    structure(anc.states[-tips], names=node.labels)
-  }
-  
-  if ( n == 1 && simplify )
-    x <- f()
-  else {
-    x <- replicate(n, f(), simplify)
-    if ( simplify )
-      x <- t(x)
-  }
 
-  x
+  anc.states <- matrix(NA, n, len)
+  anc.states[,root] <- sample(k, n, TRUE, root.p)
+  for ( i in rev(cache$order)[-1] ) {
+    parent.state <- anc.states[,parent[i]]
+    for ( j in seq_len(k) ) {
+      idx <- parent.state == j
+      nj <- sum(idx)
+      if ( nj > 0 ) {
+        p <- li[i,] * pij2[i,j,] # di * pij
+        anc.states[idx,i] <- sample(k, nj, TRUE, p)
+      }
+    }
+  }
+  
+  anc.states[,-tips,drop=simplify]
 }
 
-do.asr.joint.mean <- function(pars, cache, li, pij, root.p,
-                              node.labels=NULL, ...) {
+## TODO: explain this one...
+do.asr.jointmean <- function(cache, li, pij, root.p, ...) {
   parent <- cache$parent
   len <- length(cache$len)
   root <- cache$root

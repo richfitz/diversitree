@@ -147,7 +147,7 @@ h <- history.from.sim.discrete(phy, 0:1)
 plot(h, phy)
 
 lik <- make.bisse(phy, phy$tip.state)
-lik(pars) # -159.72
+lik(pars) # -159.71
 
 ## Heuristic guess at a starting point, based on the constant-rate
 ## birth-death model (uses \link{make.bd}).
@@ -159,7 +159,7 @@ p <- starting.point.bisse(phy)
 
 ## Start an ML search from this point.  This takes some time (~7s)
 fit <- find.mle(lik, p, method="subplex")
-logLik(fit) # -158.74
+logLik(fit) # -158.69
 
 ## The estimated parameters aren't too far away from the real ones, even
 ## with such a small tree

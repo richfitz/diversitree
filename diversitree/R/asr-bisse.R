@@ -1,11 +1,10 @@
 ## (1) Marginal ASR:
-asr.marginal.bisse <- function(lik, pars, nodes=NULL,
-                               condition.surv=TRUE, root=ROOT.OBS,
-                               root.p=NULL, ...) {
+asr.marginal.bisse <- function(lik, pars, nodes=NULL, ...) {
   states.idx <- 3:4
   cache <- environment(lik)$cache
   branches <- environment(lik)$branches
   root.p <- rep(1/2, 2)
+  condition.surv <- TRUE # TODO: fix pending...
 
   res <- all.branches(pars, cache, initial.conditions.bisse,
                       branches, branches.unresolved.bisse)

@@ -26,34 +26,30 @@
 }
 
 \examples{
-## Start with a simple tree evolved under a BiSSE with  with symmetric
-## character evolution but an asymmetry in the speciation rates.
-pars <- c(.1, .2, .03, .03, .03, .03)
-set.seed(1)
+## Start with a simple tree evolved under a BiSSE with all rates
+## asymmetric:
+pars <- c(.1, .2, .03, .06, .01, .02)
+set.seed(3)
 phy <- trees(pars, "bisse", max.taxa=50, max.t=Inf, x0=0)[[1]]
 
-## Here is the true history.  The root node appears to be state 1 (red)
-## at the root, despite specifying a root of state 0 (x0=0, in statement
-## above).  This is because the tree started with a single lineage, but
-## had changed state by the time the first speciation event happened.
+## Here is the true history
 h <- history.from.sim.discrete(phy, 0:1)
 plot(h, phy, main="True history")
 
+## BiSSE ancestral state reconstructions under the ML model
 lik <- make.bisse(phy, phy$tip.state)
 fit <- find.mle(lik, pars, method="subplex")
 st <- asr.marginal(lik, coef(fit))
-
-plot(h, phy, main="Marginal ASR, BiSSE", show.node.state=FALSE)
 nodelabels(thermo=t(st), piecol=1:2, cex=.5)
 
-## Compare this with the ML model under Mk2:
+## Mk2 ancestral state reconstructions, ignoring the shifts in
+## diversification rates:
 lik.m <- make.mk2(phy, phy$tip.state)
 fit.m <- find.mle(lik.m, pars[5:6], method="subplex")
 st.m <- asr.marginal(lik.m, coef(fit.m))
-
-## Add node labels to the left of the BiSSE ones.
-## For this tree, Mk2 seems better (both do pretty well, really).
-nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=0)
+## The Mk2 results have more uncertainty at the root, but both are
+## similar.
+nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
 
 \dontrun{
 ## (This section will take 10 or so minutes to run.)
@@ -71,38 +67,12 @@ st.m <- apply(samples.m[2:3], 1, function(x) asr.marginal(lik.m, x)[2,])
 st.m.avg <- rowMeans(st.m)
 
 ## These end up being more striking in their similarity than their
-## differences.
+## differences, except for the root node, where BiSSE remains more sure
+## that is in state 0 (there is about 0.05 red there).
 plot(h, phy, main="Marginal ASR, BiSSE", show.node.state=FALSE)
 nodelabels(thermo=1-st.b.avg, piecol=1:2, cex=.5)
-nodelabels(thermo=1-st.m.avg, piecol=1:2, cex=.5, adj=0)
+nodelabels(thermo=1-st.m.avg, piecol=1:2, cex=.5, adj=-.5)
 }
-
-## A different tree with a different set of results:
-pars <- c(.1, .2, .03, .06, .01, .02)
-set.seed(3)
-phy <- trees(pars, "bisse", max.taxa=50, max.t=Inf, x0=0)[[1]]
-
-## Here is the true history.  The root node appears to be state 1 (red)
-## at the root, despite specifying a root of state 0 (x0=0, in statement
-## above).  This is because the tree started with a single lineage, but
-## had changed state by the time the first speciation event happened.
-h <- history.from.sim.discrete(phy, 0:1)
-plot(h, phy, main="True history")
-
-lik <- make.bisse(phy, phy$tip.state)
-fit <- find.mle(lik, pars, method="subplex")
-st <- asr.marginal(lik, coef(fit))
-
-lik.m <- make.mk2(phy, phy$tip.state)
-fit.m <- find.mle(lik.m, pars[5:6], method="subplex")
-st.m <- asr.marginal(lik.m, coef(fit.m))
-
-## Again, Mk2 results in left bar.  This time there is far more
-## uncertainty at the root in the Mk2 case (and a few of the internal
-## nodes) than from the BiSSE reconstructions.
-plot(h, phy, main="Marginal ASR, BiSSE & Mk2", show.node.state=FALSE)
-nodelabels(thermo=t(st), piecol=1:2, cex=.5)
-nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
 
 ## Equivalency of Mk2 and BiSSE where diversification is state
 ## independent.  For any values of lambda/mu (here .1 and .03) where
@@ -114,7 +84,7 @@ st.id.m <- asr.marginal(lik.m, coef(fit.m))
 ## Reconstructions are identical to a relative tolerance of 1e-7
 ## (0.0000001), which is similar to the expected tolerance of the BiSSE
 ## calculations.
-all.equal(st.id, st.m, tolerance=1e-7)
+all.equal(st.id, st.id.m, tolerance=1e-7)
 }
 
 \author{Richard G. FitzJohn}

@@ -1,5 +1,4 @@
-asr.marginal.mkn <- function(lik, pars, nodes=NULL, root=ROOT.OBS,
-                             root.p=NULL, ...) {
+asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
   k <- attr(lik, "k")
   states.idx <- seq_len(k)
   cache <- environment(lik)$cache
@@ -32,7 +31,6 @@ asr.joint.mkn <- function(lik, pars, n=1, simplify=TRUE,
                           intermediates=FALSE, ...) {
   k <- attr(lik, "k")
   cache <- environment(lik)$cache
-  node.labels <- environment(lik)$tree$node.label
 
   obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
 
@@ -40,34 +38,27 @@ asr.joint.mkn <- function(lik, pars, n=1, simplify=TRUE,
   pij <- t(obj$pij)
   root.p <- obj$root.p
 
-  x <- do.asr.joint(pars, n, cache, li, pij, root.p, node.labels,
-                    simplify)
+  x <- do.asr.joint(n, cache, li, pij, root.p, simplify)
   
-  if ( inherits(lik, "mk2") ) {
-    if ( simplify )
-      x <- x - 1
-    else
-      x[] <- lapply(x, function(el) el - 1)
-  }
+  if ( inherits(lik, "mk2") )
+    x <- x - 1
 
   if ( intermediates )
     attr(x, "intermediates") <- obj
   x
 }
 
-## This name will of course conflict with the 
-asr.joint.mean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
+asr.jointmean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
   k <- attr(lik, "k")
   cache <- environment(lik)$cache
-  node.labels <- environment(lik)$tree$node.label
 
   obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
 
   li <- obj$init
-  pij <- t(obj$pij)
+  pij <- t(obj$pij) # because mkn has peculiar transpose.
   root.p <- obj$root.p
 
-  x <- do.asr.joint.mean(pars, cache, li, pij, root.p, node.labels)
+  x <- do.asr.jointmean(cache, li, pij, root.p)
   
   if ( intermediates )
     attr(x, "intermediates") <- obj
@@ -75,24 +66,25 @@ asr.joint.mean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
   x
 }
 
-asr.stoch.mkn <- function(lik, pars, n=1, root.state=NA, ...) {
+asr.stoch.mkn <- function(lik, pars, n=1, ...) {
   is.mk2 <- inherits(lik, "mk2")
   k <- attr(lik, "k")
   cache <- environment(lik)$cache
   edge <- cache$edge
   edge.length <- cache$edge.length
 
-  node.state <- asr.joint(lik, pars, n, root.state,
-                          simplify=TRUE, intermediates=TRUE)
+  node.state <- asr.joint(lik, pars, n, intermediates=TRUE)
 
   if ( n == 1 )
     do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
                          edge, edge.length, k, is.mk2)
-  else
+  else {
+    stop("Broken?")
     replicate(n,
               do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
                                    edge, edge.length, k, is.mk2),
               simplify=FALSE)
+  }
 }
 
 do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,

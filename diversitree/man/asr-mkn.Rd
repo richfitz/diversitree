@@ -16,9 +16,9 @@
 
 \usage{
 \method{asr.marginal}{mkn}(lik, pars, nodes=NULL, ...)
-\method{asr.joint}{mkn}(lik, pars, n=1, root.state=NA, simplify=TRUE,
+\method{asr.joint}{mkn}(lik, pars, n=1, simplify=TRUE,
        intermediates=FALSE, ...)
-\method{asr.stoch}{mkn}(lik, pars, n=1, root.state=NA, ...)
+\method{asr.stoch}{mkn}(lik, pars, n=1, ...)
 }
 
 \arguments{
@@ -30,12 +30,8 @@
     default, all nodes are returned.}
   \item{n}{The number of samples to draw from the joint distribution, or
     number of stochastic reconstructions to make.}
-  \item{root.state}{For \code{asr.marginal} and \code{asr.joint}; the
-    state to start the root in.  If \code{NA} is given (the default),
-    the root state is drawn from the conditional likelihoods at the
-    root.}
-  \item{simplify}{Should the states be simplified into a matrix or
-    left unsimplified as a list?}
+  \item{simplify}{For \code{asr.joint}, return a vector of states when
+    \code{n=1}? Otherwise leaves as a one row matrix.}
   \item{intermediates}{Logical: Return intermediates as an attribute?
     Used internally, and probably not of general interest.}
   \item{...}{Additional arguments passed through to future methods.
@@ -85,11 +81,10 @@ plot(h, phy, main="Joint ASR", show.node.state=FALSE)
 nodelabels(pch=19, col=st.j + 1)
 
 ## This is just one sample, and is not very accurate in this case!  Make
-## 100 such samples and average them:
-st.j2 <- asr.joint(lik, pars[5:6], 100)
+## 1,000 such samples and average them:
+st.j2 <- asr.joint(lik, pars[5:6], 1000)
 st.j2.mean <- colMeans(st.j2)
 
-## Plotted, this looks much like the joint sample:
 plot(h, phy, main="Joint ASR (averaged)", show.node.state=FALSE)
 nodelabels(thermo=1-st.j2.mean, piecol=1:2, cex=.5)
 
@@ -120,7 +115,9 @@ all.equal(st.m, st2.m)
 summary(lm(colMeans(st2.j) - 1 ~ colMeans(st.j2) - 1))
 
 ## Integrate parameter uncertainty, and see how far down the tree there
-## is any real information on parameter states for this tree:
+## is any real information on parameter states for this tree (this takes
+## about 6s)
+\dontrun{
 set.seed(1)
 prior <- make.prior.exponential(.5)
 samples <- mcmc(lik, pars[5:6], 1000, c(1, 1), 0, prior=prior,
@@ -129,6 +126,7 @@ st.m.avg <- rowMeans(apply(samples[2:3], 1, asr.joint, lik=lik))
 
 plot(h, phy, main="MCMC Averaged ASR", show.node.state=FALSE)
 nodelabels(thermo=1 - st.m.avg, piecol=1:2, cex=.5)
+}
 }
 
 \author{Richard G. FitzJohn}

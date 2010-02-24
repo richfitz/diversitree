@@ -1,5 +1,19 @@
 2010-02-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
+	* R/asr*.R: Finished fix of the asr code.
+
+	* R/constrain.R: More informative error message when parameters of
+	wrong length.
+
+	* R/mle.R: find.mle gives error when starting point invalid.
+
+	* R/model-bisse.R, R/model-mkn.R: Give informative error message when
+	given invalid tree object (e.g. NULL) and likelihood calculations
+	give informative message when given wrong length parameters.
+
+	* R/zzz.R: no longer needed - removed.
+
+
 	* DESCRIPTION: Depend on at least deSolve 1.5, so that correct
 	behaviour can be guaranteed.
 

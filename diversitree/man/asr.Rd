@@ -13,8 +13,8 @@
 
 \usage{
 asr.marginal(lik, pars, nodes=NULL, ...)
-asr.joint(lik, pars, n=1, root.state=NA, simplify=TRUE, ...)
-asr.stoch(lik, pars, n=1, root.state=NA, ...)
+asr.joint(lik, pars, n=1, simplify=TRUE, ...)
+asr.stoch(lik, pars, n=1, ...) 
 }
 
 \arguments{
@@ -25,12 +25,8 @@ asr.stoch(lik, pars, n=1, root.state=NA, ...)
     default, all nodes are returned.}
   \item{n}{The number of samples to draw from the joint distribution, or
     number of stochastic reconstructions to make.}
-  \item{root.state}{For \code{asr.marginal} and \code{asr.joint}; the
-    state to start the root in.  If \code{NA} is given (the default),
-    the root state is drawn from the conditional likelihoods at the
-    root.}
-  \item{simplify}{Should the states be simplified into a matrix or
-    left unsimplified as a list?}
+  \item{simplify}{For \code{asr.joint}, return a vector of states when
+    \code{n=1}? Otherwise leaves as a one row matrix.}
   \item{...}{Additional arguments passed through to future methods}
 }
 

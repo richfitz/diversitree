@@ -134,7 +134,7 @@ constrain <- function(f, ..., formulae=NULL, names=argnames(f),
   names(pars) <- names
   g <- function(x, ..., pars.only=FALSE) {
     if ( length(x) != npar )
-      stop("x of wrong length")
+      stop(sprintf("x of wrong length (expected %d)", npar))
 
     pars[free.i] <- x[free.j]
     e <- structure(as.list(x), names=final)
