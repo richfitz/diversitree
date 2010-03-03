@@ -13,7 +13,7 @@ make.tree.bd <- function(pars, max.taxa=Inf, max.t=Inf) {
 
   pr.speciation <- lambda/(lambda + mu)
 
-  while ( n.taxa < max.taxa && n.taxa > 0) {
+  while ( n.taxa <= max.taxa && n.taxa > 0) {
     ## When does an event happen?
     r.n <- r * n.taxa
     r.tot <- sum(r.n)
@@ -35,6 +35,9 @@ make.tree.bd <- function(pars, max.taxa=Inf, max.t=Inf) {
 
     if ( runif(1) < pr.speciation ) {
       ## Speciating:
+      if ( n.taxa == max.taxa )
+        ## Don't add this one
+        break
       new.i <- length(extinct) + 1:2
       split[lineage] <- TRUE
       extinct[new.i] <- split[new.i] <- FALSE

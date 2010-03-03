@@ -58,6 +58,12 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
     stop("'tree' must be a valid phylo tree")
   if ( is.null(names(states)) )
     stop("The states vector must contain names")
+  if ( inherits(tree, "clade.tree") ) {
+    if ( !is.null(unresolved) )
+      stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
+    unresolved <- make.unresolved(tree$clades, states)
+  }
+
 
   ## Check 'sampling.f'
   if ( !is.null(sampling.f) && !is.null(unresolved) )
@@ -66,19 +72,14 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
     sampling.f <- c(1, 1)
   else if ( length(sampling.f) != 2 )
     stop("sampling.f must be of length 2 (or NULL)")
-  else if ( max(sampling.f) > 1 || min(sampling.f) < 0 )
-    stop("sampling.f must be on range [0,1]")
+  else if ( max(sampling.f) > 1 || min(sampling.f) <= 0 )
+    stop("sampling.f must be on range (0,1]")
   
   ## Check 'unresolved' (there is certainly room to streamline this in
   ## the future).
   if ( !is.null(unresolved) && nrow(unresolved) == 0 ) {
     unresolved <- NULL
     warning("Ignoring empty 'unresolved' argument")
-  }
-  if ( inherits(tree, "clade.tree") ) {
-    if ( !is.null(unresolved) )
-      stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
-    unresolved <- make.unresolved(tree$clades, states)
   }
   if ( !is.null(unresolved) ) {
     required <- c("tip.label", "Nc", "n0", "n1")

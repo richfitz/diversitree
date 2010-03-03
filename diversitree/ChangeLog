@@ -1,3 +1,27 @@
+2010-03-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/mle.R: Reverted previous change (gives error when starting
+	point invalid) as the handling of '...' needs fixing.
+
+	* R/model-bd.R: Added support for sampled trees and trees with
+	unresolved clades.
+
+	* R/model-bisse.R: Minor logical tweaks in make.cache checking
+	code.
+
+	* R/simulate-bd.R: Don't create final species when making a tree
+	with fixed number of species (simulate to n+1 and trim the final
+	species).
+
+	* man/make.bisse.Rd: More examples, showing that BiSSE reduces to
+	Mk2 and the birth-death model under certain conditions.  This is
+	also shown for the case of sampled trees and unresolved clades,
+	and acts as a good test case that everything is working
+	correctly.
+
+	* src/bucexp.f: Likelihoods were incorrectly calculated for clades
+	with no known states.
+
 2010-02-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/asr*.R: Finished fix of the asr code.

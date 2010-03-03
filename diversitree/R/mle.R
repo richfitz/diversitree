@@ -49,11 +49,13 @@ do.mle.search <- function(func, x.init, method, fail.value=NA,
     }
   }
 
-  y0 <- try(func(x.init, ...))
-  if ( inherits(y0, "try-error") )
-    stop("The above error occured when testing the starting position")
-  if ( !is.finite(y0) )
-    stop("Starting point must have finite probability")
+  ## TODO: check starting position like so.  However, doing this
+  ## fails because things like lower are passed through "...".
+  ## y0 <- try(func(x.init, ...))
+  ## if ( inherits(y0, "try-error") )
+  ##   stop("The above error occured when testing the starting position")
+  ## if ( !is.finite(y0) )
+  ##   stop("Starting point must have finite probability")
 
   mle.search <- get(sprintf("do.mle.search.%s", method))
   ans <- mle.search(func2, x.init, fail.value, ...)

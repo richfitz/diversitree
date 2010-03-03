@@ -112,9 +112,9 @@ all.branches <- function(pars, cache, initial.conditions, branches,
   } else {
     branch.init[tips,] <- y$y[y$i,]
     for ( i in y$types ) {
-      idx <- tips[which(y$i == i)]
-      t <- len[idx]
-      ans <- branches(y$y[i,], sort(unique(t)), pars, 0)
+      ##idx <- tips[which(y$i == i)]
+      ##t <- len[idx]
+      ##ans <- branches(y$y[i,], sort(unique(t)), pars, 0)
       ## TODO: tapply(x,x) is slow and error prone where there are
       ## small (O(1e-15)) differences between otherwise identical
       ## lengths.  Consider
@@ -122,7 +122,15 @@ all.branches <- function(pars, cache, initial.conditions, branches,
       ##   ans <- branches(y$y[i,], t.uniq, pars, 0)
       ##   ans[match(t, t.uniq),,drop=FALSE]
       ## instead.
-      ans <- ans[tapply(t, t),,drop=FALSE]
+      ##ans <- ans[tapply(t, t),,drop=FALSE]
+
+      idx <- tips[which(y$i == i)]
+      ##t <- round(len[idx], 8)
+      t <- len[idx]
+      t.uniq <- sort(unique(t))
+      ans <- branches(y$y[i,], t.uniq, pars, 0)
+      ans <- ans[match(t, t.uniq),,drop=FALSE]
+      
       lq[idx] <- ans[,1]
       branch.base[idx,] <- ans[,-1]
     }

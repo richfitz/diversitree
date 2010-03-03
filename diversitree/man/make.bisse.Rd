@@ -135,7 +135,6 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
 \examples{
-library(diversitree)
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(4)
 phy <- tree.bisse(pars, max.t=30, x0=0)
@@ -198,6 +197,61 @@ profiles.plot(samples[c("lambda0", "lambda1")], col.line=col, las=1,
               ylab="Posterior probability density")
 legend("topright", c("lambda0", "lambda1"), col=col, lty=1)
 }
+
+## BiSSE reduces to the birth-death model and Mk2 when diversification
+## is state independent (i.e., lambda0 ~ lambda1 and mu0 ~ mu1).
+lik.mk2 <- make.mk2(phy, phy$tip.state)
+lik.bd <- make.bd(phy)
+
+## 1. BiSSE / Birth-Death
+## Set the q01 and q10 parameters to arbitrary numbers (need not be
+## symmetric), and constrain the lambdas and mus to be the same for each
+## state.  The likelihood function now has just two parameters and
+## will be proprtional to Nee's birth-death based likelihood:
+lik.bisse.bd <- constrain(lik,
+                          lambda1 ~ lambda0, mu1 ~ mu0,
+                          q01 ~ .01, q10 ~ .02)
+pars <- c(.1, .03)
+## These differ by -167.3861 for both parameter sets:
+lik.bisse.bd(pars)   - lik.bd(pars)
+lik.bisse.bd(2*pars) - lik.bd(2*pars)
+
+## 2. BiSSE / Mk2
+## Same idea as above: set all diversification parameters to arbitrary
+## values (but symmetric this time):
+lik.bisse.mk2 <- constrain(lik,
+                           lambda0 ~ .1, lambda1 ~ .1,
+                           mu0 ~ .03, mu1 ~ .03)
+## Differ by -150.4740 for both parameter sets.
+lik.bisse.mk2(pars)   - lik.mk2(pars)
+lik.bisse.mk2(2*pars) - lik.mk2(2*pars)
+
+## 3. Sampled BiSSE / Birth-Death
+## Pretend that the tree is only .6 sampled:
+lik.bd2 <- make.bd(phy, sampling.f=f)
+lik.bisse2 <- make.bisse(phy, phy$tip.state, sampling.f=c(f, f))
+lik.bisse2.bd <- constrain(lik.bisse2,
+                           lambda1 ~ lambda0, mu1 ~ mu0,
+                           q01 ~ .01, q10 ~ .01)
+
+## Difference of -49.33389
+lik.bisse2.bd(pars.bd)   - lik.bd2(pars.bd)
+lik.bisse2.bd(2*pars.bd) - lik.bd2(2*pars.bd)
+
+## 4. Unresolved clade BiSSE / Birth-Death
+set.seed(1)
+unresolved <- data.frame(tip.label=I(sample(phy$tip.label, 5)),
+                         Nc=sample(2:10, 5), n0=0, n1=0)
+unresolved.mk2 <- structure(unresolved$Nc, names=unresolved$tip.label)
+lik.bisse3 <- make.bisse(phy, phy$tip.state, unresolved)
+lik.bisse3.bd <- constrain(lik.bisse3,
+                           lambda1 ~ lambda0, mu1 ~ mu0,
+                           q01 ~ .01, q10 ~ .01)
+lik.bd3 <- make.bd(phy, unresolved=unresolved.mk2)
+
+## Difference of -47.0206 (less accurate than the above)
+lik.bisse3.bd(pars.bd) - lik.bd3(pars.bd)
+lik.bisse3.bd(pars.bd*2) - lik.bd3(pars.bd*2)
 }
 
 \references{

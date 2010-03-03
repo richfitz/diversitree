@@ -483,7 +483,7 @@
             enddo
          endif
       elseif ( ns .eq. 0 ) then
-         do i = 1,N
+         do i = 0,N
             ans = ans + w(off + i)
          enddo
       else

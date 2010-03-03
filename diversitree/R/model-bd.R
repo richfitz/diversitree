@@ -132,9 +132,39 @@ make.cache.bd <- function(tree=NULL, times=NULL,
     times <- as.numeric(sort(branching.times(tree), decreasing=TRUE))
   else
     times <- as.numeric(sort(times, decreasing=TRUE))
-  
-  if ( !is.null(sampling.f) ) .NotYetUsed("sampling.f")
-  if ( !is.null(unresolved) ) .NotYetUsed("unresolved")
+
+  if ( !is.null(sampling.f) && !is.null(unresolved) )
+    stop("Cannot specify both sampling.f and unresolved")
+  else if ( is.null(sampling.f) )
+    sampling.f <- 1
+  else if ( length(sampling.f) != 1 )
+    stop("sampling.f must be of length 1 (or NULL)")
+  else if ( sampling.f > 1 || sampling.f <= 0 )
+    stop("sampling.f must be on range (0,1]")
+
+  if ( !is.null(unresolved) && length(unresolved) > 0 ) {
+    if ( is.null(names(unresolved)) || !is.numeric(unresolved) )
+      stop("'unresolved' must be a named numeric vector")
+    if ( !(all(names(unresolved) %in% tree$tip.label)) )
+      stop("Unknown species in 'unresolved'")
+    if ( any(unresolved < 0) )
+      stop("All unresolved entries must be > 0")
+
+    if ( any(unresolved == 0) ) {
+      warning("Removing unresolved entries that are zero")
+      unresolved <- unresolved[unresolved != 0]
+    }
+
+    if ( length(unresolved) == 0 )
+      unresolved <- NULL
+    else {
+      i <- match(names(unresolved), phy$tip.label)
+      unresolved <- list(n=unresolved,
+                         t=phy$edge.length[match(i, phy$edge[,2])])
+    }
+  } else {
+    unresolved <- NULL
+  }
 
   x <- c(NA, times)
   N <- length(x)
@@ -148,32 +178,46 @@ make.cache.bd <- function(tree=NULL, times=NULL,
     n.node <- tree$Nnode
   }
 
-  list(N=N, x=x, tot.len=tot.len, n.node=n.node)
+  list(N=N, x=x, f=sampling.f, unresolved=unresolved, tot.len=tot.len,
+       n.node=n.node)
 }
 
-## make here only requires the ll function.  It cannot use cleanup
-## though, as the normal cache structure is not generated.
+## This allows r < 0, a > 1.  a < 0 is not allowed though
+## Also, if r < 0, then a must > 1 (and vv.).  XOR captures this.
+##   if ( a < 0 || sign(1-a) != sign(r) ) return(-Inf)
+## Alternatively, just enforce all(pars > 0)?
 ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   N <- cache$N
   x <- cache$x
+  f <- cache$f
+  unresolved <- cache$unresolved
 
   r <- pars[1] - pars[2]
   a <- pars[2] / pars[1]
-  ## This allows r < 0, a > 1.  a < 0 is not allowed though
-  ## Also, if r < 0, then a must > 1 (and vv.).  XOR captures this.
-  ##   if ( a < 0 || sign(1-a) != sign(r) ) return(-Inf)
-  ## Alternatively, just enforce all(pars > 0)?
-  if ( is.nan(a) || a < 0 || xor(a > 1, r < 0) )
+
+  if ( pars[1] <= 0 || pars[2] < 0 )
     return(-Inf)
 
-  if ( condition.surv )
-    loglik <- lfactorial(N - 1) + (N - 2) * log(abs(r)) + r * sum(x[3:N]) +
-      N * log(abs(1 - a)) - 2*sum(log(abs(exp(r * x[2:N]) - a)))
-  else
-    loglik <- lfactorial(N - 1) + (N - 2) * log(abs(r)) + r * sum(x[3:N]) +
-      N * log(abs(1 - a)) - 2*sum(log(abs(exp(r * x[2:N]) - a))) +
-        2*log(abs((1-a)/(1-a*exp(-r * x[2])))) + log(r/(1-a))
+  if ( f < 1 )
+    loglik <- lfactorial(N - 1) +
+      (N - 2) * log(f*abs(r)) + N * log(abs(1 - a)) +
+        r * sum(x[3:N]) -
+          2*sum(log(abs(f * exp(r * x[2:N]) - a + 1 - f)))
+  else # this may not be faster enough to warrant keeping.
+    loglik <- lfactorial(N - 1) +
+      (N - 2) * log(abs(r)) + N * log(abs(1 - a)) + r * sum(x[3:N]) -
+        2*sum(log(abs(exp(r * x[2:N]) - a)))
 
+  if ( !condition.surv )
+    loglik <- loglik +
+      log(f * f * r * (1 - a)) -
+        2*log(abs(exp(-r * x[2])*(a - 1+f) + f))
+
+  if ( !is.null(unresolved) ) {
+    ert <- exp(r * unresolved$t)
+    loglik <- loglik +
+      sum((unresolved$n-1) * (log(abs(ert - 1)) - log(abs(ert - a))))
+  }
 
   if ( is.null(prior) )
     p <- loglik
