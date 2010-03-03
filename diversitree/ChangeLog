@@ -1,5 +1,8 @@
 2010-03-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
+	* R/model-bd.R: Fix for lambda=mu (not pretty, but should work in
+	the short term).
+
 	* R/mle.R: Reverted previous change (gives error when starting
 	point invalid) as the handling of '...' needs fixing.
 

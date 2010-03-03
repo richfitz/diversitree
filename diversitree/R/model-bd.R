@@ -192,6 +192,9 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   f <- cache$f
   unresolved <- cache$unresolved
 
+  if ( pars[2] == pars[1] )
+    pars[1] <- pars[1] + 1e-12
+
   r <- pars[1] - pars[2]
   a <- pars[2] / pars[1]
 
