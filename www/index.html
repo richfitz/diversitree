@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8" ?><!-- -*-nxml-*- -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Diversitree</title>
+    <link rel="Stylesheet" type="text/css" href="stylesheet.css"
+	  media="all" />
+  </head>
+  <body>
+    <div class="float-right">
+      <img src="pics/logo.png" alt="Diversitree logo" class="display" />
+    </div>
+    <h1>Diversitree</h1>
+
+    <p>
+      Comparative phylogenetic analysis of diversification in <a
+      href="http://www.r-project.org">R</a>.  The "diversitree"
+      package includes the BiSSE method (Binary State Speciation and
+      Extinction; Maddison et al. 2007) and extensions for terminally
+      unresolved trees and skeleton trees (FitzJohn et al. 2009).
+      The package also includes support for models of character
+      evolution (e.g. Pagel 1994) and character-independent
+      speciation/extinction (Nee et al. 1994).
+    </p>
+
+    <h2>Download</h2>
+    <p>
+      <a href="diversitree_0.4-5.tar.gz">R source package</a>.
+    </p>
+    
+    <p>It is important that this file is not uncompressed by your
+    browser.  If the file is downloaded without the "gz" extension,
+    try right-clicking the file and selecting "Save file as" (or
+    similar depending on your browser).  Mac users might try
+    <code>
+      curl -O http://www.zoology.ubc.ca/prog/diversitree/diversitree_0.4-5.tar.gz
+    </code>
+    from the command line.
+    </p>
+
+    <h2>Installation</h2>
+    <p>
+      Until the package can be uploaded to CRAN, installation may be
+      tricky.  The download is a source package only; you will need a
+      working C and Fortran compiler to install the package.  (Xcode +
+      <a href="http://r.research.att.com/tools/">gfortran</a> is
+      sufficient on Mac OS X, most Linux systems are probably fine
+      as-is, and on windows consider <a
+      href="http://www.mingw.org/">MinGW</a> or the tools <a
+      href="http://www.murdoch-sutherland.com/Rtools/">here</a>).
+      First, install the packages <a
+      href="http://cran.r-project.org/web/packages/deSolve/index.html">deSolve</a>,
+      <a
+      href="http://cran.r-project.org/web/packages/ape/index.html">ape</a>,
+      and <a
+      href="http://cran.r-project.org/web/packages/subplex/index.html">subplex</a>
+      From within R, run
+    </p>
+    <pre>
+      install.packages("diversitree_0.4-5.tar.gz", repos=NULL, type="source")
+    </pre>
+    <p>
+      which will compile and install the package.
+    </p>
+
+    <h3>Mac OS X 10.5 (leopard) and R 2.10.1</h3>
+    <p>
+      R 2.10.1 and Mac OS X 10.5 (leopard)'s default Xcode appear not
+      to play well together and the installation will not work,
+      failing with an error like
+    </p>
+    <pre>
+      gcc-4.2 -arch i386 -std=gnu99 -I/Library/Frameworks/R.framework...
+      make: gcc-4.2: Command not found
+      make: *** [bisse-eqs.o] Error 127
+      ERROR: compilation failed for package ‘diversitree’
+    </pre>
+    <p>
+      This type of error will occur for all R packages.  To get around
+      this, either install Xcode 3.1.4 (available with some hunting
+      from <a
+      href="http://connect.apple.com">http://connect.apple.com</a>,
+      which includes a more recent Xcode.  This is a big download and
+      you need to create a apple developer account.
+    </p>
+    <p>
+      Alternatively, you can work around the issue by changing the
+      default compilers.  Create a directory <code>~/.R</code> and
+      download <a href="Makevars">this file</a>.  Don't forget to
+      delete this file when you upgrade either R or OSX!
+    </p>
+    <p>From within R</p>
+    <pre>
+      dir.create("~/.R", FALSE)
+      download.file("http://www.zoology.ubc.ca/prog/diversitree/Makevars",
+                    "~/.R/Makevars")
+    </pre>
+   
+    <h2>Documentation</h2>
+    <p>
+      A <strong>very</strong> preliminary tutorial is available <a
+      href="diversitree-bisse.pdf">here</a>.  Additional help is
+      available through R's online help system.
+    </p>
+
+    <h2>News/Changes</h2>
+    <ul>
+      <li><b>2 March 2010 [<a
+      href="archive/diversitree_0.4-5.tar.gz">0.4-5</a>]</b>.  Some
+      important bug fixes (BiSSE likelihood calculations were very
+      slightly incorrect at root and unresolved clade calculations
+      were incorrect when no species within a clade had a known
+      state).  Other changes:
+      <ul>
+	<li>Added support for sampling and unresolved clades in
+	constant rate birth-death models.</li>
+	<li>Fixes to the Mk2 ancestral state reconstructions</li>
+	<li>Works with deSolve version 1.7</li>
+	<li>Assorted small bug fixes and documentation
+	improvements</li>
+      </ul>
+      </li>
+
+      <li><b>2 Febrary 2010 [<a
+      href="archive/diversitree_0.4-4.tar.gz">0.4-4</a>]</b>.  New
+      features include:
+      <ul>
+	<li>Ancestral state reconstruction and stochastic character
+	mapping under Mk2 (<code>?asr.mk2</code>) (slow, but will get
+	faster in future versions)</li>
+	<li>Much faster Mk2 likelihood calculation (speed increase of
+	20-50x)</li>
+	<li>Ancestral state reconstruction under BiSSE
+	(<code>?asr.marginal.bisse</code>)</li>
+      </ul>
+      The ancestral state reconstruction code should be regarded as
+      <strong>experimental</strong>.
+      </li>
+      <li><b>19 January 2010 [<a
+      href="archive/diversitree_0.4-3.tar.gz">0.4-3</a>]</b>.  Mostly
+      a few bug fixes.
+      </li>
+      <li><b>11 January 2010 [<a
+      href="archive/diversitree_0.4-2.tar.gz">0.4-2</a>]</b>.  New
+      features include: 
+      <ul>
+	<li>Remembering and plotting character histories on simulated
+	trees (see <code>?tree.bisse</code></li>
+	<li>Works with deSolve 1.6</li>
+	<li>Support for simulating Yule trees and estimating Yule
+	model parameters</li>
+	<li>Bug fixes and improvements to the MLE code</li>
+      </ul>
+      </li>
+      <li><b>02 December 2009 [<a
+      href="archive/diversitree_0.4-1.tar.gz">0.4-1</a>]</b>.  New
+      features include
+      <ul>
+	<li>Constant rate birth death model (<code>make.bd</code>) and
+	Mk2/Mk-n (<code>make.mk2</code>, <code>make.mkn</code>) models
+	implemented</li>
+	<li>Now works with the current deSolve package</li>
+	<li>Node states now retained during tree simulation (see
+	<code>?trees</code> for an example)</li>
+	<li>Simple MCMC plots with <code>profiles.plot</code></li>
+	<li>Several bugs fixes, documentation improvements, additional
+	examples, and minor features</li>
+      </ul>
+      </li>
+      <li><b>16 October 2009 [<a href="archive/diversitree_0.3-2.tar.gz">0.3-2</a>]:</b>: Minor bugfix</li>
+      <li><b>15 October 2009 [<a href="archive/diversitree_0.3-1.tar.gz">0.3-1</a>]:</b>
+      <ul>
+	<li>New formula-based constraint interface (through function
+	<code>constrain()</code>)</li>
+	<li><a
+		href="http://cran.r-project.org/web/packages/subplex/index.html">Subplex</a> available to do ML searches</li>
+	<li>Simple hypothesis testing convenience functions added
+	(<code>anova()</code>, <code>logLik()</code>).</li>
+      </ul>
+      </li>
+      <li><b>5 May 2009 [<a href="archive/diversitree_0.2-1.tar.gz">0.2-1</a>]:</b> Initial public release</li>
+    </ul>
+
+    <h2>References</h2>
+    <ul>
+      <li>
+	FitzJohn, R.G., W.P. Maddison, and S.P. Otto. 2009.
+	Estimating trait-dependent speciation and extinction rates
+	from incompletely resolved phylogenies.  Syst. Biol.  58:
+	595-611.
+      </li>
+      <li>
+	Maddison, W.P., P.E. Midford, and S.P. Otto. 2007. Estimating
+	a binary character's effect on speciation and
+	extinction. Syst. Biol. 56: 701–710.
+      </li>
+      <li>
+	Nee S., May R.M., and Harvey P.H. 1994. The reconstructed
+	evolutionary process. Philos.  Trans. R. Soc. Lond. B
+	Biol. Sci. 344:305–311.
+      </li>
+      <li>
+	Pagel M. 1994. Detecting correlated evolution on phylogenies:
+	a general method for the comparative analysis of discrete
+	characters. Proc. R. Soc. Lond. B Biol. Sci. 255:37–45.
+      </li>
+    </ul>
+  </body>
+</html>

@@ -1,0 +1,109 @@
+body {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+h1 {
+    padding: .1em;
+    padding-top: .2em;
+    padding-left: 0.6em;
+    border-left: 0.125em solid #36648B;
+    border-top: 1px solid #36648B;
+    line-height: 1.2em;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+table {
+    width: 75%;
+    background-color: #fafafa;
+    border: 1px #6699CC solid;
+    border-collapse: collapse;
+    border-spacing: 0px; 
+    margin-left: 10%;
+}
+td, th {
+    padding: 0.5ex 1ex 0.5ex 1ex;
+    padding: 1ex;
+    text-align: left;
+}
+th {
+    border: 1px solid #6699CC;
+    border-bottom-width: 2px;
+    background-color: #BEC8D1;
+}
+td {
+    border: 1px solid #9CF;
+    background-color: #fafafa; 
+}
+
+/* Special types */
+td.date {
+    white-space:nowrap;
+    text-align:right;
+}
+td.presenter {
+    white-space:nowrap;
+}
+td.nomeeting {
+    text-align: center;
+}
+
+.odd td {
+    background-color: #eeeeee;
+}
+.nomeeting td {
+    background-color: #E9B3A5;
+}
+
+/* Menu at the bottom */
+ul.nav {
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:0;
+    margin-bottom: 0;
+    padding:0;
+    list-style:none;
+    display:table;
+}
+.nav li {
+    display: inline;
+    border-right: 1px solid black;
+    padding: 0px 0.6ex 0px 0.6ex;
+    white-space: nowrap;
+    text-align: centre;
+}
+.nav li:last-child {
+    border: 0;
+}
+
+.nav li:hover {
+    background: #dddddd;
+}
+
+div.banner {
+    margin-left:auto;
+    margin-right: auto;
+    text-align: center;
+}
+.banner img {
+    border: 1px solid black;
+}
+
+.badges { 
+    margin: 0;
+    margin-top: .5ex;
+    border: 0;
+    padding: 0;
+    text-align: right;
+    color: black;
+}
+
+div.float-right {
+    float: right;
+}
+
+div.float-left {
+    float: left;
+}

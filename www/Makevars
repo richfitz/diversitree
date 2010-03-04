@@ -1,0 +1,16 @@
+CC = gcc-4.0 -arch i386 -std=gnu99
+CFLAGS = -g -O2
+CXX = g++-4.0 -arch i386
+CXXCPP = g++-4.0 -arch i386 -E
+CXXFLAGS = -g -O2
+DYLIB_LD = gcc-4.0 -arch i386 -std=gnu99
+F77 = gfortran-4.0 -arch i386
+FC = gfortran-4.0 -arch i386
+FCFLAGS = -g -O2
+MAIN_LD = gcc-4.0 -arch i386 -std=gnu99
+OBJC = gcc-4.0 -arch i386
+OBJCFLAGS = -g -O2
+OBJCXX = g++-4.0 -arch i386
+SHLIB_CXXLD = g++-4.0 -arch i386
+SHLIB_FCLD = gfortran-4.0 -arch i386
+SHLIB_LD = gcc-4.0 -arch i386 -std=gnu99
