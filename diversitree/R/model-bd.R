@@ -25,8 +25,11 @@ make.bd <- function(tree, times=NULL,
 
 make.yule <- function(tree, times=NULL,
                       sampling.f=NULL, unresolved=NULL) {
+  if ( !is.null(sampling.f) || !is.null(unresolved) )
+    stop("Cannot yet do Yule model with unresolved clades or sampling.f")
   cache <- make.cache.bd(tree, times, sampling.f, unresolved)
-  ll <- function(pars, ...) ll.bd(cache, c(pars, 0), ...)
+  ll <- function(pars, ...)
+    ll.bd(cache, c(pars, 0), ...)
   class(ll) <- c("yule", "bd", "function")
   ll
 }
@@ -158,9 +161,9 @@ make.cache.bd <- function(tree=NULL, times=NULL,
     if ( length(unresolved) == 0 )
       unresolved <- NULL
     else {
-      i <- match(names(unresolved), phy$tip.label)
+      i <- match(names(unresolved), tree$tip.label)
       unresolved <- list(n=unresolved,
-                         t=phy$edge.length[match(i, phy$edge[,2])])
+                         t=tree$edge.length[match(i, tree$edge[,2])])
     }
   } else {
     unresolved <- NULL
@@ -192,6 +195,8 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   f <- cache$f
   unresolved <- cache$unresolved
 
+  if ( length(pars) != 2 )
+    stop("Incorrect number of parameters")
   if ( pars[2] == pars[1] )
     pars[1] <- pars[1] + 1e-12
 
@@ -214,7 +219,7 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   if ( !condition.surv )
     loglik <- loglik +
       log(f * f * r * (1 - a)) -
-        2*log(abs(exp(-r * x[2])*(a - 1+f) + f))
+        2*log(abs(exp(-r * x[2])*(a - 1 + f) - f))
 
   if ( !is.null(unresolved) ) {
     ert <- exp(r * unresolved$t)

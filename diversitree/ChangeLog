@@ -1,3 +1,25 @@
+2010-03-25  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: bumped version number (did I miss checking in
+	0.4-5?)
+
+	* R/asr-mkn.R: Pass additional arguments through to underlying
+	likelihood calculations.
+
+	* R/model-bd.R: Some warnings for the Yule function with sampling
+	and unresolved clades.  Fixed a couple of bugs (e.g., use of phy
+	rather than tree leading to unbound variables).  Check parameter
+	number and give a nice error if the wrong number are given.
+	Corrected formula for bd likelihood under sampking where survival
+	is not conditioned on.
+
+	* R/profiles-plot.R: Overhaul that should perform much better on
+	distributions whose density does not tend to zero as x->infty.
+	Also now the shading lines up properly with the confidence
+	intervals.
+
+	* man/make.bd.Rd, man/make.bisse.Rd: Documentation improvements.
+
 2010-03-02  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/model-bd.R: Fix for lambda=mu (not pretty, but should work in

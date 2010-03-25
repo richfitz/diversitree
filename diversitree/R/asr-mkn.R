@@ -73,7 +73,7 @@ asr.stoch.mkn <- function(lik, pars, n=1, ...) {
   edge <- cache$edge
   edge.length <- cache$edge.length
 
-  node.state <- asr.joint(lik, pars, n, intermediates=TRUE)
+  node.state <- asr.joint(lik, pars, n, intermediates=TRUE, ...)
 
   if ( n == 1 )
     do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,

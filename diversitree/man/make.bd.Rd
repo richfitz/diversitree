@@ -26,10 +26,17 @@ starting.point.bd(tree, yule=FALSE)
     \code{branching.times}.  You don't need to use this unless you know
     that you need to use this.  Don't use it at the same time as
     \code{tree}.}
-  \item{unresolved}{(Not yet used.)  Unresolved clade information.}
-  \item{sampling.f}{(Not yet used.)  Probability of an extant species
-    being included in the phylogeny (sampling fraction).  By default,
-    all extant species are assumed to be included.}
+  \item{unresolved}{Unresolved clade information.  This is a named
+    vector, with the number of species as the value and names
+    corresponding to tip labels.  Tips that represent a single species
+    should not be included in this vector.  For example
+    \code{sp1=10, sp2=2}, would mean that \code{sp1} represents 10
+    species, while \code{sp2} represents two.  These labels must exist
+    in \code{tree$tip.label} and all other tips are assumed to
+    represent one species.}
+  \item{sampling.f}{Probability of an extant species being included in
+    the phylogeny (sampling fraction).  By default, all extant species are
+    assumed to be included.}
   \item{yule}{Should the starting point function return a Yule model
     (zero extinction rate)?}
 }
@@ -117,6 +124,15 @@ profiles.plot(samples[c("lambda", "mu", "r")], col.line=col, las=1,
 legend("topright", c("lambda", "mu", "r"), fill=col)
 abline(v=0, lty=2)
 abline(v=c(.1, .03, .07), col=col)
+
+## Sample the phylogeny to include 20 of the species, and run the
+## likelihood search assuming random sampling:
+set.seed(1)
+phy2 <- drop.tip(phy, sample(25, 5))
+lik2 <- make.bd(phy, sampling.f=20/25)
+fit2 <- find.mle(lik2, c(.1, .03))
+
+%% TODO: Example of unresolved clades
 }
 
 \references{

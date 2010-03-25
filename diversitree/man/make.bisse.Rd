@@ -228,15 +228,15 @@ lik.bisse.mk2(2*pars) - lik.mk2(2*pars)
 
 ## 3. Sampled BiSSE / Birth-Death
 ## Pretend that the tree is only .6 sampled:
-lik.bd2 <- make.bd(phy, sampling.f=f)
-lik.bisse2 <- make.bisse(phy, phy$tip.state, sampling.f=c(f, f))
+lik.bd2 <- make.bd(phy, sampling.f=.6)
+lik.bisse2 <- make.bisse(phy, phy$tip.state, sampling.f=c(.6, .6))
 lik.bisse2.bd <- constrain(lik.bisse2,
                            lambda1 ~ lambda0, mu1 ~ mu0,
                            q01 ~ .01, q10 ~ .01)
 
-## Difference of -49.33389
-lik.bisse2.bd(pars.bd)   - lik.bd2(pars.bd)
-lik.bisse2.bd(2*pars.bd) - lik.bd2(2*pars.bd)
+## Difference of -167.2876
+lik.bisse2.bd(pars)   - lik.bd2(pars)
+lik.bisse2.bd(2*pars) - lik.bd2(2*pars)
 
 ## 4. Unresolved clade BiSSE / Birth-Death
 set.seed(1)
@@ -249,9 +249,9 @@ lik.bisse3.bd <- constrain(lik.bisse3,
                            q01 ~ .01, q10 ~ .01)
 lik.bd3 <- make.bd(phy, unresolved=unresolved.mk2)
 
-## Difference of -47.0206 (less accurate than the above)
-lik.bisse3.bd(pars.bd) - lik.bd3(pars.bd)
-lik.bisse3.bd(pars.bd*2) - lik.bd3(pars.bd*2)
+## Difference of -167.1523
+lik.bisse3.bd(pars) - lik.bd3(pars)
+lik.bisse3.bd(pars*2) - lik.bd3(pars*2)
 }
 
 \references{
