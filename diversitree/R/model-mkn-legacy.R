@@ -34,6 +34,8 @@ make.mkn.old <- function(tree, states, k) {
 
   ll.mkn <- function(cache, pars, prior=NULL, root=ROOT.OBS,
                      root.p=NULL, intermediates=FALSE) {
+    if ( !is.null(prior) )
+      stop("'prior' argument to likelihood function no longer accepted")
     if ( length(pars) != k*(k-1) )
       stop("Invalid length parameters")
     if ( any(!is.finite(pars)) )
@@ -45,10 +47,7 @@ make.mkn.old <- function(tree, states, k) {
                         branches.unresolved.mkn)
     loglik <- root.mkn.old(ans$init[cache$root,], ans$lq, pars, root,
                            root.p)
-    cleanup(loglik, pars, prior, intermediates, cache, ans)
-    ##     if ( !is.null(prior) )
-    ##       loglik <- loglik + prior.mkn(pars, prior)
-    ##     loglik
+    cleanup(loglik, pars, intermediates, cache, ans)
   }
 
   ll <- function(pars, ...) ll.mkn(cache, pars, ...)
@@ -162,7 +161,9 @@ root.mkn.old <- function(vals, lq, pars, root, root.p=NULL) {
 
 ## 6: ll (ll.mkn is done within make.mkn)
 ll.mk2.old <- function(cache, pars, prior=NULL, root=ROOT.OBS,
-                   root.p=NULL, intermediates=FALSE) {
+                       root.p=NULL, intermediates=FALSE) {
+  if ( !is.null(prior) )
+    stop("'prior' argument to likelihood function no longer accepted")
   if ( length(pars) != 2 )
     stop("Invalid length parameters")
   if ( any(pars < 0) || any(!is.finite(pars)) )
@@ -171,7 +172,7 @@ ll.mk2.old <- function(cache, pars, prior=NULL, root=ROOT.OBS,
                       branches.mk2, branches.unresolved.mkn)
   loglik <- root.mkn.old(ans$init[cache$root,], ans$lq, pars, root,
                          root.p)
-  cleanup(loglik, pars, prior, intermediates, cache, ans)
+  cleanup(loglik, pars, intermediates, cache, ans)
 }
 
 ## 7: initial.conditions:

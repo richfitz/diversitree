@@ -16,6 +16,16 @@ protect <- function(f, fail.value.default=NULL) {
 
 invert <- function(f) function(...) -f(...)
 
+## Box constraints
+boxconstrain <- function(f, lower, upper, fail.value=-Inf) {
+  function(x, ...) {
+    if ( any(x < lower | x > upper) )
+      fail.value
+    else
+      f(x, ...)
+  }
+}
+
 big.brother <- function(f, interval=1) {
   .x.eval <- list()
   .y.eval <- list()
@@ -198,19 +208,74 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
 quadratic.roots <- function(a, b, c)
   (-b + c(-1, 1) * sqrt(b*b - 4*a*c))/(2 * a)
 
-## TODO: Do the tips immediately after the loop; this should be really
-## easy, but I think that I need to include the edge matrix to make it
-## work.  Should be something like this:
-##   ans[tips] <- ans[match(tips, edge[,2])]
-ancestors <- function(parent, order) {
-  ans <- vector("list", max(order))
-  for ( i in rev(order[-length(order)]) )
-    ans[[i]] <- c(parent[i], ans[[parent[i]]])
-  ans
-}
 
 discretize <- function(x, n, r=range(x)) {
   at <- seq(r[1], r[2], length=n+1)
   as.integer(cut(x, at, include.lowest=TRUE, labels=FALSE))
 }
 
+make.prior.exponential <- function(r) {
+  function(pars)
+    sum(log(r) - pars * r)
+}
+
+
+## This is the same as the function in quasse2
+descendants <- function(node, edge) {
+  ans <- node
+  repeat {
+    node <- edge[edge[,1] %in% node,2]
+    if ( length(node) > 0 )
+      ans <- c(ans, node)
+    else
+      break
+  }
+
+  unlist(ans)
+}
+
+ancestors <- function(phy, i=seq_along(phy$tip.label)) {
+  anc <- i
+  edge <- phy$edge
+  while ( any(!is.na(i)) ) {
+    i <- edge[match(i, edge[,2]),1]
+    anc <- cbind(anc, i, deparse.level=0)
+  }
+
+  apply(anc, 1, function(x)
+        c(rev(x[!is.na(x)]), rep(NA, sum(is.na(x)))))
+}
+
+## Compute the MRCA of tips with indices in 'tips'
+mrca.tipset <- function(phy, tips, anc=ancestors(phy)) {
+  if ( length(tips) == 1 )
+    tips
+  else {
+    anc <- ancestors(phy, tips)
+    j <- which(apply(anc, 1, function(x) length(unique(x))) > 1)[1]
+    anc[j-1,1]
+  }
+}
+
+## Similar to ape's branching.times(), but returns the height above
+## the root node, even for non-ultrametric trees.  Includes tip times.
+branching.heights <- function(phy) {
+  if (!inherits(phy, "phylo"))
+    stop('object "phy" is not of class "phylo"')
+
+  edge <- phy$edge
+  n.node <- phy$Nnode
+  n.tip <- length(phy$tip.label)
+
+  ht <- numeric(n.node + n.tip) # zero'd
+  for (i in seq_len(nrow(edge)) )
+    ht[edge[i, 2]] <- ht[edge[i, 1]] + phy$edge.length[i]
+
+  ## Ugly, but fairly compatible with branching.times()
+  names.node <- phy$node.label
+  if (is.null(names.node))
+    names.node <- (n.tip + 1):(n.tip + n.node)
+  names(ht) <- c(phy$tip.label, names.node)
+
+  ht
+}

@@ -1,66 +1,98 @@
 ## NAMESPACE
 useDynLib(diversitree)
-export(make.bisse)
+
+## 1. make
 export(make.bd)
-export(make.yule)
+export(make.bisse)
+export(make.bisse.split)
+export(make.bm)
 export(make.mk2)
 export(make.mkn)
+export(make.musse)
+export(make.yule)
 
-## Tree evolution code
-export(trees)
-export(tree.bisse)
-export(tree.bd)
-export(tree.yule)
+## 2. print:
+S3method(print, bd)
+S3method(print, bisse)
+S3method(print, bisse.split)
+S3method(print, bm)
+S3method(print, mkn)
+S3method(print, musse)
+S3method(print, yule)
 
-## MLE, MCMC and helpers
+S3method(print, constrained)
+
+## 3: argnames / argnames<-
+export(argnames)
+export("argnames<-")
+
+S3method(argnames, bd)
+S3method(argnames, bisse)
+S3method(argnames, bisse.split)
+S3method(argnames, bm)
+S3method(argnames, mk2)
+S3method(argnames, mkn)
+S3method(argnames, musse)
+S3method(argnames, yule)
+
+S3method("argnames<-", bd)
+S3method("argnames<-", bisse)
+S3method("argnames<-", bisse.split)
+S3method("argnames<-", bm)
+S3method("argnames<-", mkn) # is also the mk2 method
+S3method("argnames<-", musse)
+S3method("argnames<-", yule)
+
+## Extra:
+S3method(argnames, constrained)
+S3method("argnames<-", constrained)
+
+## 4: find.mle
 export(find.mle)
-S3method(find.mle, default)
-S3method(find.mle, bisse)
-S3method(find.mle, bd)
-S3method(find.mle, yule)
-S3method(find.mle, mkn)
 
+S3method(find.mle, bd)
+S3method(find.mle, bisse)
+S3method(find.mle, bisse.split)
+S3method(find.mle, bm)
+S3method(find.mle, default)
+S3method(find.mle, mkn)
+S3method(find.mle, musse)
+S3method(find.mle, yule)
+
+## Other method support:
 S3method(anova, fit.mle)
 S3method(coef, fit.mle)
 S3method(extractAIC, fit.mle)
 S3method(logLik, fit.mle)
 
+
+
 export(mcmc)
+
 export(constrain)
-
-S3method(print, bisse)
-S3method(print, bd)
-S3method(print, yule)
-S3method(print, mkn)
-S3method(print, constrained)
-
 S3method(update, constrained)
 
-export(argnames)
-S3method(argnames, bisse)
-S3method(argnames, bd)
-S3method(argnames, yule)
-S3method(argnames, mk2)
-S3method(argnames, mkn)
-S3method(argnames, constrained)
+## Tree evolution code
+export(trees)
 
-export("argnames<-")
-S3method("argnames<-", bisse)
-S3method("argnames<-", bd)
-S3method("argnames<-", yule)
-S3method("argnames<-", mkn)
-S3method("argnames<-", constrained)
+export(tree.bd)
+export(tree.bisse)
+export(tree.musse)
+export(tree.yule)
 
+## Utility functions:
 export(protect)
 export(invert)
 export(big.brother)
 export(starting.point.bisse)
 export(starting.point.bd)
-export(bisse.starting.point)
-export(starting.point)
 export(profiles.plot)
 export(make.prior.exponential)
 export(prune)
+
+## Deprecated:
+export(bisse.starting.point)
+export(starting.point)
 
 ## ASR:
 export(asr.marginal)
@@ -78,11 +110,15 @@ S3method(asr.stoch, mkn)
 ## ASR/BiSSE
 S3method(asr.marginal, bisse)
 
-
 ## Support for "clade.tree"s
-export(polytomies.to.clades)
+## TODO: polytomies.to.clades -> clades.from.polytomies
 export(make.clade.tree)
+export(clades.from.polytomies)
+export(clades.from.classification)
 S3method(plot, clade.tree)
+
+## Deprecated:
+export(polytomies.to.clades)
 
 ## History objects
 S3method(plot, history)

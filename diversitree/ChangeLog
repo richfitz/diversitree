@@ -1,3 +1,69 @@
+2010-05-31  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: Added functions for the changes included in this
+	changeset.
+
+	* DESCRIPTION: bumped version number to 0.5-1, as this version
+	will have quite a few new features.
+
+	* R/clade-tree.R: New function clades.from.classification(), that
+	builds a clade tree by using a higher-level classification of
+	tips.  Renamed polytomies.to.clades() -> clades.from.polytomies()
+	for consistency.
+
+	* R/clade-tree-plot.R: Removed - now uses alternative plotting in
+	R/plot-alt.R.  Methods for control have been added to
+	R/clade-tree.R.
+
+	* R/history.R: Minor changes to cope with changes to the
+	alternative plotting interface.
+
+	* R/mcmc.R: Changes to move the prior control within MCMC.
+
+	* R/mle.R: Added box constraints for subplex (not done "properly",
+	but through disallowing any value outside of the constraints).
+
+	* R/model-bd.R: Moved to new checking functions in R/check.R,
+	using the "prior" argument to bd likelihood functions is now an
+	error.
+
+	* R/model-bisse.R: nt.extra was not being passed through
+	correctly.  Moved to new checking functions, and added error for
+	use of "prior" argument to likelihood function.
+
+	* R/model-bm.R: Added to the package
+
+	* R/model-mkn-legacy.R: Added error for use of "prior" argument to
+	likelihood function.
+
+	* R/model-mkn.R: Moved to new checking functions, and added error
+	for use of "prior" argument to likelihood function.
+
+	* R/model-musse.R: Added to the package.
+
+	* R/plot-alt.R, R/plot-alt-util.R, R/plot-alt-extra.R: Completely
+	reworked.  Now works for type="fan".
+
+	* R/simulate-musse.R: Added to the package
+
+	* R/split.R, R/model-bisse-split.R: Functions for partitioned,
+	MEDUSA-style, calculations, including the BiSSE method.
+
+	* R/util.R: New functions boxconstrain(), descendants(),
+	mrca.tipset(), and branching.heights() (none are exported).
+
+	* src/musse-eqs.c: Added to the package
+
+	* man/make.bd.Rd: Fixed typo in example
+	
+	* man/make.clade.tree.Rd: Added documentation for
+	clades.from.classification(), though this is preliminary, and no
+	examples are given.
+	
+	* man/make.musse.Rd: Added
+
+	* man/tree.musse.Rd: Added
+
 2010-03-25  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: bumped version number (did I miss checking in

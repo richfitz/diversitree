@@ -108,10 +108,6 @@ find.mle.yule <- function(func, x.init, method, fail.value=NA,
   if ( is.null(condition.surv) )
     condition.surv <- TRUE
 
-  if ( !is.null(environment(func)$prior) )
-    stop("Cannot yet get MAP point for Yule with prior - ",
-         "use constrained bd model instead")
-
   n.node <- if ( condition.surv ) cache$n.node - 1 else cache$n.node
   lambda <- n.node / cache$tot.len
   obj <- list(par=c(lambda=lambda),
@@ -131,19 +127,16 @@ make.cache.bd <- function(tree=NULL, times=NULL,
     stop("times cannot be specified if tree given")
   else if ( is.null(times) && is.null(tree) )
     stop("Either times or tree must be specified")
-  else if ( is.null(times) )
+  else if ( is.null(times) ) {
+    tree <- check.tree(tree)
     times <- as.numeric(sort(branching.times(tree), decreasing=TRUE))
-  else
+  } else
     times <- as.numeric(sort(times, decreasing=TRUE))
 
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
-  else if ( is.null(sampling.f) )
-    sampling.f <- 1
-  else if ( length(sampling.f) != 1 )
-    stop("sampling.f must be of length 1 (or NULL)")
-  else if ( sampling.f > 1 || sampling.f <= 0 )
-    stop("sampling.f must be on range (0,1]")
+  else
+    sampling.f <- check.sampling.f(sampling.f, 1)
 
   if ( !is.null(unresolved) && length(unresolved) > 0 ) {
     if ( is.null(names(unresolved)) || !is.numeric(unresolved) )
@@ -154,6 +147,7 @@ make.cache.bd <- function(tree=NULL, times=NULL,
       stop("All unresolved entries must be > 0")
 
     if ( any(unresolved == 0) ) {
+      ## TODO: surely this should be entries that are one?
       warning("Removing unresolved entries that are zero")
       unresolved <- unresolved[unresolved != 0]
     }
@@ -190,6 +184,9 @@ make.cache.bd <- function(tree=NULL, times=NULL,
 ##   if ( a < 0 || sign(1-a) != sign(r) ) return(-Inf)
 ## Alternatively, just enforce all(pars > 0)?
 ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
+  if ( !is.null(prior) )
+    stop("'prior' argument to likelihood function no longer accepted")
+
   N <- cache$N
   x <- cache$x
   f <- cache$f
@@ -227,16 +224,7 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
       sum((unresolved$n-1) * (log(abs(ert - 1)) - log(abs(ert - a))))
   }
 
-  if ( is.null(prior) )
-    p <- loglik
-  else if ( is.numeric(prior) )
-    p <- loglik + prior.default(pars, prior)
-  else if ( is.function(prior) )
-    p <- loglik + prior(pars)
-  else
-    stop("Invalid 'prior' argument")
-
-  p
+  loglik
 }
 
 starting.point.bd <- function(tree, yule=FALSE) {

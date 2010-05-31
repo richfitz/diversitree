@@ -96,14 +96,32 @@ do.mle.search.optim <- function(func, x.init, fail.value=NA,
 }
 
 do.mle.search.subplex <- function(func, x.init, fail.value=NA,
-                                  control=list(), ...) {
+                                  control=list(), lower=-Inf,
+                                  upper=Inf, ...) {
   if ( is.null(fail.value) || is.na(fail.value) )
     fail.value <- -Inf
   ## By default, a less agressive tolerance that is more likely to be
   ## met.
   control <- modifyList(list(reltol=.Machine$double.eps^0.25),
                         control)
-  ans <- subplex(x.init, invert(func), fail.value=fail.value,
+
+  ## This is fairly simple minded treatment of box constraints
+  ## compared with optim.  In particular, no check is made to see if
+  ## the best solution falls at the edge of parameter space.
+  ## Realistically, this would not be too difficult to do (though
+  ## fairly expensive); we could check at the end of the optimisation
+  ## if the best point was close to a boundary (say, 10 * control
+  ## within boundaries) and set those points to their boundary
+  ## values.  Constrain the problem and start again.  I'm not sure if
+  ## this is worth the effort though.
+  if ( any(is.finite(lower)) || any(is.finite(upper)) ) {
+    if ( any(x.init < lower | x.init > upper) )
+      stop("Starting point falls outside of box constraints")
+    func2 <- invert(boxconstrain(func, lower, upper))
+  } else {
+    func2 <- invert(func)
+  }
+  ans <- subplex(x.init, func2, fail.value=fail.value,
                  control=control, ...)
   ans$value <- -ans$value
   names(ans)[names(ans) == "value"] <- "lnLik"

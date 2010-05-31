@@ -129,7 +129,7 @@ abline(v=c(.1, .03, .07), col=col)
 ## likelihood search assuming random sampling:
 set.seed(1)
 phy2 <- drop.tip(phy, sample(25, 5))
-lik2 <- make.bd(phy, sampling.f=20/25)
+lik2 <- make.bd(phy2, sampling.f=20/25)
 fit2 <- find.mle(lik2, c(.1, .03))
 
 %% TODO: Example of unresolved clades

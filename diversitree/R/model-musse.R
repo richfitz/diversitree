@@ -1,0 +1,177 @@
+## Models should provide:
+##   1. make
+##   2. print
+##   3. argnames / argnames<-
+##   4. find.mle
+## Generally, make will require:
+##   5. make.cache (also initial.tip, root)
+##   6. ll
+##   7. initial.conditions
+##   8. branches
+##   9. branches.unresolved
+
+## 1: make
+make.musse <- function(tree, states, k, sampling.f=NULL) {
+  cache <- make.cache.musse(tree, states, k, sampling.f)
+  branches <- make.branches.musse(k)
+
+  ll.musse <- function(cache, pars, condition.surv=TRUE,
+                       root=ROOT.OBS, root.p=NULL, intermediates=FALSE) {
+    if ( length(pars) != k*(k+1) )
+      stop(sprintf("Invalid length parameters (expected %d)",
+                   k*(k+1)))
+    if ( any(!is.finite(pars)) || any(pars < 0) )
+      return(-Inf)
+
+    xxsse.ll(pars, cache, initial.conditions.musse,
+             branches, branches.unresolved.musse,
+             condition.surv, root, root.p, NULL, # Null -> prior
+             intermediates)
+  }
+
+  ll <- function(pars, ...) ll.musse(cache, pars, ...)
+  class(ll) <- c("musse", "function")
+  attr(ll, "k") <- k
+  ll
+}
+
+## 2: print
+print.musse <- function(x, ...) {
+  cat("MuSSE likelihood function:\n")
+  print(unclass(x))
+}
+
+## 3: argnames / argnames <-
+argnames.musse <- function(x, k=attr(x, "k"), ...) {
+  ret <- attr(x, "argnames")
+  if ( is.null(ret) ) {
+    c(sprintf("lambda%d", 1:k),
+      sprintf("mu%d", 1:k),
+      sprintf("q%d%d", rep(1:k, each=k-1),
+              unlist(lapply(1:k, function(i) (1:k)[-i]))))
+  } else {
+    ret
+  }
+}
+`argnames<-.musse` <- function(x, value) {
+  k <- environment(x)$cache$k  
+  if ( length(value) != k*(k+1) )
+    stop("Invalid names length")
+  attr(x, "argnames") <- value
+  x
+}
+
+## 4: find.mle
+find.mle.musse <- function(func, x.init, method, fail.value=NA, ...) {
+  if ( missing(method) )
+    method <- "optim"
+  NextMethod("find.mle", method=method, class.append="fit.mle.musse")
+}
+
+## Make requires the usual functions:
+## 5: make.cache (initial.tip)
+make.cache.musse <- function(tree, states, k, sampling.f=NULL) {
+  tree <- check.tree(tree)
+  states <- check.states(tree, states)
+  sampling.f <- check.sampling.f(sampling.f, k)
+
+  cache <- make.cache(tree)
+  cache$tip.state <- states
+  cache$k <- k
+  cache$sampling.f <- sampling.f
+  cache$y <- initial.tip.musse(cache)
+  cache
+}
+initial.tip.musse <- function(cache) {
+  k <- cache$k
+  tip.state <- cache$tip.state
+  if ( any(tip.state < 1 | tip.state > k, na.rm=TRUE) )
+    stop(sprintf("tip states must be in the range [1, %d]", k))
+  
+  f <- cache$sampling.f
+  y <- matrix(rep(c(1-f, rep(0, k)), k + 1), k+1, 2*k, TRUE)
+  y[k+1,(k+1):(2*k)] <- diag(y[1:k,(k+1):(2*k)]) <- f
+  i <- cache$tip.state
+  i[is.na(i)] <- k + 1
+  list(y=y, i=i, types=sort(unique(i)))
+}
+
+## 6: ll.musse is done within make.musse
+
+## 7: initial.conditions:
+initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
+  k <- ncol(init)/2
+  i <- seq_len(k)
+  d <- init[,i + k]
+  c(init[1,i], d[1,] * d[2,] * pars[i])
+}
+
+## 8: branches (separate for mk2 and mkn)
+make.branches.musse <- function(k) {
+  RTOL <- ATOL <- 1e-8
+  eps <- 0
+
+  qmat <- matrix(0, k, k)
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.lm <- 1:(2*k)
+  idx.q <- (2*k+1):(k*(1+k))
+
+  if ( k == 2 )
+    warning("Two states is faster with BiSSE")
+  musse.ode <- make.ode("derivs_musse", "diversitree.unrel",
+                        "initmod_musse", 2*k, FALSE)
+
+  branches.musse <- function(y, len, pars, t0) {
+    qmat[idx.qmat] <- pars[idx.q]
+    diag(qmat) <- -rowSums(qmat)
+    pars <- c(pars[idx.lm], qmat)
+    t(musse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+  }
+  make.branches(branches.musse, (k+1):(2*k))
+}
+
+## 9: branches.unresolved
+branches.unresolved.musse <- function(...) {
+  stop("Cannot use unresolved clades with MuSSE")
+}
+
+## Historical interest: This function creates a function for computing
+## derivatives under MuSSE.
+make.musse.eqs.R <- function(k) {
+  qmat <- matrix(0, k, k)
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.e <- 1:k
+  idx.d <- (k+1):(2*k)
+  idx.l <- 1:k
+  idx.m <- (k+1):(2*k)
+  idx.q <- (2*k+1):(k*(1+k))
+
+  function(t, y, parms, ...) {
+    e <- y[idx.e]
+    d <- y[idx.d]
+    lambda <- parms[idx.l]
+    mu     <- parms[idx.m]
+    qmat[idx.qmat] <- parms[idx.q]  
+    diag(qmat) <- -rowSums(qmat)
+
+    list(c(mu - (lambda + mu) * e + lambda * e * e + qmat %*% e,
+           -(lambda + mu) * d + 2 * lambda * d * e + qmat %*% d))
+  }
+}
+
+## This makes the Q matrix from a set of parameters.
+musse.Q <- function(pars, k) {
+  if ( missing(k) )
+    k <- (sqrt(1+4*length(pars))-1)/2
+  if ( abs(k - round(k)) > 1e-6 || length(pars) != k*(1+k) )
+    stop("Invalid parameter length")
+  qmat <- matrix(0, k, k)
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.q <- (2*k+1):(k*(1+k))
+  qmat[idx.qmat] <- pars[idx.q]
+  diag(qmat) <- -rowSums(qmat)
+  qmat
+}

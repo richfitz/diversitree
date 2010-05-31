@@ -1,18 +1,19 @@
 \name{make.clade.tree}
 \alias{make.clade.tree}
-\alias{polytomies.to.clades}
+\alias{clades.from.polytomies}
+\alias{clades.from.classification}
 
 \title{Make a "Clade Tree"}
 
 \description{This function makes a \dQuote{clade tree}, where tips
   represent clades.  It is designed to make working with unresolved
   clade information in \code{\link{make.bisse}} more straightforward.
-  Soon, \code{clade.tree} objects will have their own plotting methods,
-  though.}
+  \code{clade.tree} objects have their own plotting methods.}
 
 \usage{
 make.clade.tree(tree, clades)
-polytomies.to.clades(tree)
+clades.from.polytomies(tree)
+clades.from.classification(tree, class, check=TRUE)
 }
 
 \arguments{
@@ -20,6 +21,11 @@ polytomies.to.clades(tree)
   \item{clades}{A list, where the name of each element represents a tip
     in \code{tree} and each element is a character vector containing the
     names of species contained within that clade.}
+  \item{class}{A vector along \code{tree$tip.label}, indicating the
+    class to which each tip belongs.}
+  \item{check}{Logical, indicating whether a (potentially slow) check
+    will be done to ensure that all resulting clades are reciprocally
+    monophyletic within the tree.}
 }
 
 \details{

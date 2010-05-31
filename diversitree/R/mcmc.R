@@ -5,14 +5,24 @@
 ## take the input x and return a vector of parameters 'y'
 ## corresponding to a new position.
 mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
-                 fail.value=-Inf, print.every=1, ...) {
-  fn <- protect(function(x) f(x, ...), fail.value)
+                 fail.value=-Inf, prior=NULL, print.every=1, ...) {
+  if ( is.numeric(prior) ) {
+    .Deprecated(msg="numeric values for 'prior' are deprecated: use make.prior.exponential instead")
+    prior <- make.prior.exponential(prior)
+  }
 
   y0 <- try(f(x0, ...))
   if ( inherits(y0, "try-error") )
     stop("The above error occured when testing the starting position")
   if ( !is.finite(y0) )
     stop("Starting point must have finite probability")
+  
+  if ( is.null(prior) )
+    fn <- protect(function(x) f(x, ...), fail.value)
+  else {
+    fn <- protect(function(x) f(x, ...) + prior(x), fail.value)
+    y0 <- y0 + prior(x0)
+  }
 
   if ( length(lower) == 1 ) lower <- rep(lower, length(x0))
   if ( length(upper) == 1 ) upper <- rep(upper, length(x0))

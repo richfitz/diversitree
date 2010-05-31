@@ -35,6 +35,8 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE) {
 
   ll.mkn <- function(cache, pars, prior=NULL, root=ROOT.OBS,
                      root.p=NULL, intermediates=FALSE) {
+    if ( !is.null(prior) )
+      stop("'prior' argument to likelihood function no longer accepted")
     if ( length(pars) != k*(k-1) )
       stop(sprintf("Invalid length parameters (expected %d)", k*(k-1)))
     if ( any(!is.finite(pars)) || any(pars < 0) )
@@ -50,7 +52,7 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE) {
       ans$root.p <- root.p
     }
 
-    cleanup(loglik, pars, prior, intermediates, cache, ans)
+    cleanup(loglik, pars, intermediates, cache, ans)
   }
 
   ll <- function(pars, ...) ll.mkn(cache, pars, ...)
@@ -109,14 +111,9 @@ find.mle.mkn <- function(func, x.init, method,
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
 make.cache.mkn <- function(tree, states, k, use.mk2) {
-  if ( !inherits(tree, "phylo") )
-    stop("'tree' must be a valid phylo tree")
-  if ( is.null(names(states)) )
-    stop("The states vector must contain names")
-  if ( !all(tree$tip.label %in% names(states)) )
-    stop("Not all species have state information")
-  states <- states[tree$tip.label]
-  names(states) <- tree$tip.label
+  tree <- check.tree(tree)
+  states <- check.states(tree, states)
+
   cache <- make.cache(tree)
   cache$k <- k
   cache$tip.state  <- states

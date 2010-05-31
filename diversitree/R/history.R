@@ -75,11 +75,15 @@ plot.history <- function(x, phy, cols=seq_along(states),
   label.offset <- if ( show.tip.state ) 1 else 0
   discrete <- x$discrete
 
-  xy <- plot.phylo.node.coords(phy)
+  xy <- pp.node.coords(phy)
   obj <- plot.history.coords(phy, xy, x)
-  plot.phylo.prepare(phy, xy, xlim, ylim, cex, show.tip.label,
-                     label.offset, ...)
 
+  lims <- pp.lim.phylogram(phy, xy, xlim, ylim, cex,
+                           show.tip.label, label.offset)
+  plot(NA, type="n", xlim=lims$xlim, ylim=lims$ylim, xlab="",
+       ylab="", xaxt="n", yaxt="n", bty="n", asp=1, ...)
+
+  
   ## Improve the colour->tip mapping.  There are a couple of options -
   ## we could have data in {0,1} or {1,2,...,k}
   ## Both may be possibly missing states.
@@ -104,18 +108,19 @@ plot.history <- function(x, phy, cols=seq_along(states),
   with(obj, segments(x0, y0, x1, y1, col=cols.seg))
 
   if ( show.tip.label )
-    plot.phylo.tiplabel(phy, xy, label.offset,
-                        cex=cex, font=font, srt=srt, adj=adj)
+    pp.tiplabel.phylogram(phy, xy, label.offset, col="black",
+                          cex=cex, font=font, adj=adj)
   if ( show.node.label )
-    plot.phylo.nodelabel(phy, xy, label.offset,
-                         cex=cex, font=font, srt=srt, adj=adj)
+    pp.nodelabel.phylogram(phy, xy, label.offset,
+                           cex=cex, font=font, srt=srt, adj=adj)
   if ( show.node.state )
-    plot.phylo.nodepoints(phy, xy, cex=cex, col=cols.node)
+    pp.nodepoints.phylogram(phy, xy, cex=cex, col=cols.node)
   if ( show.tip.state )
-    plot.phylo.tippoints(phy, xy, cex=cex, col=cols.tip)
+    pp.tippoints.phylogram(phy, xy, cex=cex, col=cols.tip)
 
-  plot.phylo.cleanup(phy, xy, show.tip.label, show.node.label,
-                     font, cex, adj, srt, label.offset, xlim, ylim)
+  ## TODO: the cleanup is not done right now.
+  ##plot.phylo.cleanup(phy, xy, show.tip.label, show.node.label,
+  ##                   font, cex, adj, srt, label.offset, xlim, ylim)
 }
 
 ## This generates the segment matrix, as in plot.phylo.coords, but
@@ -126,7 +131,7 @@ plot.history.coords <- function(phy, xy, hist) {
   s <- hist$node.state
   h <- hist$history
 
-  obj <- plot.phylo.coords(phy, xy)
+  obj <- pp.coords.phylogram(phy, xy)
 
   ## First, get the state at the *base* of each branch
   obj$state <- c(s, sapply(h, function(x) x[1,2]))

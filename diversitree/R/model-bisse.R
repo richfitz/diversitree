@@ -14,7 +14,7 @@
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
                        nt.extra=10, safe=FALSE) {
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
-                            sampling.f=sampling.f, nt.extra=10)
+                            sampling.f=sampling.f, nt.extra=nt.extra)
   branches <- make.branches.bisse(safe)
   ll <- function(pars, ...) ll.bisse(cache, pars, branches, ...)
   class(ll) <- c("bisse", "function")
@@ -54,64 +54,29 @@ find.mle.bisse <- function(func, x.init, method,
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse <- function(tree, states, unresolved=NULL,
                              sampling.f=NULL, nt.extra=10) {
-  if ( !inherits(tree, "phylo") )
-    stop("'tree' must be a valid phylo tree")
-  if ( is.null(names(states)) )
-    stop("The states vector must contain names")
+  tree <- check.tree(tree)
+  states <- check.states(tree, states)
+  
   if ( inherits(tree, "clade.tree") ) {
     if ( !is.null(unresolved) )
       stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
     unresolved <- make.unresolved(tree$clades, states)
   }
 
-
   ## Check 'sampling.f'
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
-  else if ( is.null(sampling.f) )
-    sampling.f <- c(1, 1)
-  else if ( length(sampling.f) != 2 )
-    stop("sampling.f must be of length 2 (or NULL)")
-  else if ( max(sampling.f) > 1 || min(sampling.f) <= 0 )
-    stop("sampling.f must be on range (0,1]")
-  
+  else
+    sampling.f <- check.sampling.f(sampling.f, 2)
+
   ## Check 'unresolved' (there is certainly room to streamline this in
   ## the future).
-  if ( !is.null(unresolved) && nrow(unresolved) == 0 ) {
-    unresolved <- NULL
-    warning("Ignoring empty 'unresolved' argument")
-  }
-  if ( !is.null(unresolved) ) {
-    required <- c("tip.label", "Nc", "n0", "n1")
-    if ( !all(required %in% names(unresolved)) )
-      stop("Required columns missing from unresolved clades")
-    if ( !all(unresolved$tip.label %in% tree$tip.label) )
-      stop("Unknown tip species in 'unresolved'")
-    unresolved$k   <- unresolved$n1
-    unresolved$nsc <- unresolved$n0 + unresolved$n1
-    unresolved$i   <- match(unresolved$tip.label, tree$tip.label)
-    unresolved <- as.list(unresolved)
-    unresolved$nt.extra <- nt.extra
-
-    if ( max(unresolved$Nc) > 200 )
-      stop("The largest unresolved clade supported has 200 species")
-  }
+  unresolved <- check.unresolved(tree, unresolved, nt.extra)
   
-  ## Check that we know about all required species (this requires
-  ## processing the unresolved clade information).
-  known <- names(states)
-  if ( !is.null(unresolved) )
-    known <- unique(c(known, as.character(unresolved$tip.label)))
-  if ( !all(tree$tip.label %in% known) )
-    stop("Not all species have state information")
-  states <- states[tree$tip.label]
-  names(states) <- tree$tip.label
-
   cache <- make.cache(tree)
   cache$tip.state  <- states
   cache$unresolved <- unresolved
   cache$sampling.f <- sampling.f
-  cache$nt.extra   <- nt.extra
   cache$y <- initial.tip.bisse(cache)
   cache
 }

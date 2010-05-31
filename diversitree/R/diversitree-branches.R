@@ -167,18 +167,23 @@ make.cache <- function(tree) {
   is.tip <- idx <= n.tip
 
   children <- lapply(idx[!is.tip], function(x) edge[edge[,1] == x,2])
+  ## Technically, this is already checked by check.tree, but I'm happy
+  ## leaving it in.
   if ( !all(sapply(children, length)==2) )
     stop("Multifircations/unbranched nodes in tree - best get rid of them")
   children <- rbind(matrix(NA, n.tip, 2), t(matrix(unlist(children), 2)))
 
-  ## This is not carefully checked, but I think that it is right.
-  parent <- rep(NA, length(idx))
-  parent[-root] <- unlist(lapply(idx, function(x) edge[edge[,2]==x,1]))
+  parent <- edge[match(idx, edge[,2]),1]  
 
   order <- get.ordering(children, is.tip, root)
-  depth <- c(rep(0, n.tip), as.numeric(branching.times(tree)))
 
-  anc <- ancestors(parent, order)
+  height <- branching.heights(tree)
+  depth <- max(height) - height
+
+  tips <- seq_len(n.tip)
+  anc <- vector("list", max(order))
+  for ( i in c(rev(order[-length(order)]), tips) )
+    anc[[i]] <- c(parent[i], anc[[parent[i]]])
   
   ans <- list(len=edge.length[match(idx, edge[,2])],
               children=children,
@@ -186,6 +191,7 @@ make.cache <- function(tree) {
               order=order,
               root=root,
               n.tip=n.tip,
+              height=height,
               depth=depth,
               ancestors=anc,
               edge=edge,
@@ -258,23 +264,13 @@ root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
   loglik
 }
 
-cleanup <- function(loglik, pars, prior=NULL, intermediates=FALSE,
-                    cache, vals) {
-  if ( is.null(prior) )
-    p <- loglik
-  else if ( is.numeric(prior) )
-    p <- loglik + prior.default(pars, prior)
-  else if ( is.function(prior) )
-    p <- loglik + prior(pars)
-  else
-    stop("Invalid 'prior' argument")
-    
+cleanup <- function(loglik, pars, intermediates=FALSE, cache, vals) {
   if ( intermediates ) {
-    attr(p, "cache") <- cache
-    attr(p, "intermediates") <- vals
-    attr(p, "vals") <- vals$init[cache$root,]
+    attr(loglik, "cache") <- cache
+    attr(loglik, "intermediates") <- vals
+    attr(loglik, "vals") <- vals$init[cache$root,]
   }
-  p
+  loglik
 }
 
 ## Which leads to an all singing, all dancing function:
@@ -282,23 +278,15 @@ xxsse.ll <- function(pars, cache, initial.conditions,
                      branches, branches.unresolved, 
                      condition.surv, root, root.p,
                      prior, intermediates) {
+  if ( !is.null(prior) )
+    stop("'prior' argument to likelihood function no longer accepted")
   ans <- all.branches(pars, cache, initial.conditions,
                       branches, branches.unresolved)
   vals <- ans$init[cache$root,]
   root.p <- root.p.xxsse(vals, pars, root, root.p)
   loglik <- root.xxsse(vals, pars, ans$lq, condition.surv, root.p)
   ans$root.p <- root.p
-  cleanup(loglik, pars, prior, intermediates, cache, ans)
-}
-
-make.prior.exponential <- function(r) {
-  function(pars)
-    sum(log(r) - pars * r)
-}
-
-prior.default <- function(pars, r) {
-  .Deprecated("make.prior.exponential")
-  - sum(pars * r)
+  cleanup(loglik, pars, intermediates, cache, ans)
 }
 
 ## Convert a branches function into one that adds log-compensation.
