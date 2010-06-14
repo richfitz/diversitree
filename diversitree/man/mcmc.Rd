@@ -6,8 +6,8 @@
   for independent updating of each variable.}
 
 \usage{
-mcmc(f, x0, nsteps, w, lower, upper, fail.value=-Inf, print.every=1,
-     ...)
+mcmc(f, x0, nsteps, w, lower=-Inf, upper=Inf, fail.value=-Inf,
+     prior=NULL, print.every=1, ...)
 }
 
 \details{The parameter \code{w} affects how many function evaluations
@@ -18,7 +18,12 @@ use some fixed kernel for updates.  Ideally, \code{w} would be set to
 approximately the width of the high probability region.  I find that
 chosing the distance between the 5\% and 95\% quantiles of the marginal
 distributions of each parameter works well, computed from this
-preliminary set of samples (see Examples).  }
+preliminary set of samples (see Examples).
+
+If the MCMC is stopped by an interrupt (Escape on GUI versions of R,
+Control-C on command-line version), it will return a truncated chain
+with as many points as completed so far.
+}
 
 \arguments{
   \item{f}{Function to run MCMC on.}
@@ -39,6 +44,9 @@ preliminary set of samples (see Examples).  }
   \item{print.every}{The position and its probability will be printed
     every \code{print.every} generations.  Set this to 0 to prevent
     printing.}
+  \item{prior}{An optional prior probability distribution function.
+    This will be evaluated at each point that the sampler visits.  See
+  \code{\link{make.prior}} for more information.}
   \item{...}{Arguments passed to the function \code{f}}
 }
 

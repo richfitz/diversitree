@@ -1,3 +1,51 @@
+2010-06-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/constrain.R: Better constraining of constrained functions.
+
+	* R/history.R: Fix plot.history to better return an ape-compatible
+	state.
+
+	* R/mcmc.R: MCMC now allows interrupt part-way through a chain, and
+	returns all completed points so far.
+
+	* R/make.bisse.split.R: Tweaks to fix argument handling.
+
+	* R/model-bisse.R: subplex is now the default ML search
+	algorithm.
+
+	* R/make-bm.R: Clean up pre-diversitree code.
+
+	* R/model-musse.R: subplex is now the default ML search
+	algorithm.  Better checking to make sure that expected states are
+	present.
+
+	* R/profiles-plot.R: Work around for extremely thin CIs
+
+	* R/simulation.R: musse trees available to 'trees()'.
+
+	* R/split.R: Catch an edge case of root node type.
+
+	* R/util.R: mrca.tipset() now accepts character vector of tip
+	names.
+
+	* man/constrain.Rd: Updated to reflect constraining constrained
+	functions being allowed.
+
+	* man/make.bisse.Rd: Removed prior argument from returned function
+	description.
+
+	* man/make.bisse.split.Rd: New help file.
+
+	* man/make.bm.R: New help file
+
+	* man/make.musse.Rd: Added starting.point.musse(), clarified
+	example. 
+
+	* man/mcmc.Rd: MCMC interrupt documentation, new prior
+	requirements.
+
+	* man/simulate.Rd: Added Musse abilities.
+
 2010-05-31  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE: Added functions for the changes included in this

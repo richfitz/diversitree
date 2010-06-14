@@ -5,7 +5,7 @@
   runs}
 
 \usage{
-profiles.plot(y, col.line, col.fill, xlim=NULL, n.br=50, ...)
+profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50, ...)
 }
 
 \arguments{
@@ -16,6 +16,7 @@ profiles.plot(y, col.line, col.fill, xlim=NULL, n.br=50, ...)
     probable region of the distribution.  If ommited, this will be a
     semi-transparent version of \code{col.line}.}
   \item{xlim}{X-axis limits - calculated automatically if omitted.}
+  \item{ymax}{Y-axis upper limit - calculated automatically if omitted.}
   \item{n.br}{Number of breaks along the range of the data.}
   \item{...}{Additional arguments passed through to \code{\link{plot}}.}
 }

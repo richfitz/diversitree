@@ -136,12 +136,13 @@ clades.from.classification <- function(tree, class, check=TRUE) {
     if ( any(!ok) ) {
       stop("Some groups had problems: ",
            paste(names(desc)[!ok], collapse=", "))
-      ## i <- which(!ok)[1]
-      ## to.drop <- setdiff(tree$tip.label, chk[[j]])
-      ## tmp <- drop.tip.fixed(tree, setdiff(tree$tip.label, chk[[j]]))
-      ## col <- (tmp$tip.label %in% tree$tip.label[class == names(chk)[j]])+1
-      ## plot2.phylo(tmp, type="r", cex=.5, label.offset=1, font=1,
-      ##             tip.color=col)
+      i <- which(!ok)[1]
+      to.drop <- setdiff(tree$tip.label, chk[[i]])
+      tmp <- drop.tip.fixed(tree, setdiff(tree$tip.label, chk[[i]]))
+      col <- (tmp$tip.label %in% tree$tip.label[class == names(chk)[i]])+1
+      plot2.phylo(tmp, type="f", cex=.5, label.offset=1, font=1,
+                  tip.color=col, no.margin=TRUE)
+      tmp$tip.label[tmp$tip.label %in% tree$tip.label[class == names(chk)[i]]]
     }
   }
 
@@ -160,6 +161,8 @@ clades.from.classification <- function(tree, class, check=TRUE) {
 ## done by the plot-alt code.
 plot.clade.tree <- function(x, as.clade.tree=TRUE, transform=identity,
                             ...) {
+  if ( abs(transform(1) - 1) > 1e-8 )
+    stop("transform(1) must equal 1")
   if ( as.clade.tree )
     n.taxa <- transform(sapply(x$clades, length)[x$tip.label])
   else

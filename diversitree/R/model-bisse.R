@@ -46,7 +46,7 @@ argnames.bisse <- function(x, ...) {
 find.mle.bisse <- function(func, x.init, method,
                            fail.value=NA, ...) {
   if ( missing(method) )
-    method <- "optim"
+    method <- "subplex"
   NextMethod("find.mle", method=method, class.append="fit.mle.bisse")
 }
 

@@ -261,7 +261,7 @@ pp.clades.phylogram <- function(phy, xy, xy.seg, border, fill) {
 
   dy <- (n.taxa/2 - .5)
   
-  tmp <- subset(xy.seg, horiz)[match(which(i), phy$edge[,2]),] 
+  tmp <- xy.seg[xy.seg$horiz,][match(which(i), phy$edge[,2]),] 
 
   x0 <- tmp$x0
   x1 <- tmp$x1
@@ -280,8 +280,8 @@ pp.clades.fan <- function(phy, xy, xy.seg, border, fill) {
   n.taxa <- phy$n.taxa[i]
   
   dt <- (n.taxa/2 - .5) / n * 2 * pi
-   
-  tmp <- subset(xy.seg, horiz)[match(which(i), phy$edge[,2]),]
+
+  tmp <- xy.seg[xy.seg$horiz,][match(which(i), phy$edge[,2]),]
   r0 <- tmp$r0
   r1 <- tmp$r1
   t0 <- tmp$theta0 - dt

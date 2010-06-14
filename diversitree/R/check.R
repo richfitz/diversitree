@@ -1,6 +1,5 @@
 ## Checking utilities.  These are things that happen over and over
 ## again, and are tedious to have to write into each function.
-
 check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
                        node.labels=TRUE) {
   if ( !inherits(tree, "phylo") )
@@ -14,9 +13,16 @@ check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
                        any(tabulate(tree$edge[, 1]) == 1)) )
     stop("'tree must be bifurcating (no polytomies or unbranched nodes)'")
 
-  if ( node.labels )
-    tree$node.label <- sprintf("nd%d", seq_len(tree$Nnode))
+  if ( any(duplicated(tree$tip.label)) )
+    stop("Tree contains duplicated tip labels")
   
+  if ( node.labels ) {
+    if ( is.null(tree$node.label) )
+      tree$node.label <- sprintf("nd%d", seq_len(tree$Nnode))
+    else if ( any(duplicated(tree$node.label)) )
+      stop("Tree contains duplicated node labels")
+  }
+
   tree
 }
 

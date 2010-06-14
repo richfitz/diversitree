@@ -38,7 +38,7 @@ argnames.bisse.split <- function(x, ...) {
     obj <- list(base=c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10"),
                 levels=seq_len(n))
 
-  matrix(paste(rep(obj$base, each=n), obj$levels, sep="."), n, 6)
+  paste(obj$base, rep(obj$levels, each=6), sep=".")
 }
 `argnames<-.bisse.split` <- function(x, value) {
   n <- attr(x, "n")
@@ -78,13 +78,14 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
   ## Check 'sampling.f'
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
+  ## TODO: a sampling.f of length 2 should be OK.
   n <- length(nodes) + 1 # +1 for base group
   sampling.f <- check.sampling.f(sampling.f, 2 * n)
   sampling.f <- matrix(sampling.f, n, 2)
 
   ## This has the poor effect of not working correctly to create
   ## single branch partitions.  I should be careful about that.
-  subtrees <- split.phylo(phy, nodes, split.t=split.t)
+  subtrees <- split.phylo(tree, nodes, split.t=split.t)
 
   ## Next, process the unresolved clade information for the different
   ## trees, and build the
@@ -147,11 +148,12 @@ ll.bisse.split <- function(cache, pars, branches, condition.surv=TRUE,
     .NotYetUsed("intermediates")
 
   n <- cache$n
-  
-  if ( !is.matrix(pars) || all(dim(pars) != c(n, 6)) )
-    stop(sprintf("Expected a %d x 6 matrix of parameters", n))
+
+  if ( length(pars) != n * 6 )
+    stop("Expected %d parameters", n * 6)
   if ( any(pars < 0) || any(!is.finite(pars)) )
     return(-Inf)
+  pars <- matrix(pars, n, 6, TRUE)
 
   res <- matrix(NA, n, 5)
   obj <- vector("list", n)

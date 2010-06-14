@@ -68,6 +68,7 @@ plot.history <- function(x, phy, cols=seq_along(states),
                          show.node.label=FALSE,
                          show.tip.state=TRUE,
                          show.node.state=TRUE,
+                         no.margin=FALSE,
                          cex=1, font=3,
                          srt=0, adj=0,
                          label.offset=0,
@@ -78,10 +79,13 @@ plot.history <- function(x, phy, cols=seq_along(states),
   xy <- pp.node.coords(phy)
   obj <- plot.history.coords(phy, xy, x)
 
+  if ( no.margin )
+    par(mar=rep(0, 4))
+
   lims <- pp.lim.phylogram(phy, xy, xlim, ylim, cex,
                            show.tip.label, label.offset)
   plot(NA, type="n", xlim=lims$xlim, ylim=lims$ylim, xlab="",
-       ylab="", xaxt="n", yaxt="n", bty="n", asp=1, ...)
+       ylab="", xaxt="n", yaxt="n", bty="n", asp=NA, ...)
 
   
   ## Improve the colour->tip mapping.  There are a couple of options -
@@ -118,9 +122,21 @@ plot.history <- function(x, phy, cols=seq_along(states),
   if ( show.tip.state )
     pp.tippoints.phylogram(phy, xy, cex=cex, col=cols.tip)
 
-  ## TODO: the cleanup is not done right now.
-  ##plot.phylo.cleanup(phy, xy, show.tip.label, show.node.label,
-  ##                   font, cex, adj, srt, label.offset, xlim, ylim)
+
+  ## TODO: This is a hack.
+  ret <- list(type="cladogram", use.edge.length=TRUE,
+              node.pos=NULL, show.tip.label=show.tip.label,
+              show.node.label=show.node.label, font=font,
+              cex=cex, adj=adj, srt=srt, no.margin=no.margin,
+              label.offset=label.offset,
+              x.lim=lims$xlim, y.lim=lims$ylim,
+              direction="rightwards", tip.color="black",
+              Ntip=length(phy$tip.label), Nnode=phy$Nnode,
+              edge=phy$edge, xx=xy$xx, yy=xy$yy,
+              ## Extra below here
+              n.taxa=phy$n.taxa, n.spp=phy$n.spp, xy=xy, xy.seg=obj)
+  assign("last_plot.phylo", ret, envir=.PlotPhyloEnv)
+  invisible(ret)
 }
 
 ## This generates the segment matrix, as in plot.phylo.coords, but

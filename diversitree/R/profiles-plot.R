@@ -35,7 +35,8 @@ add.profile.shading <- function(h, ci, col) {
   xx <- c(h$mids - dx / 2, h$mids[length(h$mids)] + dx / 2)
   i <- which(xx > ci[1] & xx < ci[2])
   xs <- rep(c(ci[1], xx[i], ci[2]), each=2)
-  ys <- c(0, rep(h$density[c(min(i)-1, i)], each=2), 0)
+  j <- if ( length(i) > 1 ) min(i) - 1 else 1
+  ys <- c(0, rep(h$density[c(j, i)], each=2), 0)
   polygon(xs, ys, col=col, border=NA)
 }
 add.profile.outline <- function(h, col, vertical=FALSE) {

@@ -49,11 +49,9 @@ constrain(f, ..., formulae=NULL, names=argnames(f), extra=NULL)
 
 \section{Warning}{
   Only a few checks are done to ensure that the resulting function makes
-  any sense; it is possible that I have missed some cases.  It is
-  probably dangerous to constrain a constrained function (just start
-  again from the raw likelihood function) and there is currently no way
-  of modifying constrained functions to remove the constraints.  These
-  weaknesses will be addressed in a future version.
+  any sense; it is possible that I have missed some cases.  There is
+  currently no way of modifying constrained functions to remove the
+  constraints.  These weaknesses will be addressed in a future version.
 }
 
 \value{

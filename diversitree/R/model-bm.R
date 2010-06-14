@@ -20,41 +20,42 @@
 ##   9. branches.unresolved
 
 ## 1: make
-make.bm.old <- function(tree, states, meserr=NULL) {
-  cache <- make.cache.bm(tree, states, meserr)
+## make.bm.old <- function(tree, states, meserr=NULL) {
+##   cache <- make.cache.bm(tree, states, meserr)
 
-  n.tip <- cache$n.tip
-  states <- cache$states
-  meserr <- cache$meserr
-  vcv <- cache$vcv
-  one <- rep(1, n.tip)
+##   n.tip <- cache$n.tip
+##   states <- cache$states
+##   meserr <- cache$meserr
+##   vcv <- cache$vcv
+##   one <- rep(1, n.tip)
 
-  if ( is.null(meserr) ) {
-    VI.tmp <- solve(vcv)
-    lik <- function(x) {
-      if ( x < 0 )
-        return(-Inf)
-      VI <- VI.tmp / x
-      ## By my calculations t(1) %*% VI %*% 1 = sum(VI)
-      ## t(one) %*% VI %*% states = sum(colSums(m) * x)
-      mu <- solve(t(one) %*% VI %*% one) %*% (t(one) %*% VI %*% states)
-      dmvnorm(states, rep(mu, n.tip), vcv * x, log=TRUE)
-    }
-  } else {
-    lik <- function(x) {
-      if ( x < 0 )
-        return(-Inf)
-      vv <- x*vcv
-      if ( !is.null(meserr) )
-        diag(vv) <- diag(vv) + meserr^2
-      VI <- solve(vv)
-      mu <- solve(t(one) %*% VI %*% one) %*% t(one) %*% VI %*% states
-      dmvnorm(states, rep(mu, n.tip), vv, log=TRUE)
-    }
-  }
-  class(lik) <- c("bm", "function")
-  lik
-}
+##   if ( is.null(meserr) ) {
+##     VI.tmp <- solve(vcv)
+##     lik <- function(x) {
+##       if ( x < 0 )
+##         return(-Inf)
+##       VI <- VI.tmp / x
+##       ## By my calculations t(1) %*% VI %*% 1 = sum(VI)
+##       ## t(one) %*% VI %*% states = sum(colSums(m) * x)
+##       mu <- solve(t(one) %*% VI %*% one) %*% (t(one) %*% VI %*% states)
+##       # from mvtnorm
+##       dmvnorm(states, rep(mu, n.tip), vcv * x, log=TRUE)
+##     }
+##   } else {
+##     lik <- function(x) {
+##       if ( x < 0 )
+##         return(-Inf)
+##       vv <- x*vcv
+##       if ( !is.null(meserr) )
+##         diag(vv) <- diag(vv) + meserr^2
+##       VI <- solve(vv)
+##       mu <- solve(t(one) %*% VI %*% one) %*% t(one) %*% VI %*% states
+##       dmvnorm(states, rep(mu, n.tip), vv, log=TRUE)
+##     }
+##   }
+##   class(lik) <- c("bm", "function")
+##   lik
+## }
 
 make.bm <- function(tree, states, meserr=NULL) {
   cache <- make.cache.bm(tree, states, meserr)
@@ -129,26 +130,17 @@ find.mle.bm <- function(func, x.init, method,
 ## Make requires the usual functions:
 ## 5: make.cache
 make.cache.bm <- function(tree, states, meserr) {
-  if ( !inherits(tree, "phylo") )
-    stop("'tree' must be a valid phylo tree")
-  if ( is.null(names(states)) )
-    stop("The states vector must contain names")
-  if ( !all(tree$tip.label %in% names(states)) )
-    stop("Not all species have state information")
-  states <- states[tree$tip.label]
+  tree <- check.tree(tree)
+  states <- check.states(tree, states)
   
   n.tip <- length(tree$tip.label)
 
   if ( is.null(meserr) )
-    meserr <- NULL # No change.
+    meserr <- NULL
   else if ( length(meserr) == 1 )
     meserr <- rep(meserr^2, n.tip)
-  else if ( is.null(names(meserr)) )
-    stop("The error vector must contain names if length > 1")
-  else if ( !all(tree$tip.label %in% names(meserr)) )
-    stop("Not all species have error information")
   else
-    meserr <- meserr[tree$tip.label]^2
+    meserr <- check.states(tree, meserr)^2
       
   list(tree=tree,
        states=states,

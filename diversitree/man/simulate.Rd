@@ -2,34 +2,40 @@
 \alias{trees}
 \alias{tree.bisse}
 \alias{tree.bd}
+\alias{tree.musse}
 \alias{tree.yule}
 \alias{prune}
 
 \title{Evolve Birth-Death Trees}
 
 \description{Evolves one or more trees under the BiSSE (Binary State
-  Speciation and Extinction) birth-death model or a simple character
-  independent birth-death model.  For BiSSE trees, it simultaneously
+  Speciation and Extinction) birth-death model, MuSSE (Multi-State
+  Speciation and Extinction) model, or a simple character independent
+  birth-death model.  For BiSSE and MuSSE trees, it simultaneously
   evolves a binary character that affects speciation and/or extinction,
   and the tree itself.
 }
 
 \usage{
-trees(pars, type=c("bisse", "bd", "yule"), n=1, max.taxa=Inf,
+trees(pars, type=c("bisse", "bd", "musse", "yule"), n=1, max.taxa=Inf,
       max.t=Inf, include.extinct=FALSE, ...)
+
 tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA, ...)
+tree.musse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
+           x0=NA, ...)
+
 tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
 tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
+
 prune(phy, to.drop=NULL)
 }
 
 \arguments{
-  \item{pars}{Vector of parameters, in the order \code{lambda0},
-    \code{lambda1}, \code{mu0}, \code{mu1}, \code{q01}, \code{q10} for a
-    BiSSE tree, and in the order \code{lambda}, \code{mu} for a
-    birthdeath tree.  Note that this is the same order as the function
-    returned by \code{\link{make.bisse}}.}
+  \item{pars}{Vector of parameters.  The parameters must be in the same
+    order as an unconstrained likelihood function returned by
+    \code{make.x}, for tree type {x}.  The MuSSE simulator automatically
+    detects the appropriate number of states, given a parameter vector.}
   \item{type}{Type of tree to generate: May be "bisse" or "bd".}
   \item{n}{How many trees to generate?}
   \item{max.taxa}{Maximum number of taxa to include in the tree.  If
@@ -88,6 +94,41 @@ set.seed(3)
 phy2 <- tree.bisse(pars, max.taxa=30, x0=0, include.extinct=TRUE)
 h2 <- history.from.sim.discrete(phy2, 0:1)
 plot(h2, phy2)
+
+#### MuSSE:
+## Two states
+pars <- c(.1, .2, .03, .04, 0.05, 0.1)
+set.seed(2)
+phy <- tree.musse(pars, 20, x0=1)
+
+h <- history.from.sim.discrete(phy, 1:2)
+plot(h, phy)
+
+## A 3-state example where movement is only allowed between neighbouring
+## states (1 <-> 2 <-> 3), and where speciation and extinction rates
+## increase moving from 1 -> 2 -> 3:
+pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3
+          .03, .045, .06, # mu 1, 2, 3
+          .05, 0,         # q12, q13
+          .05, .05,       # q21, q23
+          0,   .05)       # q31, q32
+
+set.seed(2)
+phy <- tree.musse(pars, 30, x0=1, include.extinct=TRUE)
+
+h <- history.from.sim.discrete(phy, 1:3)
+plot(h, phy, cex=.7)
+
+## And with extinct taxa pruned:
+phy2 <- prune(phy)
+h2 <- history.from.sim.discrete(phy2, 1:3)
+plot(h2, phy2, cex=.7)
+
+## This can all be done in one step (and is by default):
+set.seed(2)
+phy <- tree.musse(pars, 30, x0=1)
+h <- history.from.sim.discrete(phy, 1:3)
+plot(h, phy, cex=.7)
 }
 
 \keyword{models}

@@ -104,9 +104,12 @@ constrain.parse <- function(formula, names.lhs, names.rhs,
 
 constrain <- function(f, ..., formulae=NULL, names=argnames(f),
                       extra=NULL) {
-  if ( inherits(f, "constrained") )
-    warning("It is probaably not a good idea to constrain a constrained function")
-  formulae <- c(list(...), formulae)
+  if ( inherits(f, "constrained") ) {
+    formulae <- c(attr(f, "formulae"), formulae)
+    f <- attr(f, "func")
+  }
+
+  formulae <- c(formulae, list(...))
   names.lhs <- names.rhs <- names
   rels <- list()
   

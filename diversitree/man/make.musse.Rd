@@ -1,5 +1,6 @@
 \name{make.musse}
 \alias{make.musse}
+\alias{starting.point.musse}
 
 \title{MuSSE: Multi-State Speciation and Extinction}
 
@@ -16,7 +17,8 @@
 }
 
 \usage{
-make.musse(tree, states, k, sampling.f=NULL)
+make.musse(tree, states, k, sampling.f=NULL, strict=TRUE)
+starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
 \arguments{
@@ -37,11 +39,25 @@ make.musse(tree, states, k, sampling.f=NULL)
     species in state 1, three quarters of species in state 2, and all
     species in state 3 are included in the phylogeny.  By default all
     species are assumed to be known}
+
+  \item{strict}{The \code{states} vector is always checked to make sure
+    that the values are integers on \code{1:k}.  If \code{strict} is
+    \code{TRUE} (the default), then the additional check is made that
+    \emph{every} state is present.  The likelihood models tend to be
+    poorly behaved where states are missing, but there are cases
+    (missing intermediate states for meristic characters) where allowing
+    such models may be useful.}
+
+  \item{q.div}{Ratio of diversification rate to character change rate.
+    Eventually this will be changed to allow for Mk2 to be used for
+    estimating q parameters.}
+  
+  \item{yule}{Logical: should starting parameters be Yule estimates
+    rather than birth-death estimates?}
 }
 
-\usage{
-## BiSSE equivalence
-library(diversitree.unrel)
+\examples{
+## 1: BiSSE equivalence
 pars <- c(.1, .2, .03, .04, 0.05, 0.1)
 set.seed(2)
 phy <- tree.musse(pars, 20, x0=1)
@@ -57,9 +73,9 @@ all.equal(lik.b(pars), lik.m(pars), tolerance=1e-7)
 argnames(lik.b) # BiSSE: 0/1
 argnames(lik.m) # MuSSE: 1/2
 
-## A 3-state example where movement is only allowed between neighbouring
-## states (1 <-> 2 <-> 3), and where speciation and extinction rates
-## increase moving from 1 -> 2 -> 3:
+## 2: A 3-state example where movement is only allowed between
+## neighbouring states (1 <-> 2 <-> 3), and where speciation and
+## extinction rates increase moving from 1 -> 2 -> 3:
 pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3
           .03, .045, .06, # mu 1, 2, 3
           .05, 0,         # q12, q13
@@ -75,6 +91,8 @@ argnames(lik)
 
 ## Start with a fully constrained model
 constraints <- list(lambda2 ~ lambda1,
+
+
 
 }
 

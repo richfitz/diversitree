@@ -15,7 +15,7 @@
 ## Main interface.  In the hope that I will make this generic over a
 ## 'model' object, I will design the calling structure in a way that
 ## is similar to S3 generics/methods.
-trees <- function(pars, type=c("bisse", "bd", "yule"), n=1,
+trees <- function(pars, type=c("bisse", "bd", "musse", "yule"), n=1,
                   max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
                   ...) {
   if ( is.infinite(max.taxa) && is.infinite(max.t) )
@@ -24,6 +24,7 @@ trees <- function(pars, type=c("bisse", "bd", "yule"), n=1,
   f <- switch(type,
               bisse=tree.bisse,
               bd=tree.bd,
+              musse=tree.musse,
               yule=tree.yule)
   trees <- vector("list", n)  
   i <- 1

@@ -43,6 +43,13 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
   parent.node <- phy$edge[match(nodes, phy$edge[,2]),1]
   parent.group <- group[match(parent.node, phy$edge[,2])]
 
+  ## This is a hack:
+  ## Because the root node does not terminate in an edge in the tree,
+  ## this needs catching.  There may be a clearer way of doing this.
+  ## The root node is always group 1.  I hope.
+  if ( length(i <- which(parent.node == n.tip + 1)) > 0 )
+    parent.group[i] <- 1
+
   ## 'extra.tips' is the index for the tips that represent daughter
   ## groups, the index being against 'phy' (it will change in the sub
   ## sub phylogeny)

@@ -247,7 +247,10 @@ ancestors <- function(phy, i=seq_along(phy$tip.label)) {
 }
 
 ## Compute the MRCA of tips with indices in 'tips'
-mrca.tipset <- function(phy, tips, anc=ancestors(phy)) {
+mrca.tipset <- function(phy, tips) {
+  if ( is.character(tips) )
+    tips <- match(tips, phy$tip.label)
+  
   if ( length(tips) == 1 )
     tips
   else {

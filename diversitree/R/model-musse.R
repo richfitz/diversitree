@@ -64,15 +64,30 @@ argnames.musse <- function(x, k=attr(x, "k"), ...) {
 ## 4: find.mle
 find.mle.musse <- function(func, x.init, method, fail.value=NA, ...) {
   if ( missing(method) )
-    method <- "optim"
+    method <- "subplex"
   NextMethod("find.mle", method=method, class.append="fit.mle.musse")
 }
 
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip)
-make.cache.musse <- function(tree, states, k, sampling.f=NULL) {
+make.cache.musse <- function(tree, states, k, sampling.f=NULL,
+                             strict=TRUE) {
   tree <- check.tree(tree)
-  states <- check.states(tree, states)
+  tmp <- states <- check.states(tree, states)
+  states <- as.integer(states)
+
+  ## Some additional checking of states - eventually this sort of
+  ## thing will go into check.states()
+  if ( !isTRUE(all.equal(states, tmp, check.attributes=FALSE)) )
+    stop("'states' must be an integer vector (or convert nicely to one)")
+  if ( strict ) {
+    if ( !isTRUE(all.equal(1:k, sort(unique(states)))) )
+      stop("'states' must contain only integers on 1:", k,
+           ", and must contain all states")
+    else if ( min(states) < 1 || max(states) > k)
+      stop("'states' must contain only integers on 1:", k)
+  }
+  
   sampling.f <- check.sampling.f(sampling.f, k)
 
   cache <- make.cache(tree)
@@ -119,7 +134,7 @@ make.branches.musse <- function(k) {
 
   if ( k == 2 )
     warning("Two states is faster with BiSSE")
-  musse.ode <- make.ode("derivs_musse", "diversitree.unrel",
+  musse.ode <- make.ode("derivs_musse", "diversitree",
                         "initmod_musse", 2*k, FALSE)
 
   branches.musse <- function(y, len, pars, t0) {
@@ -174,4 +189,13 @@ musse.Q <- function(pars, k) {
   qmat[idx.qmat] <- pars[idx.q]
   diag(qmat) <- -rowSums(qmat)
   qmat
+}
+
+starting.point.musse <- function(tree, k, q.div=5, yule=FALSE) {
+  pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
+  r <- if  ( pars.bd[1] > pars.bd[2] )
+    (pars.bd[1] - pars.bd[2]) else pars.bd[1]
+  p <- rep(c(pars.bd, r / q.div), c(k, k, k * (k-1)))
+  names(p) <- argnames.musse(NULL, k)
+  p
 }

@@ -33,20 +33,33 @@ mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
     try(names(x0) <- argnames(f), silent=TRUE)
 
   hist <- vector("list", nsteps)
-  for ( i in seq_len(nsteps) ) {
-    hist[[i]] <- tmp <- slice.nd(fn, x0, y0, w, lower, upper)
-    x0 <- tmp[[1]]
-    y0 <- tmp[[2]]
-    if ( print.every > 0 && i %% print.every == 0 )
-      cat(sprintf("%d: {%s} -> %2.5f\n", i,
-                  paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
-                  tmp[[2]]))
+
+  mcmc.loop <- function() {
+    for ( i in seq_len(nsteps) ) {
+      hist[[i]] <<- tmp <- slice.nd(fn, x0, y0, w, lower, upper)
+      x0 <- tmp[[1]]
+      y0 <- tmp[[2]]
+      if ( print.every > 0 && i %% print.every == 0 )
+        cat(sprintf("%d: {%s} -> %2.5f\n", i,
+                    paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
+                    tmp[[2]]))
+    }
   }
+
+  mcmc.recover <- function(...) {
+    hist <- hist[!sapply(hist, is.null)]
+    warning("MCMC was stopped prematurely: ", length(hist), "/", nsteps,
+            " steps completed.  Truncated chain is being returned",
+            immediate.=TRUE)
+    hist
+  }
+
+  hist <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
 
   hist <- cbind(i=seq_along(hist),
                 as.data.frame(t(sapply(hist, unlist))))
-
   names(hist)[ncol(hist)] <- "p"
+
   hist
 }
 

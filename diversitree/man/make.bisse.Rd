@@ -55,8 +55,6 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
     \item \code{pars} A vector of six parameters, in the order
     \code{lambda0}, \code{lambda1}, \code{mu0}, \code{mu1},
     \code{q01}, \code{q10}.
-    \item \code{prior}: a valid prior.  See \code{\link{make.prior}} for
-    more information.
     \item \code{condition.surv} (logical): should the likelihood
     calculation condition on survival of two lineages and the speciation
     event subtending them?  This is done by default, following Nee et
@@ -88,7 +86,6 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
       \item \code{cache}: Cached tree traversal information.
       \item \code{intermediates}: Mostly branch end information.
       \item \code{vals}: Root \eqn{D} values.
-      \item \code{logComp}: Underflow compensation information.
     }
     At this point, you will have to poke about in the source for more
     information on these.
@@ -98,7 +95,7 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
   start from, based on the character-independent birth-death model.  You
   can probably do better than this; see the vignette, for example.
   \code{bisse.starting.point} is the same code, but deprecated in favour
-  of \code{startng.point.bisse} - it will be removed in a future
+  of \code{starting.point.bisse} - it will be removed in a future
   version.
 }
 
@@ -139,7 +136,7 @@ pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(4)
 phy <- tree.bisse(pars, max.t=30, x0=0)
 
-## Here is the 203 species tree with the true character history coded.
+## Here is the 52 species tree with the true character history coded.
 ## Red is state '1', which has twice the speciation rate of black (state
 ## '0').
 h <- history.from.sim.discrete(phy, 0:1)
