@@ -1,3 +1,45 @@
+2010-06-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/diversitree-branches.R: Many changes to all.branches to remove
+	handling of unresolved clades, and to move the internal data
+	structures to be lists (rather than matrices).  New function
+	dt.tips.ordered for helping make initial conditions in the format
+	we now expect.
+
+	* R/mcmc.R: MCMC now returns samples if run to completion (oops)
+
+	* R/model-bisse-split.R: Now makes its own branches.aux(), changes
+	to unresolved clade handling, new list structure, and using the
+	generic all.branches.split in R/split.R
+
+	* R/model-bisse.R: Changed handling of unresolved clades, given
+	above changes.  Changed initial condition format.
+
+	* R/model-mkn-legacy.R: Removed as I doubt that it is accurate at
+	all now.
+
+	* R/model-mkn.R: Removed unresolved clades, updated to list
+	structure.
+
+	* R/model-musse.R: Removed unresolved clades, updated to list
+	structure, new initial conditions.
+
+	* R/split.R: New generic all.branches.split() and
+	make.cache.split() functions.
+
+	* R/util.R: matrix.to.list() - convert matrix rows to list
+	elements.
+
+	* R/check.R: Moved check.unresolved into R/model-bisse.R
+
+	* R/asr.R, R/asr-bisse.R, R/asr-mkn.R: Changed handling of
+	unresolved clades, given above changes.  R/asr.R is also updated
+	to the new list data structures.
+
+	* man/*.Rd: Sundry documentation changes.
+
+	* R/model-mkn-legacy.R: check in before removal.
+
 2010-06-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/constrain.R: Better constraining of constrained functions.

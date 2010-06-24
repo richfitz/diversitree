@@ -22,9 +22,7 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
   
   do.asr.marginal(pars, cache, res, nodes, states.idx,
                   initial.conditions.mkn,
-                  branches,
-                  branches.unresolved.mkn,
-                  root.f)
+                  branches, root.f)
 }
 
 asr.joint.mkn <- function(lik, pars, n=1, simplify=TRUE,

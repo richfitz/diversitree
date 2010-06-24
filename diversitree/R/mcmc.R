@@ -44,6 +44,7 @@ mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
                     paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
                     tmp[[2]]))
     }
+    hist
   }
 
   mcmc.recover <- function(...) {

@@ -8,7 +8,6 @@
 ##   6. ll
 ##   7. initial.conditions
 ##   8. branches
-##   9. branches.unresolved
 
 ## 1: make
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
@@ -71,42 +70,61 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
 
   ## Check 'unresolved' (there is certainly room to streamline this in
   ## the future).
-  unresolved <- check.unresolved(tree, unresolved, nt.extra)
-  
+
   cache <- make.cache(tree)
   cache$tip.state  <- states
   cache$unresolved <- unresolved
   cache$sampling.f <- sampling.f
+
+  unresolved <- check.unresolved(cache, unresolved, nt.extra)
+  cache$unresolved <- unresolved
+
+  if ( !is.null(unresolved) ) {
+    cache$tips <- cache$tips[-unresolved$i]
+    cache$tip.state <- cache$tip.state[-unresolved$i]
+  }
   cache$y <- initial.tip.bisse(cache)
   cache
 }
 
+## By the time this hits, unresolved clades and any other non-standard
+## tips have been removed.  We have an index "tips" (equal to 1:n.tip
+## for plain bisse) that is the "index" (in phy$edge numbering) of the
+## tips, and a state vector cache$tip.state, both of the same length.
+## The length of the terminal branches is cache$len[cache$tips].
+##
+## Allowing for unknown state tips, there are three possible states
+##   (0, 1, NA -> 1, 2, 3)
 ## Initial conditions at the tips are given by their tip states:
 ## There are three types of initial condition in bisse:
 ##   state0: c(f_0, 0,   1-f_0, 1-f_1)
 ##   state1: c(0,   f_1, 1-f_0, 1-f_1)
 ##   state?: c(f_0, f_1, 1-f_0, 1-f_1)
-## Build this small matrix of possible initial conditions (y), then
-## work out which of the three types things are (i).  Note that y[i,]
-## gives the full initial conditions.  The element 'types' contains
-## the different possible conditions.
+
 initial.tip.bisse <- function(cache) {
   f <- cache$sampling.f
-  y <- rbind(c(1-f, f[1], 0),
-             c(1-f, 0, f[2]),
-             c(1-f, f))
-  i <- cache$tip.state + 1
-  if ( !is.null(cache$unresolved) )
-    i <- i[-cache$unresolved$i]
-  i[is.na(i)] <- 3
-  list(y=y, i=i, types=sort(unique(i)))
+  y <- list(c(1-f, f[1], 0),
+            c(1-f, 0, f[2]),
+            c(1-f, f))
+  y.i <- cache$tip.state + 1
+  y.i[is.na(y.i)] <- 3
+
+  tips <- cache$tips
+
+  ## This would return a data structure appropriate for the more basic
+  ## tip treatment:
+  ##   dt.tips.ordered(y[y.i], tips, cache$len[tips])
+  dt.tips.grouped(y, y.i, tips, cache$len[tips])
 }
+
 
 ## 6: ll
 ll.bisse <- function(cache, pars, branches, prior=NULL,
                      condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
                      intermediates=FALSE,
                      root.p0=NA, root.p1=NA) {
+  if ( !is.null(prior) )
+    stop("'prior' argument to likelihood function no longer accepted")
   if ( length(pars) != 6 )
     stop("Invalid parameter length (expected 6)")
   if ( any(pars < 0) || any(!is.finite(pars)) )
@@ -122,16 +140,18 @@ ll.bisse <- function(cache, pars, branches, prior=NULL,
   if ( !is.null(root.p) &&  root != ROOT.GIVEN )
     warning("Ignoring specified root state")
 
-  xxsse.ll(pars, cache, initial.conditions.bisse,
-           branches, branches.unresolved.bisse,
-           condition.surv, root, root.p,
-           prior, intermediates)
+  if ( !is.null(cache$unresolved) )
+    cache$preset <- 
+      branches.unresolved.bisse(pars, cache$unresolved)
+
+  xxsse.ll(pars, cache, initial.conditions.bisse, branches,
+           condition.surv, root, root.p, intermediates)
 }
 
 ## 7: initial.conditions:
 initial.conditions.bisse <- function(init, pars, t, is.root=FALSE)
-  c(init[1,c(1,2)],
-    init[1,c(3,4)] * init[2,c(3,4)] * pars[c(1,2)])
+  c(init[[1]][c(1,2)],
+    init[[1]][c(3,4)] * init[[2]][c(3,4)] * pars[c(1,2)])
 
 ## 8: branches
 make.branches.bisse <- function(safe=FALSE) {
@@ -144,11 +164,11 @@ make.branches.bisse <- function(safe=FALSE) {
 }
 
 ## 9: branches.unresolved
-branches.unresolved.bisse <- function(pars, len, unresolved) {
+branches.unresolved.bisse <- function(pars, unresolved) {
   Nc <- unresolved$Nc
   k <- unresolved$k
   nsc <- unresolved$nsc
-  t <- len
+  t <- unresolved$len
   nt <- max(Nc) + unresolved$nt.extra
   
   lambda0 <- pars[1]
@@ -157,12 +177,15 @@ branches.unresolved.bisse <- function(pars, len, unresolved) {
   mu1 <- pars[4]
   q01 <- pars[5]
   q10 <- pars[6]
-  ret <- bucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, t,
-          Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
+  base <- bucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, t,
+                  Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
 
-  q <- rowSums(ret[,3:4,drop=FALSE])
-  ret[,3:4] <- ret[,3:4] / q
-  cbind(log(q), ret, deparse.level=0)
+  q <- rowSums(base[,3:4,drop=FALSE])
+  base[,3:4] <- base[,3:4] / q
+
+  list(target=unresolved$target,
+       lq=log(q),
+       base=matrix.to.list(base))
 }
 
 ## Additional functions
@@ -263,4 +286,37 @@ all.models.bisse <- function(f, p, ...) {
        ans5.l =ans5.l,  ans5.m =ans5.m,  ans5.q =ans5.q,
        ans4.lm=ans4.lm, ans4.lq=ans4.lq, ans4.mq=ans4.mq,
        ans3=ans3)
+}
+
+check.unresolved <- function(cache, unresolved, nt.extra) {
+  if ( is.null(unresolved) ) {
+    return(NULL)
+  } else if ( nrow(unresolved) == 0 ) {
+    warning("Ignoring empty 'unresolved' argument")
+    return(NULL)
+  }
+
+  required <- c("tip.label", "Nc", "n0", "n1")
+  if ( !all(required %in% names(unresolved)) )
+    stop("Required columns missing from unresolved clades")
+
+  unresolved$tip.label <- as.character(unresolved$tip.label)
+  if ( !all(unresolved$tip.label %in% cache$tip.label) )
+    stop("Unknown tip species in 'unresolved'")
+
+  if ( max(unresolved$Nc + nt.extra) > 200 )
+    stop("The largest unresolved clade supported has %d species",
+         200 - nt.extra)
+
+  unresolved$i <- match(unresolved$tip.label, cache$tip.label)
+  unresolved$target <- cache$tips[unresolved$i]
+
+  unresolved$k   <- unresolved$n1
+  unresolved$nsc <- unresolved$n0 + unresolved$n1
+  unresolved <- as.list(unresolved)
+  unresolved$nt.extra <- nt.extra
+
+  unresolved$len <- cache$len[unresolved$target]
+
+  unresolved
 }

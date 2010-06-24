@@ -282,3 +282,12 @@ branching.heights <- function(phy) {
 
   ht
 }
+
+## Convert a matrix to a list by row.
+matrix.to.list <- function(m) {
+  n <- nrow(m)
+  out <- vector("list", n)
+  for ( i in seq_len(n) )
+    out[[i]] <- m[i,]
+  out
+}

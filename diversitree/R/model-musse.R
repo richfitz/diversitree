@@ -8,11 +8,10 @@
 ##   6. ll
 ##   7. initial.conditions
 ##   8. branches
-##   9. branches.unresolved
 
 ## 1: make
-make.musse <- function(tree, states, k, sampling.f=NULL) {
-  cache <- make.cache.musse(tree, states, k, sampling.f)
+make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE) {
+  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
   branches <- make.branches.musse(k)
 
   ll.musse <- function(cache, pars, condition.surv=TRUE,
@@ -23,10 +22,8 @@ make.musse <- function(tree, states, k, sampling.f=NULL) {
     if ( any(!is.finite(pars)) || any(pars < 0) )
       return(-Inf)
 
-    xxsse.ll(pars, cache, initial.conditions.musse,
-             branches, branches.unresolved.musse,
-             condition.surv, root, root.p, NULL, # Null -> prior
-             intermediates)
+    xxsse.ll(pars, cache, initial.conditions.musse, branches,
+             condition.surv, root, root.p, intermediates)
   }
 
   ll <- function(pars, ...) ll.musse(cache, pars, ...)
@@ -102,23 +99,29 @@ initial.tip.musse <- function(cache) {
   tip.state <- cache$tip.state
   if ( any(tip.state < 1 | tip.state > k, na.rm=TRUE) )
     stop(sprintf("tip states must be in the range [1, %d]", k))
-  
+
   f <- cache$sampling.f
   y <- matrix(rep(c(1-f, rep(0, k)), k + 1), k+1, 2*k, TRUE)
   y[k+1,(k+1):(2*k)] <- diag(y[1:k,(k+1):(2*k)]) <- f
-  i <- cache$tip.state
-  i[is.na(i)] <- k + 1
-  list(y=y, i=i, types=sort(unique(i)))
+  y <- matrix.to.list(y)
+  y.i <- cache$tip.state
+  y.i[is.na(y.i)] <- k + 1
+
+  tips <- cache$tips
+
+  dt.tips.grouped(y, y.i, tips, cache$len[tips])
 }
 
 ## 6: ll.musse is done within make.musse
 
 ## 7: initial.conditions:
 initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
-  k <- ncol(init)/2
+  k <- length(init[[1]])/2
   i <- seq_len(k)
-  d <- init[,i + k]
-  c(init[1,i], d[1,] * d[2,] * pars[i])
+  j <- i + k
+
+  c(init[[1]][i],
+    init[[1]][j] * init[[2]][j] * pars[i])
 }
 
 ## 8: branches (separate for mk2 and mkn)
@@ -144,11 +147,6 @@ make.branches.musse <- function(k) {
     t(musse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
   }
   make.branches(branches.musse, (k+1):(2*k))
-}
-
-## 9: branches.unresolved
-branches.unresolved.musse <- function(...) {
-  stop("Cannot use unresolved clades with MuSSE")
 }
 
 ## Historical interest: This function creates a function for computing

@@ -1,3 +1,8 @@
+## TODO: document this!
+## much of this file is to split functions what diversitree-branches.R
+## is to the core models; code for generating caches, and then runing
+## integrations given those caches are provided.
+
 ## Checking that is specific to splitting:
 check.split <- function(phy, nodes, split.t) {
   if ( length(split.t) != length(nodes) )
@@ -130,4 +135,126 @@ dt.split.order <- function(daughters, parents) {
   }
   
   order
+}
+
+all.branches.split <- function(pars, cache, initial.conditions, branches,
+                               branches.aux, intermediates=FALSE) {
+  ## TODO: 'n' is a stupid name: change to n.part or n.split
+  n.part <- cache$n.part
+  obj <- res <- vector("list", n.part)
+  aux.i <- cache$aux.i # 1, 2 (E0, E1) for BiSSE
+
+  ## TODO: 'order' is confusing with the *other* cache$order
+  ## change to order.part
+  for ( i in cache$order ) {
+    x <- cache$cache[[i]]
+
+    ## It might be the case that auxilliary variables need computing
+    ## at splits.  For example, in BiSSE (and friends), when switching
+    ## parameter space, rather than take the E values from the
+    ## daughter lineage, I need to recompute them to use the new
+    ## parameters at this point (a lineage arising just below the
+    ## split would have a totally different probability of extinction
+    ## than one after the split).  In this case I have to run a new
+    ## branch down with the parent set and parent sampling.f.  The 'D'
+    ## values from doing this would be ignored.  For mk2 (and friends)
+    ## this is not an issue.
+    if ( length(x$daughters) > 0 ) {
+      y <- res[x$daughters]
+      ## TODO:
+      ##   x$depth[names(x$daughters)]
+      ## might be replaced with
+      ##   x$depth[x$daughters.i]
+      ## I think?
+      x$depth[names(x$daughters)]
+      
+      aux <- branches.aux(i, x$depth[names(x$daughters)], pars[[i]])
+      if ( is.matrix(aux) )
+        aux <- matrix.to.list(aux)
+
+      preset <- list(target=x$daughters.i,
+                     base=vector("list", length(x$daughters)),
+                     lq=numeric(length(x$daughters)))
+      
+      for ( j in seq_along(x$daughters) ) {
+        yj <- res[[x$daughters[j]]]$base
+        yj[aux.i] <- aux[[j]]
+        idx <- x$daughters.i[j]
+        tmp <- branches(yj, x$len[idx], pars[[i]], x$depth[idx])
+        preset$lq[j] <- tmp[1]
+        preset$base[[j]] <- tmp[-1]
+      }
+
+      if ( is.null(x$preset) ) {
+        x$preset <- preset
+      } else { # TODO: This should be done with something like modifyList
+        x$preset$target <- c(x$preset$target, preset$target)
+        x$preset$lq     <- c(x$preset$lq,     preset$lq)
+        x$preset$base   <- c(x$preset$base,   preset$base)
+      }
+    }
+
+    obj[[i]] <-
+      all.branches(pars[[i]], x, initial.conditions, branches)
+
+    base <- obj[[i]]$init[[x$root]]
+    if ( !is.na(cache$parent[i]) ) { # trailing to deal with...
+      tmp <- branches(base, x$trailing.len, pars[[i]], x$trailing.t0)
+      res[[i]] <- list(lq=tmp[1] + sum(obj[[i]]$lq), base=tmp[-1])
+    } else {
+      res[[i]] <- list(lq=sum(obj[[i]]$lq), base=base)
+    }
+
+    if ( intermediates )
+      res[[i]]$intermediates <- obj[[i]]
+  }
+
+  res
+}
+
+make.cache.split <- function(tree, nodes, split.t) {
+  ## TODO: This has the poor effect of not working correctly to create
+  ## single branch partitions.  I should be careful about that.  This
+  ## is also quite slow, so that making split functions is not very quick.
+  subtrees <- split.phylo(tree, nodes, split.t=split.t)
+
+  n.part <- length(subtrees)
+
+  cache <- list()
+  cache$cache <- vector("list", n.part)
+  cache$tip.tr <- structure(rep(NA, length(tree$tip.label)),
+                            names=tree$tip.label)
+  cache$parents <- integer(n.part)
+  cache$daughters <- vector("list", n.part)
+
+  for ( i in seq_len(n.part) ) {
+    tree.sub <- subtrees[[i]]
+
+    res <- make.cache(tree.sub)
+    res$tips <- seq_len(res$n.tip) # TODO: remove after update
+    res$tip.label <- tree.sub$tip.label
+        res$trailing.len <- tree.sub$trailing
+    res$trailing.t0 <- max(res$depth)
+    res$daughters <- tree.sub$daughters
+    n <- length(res$daughters)
+    if ( n > 0 ) {
+      res$daughters.i <- match(names(res$daughters), tree.sub$tip.label)
+      res$n.tip <- res$n.tip - n
+      res$tips <- res$tips[-res$daughters.i]
+      res$tip.label <- res$tip.label[-res$daughters.i]
+    }
+
+    cache$cache[[i]] <- res
+    
+    cache$parents[i] <- tree.sub$parent
+    cache$daughters[i] <- list(res$daughters)
+    if ( length(cache$daughters) != n.part )
+      browser()
+    cache$tip.tr[tree.sub$tip.label[res$tips]] <- i
+  }
+
+  cache$n.parts <- length(subtrees)
+  cache$order.parts <- dt.split.order(cache$daughters, cache$parents)
+
+  cache
 }

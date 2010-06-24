@@ -10,8 +10,8 @@
              states=x$states,
              xlim=NULL, ylim=NULL, show.tip.label=TRUE,
              show.node.label=FALSE, show.tip.state=TRUE,
-             show.node.state=TRUE, cex=1, font=3, srt=0,
-             adj=0, label.offset=0, ...)
+             show.node.state=TRUE, no.margin=FALSE, cex=1, font=3,
+             srt=0, adj=0, label.offset=0, ...)
 }
 
 \arguments{
@@ -33,6 +33,7 @@
     tip state?}
   \item{show.node.state}{Logical: draw a symbol at the nodes to indicate
     node state?}
+  \item{no.margin}{Supress drawing of margins around the plot}
   \item{cex}{Font and symbol scaling factor.}
   \item{font}{Font used for tip and node labels (see
     \code{\link{par}}).}

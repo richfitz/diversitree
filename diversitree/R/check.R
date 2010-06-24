@@ -56,28 +56,3 @@ check.sampling.f <- function(sampling.f, n) {
     stop("sampling.f must be on range (0,1]")
   sampling.f
 }
-
-check.unresolved <- function(tree, unresolved, nt.extra) {
-  if ( !is.null(unresolved) && nrow(unresolved) == 0 ) {
-    unresolved <- NULL
-    warning("Ignoring empty 'unresolved' argument")
-  } else if ( !is.null(unresolved) ) {
-    required <- c("tip.label", "Nc", "n0", "n1")
-    if ( !all(required %in% names(unresolved)) )
-      stop("Required columns missing from unresolved clades")
-    unresolved$tip.label <- as.character(unresolved$tip.label)
-    if ( !all(unresolved$tip.label %in% tree$tip.label) )
-      stop("Unknown tip species in 'unresolved'")
-    unresolved$k   <- unresolved$n1
-    unresolved$nsc <- unresolved$n0 + unresolved$n1
-    unresolved$i   <- match(unresolved$tip.label, tree$tip.label)
-    unresolved <- as.list(unresolved)
-    unresolved$nt.extra <- nt.extra
-
-    if ( max(unresolved$Nc + nt.extra) > 200 )
-      stop("The largest unresolved clade supported has %d species",
-           200 - nt.extra)
-  }
-
-  unresolved
-}

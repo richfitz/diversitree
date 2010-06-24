@@ -44,11 +44,11 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE) {
     qmat[idx] <- pars
     diag(qmat) <- -rowSums(qmat)
     ans <- all.branches.mkn(qmat, cache)
-    d.root <- ans$init[cache$root,]
+    d.root <- ans$init[[cache$root]]
     root.p <- root.p.mkn(d.root, pars, root, root.p)
     loglik <- root.mkn(d.root, ans$lq, root.p)
     if ( intermediates ) {
-      ans$init[seq_len(n.tip),] <- cache$y$y[cache$y$i,]
+      ans$init[seq_len(n.tip)] <- matrix.to.list(cache$y$y[cache$y$i,])
       ans$root.p <- root.p
     }
 
@@ -188,7 +188,7 @@ root.mkn <- function(vals, lq, root.p) {
 
 ## 7: initial.conditions:
 initial.conditions.mkn <- function(init, pars, t, is.root=FALSE)
-  init[1,] * init[2,]
+  init[[1]] * init[[2]]
 
 ## 8: branches (separate for mk2 and mkn)
 pij.mk2 <- function(len, pars) {
@@ -273,6 +273,8 @@ all.branches.mkn <- function(pars, cache) {
             lq       = lq,
             NAOK=TRUE, DUP=FALSE)
 
-  list(init=t(ans$init), base=t(ans$base), lq=ans$lq, pij=pij)
+  list(init=matrix.to.list(t(ans$init)),
+       base=matrix.to.list(t(ans$base)),
+       lq=ans$lq, pij=pij)
 }
 

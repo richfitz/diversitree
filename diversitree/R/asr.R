@@ -63,7 +63,7 @@ asr.stoch.constrained <- function(lik, pars, n=1, ...) {
 ## And then sample the appropriate number of points.
 do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
                             initial.conditions,
-                            branches, branches.unresolved, root,
+                            branches, root,
                             ...) {
   ## Store these for easier calculation.
   children <- cache$children
@@ -88,21 +88,21 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
       lq <- res$lq
       branch.init <- res$init
       branch.base <- res$base
-      branch.init[nd,states.idx[-st]] <- 0
-      y.in <- branch.init[nd,]
+      branch.init[[nd]][states.idx[-st]] <- 0
+      y.in <- branch.init[[nd]]
       ## j <- nd # Needed for when nd == root.idx - TODO:poss no longer?
 
       for ( i in anc.nd ) {
         ans <- branches(y.in, len[i], pars, depth[i])
         lq[i] <- ans[1]
-        branch.base[i,] <- ans[-1]
+        branch.base[[i]] <- ans[-1]
         j <- parent[i]
-        y.in <- initial.conditions(branch.base[children[j,],], pars,
+        y.in <- initial.conditions(branch.base[children[j,]], pars,
                                    depth[j], j == root.idx)
-        branch.init[j,] <- y.in
+        branch.init[[j]] <- y.in
       }
 
-      ans <- root(pars, branch.init[root.idx,], lq)
+      ans <- root(pars, branch.init[[root.idx]], lq)
       
       if ( is.na(ans) )
         p[st] <- -Inf # explots R's exp(-Inf) == 0
@@ -149,7 +149,7 @@ do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
   len <- length(cache$len)
   root <- cache$root
   tips <- seq_len(cache$n.tip)
-  k <- ncol(li)
+  k <- length(li[[1]])
   pij2 <- array(pij, c(len, k, k))
 
   anc.states <- matrix(NA, n, len)
@@ -160,7 +160,7 @@ do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
       idx <- parent.state == j
       nj <- sum(idx)
       if ( nj > 0 ) {
-        p <- li[i,] * pij2[i,j,] # di * pij
+        p <- li[[i]] * pij2[i,j,] # di * pij
         anc.states[idx,i] <- sample(k, nj, TRUE, p)
       }
     }
@@ -175,7 +175,7 @@ do.asr.jointmean <- function(cache, li, pij, root.p, ...) {
   len <- length(cache$len)
   root <- cache$root
   tips <- seq_len(cache$n.tip)
-  k <- ncol(li)
+  k <- length(li[[1]])
   pij2 <- array(pij, c(len, k, k))
 
   anc.states <- matrix(NA, k, len)  
@@ -183,7 +183,7 @@ do.asr.jointmean <- function(cache, li, pij, root.p, ...) {
 
   for ( i in rev(cache$order)[-1] ) {
     pp <- anc.states[,parent[i]]
-    tmp <- t((li[i,] * t(pij2[i,,])))
+    tmp <- t((li[[i]] * t(pij2[i,,])))
     anc.states[,i] <- (c(pp) / sum(pp)) %*% (tmp/rowSums(tmp))
   }
 

@@ -239,12 +239,12 @@ lik.bisse2.bd(2*pars) - lik.bd2(2*pars)
 set.seed(1)
 unresolved <- data.frame(tip.label=I(sample(phy$tip.label, 5)),
                          Nc=sample(2:10, 5), n0=0, n1=0)
-unresolved.mk2 <- structure(unresolved$Nc, names=unresolved$tip.label)
+unresolved.bd <- structure(unresolved$Nc, names=unresolved$tip.label)
 lik.bisse3 <- make.bisse(phy, phy$tip.state, unresolved)
 lik.bisse3.bd <- constrain(lik.bisse3,
                            lambda1 ~ lambda0, mu1 ~ mu0,
                            q01 ~ .01, q10 ~ .01)
-lik.bd3 <- make.bd(phy, unresolved=unresolved.mk2)
+lik.bd3 <- make.bd(phy, unresolved=unresolved.bd)
 
 ## Difference of -167.1523
 lik.bisse3.bd(pars) - lik.bd3(pars)

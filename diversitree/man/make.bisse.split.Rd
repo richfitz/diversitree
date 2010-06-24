@@ -51,8 +51,12 @@ set.seed(546)
 phy <- tree.bisse(pars, max.taxa=30, x0=0)
 
 ## Here is the phylogeny:
-plot(phy, show.node.label=TRUE, label.offset=1, font=1, cex=.75,
+plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
      no.margin=TRUE)
+
+## Here is a plain BiSSE function for comparison:
+lik.b <- make.bisse(phy, phy$tip.state)
+lik.b(pars) # -93.61627
 
 ## Split this phylogeny at three points: nd15, nd18 and nd26
 nodes <- c("nd15", "nd18", "nd26")
@@ -60,7 +64,7 @@ nodes <- c("nd15", "nd18", "nd26")
 ## This is the index in ape's node indexing:
 nodes.i <- match(nodes, phy$node.label) + length(phy$tip.label)
 
-nodelabels(node=nodes.i, pch=19, cex=2, col="red")
+nodelabels(node=nodes.i, pch=19, cex=2, col="#FF000099")
 
 ## Split these half way down the branch, by specifying split.t:
 t0 <- branching.times(phy)[nodes.i - length(phy$tip.label)]
@@ -68,30 +72,41 @@ t1 <- t0 + phy$edge.length[match(nodes.i, phy$edge[,2])]
 split.t <- (t0 + t1) / 2
 rm(t0, t1)
 
-## Then make the likelihood function:
-lik <- make.bisse.split(phy, phy$tip.state, nodes.i, split.t)
-pars4 <- matrix(pars, 4, 6, TRUE)
-lik(pars4) # -93.61627
+## To make a split BiSSE function, pass the node locations and times in:
+lik.s <- make.bisse.split(phy, phy$tip.state, nodes.i, split.t)
 
-## And compare this to the straight BiSSE calculation:
-make.bisse(phy, phy$tip.state)(pars) # -93.61627
+## The parameters must be a list of the same length as the number of
+## partitions.  Partition '1' is the root partition, and partition i is
+## the partition rooted at the node[i-1]
+pars4 <- rep(list(pars), 4)
+pars4
 
-## These are basically identical:
-lik(pars4) - make.bisse(phy, phy$tip.state)(pars)
+## Run the likelihod calculation:
+lik.s(pars4) # -93.61627
+
+## These are basically identical (to acceptable tolerance)
+lik.s(pars4) - lik.b(pars)
 
 ## You can use the labelled nodes rather than indices:
-lik2 <- make.bisse.split(phy, phy$tip.state, nodes, split.t)
-identical(lik(pars4), lik2(pars4))
+lik.s2 <- make.bisse.split(phy, phy$tip.state, nodes, split.t)
+identical(lik.s(pars4), lik.s2(pars4))
 
-## Now, add some unresolved clades to the mix:
+## This also works where some tips are unresolved clades.  Here are a
+## few:
 unresolved <-
   data.frame(tip.label=c("sp12", "sp32", "sp9", "sp22", "sp11"),
              Nc=c(2,5,3,2,5), n0=c(1, 4, 3, 2, 4), n1=c(1, 1, 0, 0, 1))
 
-make.bisse(phy, phy$tip.state, unresolved=unresolved)(pars) # -139.3669
-lik <- make.bisse.split(phy, phy$tip.state, nodes, split.t,
-                        unresolved=unresolved)
-lik(pars4) # -139.3669
+## Plain BiSSE with unresolved clades:
+lik.u.b <- make.bisse(phy, phy$tip.state, unresolved=unresolved)
+lik.u.b(pars) # -139.3669
+
+## Split BiSSE with unresolved clades:
+lik.u.s <- make.bisse.split(phy, phy$tip.state, nodes, split.t,
+                            unresolved=unresolved)
+lik.u.s(pars4) # -139.3669
+
+lik.u.b(pars) - lik.u.s(pars4) # numerical error only
 }
 
 \author{Richard G. FitzJohn}

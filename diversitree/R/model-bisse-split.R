@@ -17,10 +17,11 @@ make.bisse.split <- function(tree, states, nodes, split.t,
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
                                   unresolved, sampling.f, nt.extra)
   branches <- make.branches.bisse(safe)
+  branches.aux <- make.branches.aux.bisse(cache$sampling.f, safe)
   ll <- function(pars, ...)
-    ll.bisse.split(cache, pars, branches, ...)
+    ll.bisse.split(cache, pars, branches, branches.aux, ...)
   class(ll) <- c("bisse.split", "function")
-  attr(ll, "n") <- cache$n
+  attr(ll, "n.part") <- cache$n.part
   ll
 }
 
@@ -65,131 +66,116 @@ find.mle.bisse.split <- function(func, x.init, method, fail.value=NA,
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse.split <- function(tree, states, nodes, split.t,
                                    unresolved=NULL, sampling.f=NULL,
-                                   nt.extra=10, safe=FALSE) {
+                                   nt.extra=10) {
   ## 1: tree
   tree <- check.tree(tree)
 
   ## 2: states:
   states <- check.states(tree, states)
 
-  ## 3: A large amount of unstreamlined checking of sampling.f and
-  ## unresolved - try to abstract this to some degree.
-
   ## Check 'sampling.f'
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
-  ## TODO: a sampling.f of length 2 should be OK.
+  ## TODO: a sampling.f of length 2 can be expanded manually.
   n <- length(nodes) + 1 # +1 for base group
   sampling.f <- check.sampling.f(sampling.f, 2 * n)
-  sampling.f <- matrix(sampling.f, n, 2)
+  sampling.f <- matrix.to.list(matrix(sampling.f, n, 2))
 
-  ## This has the poor effect of not working correctly to create
-  ## single branch partitions.  I should be careful about that.
-  subtrees <- split.phylo(tree, nodes, split.t=split.t)
+  cache <- make.cache.split(tree, nodes, split.t)
 
-  ## Next, process the unresolved clade information for the different
-  ## trees, and build the
+  for ( i in seq_along(cache$cache) ) {
+    x <- cache$cache[[i]]
+    x$tip.state  <- states[x$tip.label]
+    x$sampling.f <- sampling.f[[i]]
 
-  if ( !is.null(unresolved) ) {
-    ret <- vector("list", n)
-    for ( i in seq_len(n) ) {
-      x <- subtrees[[i]]
-      ok <- (unresolved$tip.label %in%
-             setdiff(x$tip.label, names(x$daughters)))
-      if ( any(ok) )
-        ret[[i]] <- check.unresolved(x, unresolved[ok,], nt.extra)
+    if ( !is.null(unresolved) ) {
+      ok <- unresolved$tip.label %in% x$tip.label
+      if ( any(ok) ) {
+        x$unresolved <-
+          check.unresolved(x, unresolved[ok,], nt.extra)
+        x$tips <- x$tips[-x$unresolved$i]
+        x$tip.label <- x$tip.label[-x$unresolved$i]
+        x$tip.state <- x$tip.state[-x$unresolved$i]
+      }
     }
-    unresolved <- ret
+    
+    x$y <- initial.tip.bisse(x)
+    cache$cache[[i]] <- x
   }
-  
-  cache <- list()
-  cache$cache <- vector("list", n)
-  for ( i in seq_len(n) )
-    cache$cache[[i]] <-
-      mcbs.one(subtrees[[i]], states, unresolved[[i]], sampling.f[i,])
-  
-  cache$daughters <- lapply(subtrees, "[[", "daughters")
-  cache$parents <- sapply(subtrees, "[[", "parent")
-  cache$order <- dt.split.order(cache$daughters, cache$parents)
-  cache$n <- length(subtrees)
 
-  cache
-}
-
-mcbs.one <- function(tree.sub, states, unresolved, sampling.f) {
-  ## This is essentially identical to the code in make.cache.bisse()
-  cache <- make.cache(tree.sub)
-  cache$tip.state  <- states[tree.sub$tip.label]
-  cache$unresolved <- unresolved
   cache$sampling.f <- sampling.f
-  cache$y <- initial.tip.bisse(cache)
-
-  ## This adds the daughter information:
-  cache$daughters <- tree.sub$daughters
-  n <- length(tree.sub$daughters)
-  cache$daughters.i <- seq_len(n) + 3
-  if ( n > 0 ) {
-    cache$y$y <- rbind(cache$y$y, matrix(NA, n, 4))
-    cache$y$i[names(tree.sub$daughters)] <- cache$daughters.i
-    cache$y$types <- c(cache$y$types, cache$daughters.i)
-  }
-
-  cache$trailing <- tree.sub$trailing
-  cache$trailing.t0 <- max(cache$depth)
-  
+  cache$aux.i <- 1:2
   cache
 }
 
+ll.bisse.split <- function(cache, pars, branches, branches.aux,
+                           condition.surv=TRUE, root=ROOT.OBS,
+                           root.p=NULL, intermediates=FALSE) {
+  n.part <- cache$n.part
+  if ( is.matrix(pars) ) {
+    if ( nrow(pars) != n.part )
+      stop(sprintf("Expected %d parameter sets", n.part))
+    if ( ncol(pars) != 6 )
+      stop("Expected 6 parameters in each set")
+    pars <- matrix.to.list(pars)
+  } else if ( is.list(pars) ) {
+    if ( length(pars) != n.part )
+      stop(sprintf("Expected %d parameter sets", n.part))
+    if ( !all(unlist(lapply(pars, length)) == 6) )
+      stop("Expected 6 parameters in each set")
+  } else {
+    if ( length(pars) != n.part * 6 )
+      stop(sprintf("Expected %d parameters", n.part * 6))
+    pars <- matrix.to.list(matrix(pars, n.part, 6, TRUE))
+  }
 
-ll.bisse.split <- function(cache, pars, branches, condition.surv=TRUE,
-                           root=ROOT.OBS, root.p=NULL,
-                           intermediates=FALSE) {
+  ## TODO:
   if ( intermediates )
     .NotYetUsed("intermediates")
 
-  n <- cache$n
-
-  if ( length(pars) != n * 6 )
-    stop("Expected %d parameters", n * 6)
-  if ( any(pars < 0) || any(!is.finite(pars)) )
-    return(-Inf)
-  pars <- matrix(pars, n, 6, TRUE)
-
-  res <- matrix(NA, n, 5)
-  obj <- vector("list", n)
-  for ( i in cache$order ) {
-    x <- cache$cache[[i]]
-
-    if ( length(x$daughters) > 0 ) {
-      ## Rather than take the E values from the daughter lineage, I
-      ## need to recompute them to use the new parameters at this
-      ## point.  This means that I have to run a new branch down with
-      ## the parent set and parent sampling.f (I am using the "no
-      ## data" initial condition here).  The D initial conditions come
-      ## from the previous case.
-      e0 <- branches(x$y$y[3,], x$depth[names(x$daughters)],
-                     pars[i,], 0)[,2:3,drop=FALSE]
-      d0 <- res[x$daughters,4:5,drop=FALSE]
-      x$y$y[x$daughters.i,] <- cbind(e0, d0)
-    }
-
-    obj[[i]] <- all.branches(pars[i,], x, initial.conditions.bisse,
-                             branches, branches.unresolved.bisse)
-
-    ## Add trailing edge
-    if ( !is.na(cache$parent[i]) )
-      res[i,] <- branches(obj[[i]]$init[x$root,], x$trailing,
-                          pars[i,], x$trailing.t0)
-    else 
-      res[i,] <- c(0, obj[[i]]$init[x$root,])
-
-    res[i,1] <- res[i,1] + sum(obj[[i]]$lq)
+  for ( i in seq_len(n.part) ) {
+    unresolved.i <- cache$cache[[i]]$unresolved
+    if ( !is.null(unresolved.i) )
+      cache$cache[[i]]$preset <-
+        branches.unresolved.bisse(pars[[i]], unresolved.i)
   }
+
+  ans <- all.branches.split(pars, cache, initial.conditions.bisse,
+                            branches, branches.aux)
+
+  ## TODO: all.branches.split still does not return the 'obj'
+  ## component, which will be required to really use the
+  ## intermediates, which I will use for partitioned optimisation.
   
-  root.p <- root.p.xxsse(res[i,-1], pars[i,], root, root.p)
-  root.xxsse(res[i,-1], pars[i,], res[,1], condition.surv, root.p)
+  vars <- ans[[1]]$base
+  lq <- unlist(lapply(ans, "[[", "lq"))
+  pars.root <- pars[[1]]
+
+  root.p <- root.p.xxsse(vars, pars.root, root, root.p)
+  loglik <- root.xxsse(vars, pars.root, lq, condition.surv, root.p)
+
+  ans$root.p <- root.p
+  cleanup(loglik, pars, intermediates, cache, ans)
 }
 
 ## 7: initial.conditions: from bisse
-## 8: branches: from bisse
+
+## 8: branches: from bisse.  However the 'branches.aux' function is
+## required to compute the E0, E1 values after a partition.
+
+## TODO: this would be nicer if it did not compute the Ds at all.
+## Also, it can just use the non-clever function as I do not need the
+## log compensation worked out.
+make.branches.aux.bisse <- function(sampling.f, safe=FALSE) {
+  y <- lapply(sampling.f, function(x) c(1-x, 1, 1))
+  branches <- make.branches.bisse(safe)
+  n <- length(y)
+  branches.aux.bisse <- function(i, len, pars) {
+    if ( i > n )
+      stop("No such partition")
+    branches(y[[i]], len, pars, 0)[,2:3,drop=FALSE]
+  }
+}
+
+
 ## 9: branches.unresolved: from bisse
