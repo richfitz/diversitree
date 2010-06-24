@@ -13,7 +13,6 @@
 ##   6. ll
 ##   7. initial.conditions
 ##   8. branches
-##   9. branches.unresolved
 
 ## 1: make
 make.mk2.old <- function(tree, states) {
@@ -43,8 +42,7 @@ make.mkn.old <- function(tree, states, k) {
     qmat[idx] <- pars
     diag(qmat) <- -rowSums(qmat)
     
-    ans <- all.branches(qmat, cache, initial.conditions.mkn.old, branches,
-                        branches.unresolved.mkn)
+    ans <- all.branches(qmat, cache, initial.conditions.mkn.old, branches)
     loglik <- root.mkn.old(ans$init[cache$root,], ans$lq, pars, root,
                            root.p)
     cleanup(loglik, pars, intermediates, cache, ans)
@@ -127,9 +125,14 @@ initial.tip.mkn.old <- function(cache) {
   
   y <- matrix(rep(rep(0, k), k + 1), k+1, k, TRUE)
   y[k+1,] <- diag(y[1:k,1:k]) <- 1
-  i <- cache$tip.state
-  i[is.na(i)] <- k + 1
-  list(y=y, i=i, types=sort(unique(i)))
+  y <- matrix.to.list(y)
+
+  y.i <- cache$tip.state
+  y.i[is.na(y.i)] <- k + 1
+
+  tips <- cache$tips
+  
+  dt.tips.grouped(y, y.i, tips, cache$len[tips])
 }
 root.mkn.old <- function(vals, lq, pars, root, root.p=NULL) {
   k <- length(vals)
@@ -169,7 +172,7 @@ ll.mk2.old <- function(cache, pars, prior=NULL, root=ROOT.OBS,
   if ( any(pars < 0) || any(!is.finite(pars)) )
     return(-Inf)
   ans <- all.branches(pars, cache, initial.conditions.mkn.old,
-                      branches.mk2, branches.unresolved.mkn)
+                      branches.mk2)
   loglik <- root.mkn.old(ans$init[cache$root,], ans$lq, pars, root,
                          root.p)
   cleanup(loglik, pars, intermediates, cache, ans)
@@ -177,7 +180,7 @@ ll.mk2.old <- function(cache, pars, prior=NULL, root=ROOT.OBS,
 
 ## 7: initial.conditions:
 initial.conditions.mkn.old <- function(init, pars, t, is.root=FALSE)
-  init[1,] * init[2,]
+  init[[1]] * init[[2]]
 
 ## 8: branches (separate for mk2 and mkn)
 branches.mk2 <- function(y, len, pars, t0) {
@@ -213,9 +216,6 @@ make.branches.mkn <- function(k) {
   make.branches(branches.mkn, 1:k)
 }
 
-## 9: branches.unresolved
-branches.unresolved.mkn <- function(...)
-  stop("Cannot use unresolved clades with Mk2/Mkn")
 
 ## Additional functions:
 stationary.freq.mkn.old <- function(pars) {
@@ -242,10 +242,9 @@ asr.marginal.mkn.old <- function(lik, pars, nodes=NULL, ...) {
   branches <- environment(lik)$branches
 
   res <- all.branches(pars, cache, initial.conditions.mkn,
-                      branches, branches.unresolved.mkn)
+                      branches)
 
   do.asr.marginal(pars, cache, res, nodes, states.idx,
                   initial.conditions.mkn,
-                  branches,
-                  branches.unresolved.mkn)
+                  branches)
 }
