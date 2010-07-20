@@ -41,6 +41,7 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
   bt <- branching.times(phy)
   tt <- structure(rep(0, n.tip), names=phy$tip.label) # tip times
 
+  group <- make.split.phylo.vec(phy, nodes[-1])
   group <- make.split.phylo.vec(phy, nodes)
 
   ## Find the *parent* of the different groups, so that we can
@@ -82,6 +83,7 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
       names(daughters) <- names(extra.tips[daughters])
       phy2$tt[spp] <- split.t[daughters]
       phy2$daughters <- daughters[order(split.t[daughters])]
+      phy2$anc <- ancestors(phy2, match(names(daughters), phy2$tip.label))
     }
 
     if ( !is.na(nodes[idx]) )
@@ -98,16 +100,22 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
 ## Generate a grouping vector from a phylogeny.  This takes a vector
 ## 'nodes', and classifies the tree into different groups.
 make.split.phylo.vec <- function(phy, nodes, group=NULL) {
+  if ( is.character(nodes) )
+    nodes <- match(nodes, phy$node.label) + length(phy$tip.label)
+
   edge <- phy$edge
 
+  descendants <- diversitree:::descendants
   descendants.idx <- function(node)
     which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
   
   f <- function(node, phy, group) {
+    if ( is.na(node) )
+      return(list(group=group, base=NA))
     i <- which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
     base <- group[edge[,2] == node]
     group[i[group[i] == base]] <- max(group) + 1
-    group
+    list(group=group, base=base)
   }
 
   if ( is.null(group) )
@@ -115,9 +123,14 @@ make.split.phylo.vec <- function(phy, nodes, group=NULL) {
   else if ( length(group) != nrow(edge) )
     stop("Invalid length grouping vector")
 
-  for ( i in nodes )
-    group <- f(i, phy, group)
+  base <- integer(length(nodes))
+  for ( i in seq_along(nodes) ) {
+    tmp <- f(nodes[i], phy, group)
+    group <- tmp$group
+    base[i] <- tmp$base
+  }
 
+  attr(group, "base") <- base
   group
 }
 
@@ -133,86 +146,159 @@ dt.split.order <- function(daughters, parents) {
     daughters[j] <- lapply(daughters[j], setdiff, i)
     pending[i] <- FALSE
   }
-  
+
   order
 }
 
+
+## It might be the case that auxilliary variables need computing
+## at splits.  For example, in BiSSE (and friends), when switching
+## parameter space, rather than take the E values from the
+## daughter lineage, I need to recompute them to use the new
+## parameters at this point (a lineage arising just below the
+## split would have a totally different probability of extinction
+## than one after the split).  In this case I have to run a new
+## branch down with the parent set and parent sampling.f.  The 'D'
+## values from doing this would be ignored.  For mk2 (and friends)
+## this is not an issue.
+
+## If parameters are shared for some partitions across calls, there is
+## no need to recompute things.  However, going beyond the simple
+## implementation below is a lot of book-keeping.  The reason for
+## this, is that if we want to remember multiple points previously
+## (which would be ideal given the way that MCMC and MLE searches
+## work, generally modifying a single partition at once) then we have
+## to remember parent/offspring parameter relationships.
+## Suppose a tree has nested sements A-B-C (A tipward, B rootward).
+## and suppose that the following parameter sets have been run:
+##    A1 B1 C1
+##    A2 B2 C2
+## and now we want to run
+##    A2 B2 C1
+## we would mark the A and B partitions as case=0, and mark the C
+## partition as case=2, starting from the C2 initial conditions.
+## If we then evaluate
+##    A1 B2 C2
+## we would mark things 0, 2, 2 (the C=2 would happen automatically)
+## and then
+##    A1 B2 C1 -> 0, 0, 2
+## However, this would require that we are storing a large number of
+## intermediates, which might not be feasble anyway for QuaSSE.
 all.branches.split <- function(pars, cache, initial.conditions, branches,
-                               branches.aux, intermediates=FALSE) {
-  ## TODO: 'n' is a stupid name: change to n.part or n.split
+                               branches.aux, recycle=FALSE, prev=NULL,
+                               debug=FALSE) {
   n.part <- cache$n.part
-  obj <- res <- vector("list", n.part)
+  res <- vector("list", n.part)
+
   aux.i <- cache$aux.i # 1, 2 (E0, E1) for BiSSE
 
-  ## TODO: 'order' is confusing with the *other* cache$order
-  ## change to order.part
-  for ( i in cache$order ) {
+  run <- prev$run
+
+  if ( is.null(run) )
+    run <- rep(1, n.part)
+
+  if ( debug )
+    browser()
+
+  for ( i in cache$order.parts ) {
     x <- cache$cache[[i]]
 
-    ## It might be the case that auxilliary variables need computing
-    ## at splits.  For example, in BiSSE (and friends), when switching
-    ## parameter space, rather than take the E values from the
-    ## daughter lineage, I need to recompute them to use the new
-    ## parameters at this point (a lineage arising just below the
-    ## split would have a totally different probability of extinction
-    ## than one after the split).  In this case I have to run a new
-    ## branch down with the parent set and parent sampling.f.  The 'D'
-    ## values from doing this would be ignored.  For mk2 (and friends)
-    ## this is not an issue.
-    if ( length(x$daughters) > 0 ) {
-      y <- res[x$daughters]
-      ## TODO:
-      ##   x$depth[names(x$daughters)]
-      ## might be replaced with
-      ##   x$depth[x$daughters.i]
-      ## I think?
-      x$depth[names(x$daughters)]
-      
-      aux <- branches.aux(i, x$depth[names(x$daughters)], pars[[i]])
-      if ( is.matrix(aux) )
-        aux <- matrix.to.list(aux)
+    ## There are three options for what to do:
+    if ( !recycle )
+      case <- 1 # run from scratch
+    else if ( run[i] == 0 && any(run[x$daughters] > 0) )
+      case <- 2 # run from daughters
+    else
+      case <- run[i] # may do nothing or one of the above.
 
-      preset <- list(target=x$daughters.i,
-                     base=vector("list", length(x$daughters)),
-                     lq=numeric(length(x$daughters)))
-      
-      for ( j in seq_along(x$daughters) ) {
-        yj <- res[[x$daughters[j]]]$base
-        yj[aux.i] <- aux[[j]]
-        idx <- x$daughters.i[j]
-        tmp <- branches(yj, x$len[idx], pars[[i]], x$depth[idx])
-        preset$lq[j] <- tmp[1]
-        preset$base[[j]] <- tmp[-1]
-      }
+    #cat(sprintf("i = %d, case = %d\n", i, case))
 
-      if ( is.null(x$preset) ) {
-        x$preset <- preset
-      } else { # TODO: This should be done with something like modifyList
-        x$preset$target <- c(x$preset$target, preset$target)
-        x$preset$lq     <- c(x$preset$lq,     preset$lq)
-        x$preset$base   <- c(x$preset$base,   preset$base)
-      }
-    }
-
-    obj[[i]] <-
-      all.branches(pars[[i]], x, initial.conditions, branches)
-
-    base <- obj[[i]]$init[[x$root]]
-    if ( !is.na(cache$parent[i]) ) { # trailing to deal with...
-      tmp <- branches(base, x$trailing.len, pars[[i]], x$trailing.t0)
-      res[[i]] <- list(lq=tmp[1] + sum(obj[[i]]$lq), base=tmp[-1])
+    if ( case == 0 ) {
+      res[[i]] <- prev$vals[[i]]$vals
     } else {
-      res[[i]] <- list(lq=sum(obj[[i]]$lq), base=base)
-    }
+      if ( length(x$daughters) > 0 ) {
+        if ( case == 2 ) {
+          ## Add the already-computed information, if relevant.
+          x$preset <- c(list(target=seq_along(x$len)),
+                        prev$vals[[i]]$vals$intermediates[c("base", "lq")])
 
-    if ( intermediates )
-      res[[i]]$intermediates <- obj[[i]]
+          ## Trim the traversal path to daughters -> root
+          ## TODO: where we are rerunning daughters, information here
+          ## is not making it down.  Previously I was looking to ask
+          ##   j <- x$daughters %in% which(run > 0)
+          ## but this does not work if the rerun is requested by the
+          ## recycling parameter control.  Instead, I will do them
+          ## all.
+          x$order <- x$order[rowSums(x$recycle.order)>0]
+          run[i] <- TRUE # so that parents get rerun
+
+          ## Supress tip calculations.
+          x$y <- NULL
+        }
+
+        ## Add the daughters
+        y <- res[x$daughters]
+        preset <- list(target=x$daughters.i,
+                       base=vector("list", length(x$daughters)),
+                       lq=numeric(length(x$daughters)))
+      
+        aux <- branches.aux(i, x$depth[x$daughters.i], pars[[i]])
+        if ( is.matrix(aux) )
+          aux <- matrix.to.list(aux)
+        
+        for ( j in seq_along(x$daughters) ) {
+          yj <- res[[x$daughters[j]]]$base
+          yj[aux.i] <- aux[[j]]
+          idx <- x$daughters.i[j]
+
+          ## TODO: Another hack (this should only be negative by
+          ## rounding error, when zero is really what is required).
+          ## It might be OK to replace with max(0, x$len[idx])
+          if ( x$len[idx] < 0 ) {
+            if ( x$len[idx] < 1e-6 )
+              x$len[idx] <- 0
+            else
+              stop("Illegal negative branch length")
+          }
+
+          tmp <- branches(yj, x$len[idx], pars[[i]], x$depth[idx])
+          preset$lq[j] <- tmp[1]
+          preset$base[[j]] <- tmp[-1]
+        }
+
+        ## Combine the sources of precomputed information (note that
+        ## this might include *other* preset information for case=1).
+        if ( is.null(x$preset) ) {
+          x$preset <- preset
+        } else {
+          x$preset$target <- c(x$preset$target, preset$target)
+          x$preset$lq     <- c(x$preset$lq,     preset$lq)
+          x$preset$base   <- c(x$preset$base,   preset$base)
+        }
+      }
+
+      ## Run the traversal.
+      obj <- all.branches(pars[[i]], x, initial.conditions, branches)
+
+      ## Trailing branch:
+      base <- obj$init[[x$root]]
+      if ( !is.na(cache$parent[i]) ) { # trailing to deal with...
+        tmp <- branches(base, x$trailing.len, pars[[i]], x$trailing.t0)
+        res[[i]] <- list(lq=tmp[1] + sum(obj$lq),
+                         base=tmp[-1],
+                         intermediates=obj)
+      } else {
+        res[[i]] <- list(lq=sum(obj$lq),
+                         base=base,
+                         intermediates=obj)
+      }
+    }
   }
 
   res
 }
 
-make.cache.split <- function(tree, nodes, split.t) {
+make.cache.split <- function(tree, nodes, split.t, n.recycle=10) {
   ## TODO: This has the poor effect of not working correctly to create
   ## single branch partitions.  I should be careful about that.  This
   ## is also quite slow, so that making split functions is not very quick.
@@ -231,30 +317,60 @@ make.cache.split <- function(tree, nodes, split.t) {
     tree.sub <- subtrees[[i]]
 
     res <- make.cache(tree.sub)
-    res$tips <- seq_len(res$n.tip) # TODO: remove after update
+    res$tips <- seq_len(res$n.tip)
     res$tip.label <- tree.sub$tip.label
         res$trailing.len <- tree.sub$trailing
     res$trailing.t0 <- max(res$depth)
     res$daughters <- tree.sub$daughters
     n <- length(res$daughters)
+
     if ( n > 0 ) {
       res$daughters.i <- match(names(res$daughters), tree.sub$tip.label)
       res$n.tip <- res$n.tip - n
       res$tips <- res$tips[-res$daughters.i]
       res$tip.label <- res$tip.label[-res$daughters.i]
+
+      ## TODO: This is a hack: an "offset" argument passed in to
+      ## make.cache might be nicer.
+      ## If the sub tree is entirely internal (i.e. none of its nodes
+      ## connect out to the present), then the depth and height
+      ## attributes are incorrect.
+      ## Note that this does not fix the height case...
+      bt <- tree.sub$bt
+      dt <- res$depth[names(bt)] - bt
+      if ( diff(range(dt)) > 1e-8 )
+        stop("I am confused...")
+      else
+        res$depth <- (res$depth - dt[1])
+
+      if ( !is.null(tree.sub$anc) ) {
+        res$recycle.order <-
+          apply(tree.sub$anc, 2, `%in%`, x=res$order)
+        nd <- res$order[rowSums(res$recycle.order) > 0]
+        res$recycle.keep <- sort(as.integer(res$children[nd,]))
+      }
     }
 
     cache$cache[[i]] <- res
     
     cache$parents[i] <- tree.sub$parent
     cache$daughters[i] <- list(res$daughters)
-    if ( length(cache$daughters) != n.part )
-      browser()
     cache$tip.tr[tree.sub$tip.label[res$tips]] <- i
   }
 
   cache$n.parts <- length(subtrees)
   cache$order.parts <- dt.split.order(cache$daughters, cache$parents)
 
+  cache$desc.parts <- vector("list", n.part)
+  for ( i in cache$order.parts ) {
+    j <- cache$daughters[[i]]
+    cache$desc.parts[i] <- list(c(unlist(cache$desc.parts[j]), j))
+  }
+
+  cache$prev <- new.env()
+  ## TODO: 5 should be argument...
+  cache$prev$res <- lapply(seq_len(n.part), function(...)
+                           make.stack(n.recycle))
+  
   cache
 }

@@ -13,9 +13,10 @@
 ## 1: make
 make.bisse.split <- function(tree, states, nodes, split.t,
                              unresolved=NULL, sampling.f=NULL,
-                             nt.extra=10, safe=FALSE) {
+                             nt.extra=10, safe=FALSE, n.recycle=10) {
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
-                                  unresolved, sampling.f, nt.extra)
+                                  unresolved, sampling.f, nt.extra,
+                                  n.recycle)
   branches <- make.branches.bisse(safe)
   branches.aux <- make.branches.aux.bisse(cache$sampling.f, safe)
   ll <- function(pars, ...)
@@ -66,7 +67,7 @@ find.mle.bisse.split <- function(func, x.init, method, fail.value=NA,
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse.split <- function(tree, states, nodes, split.t,
                                    unresolved=NULL, sampling.f=NULL,
-                                   nt.extra=10) {
+                                   nt.extra=10, n.recycle=10) {
   ## 1: tree
   tree <- check.tree(tree)
 
@@ -78,10 +79,14 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
     stop("Cannot specify both sampling.f and unresolved")
   ## TODO: a sampling.f of length 2 can be expanded manually.
   n <- length(nodes) + 1 # +1 for base group
-  sampling.f <- check.sampling.f(sampling.f, 2 * n)
-  sampling.f <- matrix.to.list(matrix(sampling.f, n, 2))
+  if ( is.list(sampling.f) ) {
+    check.sampling.f(unlist(sampling.f), 2*n)
+  } else {
+    sampling.f <- check.sampling.f(sampling.f, 2 * n)
+    sampling.f <- matrix.to.list(matrix(sampling.f, n, 2, TRUE))
+  }
 
-  cache <- make.cache.split(tree, nodes, split.t)
+  cache <- make.cache.split(tree, nodes, split.t, n.recycle)
 
   for ( i in seq_along(cache$cache) ) {
     x <- cache$cache[[i]]
@@ -110,7 +115,8 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
 
 ll.bisse.split <- function(cache, pars, branches, branches.aux,
                            condition.surv=TRUE, root=ROOT.OBS,
-                           root.p=NULL, intermediates=FALSE) {
+                           root.p=NULL, intermediates=FALSE,
+                           recycle=FALSE) {
   n.part <- cache$n.part
   if ( is.matrix(pars) ) {
     if ( nrow(pars) != n.part )
@@ -128,25 +134,27 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
       stop(sprintf("Expected %d parameters", n.part * 6))
     pars <- matrix.to.list(matrix(pars, n.part, 6, TRUE))
   }
+  pars.n <- unlist(pars)
+  if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
+    return(-Inf)
 
-  ## TODO:
-  if ( intermediates )
-    .NotYetUsed("intermediates")
+  prev <- recycle.get(cache, pars)
 
   for ( i in seq_len(n.part) ) {
-    unresolved.i <- cache$cache[[i]]$unresolved
-    if ( !is.null(unresolved.i) )
-      cache$cache[[i]]$preset <-
-        branches.unresolved.bisse(pars[[i]], unresolved.i)
+    if ( prev$run[i] == 1 ) {
+      unresolved.i <- cache$cache[[i]]$unresolved
+      if ( !is.null(unresolved.i) )
+        cache$cache[[i]]$preset <-
+          branches.unresolved.bisse(pars[[i]], unresolved.i)
+    }
   }
 
   ans <- all.branches.split(pars, cache, initial.conditions.bisse,
-                            branches, branches.aux)
+                            branches, branches.aux, recycle, prev)
 
-  ## TODO: all.branches.split still does not return the 'obj'
-  ## component, which will be required to really use the
-  ## intermediates, which I will use for partitioned optimisation.
-  
+  if ( recycle )
+    recycle.set(cache, pars, ans, prev$run)
+ 
   vars <- ans[[1]]$base
   lq <- unlist(lapply(ans, "[[", "lq"))
   pars.root <- pars[[1]]

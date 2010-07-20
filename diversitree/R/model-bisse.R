@@ -11,9 +11,10 @@
 
 ## 1: make
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
-                       nt.extra=10, safe=FALSE) {
+                       nt.extra=10, safe=FALSE, strict=TRUE) {
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
-                            sampling.f=sampling.f, nt.extra=nt.extra)
+                            sampling.f=sampling.f, nt.extra=nt.extra,
+                            strict=strict)
   branches <- make.branches.bisse(safe)
   ll <- function(pars, ...) ll.bisse(cache, pars, branches, ...)
   class(ll) <- c("bisse", "function")
@@ -52,10 +53,18 @@ find.mle.bisse <- function(func, x.init, method,
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse <- function(tree, states, unresolved=NULL,
-                             sampling.f=NULL, nt.extra=10) {
-  tree <- check.tree(tree)
-  states <- check.states(tree, states)
+                             sampling.f=NULL, nt.extra=10,
+                             strict=TRUE) {
+  ## TODO: There is a potential issue here with states, as
+  ## 'unresolved' may contain one of the states.  For now I am
+  ## disabling the check, but this is not great.
+  if ( strict && !is.null(unresolved) ) {
+    strict <- FALSE
+  }
   
+  tree <- check.tree(tree)
+  states <- check.states(tree, states, strict=strict, strict.vals=0:1)
+
   if ( inherits(tree, "clade.tree") ) {
     if ( !is.null(unresolved) )
       stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
@@ -144,7 +153,7 @@ ll.bisse <- function(cache, pars, branches, prior=NULL,
     cache$preset <- 
       branches.unresolved.bisse(pars, cache$unresolved)
 
-  xxsse.ll(pars, cache, initial.conditions.bisse, branches,
+  ll.xxsse(pars, cache, initial.conditions.bisse, branches,
            condition.surv, root, root.p, intermediates)
 }
 

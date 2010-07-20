@@ -22,7 +22,7 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE) {
     if ( any(!is.finite(pars)) || any(pars < 0) )
       return(-Inf)
 
-    xxsse.ll(pars, cache, initial.conditions.musse, branches,
+    ll.xxsse(pars, cache, initial.conditions.musse, branches,
              condition.surv, root, root.p, intermediates)
   }
 
@@ -70,21 +70,13 @@ find.mle.musse <- function(func, x.init, method, fail.value=NA, ...) {
 make.cache.musse <- function(tree, states, k, sampling.f=NULL,
                              strict=TRUE) {
   tree <- check.tree(tree)
-  tmp <- states <- check.states(tree, states)
+  tmp <- states <- check.states(tree, states,
+                                strict=strict, strict.vals=1:k)
   states <- as.integer(states)
 
-  ## Some additional checking of states - eventually this sort of
-  ## thing will go into check.states()
   if ( !isTRUE(all.equal(states, tmp, check.attributes=FALSE)) )
     stop("'states' must be an integer vector (or convert nicely to one)")
-  if ( strict ) {
-    if ( !isTRUE(all.equal(1:k, sort(unique(states)))) )
-      stop("'states' must contain only integers on 1:", k,
-           ", and must contain all states")
-    else if ( min(states) < 1 || max(states) > k)
-      stop("'states' must contain only integers on 1:", k)
-  }
-  
+
   sampling.f <- check.sampling.f(sampling.f, k)
 
   cache <- make.cache(tree)
@@ -96,14 +88,12 @@ make.cache.musse <- function(tree, states, k, sampling.f=NULL,
 }
 initial.tip.musse <- function(cache) {
   k <- cache$k
-  tip.state <- cache$tip.state
-  if ( any(tip.state < 1 | tip.state > k, na.rm=TRUE) )
-    stop(sprintf("tip states must be in the range [1, %d]", k))
-
   f <- cache$sampling.f
+
   y <- matrix(rep(c(1-f, rep(0, k)), k + 1), k+1, 2*k, TRUE)
   y[k+1,(k+1):(2*k)] <- diag(y[1:k,(k+1):(2*k)]) <- f
   y <- matrix.to.list(y)
+  
   y.i <- cache$tip.state
   y.i[is.na(y.i)] <- k + 1
 

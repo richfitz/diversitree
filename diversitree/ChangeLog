@@ -1,3 +1,23 @@
+2010-07-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: New exports for the BiSSE/td model.
+
+	* R/check.R: Strengthened state checking.
+
+	* R/diversitree-branches.R: Renamed xxsse.ll -> ll.xxsse
+
+	* R/model-bisse-split.R: Now includes parameter recycling.
+
+	* R/model-bisse-td.R: New model
+
+	* R/model-bisse.R, R/model-musse.R: Strict state checking, other
+	minor changes.
+
+	* R/split.R, R/split-recycle.R: Bulk of the parameter recycling
+	code.
+
+	* R/td.R: New time dependent code
+
 2010-06-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/diversitree-branches.R: Many changes to all.branches to remove

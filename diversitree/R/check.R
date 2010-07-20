@@ -26,7 +26,8 @@ check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
   tree
 }
 
-check.states <- function(tree, states, allow.unnamed=FALSE) {
+check.states <- function(tree, states, allow.unnamed=FALSE,
+                         strict=FALSE, strict.vals=NULL) {
   if ( is.null(names(states)) ) {
     if ( allow.unnamed ) {
       if ( length(states) == length(tree$tip.label) ) {
@@ -43,6 +44,14 @@ check.states <- function(tree, states, allow.unnamed=FALSE) {
   
   if ( !all(tree$tip.label %in% names(states)) )
     stop("Not all species have state information")
+
+  if ( strict && !is.null(strict.vals) )
+    if ( !isTRUE(all.equal(sort(strict.vals),
+                           sort(unique(na.omit(states))))) )
+      stop("Because strict state checking requested, all (and only) ",
+           sprintf("states in %s are allowed",
+                   paste(strict.vals, collapse=", ")))
+
 
   states[tree$tip.label]
 }
