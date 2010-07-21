@@ -1,5 +1,7 @@
 2010-07-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
+	* R/model-bisse-split.R, R/split.R: Removed the recycling code.
+
 	* NAMESPACE: New exports for the BiSSE/td model.
 
 	* R/check.R: Strengthened state checking.

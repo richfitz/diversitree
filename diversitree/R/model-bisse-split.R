@@ -13,10 +13,9 @@
 ## 1: make
 make.bisse.split <- function(tree, states, nodes, split.t,
                              unresolved=NULL, sampling.f=NULL,
-                             nt.extra=10, safe=FALSE, n.recycle=10) {
+                             nt.extra=10, safe=FALSE) {
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
-                                  unresolved, sampling.f, nt.extra,
-                                  n.recycle)
+                                  unresolved, sampling.f, nt.extra)
   branches <- make.branches.bisse(safe)
   branches.aux <- make.branches.aux.bisse(cache$sampling.f, safe)
   ll <- function(pars, ...)
@@ -67,7 +66,7 @@ find.mle.bisse.split <- function(func, x.init, method, fail.value=NA,
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse.split <- function(tree, states, nodes, split.t,
                                    unresolved=NULL, sampling.f=NULL,
-                                   nt.extra=10, n.recycle=10) {
+                                   nt.extra=10) {
   ## 1: tree
   tree <- check.tree(tree)
 
@@ -86,7 +85,7 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
     sampling.f <- matrix.to.list(matrix(sampling.f, n, 2, TRUE))
   }
 
-  cache <- make.cache.split(tree, nodes, split.t, n.recycle)
+  cache <- make.cache.split(tree, nodes, split.t)
 
   for ( i in seq_along(cache$cache) ) {
     x <- cache$cache[[i]]
@@ -115,8 +114,7 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
 
 ll.bisse.split <- function(cache, pars, branches, branches.aux,
                            condition.surv=TRUE, root=ROOT.OBS,
-                           root.p=NULL, intermediates=FALSE,
-                           recycle=FALSE) {
+                           root.p=NULL, intermediates=FALSE) {
   n.part <- cache$n.part
   if ( is.matrix(pars) ) {
     if ( nrow(pars) != n.part )
@@ -138,23 +136,16 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
   if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
     return(-Inf)
 
-  prev <- recycle.get(cache, pars)
-
   for ( i in seq_len(n.part) ) {
-    if ( prev$run[i] == 1 ) {
-      unresolved.i <- cache$cache[[i]]$unresolved
-      if ( !is.null(unresolved.i) )
-        cache$cache[[i]]$preset <-
-          branches.unresolved.bisse(pars[[i]], unresolved.i)
-    }
+    unresolved.i <- cache$cache[[i]]$unresolved
+    if ( !is.null(unresolved.i) )
+      cache$cache[[i]]$preset <-
+        branches.unresolved.bisse(pars[[i]], unresolved.i)
   }
 
   ans <- all.branches.split(pars, cache, initial.conditions.bisse,
-                            branches, branches.aux, recycle, prev)
+                            branches, branches.aux)
 
-  if ( recycle )
-    recycle.set(cache, pars, ans, prev$run)
- 
   vars <- ans[[1]]$base
   lq <- unlist(lapply(ans, "[[", "lq"))
   pars.root <- pars[[1]]

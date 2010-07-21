@@ -1,3 +1,37 @@
+## It might be the case that auxilliary variables need computing
+## at splits.  For example, in BiSSE (and friends), when switching
+## parameter space, rather than take the E values from the
+## daughter lineage, I need to recompute them to use the new
+## parameters at this point (a lineage arising just below the
+## split would have a totally different probability of extinction
+## than one after the split).  In this case I have to run a new
+## branch down with the parent set and parent sampling.f.  The 'D'
+## values from doing this would be ignored.  For mk2 (and friends)
+## this is not an issue.
+
+## If parameters are shared for some partitions across calls, there is
+## no need to recompute things.  However, going beyond the simple
+## implementation below is a lot of book-keeping.  The reason for
+## this, is that if we want to remember multiple points previously
+## (which would be ideal given the way that MCMC and MLE searches
+## work, generally modifying a single partition at once) then we have
+## to remember parent/offspring parameter relationships.
+## Suppose a tree has nested sements A-B-C (A tipward, B rootward).
+## and suppose that the following parameter sets have been run:
+##    A1 B1 C1
+##    A2 B2 C2
+## and now we want to run
+##    A2 B2 C1
+## we would mark the A and B partitions as case=0, and mark the C
+## partition as case=2, starting from the C2 initial conditions.
+## If we then evaluate
+##    A1 B2 C2
+## we would mark things 0, 2, 2 (the C=2 would happen automatically)
+## and then
+##    A1 B2 C1 -> 0, 0, 2
+## However, this would require that we are storing a large number of
+## intermediates, which might not be feasble anyway for QuaSSE.
+
 ## This is surprisingly slow for QuaSSE (can take about 0.1s).
 recycle.get <- function(cache, pars) {
   e <- cache$prev
