@@ -18,8 +18,8 @@ check.split <- function(phy, nodes, split.t) {
   ## Check that split times are OK
   t0 <- branching.times(phy)[nodes - n.tip]
   t1 <- t0 + phy$edge.length[match(nodes, phy$edge[,2])]
-  split.t[split.t == 0] <- t0
-  split.t[split.t == Inf] <- t1
+  split.t[split.t == 0] <- t0[split.t == 0]
+  split.t[split.t == Inf] <- t1[split.t == Inf]
   if ( any(split.t < t0 | split.t > t1) )
     stop("Invalid split time")
 
@@ -41,7 +41,7 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
   bt <- branching.times(phy)
   tt <- structure(rep(0, n.tip), names=phy$tip.label) # tip times
 
-  group <- make.split.phylo.vec(phy, nodes[-1])
+  ## group <- make.split.phylo.vec(phy, nodes[-1])
   group <- make.split.phylo.vec(phy, nodes)
 
   ## Find the *parent* of the different groups, so that we can
@@ -79,7 +79,23 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
       ## Trim the dummy branches
       spp <- names(extra.tips[daughters])
       j <- match(match(spp, phy2$tip.label), phy2$edge[,2])
-      phy2$edge.length[j] <- phy2$edge.length[j] - split.t[daughters]
+      len <- phy2$edge.length[j] - split.t[daughters]
+
+      ## TODO: Another hack (this should only be negative by
+      ## rounding error, when zero is really what is required).
+      if ( len < 0 ) {
+        if ( abs(len) > 1e-6 )
+          stop("Illegal negative branch length")
+        len <- 0
+      }
+      ## TODO: Another hack.  Some *very* short values of len can
+      ## cause the integrator to fail (my guess is when this is
+      ## divided apart by the underlying code).  This will just
+      ## truncate these, as they probably should be zero anyway.
+      if ( len < 1e-10 )
+        len <- 0
+      phy2$edge.length[j] <- len
+      
       names(daughters) <- names(extra.tips[daughters])
       phy2$tt[spp] <- split.t[daughters]
       phy2$daughters <- daughters[order(split.t[daughters])]
@@ -175,16 +191,6 @@ all.branches.split <- function(pars, cache, initial.conditions, branches,
         yj <- res[[x$daughters[j]]]$base
         yj[aux.i] <- aux[[j]]
         idx <- x$daughters.i[j]
-
-        ## TODO: Another hack (this should only be negative by
-        ## rounding error, when zero is really what is required).
-        ## It might be OK to replace with max(0, x$len[idx])
-        if ( x$len[idx] < 0 ) {
-          if ( x$len[idx] < 1e-6 )
-            x$len[idx] <- 0
-          else
-            stop("Illegal negative branch length")
-        }
 
         tmp <- branches(yj, x$len[idx], pars[[i]], x$depth[idx])
         preset$lq[j] <- tmp[1]

@@ -314,8 +314,6 @@ make.branches <- function(branches, idx, eps=0) {
 
 ## Utility functions for organising initial conditions.
 ## TODO: Document.
-## (the stops here are because these will be used by model
-## developers).
 dt.tips.grouped <- function(y, y.i, tips, t) {
   if ( !is.list(y) )
     stop("'y' must be a list of initial conditions")

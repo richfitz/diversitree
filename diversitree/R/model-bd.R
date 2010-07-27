@@ -179,6 +179,7 @@ make.cache.bd <- function(tree=NULL, times=NULL,
        n.node=n.node)
 }
 
+## TODO: Has argument checking been lost here?
 ## This allows r < 0, a > 1.  a < 0 is not allowed though
 ## Also, if r < 0, then a must > 1 (and vv.).  XOR captures this.
 ##   if ( a < 0 || sign(1-a) != sign(r) ) return(-Inf)

@@ -1,3 +1,11 @@
+2010-07-27  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE, R/model-bd-split.R: New bd.split model
+
+	* R/split.R: Improved handling of times around splits.
+
+	* R/split-recycle.R: Removed.
+
 2010-07-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/model-bisse-split.R, R/split.R: Removed the recycling code.
