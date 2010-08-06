@@ -43,7 +43,7 @@ argnames(x) <- value
 \examples{
 ## Same example likelihood function as for \link{make.bisse}:
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
-set.seed(2)
+set.seed(4)
 phy <- tree.bisse(pars, max.t=30, x0=0)
 f <- make.bisse(phy, phy$tip.state)
 

@@ -1,3 +1,12 @@
+2010-08-06  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/model-bd-split.R: Fixed local naming error (phy->tree).
+
+	* man/argnames.Rd: Example was broken with strict character
+	checking.
+
+	* man/make.bisse.Rd: Document strict character checking.
+
 2010-07-27  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE, R/model-bd-split.R: New bd.split model

@@ -98,16 +98,16 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
     n.taxa[is.na(n.taxa)] <- 1
   }
 
-  edge <- phy$edge
-  n.tip <- length(phy$tip.label)
-  bt <- as.numeric(branching.times(phy))
+  edge <- tree$edge
+  n.tip <- length(tree$tip.label)
+  bt <- as.numeric(branching.times(tree))
 
   i <- seq_len(max(edge))
   j <- match(i, edge[,2])
   z <- cbind(anc=edge[j,1], dec=i,
              t.0=NA,
              t.1=bt[match(edge[j,1], (n.tip+1):max(edge))],
-             t.len=phy$edge.length[j],
+             t.len=tree$edge.length[j],
              n0=1, nt=NA,
              group=NA)
   z[,"t.0"] <- z[,"t.1"] - z[,"t.len"]
@@ -115,11 +115,11 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
   z[match(seq_len(n.tip), z[,2]),"nt"] <- n.taxa
   z[n.tip + 1,1] <- n.tip + 1
 
-  group <- make.split.phylo.vec(phy, nodes)[j]
+  group <- make.split.phylo.vec(tree, nodes)[j]
   group[n.tip + 1] <- 1
   z[,"group"] <- group
 
-  obj <- list(z=z, n.taxa=n.tip, n.node=phy$Nnode,
+  obj <- list(z=z, n.taxa=n.tip, n.node=tree$Nnode,
               sampling.f=sampling.f, t.root=max(bt),
               n.part=n)
 }

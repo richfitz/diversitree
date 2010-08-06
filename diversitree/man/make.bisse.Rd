@@ -12,7 +12,7 @@
 
 \usage{
 make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
-           safe=FALSE)
+           safe=FALSE, strict=TRUE)
 starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
@@ -34,6 +34,11 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
     (this is in addition to the largest observed clade).}
   \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
     crashes are happening.}
+  \item{strict}{The \code{states} vector is always checked to make sure
+    that the values are 0 and 1 only.  If \code{strict} is \code{TRUE}
+    (the default), then the additional check is made that \emph{every}
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing.}
   \item{q.div}{Ratio of diversification rate to character change rate.
     Eventually this will be changed to allow for Mk2 to be used for
     estimating q parameters.}
