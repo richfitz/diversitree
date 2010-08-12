@@ -11,6 +11,8 @@
 ## 1: make
 make.bd.split <- function(tree, nodes, split.t, sampling.f=NULL,
                           unresolved=NULL) {
+  if ( missing(split.t) )
+    split.t <- rep(Inf, length(nodes))
   cache <- make.cache.bd.split(tree, nodes, split.t, sampling.f,
                                unresolved)
   n.part <- cache$n.part

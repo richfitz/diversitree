@@ -207,7 +207,7 @@
       double precision function hypergs(Nt, m, ns, k)
       implicit none
       integer Nt, m, ns, k
-      double precision lchoose, hyperg
+      double precision hyperg
       IF ( Nt .lt. 0 .or. 
      .     ns .lt. 1 .or. ns .gt. Nt .or.
      .     k  .lt. 0 .or. k  .gt. ns .or.

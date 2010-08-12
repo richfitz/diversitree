@@ -1,3 +1,15 @@
+2010-08-12  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bumped version number to 0.5-2
+
+	* R/model-bd-split.R: make.bd.split has new default for split.t,
+	copying MEDUSA's default behaviour.
+
+	* R/split.R: Fixed bug in negative branch check.
+
+	* src/bucexp.f, src/dmexpv.f, src/dsexpv.f, src/dsexpvi.f,
+	src/hyperg.f: Tidied code to remove compiler warnings.
+
 2010-08-06  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/model-bd-split.R: Fixed local naming error (phy->tree).

@@ -29,4 +29,3 @@ group.label.tip.rad <- function(obj, lab, col.bar, col.lab, lwd=1,
     radial.text(r.lab, tm, sort(unique(lab)),
                 col=col.lab, font=font, cex=cex)
 }
-

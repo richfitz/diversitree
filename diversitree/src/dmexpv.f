@@ -307,7 +307,7 @@
          call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),wsp(ifree+mx))
       endif
 
- 402  continue
+      continue
 * 
 *---  error estimate ...
 * 

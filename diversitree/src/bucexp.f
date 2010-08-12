@@ -418,7 +418,7 @@
 
       implicit none
       integer nt
-      integer ti(1), Nc(1), nsc(1), k(1), m, iflag
+      integer Nc(1), nsc(1), k(1), m, iflag
       double precision mua, mub, laa, lab, qba, qab, t(1), tol, ans(4)
       iflag = 0
 *     the '1's are, in turn, lt, ti, [other args], lc

@@ -83,17 +83,18 @@ split.phylo <- function(x, f, drop=FALSE, split.t, ...) {
 
       ## TODO: Another hack (this should only be negative by
       ## rounding error, when zero is really what is required).
-      if ( len < 0 ) {
-        if ( abs(len) > 1e-6 )
+      if ( any(len < 0) ) {
+        if ( any(abs(len) > 1e-6) )
           stop("Illegal negative branch length")
-        len <- 0
+        len[len < 0] <- 0
       }
+
       ## TODO: Another hack.  Some *very* short values of len can
       ## cause the integrator to fail (my guess is when this is
       ## divided apart by the underlying code).  This will just
       ## truncate these, as they probably should be zero anyway.
-      if ( len < 1e-10 )
-        len <- 0
+      if ( any(len < 1e-10) )
+        len[len < 1e-10] <- 0
       phy2$edge.length[j] <- len
       
       names(daughters) <- names(extra.tips[daughters])
