@@ -17,19 +17,18 @@
 }
 
 \usage{
-make.musse(tree, states, k, sampling.f=NULL, strict=TRUE)
+make.musse(tree, states, k, sampling.f=NULL, strict=TRUE, safe=FALSE)
 starting.point.musse(tree, k, q.div=5, yule=FALSE)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape}
-    \dQuote{phylo} format.}
+  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
 
-  \item{states}{A vector of character states,
-    each of which must be 0 or 1.  This vector must have names that
+  \item{states}{A vector of character states, each of which must be an
+    integer between 1 and \code{k}.  This vector must have names that
     correspond to the tip labels in the phylogenetic tree
-    (\code{tree$tip.label}).  For tips corresponding to unresolved clades,
-    the state should be \code{NA}.}
+    (\code{tree$tip.label}).  For tips corresponding to unresolved
+    clades, the state should be \code{NA}.}
 
   \item{k}{The number of states.}
   
@@ -47,6 +46,9 @@ starting.point.musse(tree, k, q.div=5, yule=FALSE)
     poorly behaved where states are missing, but there are cases
     (missing intermediate states for meristic characters) where allowing
     such models may be useful.}
+
+  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
+    crashes are happening.}
 
   \item{q.div}{Ratio of diversification rate to character change rate.
     Eventually this will be changed to allow for Mk2 to be used for

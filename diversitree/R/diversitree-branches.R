@@ -167,12 +167,19 @@ make.cache <- function(tree) {
     stop("Multifircations/unbranched nodes in tree - best get rid of them")
   children <- rbind(matrix(NA, n.tip, 2), t(matrix(unlist(children), 2)))
 
-  parent <- edge[match(idx, edge[,2]),1]  
+  parent <- edge[match(idx, edge[,2]),1]
 
   order <- get.ordering(children, is.tip, root)
+  len <- edge.length[match(idx, edge[,2])]
 
+  ## This is a bit of a hack, but this is to ensure that we can really
+  ## compute the depths accurately - this is a problem when there
+  ## joins (under split models) that occur right around nodes.
   height <- branching.heights(tree)
   depth <- max(height) - height
+  depth2 <- branching.depth(len, children, order, tips)
+  i <- abs(depth - depth2) < 1e-8
+  depth[i] <- depth2[i]
 
   ## TODO: I don't need this ancestor thing for much - drop it here
   ## and move it to the asr code that actually uses it (this takes a
@@ -182,7 +189,7 @@ make.cache <- function(tree) {
     anc[[i]] <- c(parent[i], anc[[parent[i]]])
   
   ans <- list(tip.label=tree$tip.label,
-              len=edge.length[match(idx, edge[,2])],
+              len=len,
               children=children,
               parent=parent,
               order=order,

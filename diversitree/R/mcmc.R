@@ -4,41 +4,71 @@
 ## which is a vector of parameters.  Across a single iteration,
 ## take the input x and return a vector of parameters 'y'
 ## corresponding to a new position.
-mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
-                 fail.value=-Inf, prior=NULL, print.every=1, ...) {
-  if ( is.numeric(prior) ) {
-    .Deprecated(msg="numeric values for 'prior' are deprecated: use make.prior.exponential instead")
-    prior <- make.prior.exponential(prior)
-  }
 
-  y0 <- try(f(x0, ...))
-  if ( inherits(y0, "try-error") )
-    stop("The above error occured when testing the starting position")
-  if ( !is.finite(y0) )
-    stop("Starting point must have finite probability")
+## TODO: I want to allow arbitrary proposal methods.  Importantly, one
+## useful feature will be to allow some integer positions to be
+## updated with a slice sampler, and the others from a discrete
+## distribution.  Hopefully this can be done via the 'proposal'
+## vector.
+
+## The default MCMC method will return a half-finished MCMC sample if
+## interrupted with Ctrl-C.  It is expected that the default method
+## will be sufficiently general to be useful for most approaches.
+## Non-default methods should normally be default parameter setting.
+## However, totally different MCMC algorithms could be used.
+
+## Currently, the 'control' argument is not used by any method.
+mcmc <- function(lik, x.init, nsteps, ...) {
+  UseMethod("mcmc")
+}
+
+mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
+                         sampler=sampler.slice, fail.value=-Inf,
+                         lower=-Inf, upper=Inf, print.every=1,
+                         control=list(), ...) {
+  npar <- length(x.init)
+  if ( is.null(names(x.init)) )
+    try(names(x.init) <- argnames(lik), silent=TRUE)
   
   if ( is.null(prior) )
-    fn <- protect(function(x) f(x, ...), fail.value)
-  else {
-    fn <- protect(function(x) f(x, ...) + prior(x), fail.value)
-    y0 <- y0 + prior(x0)
+    posterior <- protect(function(x) lik(x, ...),
+                         fail.value.default=fail.value)
+  else
+    posterior <- protect(function(x) lik(x, ...) + prior(x, ...),
+                         fail.value.default=fail.value)
+
+  y.init <- posterior(x.init, fail.value=NULL)
+
+  if ( !is.finite(y.init) || y.init == fail.value )
+    stop("Starting point must have finite probability")
+
+  check.par <- function(x) {
+    if ( length(x) == 1 )
+      rep(x, npar)
+    else if ( length(x) == npar )
+      x
+    else
+      stop(sprintf("'%s' of incorrect length",
+                   deparse(substitute(x))))
   }
 
-  if ( length(lower) == 1 ) lower <- rep(lower, length(x0))
-  if ( length(upper) == 1 ) upper <- rep(upper, length(x0))
-  if ( length(w) != length(x0) )
-    stop("'w' of incorrect length")
+  lower <- check.par.length(lower, npar)
+  upper <- check.par.length(upper, npar)
+  w     <- check.par.length(w,     npar) # TODO: may need revisiting.
 
-  if ( is.null(names(x0)) )
-    try(names(x0) <- argnames(f), silent=TRUE)
+  check.bounds(lower, upper, x.init)
 
   hist <- vector("list", nsteps)
 
+  if ( is.null(sampler) )
+    sampler <- sampler.slice
+
   mcmc.loop <- function() {
     for ( i in seq_len(nsteps) ) {
-      hist[[i]] <<- tmp <- slice.nd(fn, x0, y0, w, lower, upper)
-      x0 <- tmp[[1]]
-      y0 <- tmp[[2]]
+      hist[[i]] <<- tmp <- sampler(posterior, x.init, y.init, w,
+                                   lower, upper, control)
+      x.init <- tmp[[1]]
+      y.init <- tmp[[2]]
       if ( print.every > 0 && i %% print.every == 0 )
         cat(sprintf("%d: {%s} -> %2.5f\n", i,
                     paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
@@ -49,14 +79,15 @@ mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
 
   mcmc.recover <- function(...) {
     hist <- hist[!sapply(hist, is.null)]
+    if ( length(hist) == 0 )
+      stop("MCMC was stopped before any samples taken")
     warning("MCMC was stopped prematurely: ", length(hist), "/", nsteps,
-            " steps completed.  Truncated chain is being returned",
+            " steps completed.  Truncated chain is being returned.",
             immediate.=TRUE)
     hist
   }
 
   hist <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
-
   hist <- cbind(i=seq_along(hist),
                 as.data.frame(t(sapply(hist, unlist))))
   names(hist)[ncol(hist)] <- "p"
@@ -64,57 +95,7 @@ mcmc <- function(f, x0, nsteps, w, lower=-Inf, upper=Inf,
   hist
 }
 
-## Here, w, lower and upper are vectors
-slice.nd <- function(f, x0, y0, w, lower, upper) {
-  if ( is.na(y0) )
-    y0 <- f(x0)
-  for ( i in seq_along(x0) ) {
-    xy <- slice.1d(make.g(f, x0, i), x0[i], y0, w[i], lower[i],
-                   upper[i])
-    x0[i] <- xy[1]
-    y0 <- xy[2]
-  }
-  list(x0, y0)
-}
-
-## Here, w, lower and upper are scalars
-slice.1d <- function(g, x0, y0, w, lower, upper) {
-  z <- y0 - rexp(1)
-  r <- isolate.step(g, x0, y0, z, w, lower, upper)
-  take.sample(g, x0, z, r)
-}
-
-take.sample <- function(g, x0, z, r) {
-  r0 <- r[1]
-  r1 <- r[2]
-
-  repeat {
-    xs <- runif(1, r0, r1)
-    ys <- g(xs)
-    if ( ys > z )
-      break
-    if ( xs < x0 )
-      r0 <- xs
-    else
-      r1 <- xs
-  }
-  c(xs, ys)
-}
-
-isolate.step <- function(g, x0, y0, z, w, lower, upper) {
-  u <- runif(1) * w
-  L <- x0 - u
-  R <- x0 + (w-u)
-
-  while ( L > lower && g(L) > z )
-    L <- L - w
-  while ( R < upper && g(R) > z )
-    R <- R + w
-
-  c(max(L, lower), min(R, upper))
-}
-
-make.g <- function(f, x, i) {
+make.unipar <- function(f, x, i) {
   function(z) {
     x[i] <- z
     f(x)

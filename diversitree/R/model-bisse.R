@@ -11,7 +11,7 @@
 
 ## 1: make
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
-                       nt.extra=10, safe=FALSE, strict=TRUE) {
+                       nt.extra=10, strict=TRUE, safe=FALSE) {
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=nt.extra,
                             strict=strict)

@@ -160,6 +160,8 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
       ret
     }
 
+    ## f.1.7 also works with f.1.8: no changes were made to the lsoda
+    ## call.
     f.1.7 <- function(y, times, parms, rtol, atol) {
       if (!is.numeric(y)) 
         stop("`y' must be numeric")
@@ -199,6 +201,7 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
 
     switch(vers,
            "1.5"=f.1.5, "1.5-1"=f.1.5, "1.6"=f.1.6, "1.7"=f.1.7,
+           "1.8"=f.1.7,
            stop("Cannot use diversitree with deSolve version ", vers))
   }
 }
@@ -217,6 +220,23 @@ discretize <- function(x, n, r=range(x)) {
 make.prior.exponential <- function(r) {
   function(pars)
     sum(log(r) - pars * r)
+}
+
+## This is still experimental, and will not work nicely unless
+## everything is nicely paired (it will not work well with constrained
+## models, for example).
+make.prior.ExpBeta <- function(r, beta) {
+  to.pars2 <- function(pars) {
+    m <- matrix(pars, 2)
+    pars.mean <- colMeans(m)
+    d <- 1 - (m[1,] / (2*pars.mean))
+    rbind(pars.mean, d)
+  }
+  function(pars) {
+    pars2 <- to.pars2(pars)
+    sum(dexp(pars2[1,], r, log=TRUE)) +
+      sum(dbeta(pars2[2,], beta, beta, log=TRUE))
+  }
 }
 
 
@@ -283,6 +303,15 @@ branching.heights <- function(phy) {
   ht
 }
 
+## This only works for ultrametric trees:
+branching.depth <- function(len, children, order, tips) {
+  depth <- numeric(nrow(children))
+  depth[tips] <- 0
+  for ( i in order )
+    depth[i] <- depth[children[i,1]] + len[children[i,1]]
+  depth
+}
+
 ## Convert a matrix to a list by row.
 matrix.to.list <- function(m) {
   n <- nrow(m)
@@ -290,4 +319,24 @@ matrix.to.list <- function(m) {
   for ( i in seq_len(n) )
     out[[i]] <- m[i,]
   out
+}
+
+argnames.twopart <- function(x, base, n.level) {
+  obj <- attr(x, "argnames")
+  if ( is.null(obj) )
+    obj <- list(base=base, levels=seq_len(n.level))
+
+  paste(obj$base, rep(obj$levels, each=length(obj$base)), sep=".")
+}
+
+argnames.twopart.set <- function(x, value, n.base, n.level) {
+  if ( !is.list(value) || length(value) != 2 )
+    stop("'value' must be a list of length 2")
+  if ( length(value[[1]]) != n.base || length(value[[2]] != n.level) )
+    stop(sprintf("value's elements must be of length %d, %d",
+                 n.base, n.level))
+
+  names(value) <- c("base", "levels")
+  attr(x, "argnames") <- value
+  x
 }

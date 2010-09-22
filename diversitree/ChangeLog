@@ -1,3 +1,62 @@
+2010-09-22  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bumped version number to 0.5-3, which will be
+	released soon.  Also updated the description, and added "Suggests"
+	dependencies on multicore and tgp.
+
+	* NAMESPACE: New exports for the musse.split, musse.td models, and
+	generic mcmc.
+
+	* R/check.R: New check.par.length() for doing simple recycling.
+	Simplified check.sampling.f() to use this.  Added
+	check.sampling.f.split(), check.bounds(), check.par.multipart().
+
+	* R/diversitree-branches.R: More defensive node depth/height
+	calculations when building cache.
+
+	* R/mcmc.R, R/mcmc-norm.R, R/mcmc-slice.R: New generic mcmc
+	function.  Default method allows different MCMC samplers.  Slice
+	sampling removed (added to R/mcmc-slice.R), and demonstration
+	univariate Gaussian sampler added.  In mcmc(), 'lower', 'upper',
+	and 'w' can be passed in as scalars now.
+
+	* R/mle-tgp.R: New find.mle interface to the tgp statistical
+	optimiser (currently experimental and unadvertised).
+
+	* R/mle.R: Added support for tgp (see above).  Simplified things
+	with new R/check.R support.  
+
+	* R/model-bisse-split.R: BiSSE/split functions now inherit from
+	'bisse'.  argnames.bisse.split() simplified.
+	find.mle.bisse.split() no longer required.
+
+	* R/model-bisse-td.R: Added 'safe' argument to make.bisse.td().
+	Changed argument order.  Use check.par.multpart() to tidy
+	likelihood function.  Simplify argnames.bisse.td().  Remved
+	find.mle.bisse.td().
+
+	* R/model-bisse.R: Switched 'safe' and 'strict' arguments for
+	consistency (should affect few users, as these should not really
+	be used positionally).
+
+	* R/model-musse-split.R, R/model-musse-td.R: Added new models.
+
+	* R/model-musse.R: Added 'safe' argument.  Other minor changes.
+
+	* R/split.R: split.t can now be a scalar if '0' or 'Inf'.
+
+	* R/util.R: Added support for deSolve version 1.8.  Added
+	make.prior.ExpBeta() (unadvertised, unexported), which gives an
+	alternative parametrisation of bisse models.  Other support
+	functions added.
+
+	* man/make.bd.split.Rd, man/make.bisse.td.Rd,
+	man/make.musse.split.Rd, man/make.musse.td.Rd: new documentation files
+
+	* man/mcmc.Rd: Substantial rewrite to reflect new MCMC approach.
+
+	* man/make.bisse.Rd, man/make.musse.Rd: Minor cleanups
+
 2010-08-12  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bumped version number to 0.5-2

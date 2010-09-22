@@ -56,12 +56,61 @@ check.states <- function(tree, states, allow.unnamed=FALSE,
   states[tree$tip.label]
 }
 
+check.par.length <- function(x, length) {
+  if ( length(x) == 1 )
+    rep(x, length)
+  else if ( length(x) == length )
+    x
+  else
+    stop(sprintf("'%s' of incorrect length",
+                 deparse(substitute(x))))
+}
+
 check.sampling.f <- function(sampling.f, n) {
   if ( is.null(sampling.f) )
     sampling.f <- rep(1, n)
-  else if ( length(sampling.f) != n )
-    stop(sprintf("sampling.f must be of length %d (or NULL)", n))
-  else if ( max(sampling.f) > 1 || min(sampling.f) <= 0 )
+  else
+    sampling.f <- check.par.length(sampling.f, n)
+
+  if ( max(sampling.f) > 1 || min(sampling.f) <= 0 )
     stop("sampling.f must be on range (0,1]")
   sampling.f
+}
+
+check.sampling.f.split <- function(sampling.f, n, n.part) {
+  if ( is.null(sampling.f) )
+    rep(list(rep(1, n)), n.part)
+  else if ( is.numeric(sampling.f) )
+    rep(list(check.sampling.f(sampling.f, n)), n.part)
+  else if ( is.list(sampling.f) )
+    lapply(sampling.f, check.sampling.f, n)
+  else
+    stop("Invalid sampling.f")
+}
+
+check.bounds <- function(lower, upper, x0=NULL) {
+  if ( !is.null(x0) && (any(x0 < lower) || any(x0 > upper)) )
+    stop("Starting parameter falls outside of problems bounds")
+  if ( any(lower >= upper) )
+    stop("'upper' must be strictly greater than 'lower'")
+}
+
+check.par.multipart <- function(pars, n.part, n.per) {
+  if ( is.matrix(pars) ) {
+    if ( nrow(pars) != n.part )
+      stop(sprintf("Expected %d parameter sets", n.part))
+    if ( ncol(pars) != n.per )
+      stop(sprintf("Expected %d parameters in each set", n.per))
+    pars <- matrix.to.list(pars)
+  } else if ( is.list(pars) ) {
+    if ( length(pars) != n.part )
+      stop(sprintf("Expected %d parameter sets", n.part))
+    if ( !all(unlist(lapply(pars, length)) == n.per) )
+      stop(sprintf("Expected %d parameters in each set", n.per))      
+  } else {
+    if ( length(pars) != n.part * n.per )
+      stop(sprintf("Expected %d parameters", n.part * n.per))
+    pars <- matrix.to.list(matrix(pars, n.part, n.per, TRUE))
+  }
+  pars
 }

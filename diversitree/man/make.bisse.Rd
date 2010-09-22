@@ -12,36 +12,44 @@
 
 \usage{
 make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
-           safe=FALSE, strict=TRUE)
+           strict=TRUE, safe=FALSE)
 starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  
   \item{states}{A vector of character states, each of which must be 0 or
     1, or \code{NA} if the state is unknown.  This vector must have
     names that correspond to the tip labels in the phylogenetic tree
     (\code{tree$tip.label}).  For tips
     corresponding to unresolved clades, the state should be \code{NA}.}
+  
   \item{unresolved}{Unresolved clade information: see section below for
     structure.}
+  
   \item{sampling.f}{Vector of length 2 with the estimated proportion of
     extant species in state 0 and 1 that are included in the phylogeny.
     A value of \code{c(0.5, 0.75)} means that half of species in state 0
     and three quarters of species in state 1 are included in the
     phylogeny.  By default all species are assumed to be known.}
+
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
+  
   \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
     crashes are happening.}
+  
   \item{strict}{The \code{states} vector is always checked to make sure
     that the values are 0 and 1 only.  If \code{strict} is \code{TRUE}
     (the default), then the additional check is made that \emph{every}
     state is present.  The likelihood models tend to be poorly behaved
     where states are missing.}
+  
   \item{q.div}{Ratio of diversification rate to character change rate.
     Eventually this will be changed to allow for Mk2 to be used for
     estimating q parameters.}
+  
   \item{yule}{Logical: should starting parameters be Yule estimates
     rather than birth-death estimates?}
 }
@@ -78,7 +86,7 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
  	D = D0 * D0/(D0 + D1) + D1 * D1/(D0 + D1)}
       \item \code{ROOT.GIVEN}: Root will be in state 0
       with probability \code{root.p[1]}, and in state 1 with
-      probability \code{root.p[1]}.
+      probability \code{root.p[2]}.
       \item \code{ROOT.BOTH}: Don't do anything at the root,
       and return both values.  (Note that this will not give you a
       likelihood!).

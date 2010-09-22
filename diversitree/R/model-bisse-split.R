@@ -20,7 +20,7 @@ make.bisse.split <- function(tree, states, nodes, split.t,
   branches.aux <- make.branches.aux.bisse(cache$sampling.f, safe)
   ll <- function(pars, ...)
     ll.bisse.split(cache, pars, branches, branches.aux, ...)
-  class(ll) <- c("bisse.split", "function")
+  class(ll) <- c("bisse.split", "bisse", "function")
   attr(ll, "n.part") <- cache$n.part
   ll
 }
@@ -32,35 +32,15 @@ print.bisse.split <- function(x, ...) {
 }
 
 ## 3: argnames / argnames <-
-argnames.bisse.split <- function(x, ...) {
-  obj <- attr(x, "argnames")
-  n <- attr(x, "n")
-  if ( is.null(obj) )
-    obj <- list(base=c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10"),
-                levels=seq_len(n))
-
-  paste(obj$base, rep(obj$levels, each=6), sep=".")
+argnames.bisse.split <- function(x, n.part=attr(x, "n.part"), ...) {
+  argnames.twopart(x, argnames.bisse(NULL), n.part)
 }
 `argnames<-.bisse.split` <- function(x, value) {
-  n <- attr(x, "n")
-  if ( !is.list(value) || length(value) != 2 )
-    stop("'value' must be a list of length 2")
-  if ( length(value[[1]]) != 6 || length(value[[2]]) != n )
-    stop(sprintf("value's elements must be of length 6, %d", n))
-
-  names(value) <- c("base", "levels")
-  attr(x, "argnames") <- value
-  x  
+  n.part <- attr(x, "n.part")
+  argnames.twopart.set(x, value, 6, n.part)
 }
 
-## 4: find.mle
-find.mle.bisse.split <- function(func, x.init, method, fail.value=NA,
-                                 ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method,
-             class.append="fit.mle.bisse.split")
-}
+## 4: find.mle: from bisse
 
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
@@ -116,22 +96,9 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
                            condition.surv=TRUE, root=ROOT.OBS,
                            root.p=NULL, intermediates=FALSE) {
   n.part <- cache$n.part
-  if ( is.matrix(pars) ) {
-    if ( nrow(pars) != n.part )
-      stop(sprintf("Expected %d parameter sets", n.part))
-    if ( ncol(pars) != 6 )
-      stop("Expected 6 parameters in each set")
-    pars <- matrix.to.list(pars)
-  } else if ( is.list(pars) ) {
-    if ( length(pars) != n.part )
-      stop(sprintf("Expected %d parameter sets", n.part))
-    if ( !all(unlist(lapply(pars, length)) == 6) )
-      stop("Expected 6 parameters in each set")
-  } else {
-    if ( length(pars) != n.part * 6 )
-      stop(sprintf("Expected %d parameters", n.part * 6))
-    pars <- matrix.to.list(matrix(pars, n.part, 6, TRUE))
-  }
+
+  pars <- check.par.multipart(pars, n.part, 6)
+
   pars.n <- unlist(pars)
   if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
     return(-Inf)
@@ -146,12 +113,12 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
   ans <- all.branches.split(pars, cache, initial.conditions.bisse,
                             branches, branches.aux)
 
-  vars <- ans[[1]]$base
+  vals <- ans[[1]]$base
   lq <- unlist(lapply(ans, "[[", "lq"))
-  pars.root <- pars[[1]]
 
-  root.p <- root.p.xxsse(vars, pars.root, root, root.p)
-  loglik <- root.xxsse(vars, pars.root, lq, condition.surv, root.p)
+  pars.root <- pars[[1]]
+  root.p <- root.p.xxsse(vals, pars.root, root, root.p)
+  loglik <- root.xxsse(vals, pars.root, lq, condition.surv, root.p)
 
   ans$root.p <- root.p
   cleanup(loglik, pars, intermediates, cache, ans)

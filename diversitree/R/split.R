@@ -228,6 +228,13 @@ all.branches.split <- function(pars, cache, initial.conditions, branches,
 }
 
 make.cache.split <- function(tree, nodes, split.t) {
+  if ( length(split.t) == 1 && length(nodes) > 1 ) {
+    if ( split.t == 0 || split.t == Inf )
+      split.t <- rep(split.t, length(nodes))
+    else
+      stop("If split.t is length 1, it must be '0' or 'Inf'")
+  }
+  
   ## TODO: This has the poor effect of not working correctly to create
   ## single branch partitions.  I should be careful about that.  This
   ## is also quite slow, so that making split functions is not very quick.
@@ -267,9 +274,10 @@ make.cache.split <- function(tree, nodes, split.t) {
       ## Note that this does not fix the height case...
       bt <- tree.sub$bt
       dt <- res$depth[names(bt)] - bt
+
       if ( diff(range(dt)) > 1e-8 )
         stop("I am confused...")
-      else
+      else if ( abs(dt[1]) > 1e-8 ) # worth updating the depths?
         res$depth <- (res$depth - dt[1])
 
       ## This was old code for when recycling was being used.

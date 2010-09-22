@@ -61,6 +61,8 @@ make.initial.conditions.td <- function(initial.conditions)
 get.par.td <- function(pars, t)
   pars[which(pars[,1] > t)[1],-1]
 
+
+
 ## This is identical to the version in diversitree-branches.R, except
 ## for the root parameter treatment.
 ll.xxsse.td <- function(pars, cache, initial.conditions,

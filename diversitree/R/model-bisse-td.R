@@ -1,8 +1,10 @@
 ## 1: make
 make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
-                          sampling.f=NULL, nt.extra=10, safe=FALSE) {
+                          sampling.f=NULL, nt.extra=10, strict=TRUE,
+                          safe=FALSE) {
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
-                            sampling.f=sampling.f, nt.extra=nt.extra)
+                            sampling.f=sampling.f, nt.extra=nt.extra,
+                            strict=strict)
   cache$n.epoch <- n.epoch
   if ( !is.null(cache$unresolved) )
     stop("Cannot (yet) use unresolved clades with time-dependent BiSSE")
@@ -11,16 +13,22 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
   initial.conditions <-
     make.initial.conditions.td(initial.conditions.bisse)
 
+  npar <- (n.epoch - 1) + (6 * n.epoch)
+  i.t <- seq_len(n.epoch - 1)
+  i.p <- n.epoch:npar
+
   ll.bisse.td <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    n.epoch <- cache$n.epoch
-    if ( length(pars) != n.epoch * 7 )
-      stop("Expected pars of length ", 7 * n.epoch)
-    pars <- matrix(pars, n.epoch, 7, TRUE)
-    if ( any(pars < 0) || any(!is.finite(pars[,-1])) )
+
+    if ( length(pars) != npar )
+      stop(sprintf("Invalid length parameters (expected %d)", npar))
+    if ( any(!is.finite(pars)) || any(pars < 0) )
       return(-Inf)
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
+
+    pars <- cbind(c(pars[i.t], Inf),
+                  matrix(pars[i.p], n.epoch, 6, TRUE))
 
     ll.xxsse.td(pars, cache, initial.conditions, branches,
                 condition.surv, root, root.p, intermediates)
@@ -40,23 +48,15 @@ print.bisse.td <- function(x, ...) {
 
 ## 3: argnames / argnames<-
 argnames.bisse.td <- function(x, n.epoch=attr(x, "n.epoch"), ...) {
-  obj <- attr(x, "argnames")
-  if ( is.null(obj) ) {
-    obj <- list(par=c("t", "lambda0", "lambda1", "mu0", "mu1", "q01", "q10"),
-                t=sprintf("t%d", 1:n.epoch))
-  }
-  paste(obj$par, rep(obj$t, each=7), sep=".")
+  c(sprintf("t.%d", seq_len(n.epoch-1)),
+    argnames.twopart(x, argnames.bisse(NULL), n.epoch))
 }
 `argnames<-.bisse.td` <- function(x, value) {
-  .NotYetImplemented()
+  n.epoch <- attr(x, "n.epoch")
+  argnames.twopart.set(x, value, 6, n.epoch)
 }
 
-## 4: find.mle
-find.mle.bisse.td <- function(func, x.init, method, fail.value=NA, ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method, class.append="fit.mle.bisse.td")
-}
+## 4: find.mle: from bisse
 
 ## Make requires the usual functions:
 ## 5: make.cache (in model-bisse)

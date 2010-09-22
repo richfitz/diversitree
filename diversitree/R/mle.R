@@ -32,14 +32,15 @@ find.mle.default <- function(func, x.init, method,
 do.mle.search <- function(func, x.init, method, fail.value=NA,
                           hessian=FALSE, verbose=0,
                           ...) {
-  method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm"))
+  method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm",
+                                "tgp"))
 
   if ( verbose > 0 )
     func2 <- big.brother(protect(func), verbose)
   else
     func2 <- protect(func)
 
-  if ( is.null(names(x.init)) ) {
+  if ( is.null(names(x.init)) && !is.null(x.init) ) {
     names.v <- try(argnames(func), silent=TRUE)
     if ( !inherits(names.v, "try-error") ) {
       if ( length(names.v) != length(x.init) )
@@ -69,6 +70,7 @@ do.mle.search <- function(func, x.init, method, fail.value=NA,
   }
 
   ans$func <- func
+  ans$method <- method
   class(ans) <- "fit.mle"
   ans
 }
@@ -90,7 +92,6 @@ do.mle.search.optim <- function(func, x.init, fail.value=NA,
     warning("Convergence problems in find.mle (optim): ",
             tolower(ans$message))
 
-  ans$method <- "optim"
   ans$optim.method <- optim.method
   ans
 }
@@ -114,13 +115,12 @@ do.mle.search.subplex <- function(func, x.init, fail.value=NA,
   ## within boundaries) and set those points to their boundary
   ## values.  Constrain the problem and start again.  I'm not sure if
   ## this is worth the effort though.
-  if ( any(is.finite(lower)) || any(is.finite(upper)) ) {
-    if ( any(x.init < lower | x.init > upper) )
-      stop("Starting point falls outside of box constraints")
+  check.bounds(lower, upper, x.init)
+  if ( any(is.finite(lower) | is.finite(upper)) )
     func2 <- invert(boxconstrain(func, lower, upper))
-  } else {
+  else
     func2 <- invert(func)
-  }
+
   ans <- subplex(x.init, func2, fail.value=fail.value,
                  control=control, ...)
   ans$value <- -ans$value
@@ -130,7 +130,6 @@ do.mle.search.subplex <- function(func, x.init, fail.value=NA,
     warning("Convergence problems in find.mle (subplex): ",
             tolower(ans$message))
   
-  ans$method <- "subplex"  
   ans
 }
 
@@ -149,7 +148,6 @@ do.mle.search.nlminb <- function(func, x.init, fail.value=NA,
   if ( ans$convergence != 0 )
     warning("Convergence problems in find.mle (nlminb): ",
             tolower(ans$message))
-  ans$method <- "nlminb"
   ans
 }
 
@@ -172,7 +170,6 @@ do.mle.search.nlm <- function(func, x.init, fail.value=NA,
     warning("Convergence problems in find.mle: code = ",
             ans$code, " (see ?nlm for details)")  
 
-  ans$method <- "nlm"
   ans
 }
 
@@ -260,3 +257,4 @@ anova.fit.mle <- function(object, ..., sequential=FALSE) {
   class(out) <- c("anova", "data.frame")
   out
 }
+
