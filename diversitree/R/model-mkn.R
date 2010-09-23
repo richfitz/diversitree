@@ -108,6 +108,8 @@ find.mle.mkn <- function(func, x.init, method,
   NextMethod("find.mle", method=method, class.append="fit.mle.mkn")
 }
 
+mcmc.mkn <- mcmc.lowerzero
+
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
 make.cache.mkn <- function(tree, states, k, use.mk2) {

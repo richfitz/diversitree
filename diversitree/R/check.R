@@ -52,8 +52,14 @@ check.states <- function(tree, states, allow.unnamed=FALSE,
            sprintf("states in %s are allowed",
                    paste(strict.vals, collapse=", ")))
 
-
-  states[tree$tip.label]
+  if ( inherits(tree, "clade.tree") ) {
+    spp.clades <- unlist(tree$clades)
+    if ( !all(spp.clades %in% names(states)) )
+      stop("Species in 'clades' do not have states information")
+    states[union(tree$tip.label, spp.clades)]
+  } else {
+    states[tree$tip.label]
+  }
 }
 
 check.par.length <- function(x, length) {

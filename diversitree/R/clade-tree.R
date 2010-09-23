@@ -17,7 +17,7 @@ make.clade.tree <- function(tree, clades) {
 
 ## This takes a state vector and a tree that has been split into
 ## unresolved clades and produces an 'unresolved' data structure.
-make.unresolved <- function(clades, states) {
+make.unresolved.bisse <- function(clades, states) {
   if ( !all(unlist(clades) %in% names(states)) )
     stop("Species in 'clades' do not have states information")
 
@@ -33,6 +33,9 @@ make.unresolved <- function(clades, states) {
   rownames(unresolved) <- NULL
   unresolved
 }
+
+make.unresolved.bd <- function(clades)
+  sapply(clades, length)
 
 polytomies.to.clades <- function(tree) {
   .Deprecated("clades.from.polytomies")
@@ -163,9 +166,11 @@ plot.clade.tree <- function(x, as.clade.tree=TRUE, transform=identity,
                             ...) {
   if ( abs(transform(1) - 1) > 1e-8 )
     stop("transform(1) must equal 1")
-  if ( as.clade.tree )
+  if ( as.clade.tree ) {
     n.taxa <- transform(sapply(x$clades, length)[x$tip.label])
-  else
+    n.taxa[is.na(n.taxa)] <- 1
+    names(n.taxa) <- x$tip.label
+  } else
     n.taxa <- NULL
 
   plot2.phylo(x, n.taxa=n.taxa, ...)

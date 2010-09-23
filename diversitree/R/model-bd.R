@@ -120,18 +120,27 @@ find.mle.yule <- function(func, x.init, method, fail.value=NA,
   obj
 }
 
+mcmc.bd <- mcmc.lowerzero
+
 ## 5: make.cache
 make.cache.bd <- function(tree=NULL, times=NULL,
                           sampling.f=NULL, unresolved=NULL) {
-  if ( !is.null(times) && !is.null(tree) )
+  if ( !is.null(times) && !is.null(tree) ) {
     stop("times cannot be specified if tree given")
-  else if ( is.null(times) && is.null(tree) )
+  } else if ( is.null(times) && is.null(tree) ) {
     stop("Either times or tree must be specified")
-  else if ( is.null(times) ) {
+  } else if ( is.null(times) ) {
     tree <- check.tree(tree)
     times <- as.numeric(sort(branching.times(tree), decreasing=TRUE))
-  } else
+  } else {
     times <- as.numeric(sort(times, decreasing=TRUE))
+  }
+
+  if ( inherits(tree, "clade.tree") ) {
+    if ( !is.null(unresolved) )
+      stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
+    unresolved <- make.unresolved.bd(tree$clades)
+  }
 
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
@@ -143,13 +152,12 @@ make.cache.bd <- function(tree=NULL, times=NULL,
       stop("'unresolved' must be a named numeric vector")
     if ( !(all(names(unresolved) %in% tree$tip.label)) )
       stop("Unknown species in 'unresolved'")
-    if ( any(unresolved < 0) )
+    if ( any(unresolved < 1) )
       stop("All unresolved entries must be > 0")
 
-    if ( any(unresolved == 0) ) {
-      ## TODO: surely this should be entries that are one?
-      warning("Removing unresolved entries that are zero")
-      unresolved <- unresolved[unresolved != 0]
+    if ( any(unresolved == 1) ) {
+      warning("Removing unresolved entries that are one")
+      unresolved <- unresolved[unresolved != 1]
     }
 
     if ( length(unresolved) == 0 )
@@ -233,7 +241,7 @@ starting.point.bd <- function(tree, yule=FALSE) {
   if ( yule )
     p <- pars.yule
   else
-    p <- coef(find.mle(make.bd(tree), pars.yule))
+    p <- coef(find.mle(make.bd(tree), pars.yule, method="subplex"))
   names(p) <- c("lambda", "mu")
   p
 }

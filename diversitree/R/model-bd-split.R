@@ -33,7 +33,7 @@ make.bd.split <- function(tree, nodes, split.t, sampling.f=NULL,
     sum(res)
   }
 
-  class(ll) <- c("bd.split", "function")
+  class(ll) <- c("bd.split", "bd", "function")
   attr(ll, "n.part") <- cache$n.part
   
   ll

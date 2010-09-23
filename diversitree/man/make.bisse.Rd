@@ -193,11 +193,10 @@ prior <- make.prior.exponential(1 / (2 * (p[1] - p[3])))
 
 ## This takes quite a while to run, so is not run by default
 \dontrun{
-tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior,
-            lower=rep(0, 6), upper=rep(Inf, 6), w=rep(.1, 6))
+tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior, w=.1)
+
 w <- diff(sapply(tmp[2:7], range))
-samples <- mcmc(lik, fit$par, nsteps=1000, prior=prior,
-                lower=rep(0, 6), upper=rep(Inf, 6), w=rep(.1, 6))
+samples <- mcmc(lik, fit$par, nsteps=1000, prior=prior, w=w)
 
 ## See \link{profiles.plot} for more information on plotting these
 ## profiles.

@@ -95,6 +95,10 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
   hist
 }
 
+## This is common, so this helps reduce code duplication.
+mcmc.lowerzero <- function(lik, x.init, nsteps, lower=0, ...)
+  NextMethod("mcmc", lower=lower)
+
 make.unipar <- function(f, x, i) {
   function(z) {
     x[i] <- z

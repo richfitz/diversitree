@@ -69,6 +69,8 @@ find.mle.musse <- function(func, x.init, method, fail.value=NA, ...) {
   NextMethod("find.mle", method=method, class.append="fit.mle.musse")
 }
 
+mcmc.musse <- mcmc.lowerzero
+
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip)
 make.cache.musse <- function(tree, states, k, sampling.f=NULL,

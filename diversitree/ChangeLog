@@ -1,3 +1,21 @@
+2010-09-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: new exports from below
+
+	* R/check.R: Improved logic of states checking for clade trees.
+
+	* R/clade.tree.R: make.unresolved() -> make.unresolved.bisse(),
+	plus similar function for bd models.  Fixed an old bug, for where
+	clade trees do not include clades for *every* tip.
+
+	* R/mcmc.R: Added mcmc.lowerzero(), which is just passes through
+	to mcmc.default() with lower=0.  This is used as the mcmc method
+	for all the likelihood models.
+
+	* R/model-bd-split.R: bd.split models now inherit from "bd".
+
+	* R/model-bd.R: Allow clade trees when making bd models.
+
 2010-09-22  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bumped version number to 0.5-3, which will be

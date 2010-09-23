@@ -82,6 +82,12 @@ export(mcmc)
 
 S3method(mcmc, default)
 
+S3method(mcmc, bd)
+S3method(mcmc, bisse)
+S3method(mcmc, bm)
+S3method(mcmc, mkn)
+S3method(mcmc, musse)
+
 export(sampler.slice)
 export(sampler.norm)
 

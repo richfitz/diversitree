@@ -50,6 +50,8 @@ find.mle.bisse <- function(func, x.init, method,
   NextMethod("find.mle", method=method, class.append="fit.mle.bisse")
 }
 
+mcmc.bisse <- mcmc.lowerzero
+
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse <- function(tree, states, unresolved=NULL,
@@ -68,7 +70,8 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
   if ( inherits(tree, "clade.tree") ) {
     if ( !is.null(unresolved) )
       stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
-    unresolved <- make.unresolved(tree$clades, states)
+    unresolved <- make.unresolved.bisse(tree$clades, states)
+    states <- states[tree$tip.label]
   }
 
   ## Check 'sampling.f'

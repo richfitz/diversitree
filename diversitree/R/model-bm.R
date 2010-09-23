@@ -127,6 +127,8 @@ find.mle.bm <- function(func, x.init, method,
   NextMethod("find.mle", method=method, class.append="fit.mle.bm")
 }
 
+mcmc.bm <- mcmc.lowerzero
+
 ## Make requires the usual functions:
 ## 5: make.cache
 make.cache.bm <- function(tree, states, meserr) {

@@ -186,7 +186,7 @@ lik(pars)
 ## the parameter going (in effect, putting a uniform prior on the range
 ## lower..upper, and returning the joint distribution conditional on the
 ## parameters being in this range).
-tmp <- mcmc(lik, pars, nsteps=100, w=rep(.1, 6), lower=0)
+tmp <- mcmc(lik, pars, nsteps=100, w=.1)
 
 ## The argument 'w' works best when it is about the width of the "high
 ## probability" region for that parameter.  This takes the with of the
@@ -194,7 +194,7 @@ tmp <- mcmc(lik, pars, nsteps=100, w=rep(.1, 6), lower=0)
 ## than the first guess.  Samples are generated about 1/s; allow 15
 ## minutes to generate 1000 samples.
 w <- diff(sapply(tmp[2:7], quantile, c(.05, .95)))
-out <- mcmc(lik, pars, nsteps=1000, w=w, lower=0)
+out <- mcmc(lik, pars, nsteps=1000, w=w)
 
 ## You can do several things with this.  Look for candidate ML points:
 out[which.max(out$p),]

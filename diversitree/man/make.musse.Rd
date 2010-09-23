@@ -135,8 +135,8 @@ anova(fit.base, lambda=fit.lambda)
 ## usual exponential with mean of 2r)
 prior <- make.prior.exponential(1 / (2 * (p[1] - p[4])))
 \dontrun{
-samples <- mcmc(lik.lambda, coef(fit.lambda), nstep=1000, w=rep(1, 5),
-                prior=prior, lower=0, print.every=50)
+samples <- mcmc(lik.lambda, coef(fit.lambda), nstep=1000, w=1,
+                prior=prior, print.every=50)
 
 ## Posterior probability profile plots for the three speciation rates.
 profiles.plot(samples[2:4], col)
