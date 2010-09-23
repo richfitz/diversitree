@@ -1,0 +1,359 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage}
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage[garamond]{mathdesign}
+\newcommand{\sign}{\mathop{\mathrm{sign}}}
+\newcommand{\diversitree}{\textsf{diversitree}}
+
+\begin{document}
+
+Derivations of the expressions used in \diversitree, for reference and
+to make the code better explained.
+
+\section{Constant-rate Birth-Death}
+The basic model comes from  \citet{Nee-1994-305}.  
+%
+The birth-death process modelled starts with a single lineage at time
+$0$, and has a birth rate $\lambda$ and death rate $\mu$.
+%
+The probability that a birth-death process has $i$ lineages at time
+$i$ is $\Pr(i,t)$, defined in terms of two functions of time
+\begin{equation}
+  \label{eq:nee-p-descendants}
+  P(t, T) = \frac{\lambda - \mu}{
+    \lambda - \mu \exp(-(\lambda - \mu)(T-t))},
+\end{equation}
+the probability that a single lineage alive at time $t$ has some
+descendants at time $T$, and $u(t)$ is a geometric probability
+\begin{equation}
+  \label{eq:nee-u}
+  u(t) = \frac{\lambda (1 - \exp(-(\lambda - \mu)t))}{
+    \lambda - \mu \exp(-(\lambda - \mu)t)}
+\end{equation}
+
+% The probability that a single lineage at time $0$ will have $i$
+% lineages at time $i$ is
+% \begin{equation}
+%   \label{eq:nee-Pr1}
+%   \begin{split}
+%     \mathrm{Pr}_1(0,t) =& 
+%     1 - \frac{\lambda - \mu}{\lambda - \mu\exp(-(\lambda-\mu)t)}\\
+%     \mathrm{Pr}_1(i,t) =& 
+%     \frac{\lambda - \mu}{\lambda - \mu\exp(-(\lambda-\mu)t)}
+%     (1-u(t))u(t)^{i-1}\qquad i > 0
+%   \end{split}
+% \end{equation}
+
+The likelihood of a complete phylogeny, given a speciation and
+extinction rate is
+\begin{equation}
+  \label{eq:nee-lik-20}
+  L = (N-1)!\lambda^{N-2}
+  \left(\prod_{i=3}^NP(t_i, T)\right)
+  (1 - u(x_2))^2
+  \prod_{i=3}^N(1-u(x_i))
+\end{equation}
+where $x_i$ is the is the time between the present and the node that
+splits the phylogeny into $i$ branches, $t_i$ is the time between the
+root the node that splits the phylogeny into $i$ branches, and there
+are $N$ tips.
+%
+The $(1 - u(x_2))^2$ conditions on the existence of two lineages at
+the present (that is, the probability that two lineages have not gone
+extinct).
+%
+Equation (\ref{eq:nee-lik-20}) is Nee et al.'s (1994) equation (20).
+%
+Defining new parameters $r = \lambda - \mu$ and $a = \mu/\lambda$,
+equation (\ref{eq:nee-lik-20}) can be rewritten
+\begin{equation}
+  \label{eq:nee-lik-21}
+  L = 
+  (N-1)!r^{N-2}\exp\left(r\sum_{i=3}^Nx_i\right)(1-a)^N
+  \prod_{i=2}^N\frac{1}{(\exp(r x_i) - a)^2}
+\end{equation}
+
+Equation (\ref{eq:nee-lik-21}) conditions on the survival of two
+lineages to the present and a speciation event at the root.  This can
+be undone by multiplying through by
+\begin{equation}
+  \label{eq:contition}
+  \lambda (1-E(t))^2 = \lambda\left(\frac{\lambda - \mu}{
+      \lambda-\mu e^{-(\lambda-\mu)t}}\right)^2
+\end{equation}
+(from \citealt{Nee-1994-305}, his $1-P(0,t)$), where $t$ is the time
+to the root.  Changing variables and simplifying gives
+\begin{equation}
+  \label{eq:condition2}
+  %% Simplify[((\[Lambda] - \[Mu])/(\[Lambda] - \[Mu] 
+  %% Exp[-(\[Lambda] - \[Mu]) t]))^2 \[Lambda] /. subs2]
+  \frac{r - ar}{(a e^{-rt} - 1)^2}
+\end{equation}
+or, on a log scale add
+\begin{equation}
+  \label{eq:condition2-log}
+  \log(r - ar) - 2\log(a e^{-rt} - 1).
+\end{equation}
+
+\subsection{How to deal with $\mu > \lambda$ (negative $r$)}
+A na\"ive log transformation of equation (\ref{eq:nee-lik-21})
+gives
+\begin{equation}
+  \label{eq:nee-lik-21-log}
+  \ln L = \log((N-1)!) + (N-2)\log(r) + N\log(1-a) + r\sum_{i=3}^Nx_i
+  - 2\sum_{i=2}^{N}\log(\exp(r x_i) - a),
+\end{equation}
+which is undefined when $\lambda < \mu$ because $r$ and $1-a$ become
+negative (meaning $\log(r)$ and $\log(1-a)$ are undefined).  However,
+note that 
+\begin{equation*}
+  r^{N-2}(1-a)^N = (r(1-a))^{N-2}\times (1-a)^2.
+\end{equation*}
+Both components of the above sum are positive (the left because
+$\sign(1-a) = \sign(r)$, and the right because $x^2 \ge 0~\forall
+x$).  Using similar logic for the last term gives
+\begin{equation}
+  \label{eq:nee-lik-21-log2}
+  \ln L = \log((N-1)!) + (N-2)\log(|r|) + N\log(|1-a|) + r\sum_{i=3}^Nx_i
+  - 2\sum_{i=2}^{N}\log(|\exp(r x_i) - a|).
+\end{equation}
+To \textit{not} condition on survival, modify equation
+(\ref{eq:condition2-log}) to add
+\begin{equation}
+  \label{eq:condition2-log}
+  \log(r - ar) - 2\log(|a e^{-rt} - 1|).
+\end{equation}
+
+\subsection{Sampling}
+Derive the likelihood of a tree given a birth death process and given
+that only a fraction $f$ of extant taxa are present.  Versions of
+$P(t,T)$ and $u(t)$ are required that account for the sampling
+process.  \citet{Nee-1994-305} derives $P(t,T)$ under sampling as
+\begin{equation}
+  \label{eq:Ps}
+  P_s(t,T) = \frac{f(\lambda - \mu)}{
+    f\lambda + (\lambda(1-f) - \mu)\exp(-(\lambda - \mu)(T-t))}
+\end{equation}
+where the subscript $s$ denotes sampling.  This is equation (34) in
+\citet{Nee-1994-305}.  \citet{Nee-1994-305} do not give a sampling version of
+$u(t)$, but one can be derived using their equations (33) and (29).
+%
+Equation (29) describes the expected number of lineages in the
+reconstructed process at time $t$, $E[u(t)]$:
+\begin{equation}
+  \label{eq:nee-29}
+  E[n(t)] = \frac{1}{1 - \frac{u(t) P(0,T)}{P(0t)}}
+\end{equation}
+Solving for $u(t)$
+\begin{equation}
+  \label{eq:nee-29-ut}
+  u(t) = \frac{P(0,t)(1 - E[n(t)])}{E[n(t)] P(0,T)}
+\end{equation}
+%
+Equation (33) also describes the expected number of lineages in the
+reconstructed process, but under sampling:
+\begin{equation}
+  \label{eq:nee-33}
+  E[n(t)] = \frac{\exp(\lambda - \mu)P_s(t,T)}{P_s(0,t)}
+\end{equation}
+%
+Substituting equation (\ref{eq:nee-33}) into equation
+(\ref{eq:nee-29-ut}), replacing $P(t,T)$ with equation (\ref{eq:Ps})
+yields
+\begin{equation}
+  \label{eq:us}
+  u_s(t) = 1 - \frac{\lambda-\mu}{1 + (\exp((\lambda-\mu)t) - 1)f - \mu}
+\end{equation}
+
+$P_s(t,T)$ and $u_s(t)$ can be used to rewrite equation
+(\ref{eq:nee-lik-20}) to compute the likelihood of a tree, given a
+sampling fraction, speciation rate and extinction rate:
+\begin{equation}
+  \label{eq:nee-lik-20-sampled}
+  L = (N-1)!\lambda^{N-2}
+  \left(\prod_{i=3}^NP_s(t_i, T)\right)
+  (1 - u_s(x_2))^2
+  \prod_{i=3}^N(1-u_s(x_i))
+\end{equation}
+
+To derive a likelihood in the form of equation (\ref{eq:nee-lik-21}),
+note that $x_i = T-t_i$, and make the substitutions $r = \lambda -
+\mu$ and $a = \mu/\lambda$ into the expressions for $P_s(t, T)$ and
+$u_s(t)$:
+\begin{equation}
+  \label{eq:nee-sampled-bits}
+  \begin{split}
+    P_s(t) = \frac{fr\exp(r x_i)}{\lambda(f \exp(r x_i) - a + 1 - f)}\\
+    u_s(t) = 1 - \frac{1-a}{f \exp(r x_i) - a + 1 - f}
+  \end{split}
+\end{equation}
+
+Substitute equations (\ref{eq:nee-sampled-bits}) into equation
+(\ref{eq:nee-lik-20-sampled}), collect the two products, and
+rearrange:
+\begin{equation*}
+  \begin{split}
+    % Starting point:
+    L =& (N-1)!\lambda^{N-2}(1 - u_s(x_2))^2
+    \prod_{i=3}^NP_s(t_i, T)(1-u_s(x_i))\\
+    % Expand the definitions for P_s and u_s, using above defs.
+    =& (N-1)!\lambda^{N-2}
+    \frac{(1-a)^2}{(f \exp(r x_2) - a + 1 - f)^2}
+    \prod_{i=3}^N
+    \frac{fr\exp(r x_i)}{\lambda(f \exp(r x_i) - a + 1 - f)}
+    \frac{1-a}{f \exp(r x_i) - a + 1 - f}\\
+    % Separate constant terms from product
+    =& (N-1)!\lambda^{N-2}
+    \frac{(1-a)^2}{(f \exp(r x_2) - a + 1 - f)^2}
+    \prod_{i=3}^N
+    \frac{fr(1-a)}{\lambda}
+    \frac{\exp(r x_i)}{(f \exp(r x_i) - a + 1 - f)^2}\\
+    % Pull (N-2) copies of the constant term out of the product
+    =& (N-1)!\lambda^{N-2}
+    \frac{(1-a)^2}{(f \exp(r x_2) - a + 1 - f)^2}
+    \frac{f^{N-2}r^{N-2}(1-a)^{N-2}}{\lambda^{N-2}}
+    \prod_{i=3}^N
+    \frac{\exp(r x_i)}{(f \exp(r x_i) - a + 1 - f)^2}\\
+    % Cancel some terms, split product
+    =& (N-1)!
+    f^{N-2}r^{N-2}(1-a)^N
+    \left(\prod_{i=3}^N \exp(r x_i)\right)
+    \prod_{i=2}^N \frac{1}{(f \exp(r x_i) - a + 1 - f)^2}
+  \end{split}
+\end{equation*}
+which gives
+\begin{equation}
+  \label{eq:nee-lik-21-sampled}  
+  L
+  =(N-1)!f^{N-2}r^{N-2}
+  \exp(r\sum_{i=3}^Nx_{i})
+  (1-a)^N
+  \prod_{i=2}^{N}
+  \frac{1}{(f \exp(r x_i) - a + 1 -f)^2}
+\end{equation}
+Note that when $f=1$, equation (\ref{eq:nee-lik-21-sampled}) reduces
+to equation (\ref{eq:nee-lik-21}).
+
+On a log scale, and allowing for $\mu > \lambda$:
+\begin{equation}
+  \label{eq:nee-lik-21-sampled-log}
+  \ln L = \log((N-1)!) + (N-2)\log(|f r|) + N\log(|1-a|) + r\sum_{i=3}^Nx_i
+  - 2\sum_{i=2}^{N}\log(|f\exp(r x_i) - a + 1 - f|),
+\end{equation}
+
+Equations (\ref{eq:nee-lik-21-sampled}) and
+(\ref{eq:nee-lik-21-sampled-log}) condition on survival; to remove
+this, multiply through by
+\begin{equation}
+  \label{eq:condition-f}
+  \begin{split}
+    \lambda (1-E_s(t))^2=&\lambda
+    \left(\frac{f(\lambda - \mu)}{
+        f\lambda + (\lambda(1-f) - \mu)e^{-(\lambda-\mu)t}}\right)^2\\
+  =&\frac{f^2r(1-a)}{(e^{-rt}(a - 1 + f) - f)^2}
+  \end{split}
+\end{equation}
+where $t$ is the time to the root.  Log transforming:
+\begin{equation}
+  \begin{split}
+    \log(f^2r(1-a)) - 2\log(|e^{-rt}(a - 1 + f) - f|)
+  \end{split}
+\end{equation}
+
+\subsection{Unresolved clades}
+From \citet{Nee-1994-305}, equation 3, the probability of $n$ species
+in a clade over time $t$ is
+\begin{equation}
+  \label{eq:pnNee}
+  \Pr(n,t) = \frac{\lambda - \mu}{\lambda-\mu e^{-(\lambda-\mu)t}}  
+  (1-u(t))u(t)^{n-1} = \frac{(1-a)^2e^{rt}}{(a-e^{rt})^2}
+  \left(1 + \frac{1-a}{a-e^{rt}}\right)^{n-1}
+\end{equation}
+Compute the likelihood using the \citet{Nee-1994-305} equation
+(equation (\ref{eq:nee-lik-21}) above), and then remove the
+contribution of all tips that represent unresolved clades by dividing
+by $\prod_i \Pr(1,t_i)$, then multiplying by $\prod_i \Pr(n_i,t_i)$,
+where $n_i$ is the number of species in clade $i$ and $t_i$ is its
+length:
+\begin{equation}
+  \prod_i \frac{\Pr(n_i,t_i)}{\Pr(0,t_i)} = 
+  \prod_i \left(\frac{e^{rt_i}-1}{e^{rt}-a}\right)^{n_i-1}
+\end{equation}
+or, on a log scale:
+\begin{equation}
+  \sum_i (n_i-1) \log(|e^{rt_i}-1|) - \log(|e^{rt_i}-a|)
+\end{equation}
+which holds because $\sign{e^{rt_i}-1} = \sign{e^{rt_i}-a}$.
+
+\subsection{Limit case $\mu = \lambda$}
+Most of the above does not work where $\mu = \lambda$, and limits need
+taking to make the calculations correct.  In equation
+(\ref{eq:nee-lik-21}), the $(1-a)$ term becomes zero, for example.  I
+still have to derive these limit cases.  From induction in
+Mathematica, I think that equation (\ref{eq:nee-lik-21}) becomes
+\begin{equation}
+  (N-1)! \lambda^2 \prod_{i=2}^{N}\frac{1}{(1-\lambda x_i)^2}
+\end{equation}
+but I have to prove this and derive similar equations for the sampling
+case.
+
+Rearrange equation (\ref{eq:nee-lik-21}) to
+\begin{equation}
+  \label{eq:nee-lik-21-rearr}
+  L = 
+  (N-1)!\exp\left(r\sum_{i=3}^Nx_i\right)
+  \frac{r^{N-1}}{r}(1-a)^{N-1}(1-a)
+  \prod_{i=2}^N\frac{1}{(\exp(r x_i) - a)^2}
+\end{equation}
+and push the terms to the power of $N-1$ into the product
+\begin{equation}
+  \label{eq:nee-lik-21-rearr2}
+  L = 
+  (N-1)!\exp\left(r\sum_{i=3}^Nx_i\right)
+  \frac{1-a}{r}
+  \prod_{i=2}^N\frac{r(1-a)}{(\exp(r x_i) - a)^2}.
+\end{equation}
+Changing variables:
+\begin{equation}
+  \label{eq:nee-lik-21-rearr3}
+  L = 
+  (N-1)!\exp\left((\lambda-\mu)\sum_{i=3}^Nx_i\right)
+  \frac{1}{\lambda}
+  \prod_{i=2}^N\frac{\lambda(\lambda - \mu)^2}{
+    (\mu - \exp((\lambda-\mu) x_i)\lambda)^2},
+\end{equation}
+which in the limit $\mu\to\lambda$ becomes
+\begin{equation}
+  L = 
+  (N-1)!\frac{1}{\lambda}
+  \prod_{i=2}^N\frac{\lambda}{(1 - x_i\lambda)^2}
+\end{equation}
+and simplifying:
+\begin{equation}
+  L = 
+  (N-1)!\lambda^{N-2}\prod_{i=2}^N\frac{1}{(1 - x_i\lambda)^2}.
+\end{equation}
+Under sampling this is
+\begin{equation}
+  L = 
+  (N-1)!f^{N-2}\lambda^{N-2}\prod_{i=2}^N\frac{1}{(1 - f x_i\lambda)^2}.
+\end{equation}
+
+To condition on survival, multiply by equation (\ref{eq:condition-f})
+in the limit
+\begin{equation}
+  \frac{f^2\lambda}{(1 + ft\lambda)^2}
+\end{equation}
+which is $\lambda / (1+t\lambda)^2$ when $f=1$.
+
+\bibliographystyle{refstyle}
+\bibliography{refs}
+
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-PDF-mode: t
+%%% End: 

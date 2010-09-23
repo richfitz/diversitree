@@ -1,0 +1,283 @@
+#NEXUS
+[R-package APE, Thu Sep 23 11:37:12 2010]
+
+BEGIN TAXA;
+	DIMENSIONS NTAX = 135;
+	TAXLABELS
+		Catoptrophorus
+		Limnodromus_griseus
+		Pluvialis_dominica
+		Pluvialis_squatarola
+		Charadrius
+		Synthliboramphus_hypoleucus
+		Uria_aalge
+		Cepphus_grylle
+		Burhinus
+		Burhinus_vermiculatus
+		Pluvianus_aegyptius
+		Gygis_alba
+		Sterna
+		Larus_heermanni
+		Larus
+		Larus_serranus
+		Larus_novaehollandiae
+		Larus_philadelphia
+		Larus_minutus
+		Stercorarius_pomarinus
+		Stercorarius_parasiticus
+		Stercorarius_longicaudus
+		Catharacta_skua
+		Larus_scoresbii
+		Pagophila_eburnea
+		Rhodostethia_rosea
+		Rissa_tridactyla
+		Xema_sabini
+		Creagrus_furcatus
+		Dromas_ardeola
+		Chionis_alba
+		Pluvianellus_socialis
+		Glareola
+		Oreopholus_ruficollis
+		Erythrogonys_cinctus
+		Recurvirostra_avosetta
+		Recurvirostra_americana
+		Recurvirostra_novaehollandiae
+		Recurvirostra_andina
+		Cladorhynchus_leucocephalus
+		Ibidorhyncha_struthersii
+		Himantopus
+		Vanellus
+		Rostratula_benghalensis
+		Rostratula_semicollaris
+		Jacana_spinosa
+		Jacana_jacana
+		Metopidius_indicus
+		Microparra_capensis
+		Actophilornis_africanus
+		Actophilornis_albinucha
+		Irediparra_gallinacea
+		Hydrophasianus_chirurgus
+		Thinocorus_orbignyianus
+		Thinocorus_rumicivorus
+		Attagis_gayi
+		Numenius
+		Limosa_limosa
+		Limosa_haemastica
+		Limosa_lapponica
+		Limosa_fedoa
+		Gallinago
+		Lymnocryptes_minimus
+		Scolopax
+		Coenocorypha_aucklandica
+		Pluvialis_apricaria
+		Pluvialis_fulva
+		Haematopus
+		Stiltia_isabella
+		Larus_pacificus
+		Bartramia_longicauda
+		Limnodromus_scolopaceus
+		Rhinoptilus_africanus
+		Rhinoptilus_chalcopterus
+		Rhinoptilus_cinctus
+		Cursorius
+		Anous_stolidus
+		Larosterna_inca
+		Anous_minutus
+		Rynchops_niger
+		Rynchops_flavirostris
+		Brachyramphus_marmoratus
+		Alle_alle
+		Aethia_pusilla
+		Larus_ichtyaetus
+		Larus_relictus
+		Fratercula_arctica
+		Rissa_brevirostris
+		Larus_saundersi
+		Larus_maculipennis
+		Larus_cirrocephalus
+		Larus_brunnicephalus
+		Larus_ridibundus
+		Larus_genei
+		Larus_hartlaubii
+		Larus_bulleri
+		Larus_melanocephalus
+		Larus_pipixcan
+		Larus_atricilla
+		Larus_fuliginosus
+		Larus_modestus
+		Larus_leucopthalmus
+		Larus_hemprichii
+		Larus_belcheri
+		Larus_atlanticus
+		Larus_crassirostris
+		Catharacta_maccormickii
+		Catharacta
+		Larus_scopulinus
+		Procelsterna_cerulea
+		Synthliboramphus_antiquus
+		Ptychoramphus_aleuticus
+		Cyclorhynchus_psittacula
+		Cerorhinca_monocerata
+		Alca_torda
+		Fratercula_cirrhata
+		Cepphus_columba
+		Pedionomus_torquatus
+		Attagis_malouinus
+		Uria_lomvia
+		Fratercula_corniculata
+		Brachyramphus_brevirostris
+		Cepphus_carbo
+		Synthliboramphus_craveri
+		Synthliboramphus_wumizusume
+		Chionis_minor
+		Limnodromus_semipalmatus
+		Rhinoptilus_bitorquatus
+		Coenocorypha_pusilla
+		Pinguinus_impennis
+		Aethia_cristatella
+		Aethia_pygmaea
+		Rynchops_albicollis
+		Gygis_microrhyncha
+		Anous_tenuirostris
+	;
+END;
+BEGIN TREES;
+	TRANSLATE
+		1	Catoptrophorus,
+		2	Limnodromus_griseus,
+		3	Pluvialis_dominica,
+		4	Pluvialis_squatarola,
+		5	Charadrius,
+		6	Synthliboramphus_hypoleucus,
+		7	Uria_aalge,
+		8	Cepphus_grylle,
+		9	Burhinus,
+		10	Burhinus_vermiculatus,
+		11	Pluvianus_aegyptius,
+		12	Gygis_alba,
+		13	Sterna,
+		14	Larus_heermanni,
+		15	Larus,
+		16	Larus_serranus,
+		17	Larus_novaehollandiae,
+		18	Larus_philadelphia,
+		19	Larus_minutus,
+		20	Stercorarius_pomarinus,
+		21	Stercorarius_parasiticus,
+		22	Stercorarius_longicaudus,
+		23	Catharacta_skua,
+		24	Larus_scoresbii,
+		25	Pagophila_eburnea,
+		26	Rhodostethia_rosea,
+		27	Rissa_tridactyla,
+		28	Xema_sabini,
+		29	Creagrus_furcatus,
+		30	Dromas_ardeola,
+		31	Chionis_alba,
+		32	Pluvianellus_socialis,
+		33	Glareola,
+		34	Oreopholus_ruficollis,
+		35	Erythrogonys_cinctus,
+		36	Recurvirostra_avosetta,
+		37	Recurvirostra_americana,
+		38	Recurvirostra_novaehollandiae,
+		39	Recurvirostra_andina,
+		40	Cladorhynchus_leucocephalus,
+		41	Ibidorhyncha_struthersii,
+		42	Himantopus,
+		43	Vanellus,
+		44	Rostratula_benghalensis,
+		45	Rostratula_semicollaris,
+		46	Jacana_spinosa,
+		47	Jacana_jacana,
+		48	Metopidius_indicus,
+		49	Microparra_capensis,
+		50	Actophilornis_africanus,
+		51	Actophilornis_albinucha,
+		52	Irediparra_gallinacea,
+		53	Hydrophasianus_chirurgus,
+		54	Thinocorus_orbignyianus,
+		55	Thinocorus_rumicivorus,
+		56	Attagis_gayi,
+		57	Numenius,
+		58	Limosa_limosa,
+		59	Limosa_haemastica,
+		60	Limosa_lapponica,
+		61	Limosa_fedoa,
+		62	Gallinago,
+		63	Lymnocryptes_minimus,
+		64	Scolopax,
+		65	Coenocorypha_aucklandica,
+		66	Pluvialis_apricaria,
+		67	Pluvialis_fulva,
+		68	Haematopus,
+		69	Stiltia_isabella,
+		70	Larus_pacificus,
+		71	Bartramia_longicauda,
+		72	Limnodromus_scolopaceus,
+		73	Rhinoptilus_africanus,
+		74	Rhinoptilus_chalcopterus,
+		75	Rhinoptilus_cinctus,
+		76	Cursorius,
+		77	Anous_stolidus,
+		78	Larosterna_inca,
+		79	Anous_minutus,
+		80	Rynchops_niger,
+		81	Rynchops_flavirostris,
+		82	Brachyramphus_marmoratus,
+		83	Alle_alle,
+		84	Aethia_pusilla,
+		85	Larus_ichtyaetus,
+		86	Larus_relictus,
+		87	Fratercula_arctica,
+		88	Rissa_brevirostris,
+		89	Larus_saundersi,
+		90	Larus_maculipennis,
+		91	Larus_cirrocephalus,
+		92	Larus_brunnicephalus,
+		93	Larus_ridibundus,
+		94	Larus_genei,
+		95	Larus_hartlaubii,
+		96	Larus_bulleri,
+		97	Larus_melanocephalus,
+		98	Larus_pipixcan,
+		99	Larus_atricilla,
+		100	Larus_fuliginosus,
+		101	Larus_modestus,
+		102	Larus_leucopthalmus,
+		103	Larus_hemprichii,
+		104	Larus_belcheri,
+		105	Larus_atlanticus,
+		106	Larus_crassirostris,
+		107	Catharacta_maccormickii,
+		108	Catharacta,
+		109	Larus_scopulinus,
+		110	Procelsterna_cerulea,
+		111	Synthliboramphus_antiquus,
+		112	Ptychoramphus_aleuticus,
+		113	Cyclorhynchus_psittacula,
+		114	Cerorhinca_monocerata,
+		115	Alca_torda,
+		116	Fratercula_cirrhata,
+		117	Cepphus_columba,
+		118	Pedionomus_torquatus,
+		119	Attagis_malouinus,
+		120	Uria_lomvia,
+		121	Fratercula_corniculata,
+		122	Brachyramphus_brevirostris,
+		123	Cepphus_carbo,
+		124	Synthliboramphus_craveri,
+		125	Synthliboramphus_wumizusume,
+		126	Chionis_minor,
+		127	Limnodromus_semipalmatus,
+		128	Rhinoptilus_bitorquatus,
+		129	Coenocorypha_pusilla,
+		130	Pinguinus_impennis,
+		131	Aethia_cristatella,
+		132	Aethia_pygmaea,
+		133	Rynchops_albicollis,
+		134	Gygis_microrhyncha,
+		135	Anous_tenuirostris
+	;
+	TREE * UNTITLED = [&R] ((((((1:34.400002,((127:7.847002,(2:4.951002,72:4.951002):2.896):15.953,((63:21.800002,(62:20.800002,64:20.800002):1):1,(65:4.910003,129:4.910003):17.889999):1):10.6):2.6,(61:11.739002,(59:9.303002,(58:5.869002,60:5.869002):3.434):2.436):25.261):13.4,(71:20.299002,57:20.299002):30.101):13.4,(((44:27.500002,45:27.500002):15.8,((53:17.118002,(46:10.800002,47:10.800002):6.318):15.282,((48:13.546002,(49:8.547002,52:8.547002):4.999):6.299,(50:8.547002,51:8.547002):11.298):12.555):10.9):8.8,(118:45.800002,((54:19.352002,55:19.352002):17.048,(56:18.200001,119:18.200001):18.200001):9.4):6.3):11.7):12,(((((((6:7.248002,124:7.248002):7.247,(111:3.979002,125:3.979002):10.516):10.175,((83:16.939002,((7:10.800002,120:10.800002):2.367,(115:6.619002,130:6.619002):6.548):3.772):3.865,((8:6.253002,(117:3.945002,123:3.945002):2.308):7.276,(82:9.663002,122:9.663002):3.866):7.275):3.866):3.865,(112:9.663002,(131:8.323002,(132:6.596002,(84:4.162002,113:4.162002):2.434):1.727):1.34):18.872):3.865,(114:19.042002,(116:5.684002,(87:1.705002,121:1.705002):3.979):13.358):13.358):10.24,(30:40.080002,(((((12:3.810002,134:3.810002):21.165,(13:17.550002,(110:5.380002,(77:4.264002,(79:2.690002,135:2.690002):1.574):1.116):12.17):7.425):7.425,(28:23.288002,((((((14:11.272002,((106:10.701002,15:10.701002):0.39,(104:2.566002,105:2.566002):8.525):0.181):0.494,(70:4.068002,(102:2.567002,103:2.567002):1.501):7.698):0.701,((24:4.067002,(100:2.566002,101:2.566002):1.501):1.892,(98:2.566002,99:2.566002):3.393):6.508):0.364,(97:4.067002,(85:2.566002,86:2.566002):1.501):8.764):0.436,((25:2.566002,29:2.566002):2.566,(27:2.566002,88:2.566002):2.566):8.135):0.908,(26:12.188002,(19:10.130002,(89:8.073002,(18:6.015002,((16:3.095002,(109:2.788002,((90:1.240002,93:1.240002):1.171,(91:1.240002,92:1.240002):1.171):0.377):0.307):0.863,(94:2.411002,(95:1.925002,(17:1.240002,96:1.240002):0.685):0.486):1.547):2.057):2.058):2.057):2.058):1.987):9.113):9.112):2.56,(80:8.396003,(81:5.297003,133:5.297003):3.099):26.563999):2.56,(78:25.460002,((20:7.079002,(21:4.467002,22:4.467002):2.612):6.321,(23:10.371002,(107:8.933002,108:8.933002):1.438):3.029):12.06):12.06):2.56):2.56):2.56,((69:14.850002,33:14.850002):4.95,((73:9.900002,(128:7.846002,(74:4.950002,75:4.950002):2.896):2.054):4.95,76:14.850002):4.95):25.4):30.6):6.072,((((4:10.511003,(66:8.330003,(3:5.256003,67:5.256003):3.074):2.181):21.256001,(34:30.733004,(5:29.700004,(35:23.256004,43:23.256004):6.444):1.033):1.034):1.033,((41:16.500004,((40:10.182004,(36:8.770004,(38:6.950004,(37:4.385004,39:4.385004):2.565):1.82):1.412):3.718,42:13.900004):2.6):2.6,68:19.100004):13.7):32.799999,((11:36.900003,(10:19.800003,9:19.800003):17.1):17.1,(32:19.000003,(31:11.988003,126:11.988003):7.012):35):11.6):16.271999);
+END;
