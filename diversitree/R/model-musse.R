@@ -123,7 +123,6 @@ initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
 ## 8: branches (separate for mk2 and mkn)
 make.branches.musse <- function(k, safe=FALSE) {
   RTOL <- ATOL <- 1e-8
-  eps <- 0
 
   qmat <- matrix(0, k, k)
   idx.qmat <- cbind(rep(1:k, each=k-1),

@@ -3,6 +3,7 @@
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
 #include <R_ext/Rdynload.h>
+#include "util.h"
 
 static double *parms_mkn;
 void initmod_mkn(void (* odeparms)(int *, double *)) {
@@ -20,15 +21,6 @@ void initmod_mkn(void (* odeparms)(int *, double *)) {
    and zeroing the input.  GEMM does:
      Z = alpha X Y + beta Z
 */
-void do_gemm(double *x, int nrx, int ncx,
-             double *y, int nry, int ncy,
-             double *z) {
-  const char *trans = "N";
-  double one = 1.0, zero = 0.0;
-  F77_CALL(dgemm)(trans, trans, &nrx, &ncy, &ncx, &one,
-                  x, &nrx, y, &nry, &zero, z, &nrx);
-}
-
 void derivs_mkn(int *neq, double *t, double *y, double *ydot,
 		double *yout, int *ip) {
   const int k = *neq;
@@ -39,12 +31,6 @@ void derivs_mkn_pij(int *neq, double *t, double *y, double *ydot,
 		    double *yout, int *ip) {
   const int k = (int)sqrt(*neq);
   do_gemm(parms_mkn, k, k, y, k, k, ydot);
-}
-
-void r_gemm(double *x, int *nrx, int *ncx,
-            double *y, int *nry, int *ncy,
-            double *z) {
-  do_gemm(x, *nrx, *ncx, y, *nry, *ncy, z);
 }
 
 void initial_conditions_mkn(int k, double *x_l, double *x_r, 

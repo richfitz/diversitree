@@ -1,3 +1,47 @@
+2010-10-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: new exports from below
+
+	* R/model-bd-ode.R: New ODE based version of the BD model; this is
+	really here for completeness and testing against the ODE based BD
+	extensions.
+
+	* R/model-bd-split.R: Removed find.mle method; inherits bd method
+	now.
+
+	* R/model-bd-t.R, R/model-bisse-t.R, R/model-musse-t.R: New
+	time-dependent models, where parameters are arbitrary functions
+	of time.
+
+	* R/model-bisse.R: Avoid warning when making bisse likelihood
+	function when all tips represent unresolved clades (thanks: Hanno
+	Schaefer for finding bug).  Internal C function names have
+	standardised now.
+
+	* R/t.R: Support functions for time-dependent models.
+
+	* man/make.bd.R: Documentation for make.bd.ode()
+
+	* man/make.bd.split.R: Improve example
+
+	* man/make.bd.t.Rd, man/make.bisse.td.Rd, man/make/musse.td.Rd,
+	man/time.Rd: Add new time-varying functions to the help.
+
+	* man/mcmc.Rd: Small improvements in the help.
+
+	* src/bd-eqs.c: New file for ODE based BD model
+
+	* src/bisse-eqs.c: Standardised function names, and abstracted
+	derivative calculation from plain BiSSE, added time-dependent
+	derivative calculation.
+
+	* src/mkn.c: Moved matrix multiplication code into util.c
+
+	* src/musse.c: Abstracted plain MuSSE calculation, removed matrix
+	multiplication, added time-dependent derivative calculation.
+
+	* src/util.{ch}: Utility matrix multiplication helpers.
+
 2010-09-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE: new exports from below

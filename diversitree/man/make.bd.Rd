@@ -1,5 +1,6 @@
 \name{make.bd}
 \alias{make.bd}
+\alias{make.bd.ode}
 \alias{make.yule}
 \alias{starting.point.bd}
 
@@ -16,16 +17,23 @@
 
 \usage{
 make.bd(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
+make.bd.ode(tree, sampling.f=NULL, unresolved=NULL, safe=FALSE)
 make.yule(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
 starting.point.bd(tree, yule=FALSE)
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  
   \item{times}{Vector of branching times, as returned by
     \code{branching.times}.  You don't need to use this unless you know
     that you need to use this.  Don't use it at the same time as
     \code{tree}.}
+  
+  \item{sampling.f}{Probability of an extant species being included in
+    the phylogeny (sampling fraction).  By default, all extant species are
+    assumed to be included.}
+
   \item{unresolved}{Unresolved clade information.  This is a named
     vector, with the number of species as the value and names
     corresponding to tip labels.  Tips that represent a single species
@@ -34,11 +42,12 @@ starting.point.bd(tree, yule=FALSE)
     species, while \code{sp2} represents two.  These labels must exist
     in \code{tree$tip.label} and all other tips are assumed to
     represent one species.}
-  \item{sampling.f}{Probability of an extant species being included in
-    the phylogeny (sampling fraction).  By default, all extant species are
-    assumed to be included.}
+  
   \item{yule}{Should the starting point function return a Yule model
     (zero extinction rate)?}
+
+  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
+    crashes are happening.}
 }
 
 \details{
@@ -58,6 +67,12 @@ starting.point.bd(tree, yule=FALSE)
     event subtending them?  This is done by default, following Nee et
     al. 1994.
   }
+
+  The function \code{make.bd.ode} is included for completeness, but
+  should not be taken too seriously.  It uses an alternative ODE-based
+  approach, more similar to most diversitree models, to compute the
+  likelihood.  It exists so that other models that extend the
+  birth-death models may be tested.
 }
 
 \seealso{

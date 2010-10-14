@@ -89,7 +89,7 @@ find.mle.bd <- function(func, x.init, method,
     x.init <- structure(c(.2, .1), names=argnames(func))
   }
   if ( missing(method) )
-    method <- "nlm"
+    method <- if (inherits(func, "bd.split")) "subplex" else "nlm"
   find.mle.default(func, x.init, method, fail.value,
                    class.append="fit.mle.bd", ...)
   ## NextMethod("find.mle", x.init=x.init, method=method,

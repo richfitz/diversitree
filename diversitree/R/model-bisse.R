@@ -95,7 +95,11 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
     cache$tips <- cache$tips[-unresolved$i]
     cache$tip.state <- cache$tip.state[-unresolved$i]
   }
-  cache$y <- initial.tip.bisse(cache)
+
+  ## This avoids a warning in the case where all tips are unresolved.
+  if ( length(cache$tips) > 0 )
+    cache$y <- initial.tip.bisse(cache)
+
   cache
 }
 
@@ -168,7 +172,8 @@ initial.conditions.bisse <- function(init, pars, t, is.root=FALSE)
 ## 8: branches
 make.branches.bisse <- function(safe=FALSE) {
   RTOL <- ATOL <- 1e-8
-  bisse.ode <- make.ode("derivs", "diversitree", "initmod", 4, safe)
+  bisse.ode <- make.ode("derivs_bisse", "diversitree",
+                        "initmod_bisse", 4, safe)
   branches <- function(y, len, pars, t0)
     t(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
   

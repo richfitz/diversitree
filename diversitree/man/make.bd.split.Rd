@@ -83,6 +83,9 @@ lik.s(pars4) - lik(pars)
 ## You can use the labelled nodes rather than indices:
 lik.s2 <- make.bd.split(phy, nodes)
 identical(lik.s(pars4), lik.s2(pars4))
+
+## All the usual ML/MCMC functions work as before:
+fit <- find.mle(lik.s, pars4)
 }
 
 \author{Richard G. FitzJohn}

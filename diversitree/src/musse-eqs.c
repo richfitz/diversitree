@@ -3,15 +3,9 @@
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
 #include <R_ext/Rdynload.h>
+#include "util.h"
 
-void do_gemm2(double *x, int nrx, int ncx,
-	      double *y, int nry, int ncy,
-	      double *z) {
-  const char *trans = "N";
-  double alpha = 1.0, beta = 1.0;
-  F77_CALL(dgemm)(trans, trans, &nrx, &ncy, &ncx, &alpha,
-                  x, &nrx, y, &nry, &beta, z, &nrx);
-}
+void do_derivs_musse(int k, double *pars, double *y, double *ydot);
 
 static double *parms_musse;
 void initmod_musse(void (* odeparms)(int *, double *)) {
@@ -25,9 +19,11 @@ void initmod_musse(void (* odeparms)(int *, double *)) {
   parms_musse = REAL(get_deSolve_gparms());
 } 
 
-/* This gives a skeleton for the final version */
 void derivs_musse(int *neq, double *t, double *y, double *ydot,
 		   double *yout, int *ip) {
+
+  do_derivs_musse(*neq / 2, parms_musse, y, ydot);
+  /*
   const int k = *neq / 2;
   double *e = y, *d = y + k;
   double *dEdt = ydot, *dDdt = ydot + k;
@@ -44,51 +40,17 @@ void derivs_musse(int *neq, double *t, double *y, double *ydot,
   }
 
   do_gemm2(Q, k, k, y, k, 2, ydot);
+  */
 }
-
-void r_gemm2(double *x, int *nrx, int *ncx,
-	     double *y, int *nry, int *ncy,
-	     double *z) {
-  do_gemm2(x, *nrx, *ncx, y, *nry, *ncy, z);
-}
-
-void do_gemm3(double *x, int nrx, int ncx,
-	      double *y, int nry, int ncy,
-	      double *z, double *beta) {
-  const char *trans = "N";
-  double alpha = 1.0;
-  F77_CALL(dgemm)(trans, trans, /* trans = "N" - dont transpose */
-		  &nrx,   /* M */
-		  &ncy,   /* N */
-		  &ncx,   /* K */
-		  &alpha, /* alpha */
-                  x,      /* A */
-		  &nrx,   /* LDA */
-		  y,      /* B */
-		  &nry,   /* LDB */
-		  beta,  /* beta */
-		  z,      /* C */
-		  &nrx);  /* LDC */
-}
-
-void r_gemm3(double *x, int *nrx, int *ncx,
-	     double *y, int *nry, int *ncy,
-	     double *z, double *beta) {
-  do_gemm3(x, *nrx, *ncx, y, *nry, *ncy, z, beta);
-}
-
-
 
 /* This gives a skeleton for the final version */
-void derivs_musse2(double *pars,
-		   int *neq, double *t, double *y, double *ydot,
-		   double *yout, int *ip) {
-  const int k = *neq / 2;
+void do_derivs_musse(int k, double *pars, double *y, double *ydot) {
   double *e = y, *d = y + k;
   double *dEdt = ydot, *dDdt = ydot + k;
   double *lambda = pars, *mu = pars + k, *Q = pars + 2*k;
-  int i;
   double tmp, ei, di;
+  int i;
+
   for ( i = 0; i < k; i++ ) {
     ei = e[i];
     di = d[i];
@@ -98,4 +60,38 @@ void derivs_musse2(double *pars,
   }
 
   do_gemm2(Q, k, k, y, k, 2, ydot);
+}
+
+/* This might go in its own file; this is the extent of the
+   time-dependent MuSSE code - it's not much to look at. 
+
+   This is based on the section in R-exts on "evaluating R expressions
+   from C".
+ */
+static SEXP func_musse;
+static SEXP rho_musse;
+
+void initmod_musse_t(void (* odeparms)(int *, double *)) {
+  DL_FUNC get_deSolve_gparms = 
+    R_GetCCallable("deSolve", "get_deSolve_gparms");
+  SEXP obj = get_deSolve_gparms();
+
+  func_musse  = VECTOR_ELT(obj, 0);
+  rho_musse   = VECTOR_ELT(obj, 1);
+
+  if ( !isFunction(func_musse) )
+    error("First element must be a function");
+  if ( !isEnvironment(rho_musse) )
+    error("Second element must be an environment");
+}
+
+void derivs_musse_t(int *neq, double *t, double *y, double *ydot, 
+		    double *yout, int *ip) {
+  SEXP R_fcall;
+  double *pars;
+
+  PROTECT(R_fcall = lang2(func_musse, ScalarReal(*t)));
+  pars = REAL(eval(R_fcall, rho_musse));
+  do_derivs_musse(*neq / 2, pars, y, ydot);
+  UNPROTECT(1);
 }

@@ -1,7 +1,9 @@
 \name{make.musse.td}
+\alias{make.musse.t}
 \alias{make.musse.td}
 
-\title{Multiple State Speciation and Extinction Model: Time Chunks}
+\title{Multiple State Speciation and Extinction Model: Time Dependent
+  Models}
 
 \description{Create a likelihood function for a MuSSE model where
   different chunks of time have different parameters.  This code is
@@ -9,6 +11,8 @@
 
 \usage{
 make.musse.td(tree, states, k, n.epoch, sampling.f=NULL,
+              strict=TRUE, safe=FALSE)
+make.musse.t(tree, states, k, functions, sampling.f=NULL,
               strict=TRUE, safe=FALSE)
 }
 
@@ -25,6 +29,8 @@ make.musse.td(tree, states, k, n.epoch, sampling.f=NULL,
 
   \item{n.epoch}{Number of epochs.  1 corresponds to plain MuSSE, so
     this will generally be an integer at least 2.}
+
+  \item{functions}{A named list of functions of time.  See details.}  
   
   \item{sampling.f}{Vector of length \code{k} where \code{sampling.f[i]}
     is the proportion of species in state \code{i} that are present in

@@ -123,7 +123,8 @@ make.mvn <- function(mean, vcv) {
   }
 }
 
-## Our target distribution has mean 0, and a VCV with
+## Our target distribution has mean 0, and a VCV with positive
+## covariance between the two parameters.
 vcv <- matrix(c(1, .25, .25, .75), 2, 2)
 lik <- make.mvn(c(0, 0), vcv)
 
@@ -134,7 +135,7 @@ samples <- mcmc(lik, c(0, 0), 10000, 1, print.every=1000)
 ## The marginal distribution of V1 (the first axis of the
 ## distribution) should be a normal distribution with mean 0 and
 ## variance 1:
-curve(dnorm, ylim=c(0, .5), col="red")
+curve(dnorm, xlim=range(samples$V1), ylim=c(0, .5), col="red")
 hist(samples$V1, 30, add=TRUE, freq=FALSE)
 
 plot(V2 ~ V1, samples, pch=19, cex=.2, col="#00000055", asp=1)
@@ -167,7 +168,6 @@ title(main="Gaussian updates", outer=TRUE)
 ## The autocorrelation is negligable after just 2 samples under slice
 ## sampling, but remains significant for about 15 with Gaussian
 ## updates.
-
 
 \dontrun{
 ## Next, a diversitree likelihood example.  This example uses a 203
