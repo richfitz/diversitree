@@ -3,7 +3,7 @@
 \alias{linear.t}
 \alias{exponential.t}
 \alias{sigmoid.t}
-\alias{step1.t}
+\alias{stepf.t}
 \alias{make.pars.t}
 
 \title{Support Functions for Time-varying Models}
@@ -15,7 +15,7 @@ constant.t(t, c)
 linear.t(t, c, m)
 exponential.t(t, y0, y1, r)
 sigmoid.t(t, y0, y1, tmid, r)
-step1.t(t, y0, y1, tc)
+stepf.t(t, y0, y1, tc)
 
 make.pars.t(functions)
 }

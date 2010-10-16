@@ -98,7 +98,7 @@ me.to.ape.bd <- function(x) {
 
 
 tree.bd <- function(pars, max.taxa=Inf, max.t=Inf,
-                    include.extinct=FALSE, ...) {
+                    include.extinct=FALSE) {
   info <- make.tree.bd(pars, max.taxa, max.t)
   phy <- me.to.ape.bd(info[-1,])
   if ( include.extinct || is.null(phy) )
@@ -108,7 +108,7 @@ tree.bd <- function(pars, max.taxa=Inf, max.t=Inf,
 }
 
 tree.yule <- function(pars, max.taxa=Inf, max.t=Inf,
-                      include.extinct=FALSE, ...) {
+                      include.extinct=FALSE) {
   if ( length(pars) != 1 )
     stop("pars must be of length 1")
   info <- make.tree.bd(c(pars, 0), max.taxa, max.t)

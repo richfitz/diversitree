@@ -3,6 +3,7 @@
 \alias{tree.bisse}
 \alias{tree.bd}
 \alias{tree.musse}
+\alias{tree.quasse}
 \alias{tree.yule}
 \alias{prune}
 
@@ -17,16 +18,19 @@
 }
 
 \usage{
-trees(pars, type=c("bisse", "bd", "musse", "yule"), n=1, max.taxa=Inf,
-      max.t=Inf, include.extinct=FALSE, ...)
+trees(pars, type=c("bisse", "bd", "musse", "quasse", "yule"), n=1,
+      max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
 
 tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
-           x0=NA, ...)
+           x0=NA)
 tree.musse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
-           x0=NA, ...)
+           x0=NA)
 
-tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
-tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
+tree.quasse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA,
+            verbose=FALSE)
+
+tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
+tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
 
 prune(phy, to.drop=NULL)
 }
@@ -36,23 +40,36 @@ prune(phy, to.drop=NULL)
     order as an unconstrained likelihood function returned by
     \code{make.x}, for tree type {x}.  The MuSSE simulator automatically
     detects the appropriate number of states, given a parameter vector.}
+  
   \item{type}{Type of tree to generate: May be "bisse" or "bd".}
+
   \item{n}{How many trees to generate?}
+
   \item{max.taxa}{Maximum number of taxa to include in the tree.  If
     \code{Inf}, then the tree will be evolved until \code{max.t} time
     has passed.}
+
   \item{max.t}{Maximum length to evolve the phylogeny over.  If
     \code{Inf} (the default), then the tree will evolve until
     \code{max.taxa} extant taxa are present.}
+
   \item{include.extinct}{Logical: should extinct taxa be included in
     the final phylogeny?  And should extinct trees be returned by
     \code{trees}?}
+  
   \item{x0}{Initial character state at the root (state 0 or 1).  A value
     of \code{NA} will randomly choose a state from the model's
-    equilibrium distribution.}
+    equilibrium distribution for a BiSSE model, but a non-NA value must
+    be specified for MuSSE and QuaSSE.}
+
+  \item{verbose}{(\code{tree.quasse} only): print verbose details about
+    tree simuations.  This can be reassuring for really large trees.}
+  
   \item{...}{Additional arguments}
+
   \item{phy}{A phylogeny, possibly with extinct species, produced by one
     of the tree evolving functions.}
+  
   \item{to.drop}{Optional vector with the species names to drop.}
 }
 

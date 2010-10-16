@@ -20,7 +20,7 @@ sigmoid.t <- function(t, y0, y1, tmid, r)
   y0 + (y1 - y0)/(1 + exp(r * (tmid - t)))
 exponential.t <- function(t, y0, y1, r)
   y0 + (y1 - y0) * exp(- r * t)
-step1.t <- function(t, y0, y1, tc)
+stepf.t <- function(t, y0, y1, tc)
   if ( t <= tc ) y0 else y1
 
 check.f.t <- function(f) {

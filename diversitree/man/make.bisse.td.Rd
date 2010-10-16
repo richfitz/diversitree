@@ -135,7 +135,7 @@ lik.td2 <- constrain(lik.td, t.1 ~ 5,
                      q01.2 ~ q01.1, q10.2 ~ q10.1)
 
 lik.t <- make.bisse.t(phy, phy$tip.state,
-                        rep(list(step1.t, constant.t), c(2, 4)))
+                        rep(list(stepf.t, constant.t), c(2, 4)))
 lik.t2 <- constrain(lik.t, lambda0.tc ~ 5, lambda1.tc ~ 5)
 
 ## Note that the argument names for these functions are different from

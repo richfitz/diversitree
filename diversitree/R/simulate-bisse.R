@@ -110,7 +110,7 @@ make.tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
 }
 
 tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf,
-                       include.extinct=FALSE, x0=NA, ...) {
+                       include.extinct=FALSE, x0=NA) {
   if ( is.na(x0) )
     x0 <- as.integer(runif(1) > stationary.freq.bisse(pars))
   else if ( length(x0) != 1 || !(x0 == 0 || x0 == 1) )

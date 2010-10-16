@@ -1,11 +1,12 @@
 Package: diversitree
 Title: diversitree: comparative phylogenetic tests of diversification
-Version: 0.5-3
+Version: 0.6-1
 Date: 2010-10-01
 Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>
 Maintainer: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>
 Depends: R (>= 2.4), deSolve (>= 1.5), ape, subplex
 Suggests: numDeriv, tgp, multicore
+SystemRequirements: fftw3 (>= 3.1.2)
 Description: Contains a number of comparative phylogenetic methods,
   mostly focussing on analysing diversification and character
   evolution.  Contains implementations of BiSSE (Binary State

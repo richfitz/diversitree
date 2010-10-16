@@ -13,23 +13,30 @@ make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  
   \item{states}{A vector of character states, each of which must be 0 or
     1, or \code{NA} if the state is unknown.  This vector must have
     names that correspond to the tip labels in the phylogenetic tree
     (\code{tree$tip.label}).  For tips
     corresponding to unresolved clades, the state should be \code{NA}.}
+  
   \item{nodes}{Vector of nodes that will be split (see Details).}
+  
   \item{split.t}{Vector of split times, same length as \code{nodes} (see
     Details).}
+  
   \item{unresolved}{Unresolved clade information: see section below for
     structure.}
+  
   \item{sampling.f}{Vector of length 2 with the estimated proportion of
     extant species in state 0 and 1 that are included in the phylogeny.
     A value of \code{c(0.5, 0.75)} means that half of species in state 0
     and three quarters of species in state 1 are included in the
     phylogeny.  By default all species are assumed to be known.}
+  
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
+  
   \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
     crashes are happening.}
 }

@@ -17,6 +17,8 @@ export(make.musse)
 export(make.musse.split)
 export(make.musse.t)
 export(make.musse.td)
+export(make.quasse)
+export(make.quasse.split)
 export(make.yule)
 
 ## 2. print:
@@ -47,6 +49,8 @@ S3method(argnames, mkn)
 S3method(argnames, musse)
 S3method(argnames, musse.split)
 S3method(argnames, musse.td)
+S3method(argnames, quasse)
+S3method(argnames, quasse.split)
 S3method(argnames, yule)
 
 S3method("argnames<-", bd)
@@ -60,6 +64,8 @@ S3method("argnames<-", bm)
 S3method("argnames<-", mkn) # is also the mk2 method
 S3method("argnames<-", musse)
 S3method("argnames<-", musse.t)
+S3method("argnames<-", quasse)
+S3method("argnames<-", quasse.split)
 S3method("argnames<-", yule)
 
 ## Extra:
@@ -75,6 +81,7 @@ S3method(find.mle, bm)
 S3method(find.mle, default)
 S3method(find.mle, mkn)
 S3method(find.mle, musse)
+S3method(find.mle, quasse)
 S3method(find.mle, yule)
 
 ## Other method support:
@@ -106,6 +113,7 @@ export(trees)
 export(tree.bd)
 export(tree.bisse)
 export(tree.musse)
+export(tree.quasse)
 export(tree.yule)
 
 ## Utility functions:
@@ -115,6 +123,7 @@ export(big.brother)
 export(starting.point.bisse)
 export(starting.point.bd)
 export(starting.point.musse)
+export(starting.point.quasse)
 export(profiles.plot)
 export(make.prior.exponential)
 export(prune)
@@ -124,8 +133,18 @@ export(constant.t)
 export(exponential.t)
 export(linear.t)
 export(sigmoid.t)
-export(step1.t)
+export(stepf.t)
 export(make.pars.t)
+
+## Support for QuaSSE models.
+export(constant.x)
+export(make.linear.x)
+export(noroptimal.x)
+export(sigmoid.x)
+export(sigmoid2.x)
+export(stepf.x)
+
+export(make.brownian.with.drift)
 
 ## Deprecated:
 export(bisse.starting.point)
@@ -168,3 +187,19 @@ export(ROOT.OBS)
 export(ROOT.GIVEN)
 export(ROOT.BOTH)
 export(ROOT.ALL)
+
+## QuaSSE util: not generally used.
+## export(quasse.extent)
+## export(expand.pars.quasse)
+## export(make.pde.quasse.fftC)
+## export(make.pde.quasse.fftR)
+## export(make.pde.quasse.mol)
+## export(make.branches.quasse.fftC)
+## export(make.branches.quasse.fftR)
+## export(make.branches.quasse.mol)
+## export(make.branches.aux.quasse.fftC)
+
+## These aren't really needed any more.
+## export(load.wisdom)
+## export(save.wisdom)
+

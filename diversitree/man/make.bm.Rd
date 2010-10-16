@@ -14,8 +14,10 @@ make.bm(tree, states, meserr=NULL)
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  
   \item{states}{A vector of continuous valued character states.  This
     vector must be named with the tip labels of \code{tree}.}
+  
   \item{meserr}{An optional vector of measurement errors, as standard
     deviation around the mean.  If a single value is given it is used
     for all tips, otherwise the vector must be named as for
