@@ -53,7 +53,7 @@ starting.point.quasse(tree, states, states.sd=NULL)
     adaptive methods-of-lines approach will be available.
 
     \item \code{dt.max}: Maximum time step to use for the integration.
-    By deafult, this will be set to 1/1000 of the tree depth.  Smaller
+    By default, this will be set to 1/1000 of the tree depth.  Smaller
     values will slow down calculations, but improve accuracy.
 
     \item \code{nx}: The number of bins into which the character space
@@ -68,7 +68,7 @@ starting.point.quasse(tree, states, states.sd=NULL)
     distributions flatten out as time progresses towards the root.
     Larger values will be slower and more accurate.  For the \code{fftC}
     integration method, this should be a power of 2 (2, 4, 8, so that
-    nx*r is a power of 2).
+    \code{nx*r} is a power of 2).
     
     \item \code{tc}: where in the tree to switch to the low-resolution
     integration (zero corresponds to the present, larger numbers moving
@@ -102,8 +102,6 @@ starting.point.quasse(tree, states, states.sd=NULL)
 \examples{
 ## Example showing simple integration with two different backends,
 ## plus the splits.
-library(diversitree.unrel)
-
 lambda <- function(x) sigmoid.x(x, 0.1, 0.2,  0, 2.5)
 mu <- function(x) constant.x(x, 0.03)
 char <- make.brownian.with.drift(0, 0.025)

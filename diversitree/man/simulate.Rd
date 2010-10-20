@@ -27,7 +27,7 @@ tree.musse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA)
 
 tree.quasse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA,
-            verbose=FALSE)
+            single.lineage=TRUE, verbose=FALSE)
 
 tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
 tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
@@ -62,6 +62,11 @@ prune(phy, to.drop=NULL)
     equilibrium distribution for a BiSSE model, but a non-NA value must
     be specified for MuSSE and QuaSSE.}
 
+  \item{single.lineage}{(\code{tree.quasse} only): Start simulation with
+    a single lineage?  If \code{FALSE}, then the simulation starts with
+    two lineages in state \code{x0} (i.e., immediately following a
+    speciation event).}
+  
   \item{verbose}{(\code{tree.quasse} only): print verbose details about
     tree simuations.  This can be reassuring for really large trees.}
   

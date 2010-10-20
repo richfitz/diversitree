@@ -1,3 +1,8 @@
+2010-10-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* many: Added QuaSSE to the package, including the configure build
+	system.
+
 2010-10-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE: new exports from below

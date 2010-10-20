@@ -26,11 +26,11 @@ starting.point.quasse <- function(tree, states, states.sd=NULL)
 
 load.wisdom <- function(file="wisdom") {
   w <- paste(readLines(file), collapse="\n")
-  .Call("r_set_wisdom", w, PACKAGE="diversitree.unrel")
+  .Call("r_set_wisdom", w, PACKAGE="diversitree")
 }
 
 save.wisdom <- function(file="wisdom") {
-  w <- .Call("r_get_wisdom", PACKAGE="diversitree.unrel")
+  w <- .Call("r_get_wisdom", PACKAGE="diversitree")
   write(w, file)
 }
 

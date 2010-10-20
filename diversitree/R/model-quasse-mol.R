@@ -23,7 +23,7 @@ make.pde.quasse.mol <- function(nx, dx, nd) {
     ans <- ode.1D(y, c(t0, t0+len), "derivs_quasse_mol", pars,
                   initfunc="initmod_quasse_mol",
                   nspec=nd, dimens=nx,
-                  method="lsodes", dllname="diversitree.unrel")[-1,-1]
+                  method="lsodes", dllname="diversitree")[-1,-1]
     matrix(ans, nx, nd)
   }
 }

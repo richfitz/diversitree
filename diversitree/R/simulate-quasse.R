@@ -6,9 +6,7 @@
 ## period of time 'dt' over which evolution occurs.
 tree.quasse <- function(pars, max.taxa=Inf, max.t=Inf,
                         include.extinct=FALSE, x0=NA,
-                        verbose=FALSE) {
-  single.lineage <- TRUE # removing option for now.
-  
+                        single.lineage=TRUE, verbose=FALSE) {
   if ( is.na(x0) )
     stop("x0 must be specified")
   else if ( length(x0) != 1 )
@@ -50,7 +48,7 @@ make.tree.quasse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
   t <- 0
   t.left <- max.t
 
-  while ( n.taxa < max.taxa && n.taxa > 0 && t.left > 0 ) {
+  while ( n.taxa <= max.taxa && n.taxa > 0 && t.left > 0 ) {
     x <- run.until.change(lineages, info, k, lambda, mu, char, t.left)
     lineages <- x[[1]]
     info <- x[[2]]
@@ -61,6 +59,16 @@ make.tree.quasse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
       cat(sprintf("%s: %d [%2.3f]\n",
                   c("-", " ", "+")[sign(x[[3]])+2], n.taxa, t))
   }
+
+  if ( n.taxa > max.taxa ) {
+    ## Drop final speciation event.
+    drop <- info[nrow(info)-1,]
+    info$split[drop$parent] <- FALSE
+    info$state[drop$parent] <- drop$state
+    info$len[drop$parent] <- info$len[drop$parent] + drop$len
+    info <- info[seq_len(nrow(info)-2),]
+  }
+
   attr(info, "t") <- t
   info
 }
@@ -72,7 +80,8 @@ make.tree.quasse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
 ## TODO: I am not truncating exactly the time interval when we might
 ## run into the maximum time.  If 'k' is sufficiently high, this
 ## should not matter much.
-run.until.change <- function(lineages, info, k, lambda, mu, char, max.t) {
+run.until.change <- function(lineages, info, k, lambda, mu, char,
+                             max.t) {
   i <- 1
   time <- 0
   n.extant <- length(lineages)
@@ -87,8 +96,6 @@ run.until.change <- function(lineages, info, k, lambda, mu, char, max.t) {
     
     if ( runif(1) < p.change ) {
       if ( runif(1) < sum(lx)/r ) { # speciation
-        ## TODO: don't add the final species if it's the last - see
-        ## binary traits cases.
         i <- sample(n.extant, 1, prob=lx)
         info <- speciate(info, lineages[i])
         lineages <- c(lineages[-i], c(-1,0) + nrow(info))

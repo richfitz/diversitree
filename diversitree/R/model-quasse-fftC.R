@@ -27,7 +27,7 @@ make.branches.quasse.fftC <- function(control) {
 make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
   ptr <- .Call("r_make_quasse_fft", as.integer(nx), as.numeric(dx),
                as.integer(nd), as.integer(flags),
-               PACKAGE="diversitree.unrel")
+               PACKAGE="diversitree")
   function(y, len, pars, t0) {
     ## TODO: add basic error checking here
     nt <- as.integer(ceiling(len / dt.max))
@@ -44,7 +44,7 @@ make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
       
     .Call("r_do_integrate",
           ptr, y, pars$lambda, pars$mu, pars$drift, pars$diffusion,
-          nt, dt, pars$padding, PACKAGE="diversitree.unrel")
+          nt, dt, pars$padding, PACKAGE="diversitree")
   }
 }
 
@@ -83,10 +83,10 @@ make.tips.quasse.fftC <- function(control, t, tips) {
   
   ptr.hi <- .Call("r_make_quasse_fft", as.integer(nx*r), as.numeric(dx/r),
                   as.integer(nd.hi), as.integer(flags),
-                  PACKAGE="diversitree.unrel")
+                  PACKAGE="diversitree")
   ptr.lo <- .Call("r_make_quasse_fft", as.integer(nx), as.numeric(dx),
                   as.integer(nd.lo), as.integer(flags),
-                  PACKAGE="diversitree.unrel")
+                  PACKAGE="diversitree")
 
   dx.v <- rep(c(dx/r, dx), c(length(nd.hi)-1, length(nd.lo)))
   
@@ -110,7 +110,7 @@ make.tips.quasse.fftC <- function(control, t, tips) {
                     ptr.hi, y.hi, pars$hi$lambda, pars$hi$mu,
                     pars$hi$drift, pars$hi$diffusion, nt.hi, dt.hi,
                     as.integer(pars$hi$padding),
-                    PACKAGE="diversitree.unrel")
+                    PACKAGE="diversitree")
 
     y.lo <- rbind(ret.hi[[j]][pars$tr,],
                   matrix(0, nx - length(pars$tr), nd.lo[1]))
@@ -119,7 +119,7 @@ make.tips.quasse.fftC <- function(control, t, tips) {
                     ptr.lo, y.lo, pars$lo$lambda, pars$lo$mu,
                     pars$lo$drift, pars$lo$diffusion, nt.lo, dt.lo,
                     as.integer(pars$lo$padding),
-                    PACKAGE="diversitree.unrel")
+                    PACKAGE="diversitree")
 
     base <- c(ret.hi[-j], ret.lo)
     lq <- numeric(length(base))
@@ -196,9 +196,9 @@ make.branches.aux.quasse.fftC <- function(control, sampling.f) {
 }
 
 check.fftC <- function(error=TRUE) {
-  ok <- is.loaded("r_make_quasse_fft", "diversitree.unrel")
+  ok <- is.loaded("r_make_quasse_fft", "diversitree")
   if ( error && !ok )
-    stop("diversitree.unrel was build without FFTW support.  ",
+    stop("diversitree was built without FFTW support.  ",
          "See Details in ?make.quasse")
   ok
 }

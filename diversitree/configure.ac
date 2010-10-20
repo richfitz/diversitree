@@ -1,4 +1,4 @@
-AC_INIT([diversitree.unrel], 0.12, [fitzjohn@zoology.ubc.ca])
+AC_INIT([diversitree], 0.6, [fitzjohn@zoology.ubc.ca])
 
 : ${R_HOME=`R RHOME`}
 if test -z "${R_HOME}"; then
