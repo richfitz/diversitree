@@ -1,6 +1,4 @@
-%% TODO:
-%% http://ggorjan.blogspot.com/2009/01/sweavesh-plays-with-weaver.html
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 \usepackage{fullpage}
 \usepackage{Sweave}
 \usepackage{natbib}
@@ -20,6 +18,19 @@
 \newcommand{\ape}{\textsf{ape}}
 
 \SweaveOpts{prefix.string=cache/diversitree-tutorial,eps=FALSE}
+<<results=hide,echo=FALSE>>=
+dir.create("cache", FALSE)
+@ 
+
+<<results=hide,echo=FALSE>>=
+if ( require(cacheSweave) )
+  setCacheDir("cache")
+@ 
+
+% Because they look like rubbish in the final version:
+<<echo=FALSE,results=hide>>=
+options(show.signif.stars=FALSE)
+@ 
 
 %\VignetteIndexEntry{Introduction to diversitree}
 %\VignettePackage{diversitree}
@@ -60,18 +71,20 @@ estimation through Markov chain Monte Carlo (MCMC).  Included methods include:
     \citep{Maddison-2007-701}, and extensions for incompletely
     resolved phylogenies \citep{FitzJohn-2009-595}.
   \item \MuSSE: Multiple State Speciation and Extinction.
-  %\item \QuaSSE: Quantitative State Speciation and Extinction:
-  %  \citep{FitzJohn-2010-ip}
+  \item \QuaSSE: Quantitative State Speciation and Extinction:
+    \citep{FitzJohn-2010-ip}
   \end{itemize}
 \end{itemize}
 
 In addition, variants of these models are available:
 \begin{itemize}
 \item ``Time dependent'': different time epochs have different
-  parameters (implemented for \BiSSE, \MuSSE).
+  parameters (implemented for \BiSSE, \MuSSE), and where rates are
+  arbitrary functions of time (implemented for birth death, \BiSSE,
+  and \MuSSE).
 \item MEDUSA-style partitioned analyses, where different regions of
   the tree have different parameters (implemented for birth-death,
-  \BiSSE, and \MuSSE).
+  \BiSSE, \MuSSE, and \QuaSSE).
 \item Marginal ancestral state reconstruction for discrete characters
   (``Pagel94'') and \BiSSE.
 \item Stochastic character mapping for discrete traits
@@ -80,8 +93,6 @@ In addition, variants of these models are available:
 
 In the future, new methods will include
 \begin{itemize}
-\item \QuaSSE: Quantitative State Speciation and Extinction:
-  \citep{FitzJohn-2010-ip}
 \item Reflected Brownian motion for bounded traits
 \item Stochastic character mapping for discrete traits that affect
   speciation or extinction rates
@@ -101,13 +112,20 @@ online documentation; further examples can be found there.  Most are
 fairly contrived -- if you have examples you would rather see here, I
 would welcome data sets.
 
+\subsection{Regenerating this file}
+This file is written in ``Swears'', which allows mixing \R\ code and
+\LaTeX\ markup.  If you want to regenerate the file, you will need some
+data files (\url{http://www.zoology.ubc.ca/prog/diversitree/files/})
+in the directory \code{data}.  Some of the code chunks take a very
+long time to run (total processing time is currently about XXX hours
+on a 2.8~GHz MacPro), and use the \code{cacheSweave} package to speed
+subsequent runs up.  With Gregor Gorjanc's
+\href{http://gregor.gorjanc.googlepages.com/Sweave.sh}{Sweave.sh}, the
+file can be easily regenerated with 
+\code{Sweave.sh -c -ld diversitree-tutorial.Rnw}.
+
 <<>>=
 library(diversitree)
-@ 
-
-% Because they look like rubbish in the final version:
-<<echo=FALSE,results=hide>>=
-options(show.signif.stars=FALSE)
 @ 
 
 \section{Constant-rate birth-death models}
@@ -362,7 +380,7 @@ To run the MCMC, we need to specify a starting point (again, I have
 used $(.1, .1)$, but the ML point might be preferable).  I have
 discarded the first 500 samples (10\%), which is probably overkill for
 this model, as the autocorrelation between samples is extremely small.
-<<>>=
+<<cache=TRUE>>=
 samples <- mcmc(lik.mk2, c(.1, .1), nsteps=5000, prior=prior.exp,
                 w=.1, lower=0, print.every=1000)
 samples <- subset(samples, i > 500)
@@ -403,7 +421,7 @@ before), and a uniform distribution for $\Delta q$:
 prior.eb <- diversitree:::make.prior.ExpBeta(10, 1)
 @ 
 and running the MCMC sampler:
-<<>>=
+<<cache=TRUE>>=
 samples.eb <- mcmc(lik.mk2, c(.1, .1), nsteps=5000, prior=prior.eb,
                 w=.1, lower=0, print.every=1000)
 samples.eb <- subset(samples.eb, i > 500)
@@ -467,7 +485,7 @@ p
 @
 
 Start an ML search from this point (this may take some time)
-<<>>=
+<<cache=TRUE>>=
 fit <- find.mle(lik, p)
 @ 
 
@@ -523,7 +541,7 @@ per update.  Ideally it will be on the same order as the width of the
 ``high probability region''.  An easy way of setting this is to run a
 short chain (say, 100 steps) and use the range of observed samples as
 a measure of this.
-<<>>=
+<<cache=TRUE>>=
 set.seed(1)
 tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior,
             lower=0, w=rep(1, 6), print.every=0)
@@ -531,18 +549,9 @@ w <- diff(sapply(tmp[2:7], range))
 w
 @ 
 Run the chain for 10,000 steps (this will take a while)
-<<eval=FALSE>>=
+<<cache=TRUE>>=
 samples <- mcmc(lik, fit$par, nsteps=10000, w=w, lower=0, prior=prior,
-                print.every=0)
-@ 
-<<echo=FALSE,results=hide>>=
-if ( file.exists("cache/bisse-mcmc.Rdata") ) {
-  load("cache/bisse-mcmc.Rdata")
-} else {
-  samples <- mcmc(lik, fit$par, nsteps=10000, w=w, lower=0, prior=prior,
-                  print.every=0)
-  save(samples, file="cache/bisse-mcmc.Rdata")
-}
+                print.every=1000)
 @ 
 The marginal distributions for the two speciation rates are shown in
 figure \ref{fig:bisse-mcmc}, which shows the 95\% credibility
@@ -731,12 +740,12 @@ segments(xlab-1/2, y0[j] + 0.25, xlab-1/2, y1[j] - 0.25)
 text(xlab, ym, lab[to], cex=.5, adj=c(0, .5),
      font=ifelse(lab[to] == "Dromas", 3, 1))
 @ 
-  \caption{The shorebird supertree.  On the left, the original tree
-    with all polytomies and 350 species.  On the right, the polytomies
-    have been collapsed, to leave 135 tips, with tips representing
-    from 1 to 47 species.  The tips are colour coded to indicate
-    state: red is sexually dimorphic, blue is monomorphic, and white
-    is missing data.}
+\caption{The shorebird supertree \citep{Thomas-2004-28}.  On the left,
+  the original tree with all polytomies and 350 species.  On the
+  right, the polytomies have been collapsed, to leave 135 tips, with
+  tips representing from 1 to 47 species.  The tips are colour coded
+  to indicate state: red is sexually dimorphic, blue is monomorphic,
+  and white is missing data.}
   \label{fig:shorebird-tree}
 \end{figure}
 \setkeys{Gin}{width=0.8\textwidth}
@@ -767,15 +776,8 @@ p <- starting.point.bisse(tree.clade)
 You can then perform a ML search or MCMC analysis as usual.  However,
 unresolved clades slow down the analysis considerably, and this will
 take several minutes.
-<<eval=FALSE>>=
+<<cache=TRUE>>=
 fit.full <- find.mle(lik, p)
-<<echo=FALSE,results=hide>>=
-if ( file.exists("cache/shorebirds-mle.Rdata") ) {
-  load("cache/shorebirds-mle.Rdata")
-} else {
-  fit.full <- find.mle(lik, p)
-  save(fit.full, file="cache/shorebirds-mle.Rdata")
-}
 @ 
 In the full model, speciation rates for dimorphic species (state $1$)
 are greater than those for monomorphic species, but character
@@ -793,17 +795,9 @@ lik.l <- constrain(lik, lambda1 ~ lambda0)
 lik.q <- constrain(lik, q10 ~ q01)
 @ 
 Then, rerun the 
-<<eval=FALSE>>=
+<<cache=TRUE>>=
 fit.l <- find.mle(lik.l, p[argnames(lik.l)])
 fit.q <- find.mle(lik.q, p[argnames(lik.q)])
-<<echo=FALSE,results=hide>>=
-if ( file.exists("cache/shorebirds-mle-constrained.Rdata") ) {
-  load("cache/shorebirds-mle-constrained.Rdata")
-} else {
-  fit.l <- find.mle(lik.l, p[argnames(lik.l)])
-  fit.q <- find.mle(lik.q, p[argnames(lik.q)])
-  save(fit.l, fit.q, file="cache/shorebirds-mle-constrained.Rdata")
-}
 @ 
 
 These constrained models are significantly worse fits than the full
@@ -815,20 +809,10 @@ anova(fit.full, equal.l=fit.l, equal.q=fit.q)
 The analysis can also be run with MCMC.  Here, I am using an
 exponential prior with rate $1 / (2r)$, as earlier.  This takes a very
 long time to run (approximately 4--5~s/sample)
-<<eval=FALSE>>=
+<<cache=TRUE>>=
 prior <- make.prior.exponential(1 / (2*p[1]))
 samples <- mcmc(lik, coef(fit.full), 10000, w=.3, prior=prior,
                 print.every=0)
-@ 
-<<eval=FALSE,results=hide,echo=FALSE>>=
-if ( file.exists("cache/shorebirds-mcmc.Rdata") ) {
-  load("cache/shorebirds-mcmc.Rdata")
-} else {
-  prior <- make.prior.exponential(1 / (2*p[1]))
-  samples <- mcmc(lik, coef(fit.full), 10000, w=.3, prior=prior,
-                  print.every=0)
-  save(samples, file="cache/shorebirds-mcmc.Rdata")
-}
 @ 
 
 Setting up the likelihood function above assumed that the tree being
@@ -915,7 +899,7 @@ col <- c("blue", "orange", "red")
 h <- history.from.sim.discrete(phy, 1:3)
 plot(h, phy, cex=1, col=col, no.margin=TRUE, font=1)
 @ 
-  \caption{Simulated \MuSSE\ tree.  Blue is state 1, Orange is state 2,
+  \caption{Simulated \MuSSE\ tree.  Blue is state 1, orange is state 2,
     and red is state 3}
 \label{fig:musse-tree}
 \end{figure}
@@ -970,6 +954,418 @@ There is very little improvement here (this is a small tree)
 anova(fit.base, free.lambda=fit.lambda)
 @ 
 
+\section{\QuaSSE}
+
+The \QuaSSE\ method is by far the slowest method in \diversitree.
+This is because to compute the likelihood, we have to solve a system
+of partial differential equations, which is substantially more
+complicated than the system of ordinary differential equations or
+simple algebraic expressions in the other methods.  The basic
+interface is very similar to the other methods, but there are more
+options to control the behaviour of the integrator.
+
+<<>>=
+library(diversitree)
+@ 
+
+We'll start with a simulated tree.  The tree simulation differs
+slightly from the other methods, because there is no longer a
+canonical argument list (speciation and extinction rates are arbitrary
+functions of the character state).  
+%
+Here is a set of functions; speciation rate is a sigmoidal function
+which ranges from $0.1$ to $0.2$ with an inflection point at $x=0$,
+extinction is constant at rate $0.03$, and the model of character
+evolution is Brownian motion with diffusion parameter $0.025$.
+<<>>=
+lambda <- function(x) sigmoid.x(x, 0.1, 0.2,  0, 2.5)
+mu <- function(x) constant.x(x, 0.03)
+char <- make.brownian.with.drift(0, 0.025)
+@ 
+Simulate the tree:
+
+<<>>=
+set.seed(1)
+phy <- tree.quasse(c(lambda, mu, char), max.taxa=15, x0=0,
+                   single.lineage=FALSE)
+@ 
+
+We need to specify the standard deviation for the states; here I will
+just assume that all taxa have a state standard deviation of $1/200$
+<<>>=
+states <- phy$tip.state 
+states.sd <- 1/200
+@ 
+Then, build the likelihood as usual.  The difference compared with
+other models is that we have to specify the speciation and extinction
+functions (here, \code{sigmoid.x} and \code{constant.x},
+respectively).  There are a number of other provided functions (see
+\code{?constant.x} for a list), but any function that takes \code{x}
+as the first argument may be used.
+<<>>=
+lik <- make.quasse(phy, states, states.sd, sigmoid.x, constant.x)
+@ 
+
+This can be used in ML calculations as usual.  There is a
+\code{starting.point.quasse} function that may be useful in selecting
+sensible starting points, but some effort is still required to convert
+this into a full vector as it just returns constant rate speciation,
+extinction, and diffusion rates.
+<<>>=
+p <- starting.point.quasse(phy, states)
+p
+@
+Let's ignore drift: the argument list we need is:
+<<>>=
+lik.nodrift <- constrain(lik, drift ~ 0)
+argnames(lik.nodrift)
+@ 
+A sensible starting point here might be
+<<>>=
+p.start <- c(p[1], p[1], mean(states), 1, p[2:3])
+names(p.start) <- argnames(lik.nodrift)
+p.start
+@ 
+Lower bounds:
+<<>>=
+lower <- c(0, 0, min(states), -Inf, 0, 0)
+@ 
+
+Then run \code{find.mle}, as usual.  The \code{control} argument here
+just tells the subplex algorithm to use an initial step size of 0.1
+(rather than 1), which reduces the number of function evaluations
+somewhat.
+<<cache=TRUE>>=
+fit <- find.mle(lik.nodrift, p.start, control=list(parscale=.1),
+                lower=lower, verbose=0)
+@ 
+
+Compare this against the constant rate speciation fit:
+<<cache=TRUE>>=
+lik.constant <- constrain(lik.nodrift, l.y1 ~ l.y0, l.xmid ~ 0, l.r ~ 1)
+fit.constant <- find.mle(lik.constant,
+                         p.start[argnames(lik.constant)],
+                         control=list(parscale=.1), lower=0,
+                         verbose=0)
+@ 
+and compare the models -- no significant difference, which is not
+surprising with only a 15 species tree.
+<<>>=
+anova(fit, constant=fit.constant)
+@ 
+
+\subsection{Primate analysis}
+Here, I will recreate the analysis of primate diversification from
+\citep{FitzJohn-2010-ip}, but fitting only speciation functions to
+keep things relatively simple.
+<<>>=
+phy <- read.nexus("data/Vos-2006.nex")
+d <- read.csv("data/Redding-2006.csv")
+mass <- log(d$mass)
+names(mass) <- d$tip.label
+@ 
+
+Assume standard deviation of 1/50 for all species -- this comes from
+nowhere in particular, and is probably over-confident in the mass
+estimates for most species.
+<<>>=
+mass.sd <- 1/50
+@ 
+
+Starting point parameter estimates, as above:
+<<>>=
+p <- starting.point.quasse(phy, mass)
+p
+@ 
+
+Create a piecewise ``linear'' function.  This is linear in the range
+[\code(xr[1]), \code{xr[2]}], and flat outside this range; this
+satisfies the condition that the derivatives of the speciation and
+extinction function with respect to the character state approach zero
+at the edges of the modelled parameter space.
+<<>>=
+xr <- range(mass) + c(-1,1) * 20 * p["diffusion"]
+linear.x <- make.linear.x(xr[1], xr[2])
+@ 
+
+Because we are going to create a reasonable number of models, here is
+a function that simplifies this, requiring just speciation and
+extinction functions:
+<<>>=
+make.primates <- function(lambda, mu)
+  make.quasse(phy, mass, mass.sd, lambda, mu)
+@ 
+and a function that constrains drift to zero
+<<>>=
+nodrift <- function(f)
+  constrain(f, drift ~ 0)
+@ 
+
+Create the likelihood functions where speciation is a constant, linear,
+sigmoidal, or hump-shaped function of log body mass.
+<<>>=
+f.c <- make.primates(constant.x, constant.x)
+f.l <- make.primates(linear.x, constant.x)
+f.s <- make.primates(sigmoid.x, constant.x)
+f.h <- make.primates(noroptimal.x, constant.x)
+@ 
+
+Start by fitting the constant model first (this will take quite a
+while; each function evaluation takes about $5$~s).
+<<cache=TRUE>>=
+control <- list(parscale=.1, reltol=0.001)
+mle.c <- find.mle(nodrift(f.c), p, lower=0, control=control,
+                   verbose=0)
+@ 
+
+Starting points for the constrained analyses based on this constrained
+fit.
+<<>>=
+p.c <- mle.c$par
+p.l <- c(p.c[1], l.m=0, p.c[2:3])
+p.s <- p.h <- c(p.c[1], p.c[1], mean(xr), 1, p.c[2:3])
+names(p.s) <- argnames(nodrift(f.s))
+names(p.h) <- argnames(nodrift(f.h))
+@ 
+
+<<cache=TRUE>>=
+mle.l <- find.mle(nodrift(f.l), p.l, control=control, verbose=0)
+mle.s <- find.mle(nodrift(f.s), p.s, control=control, verbose=0)
+mle.h <- find.mle(nodrift(f.h), p.h, control=control, verbose=0)
+@ 
+
+And run the fits with the drift parameter added, starting from the
+constrained model's ML parameters:
+<<cache=TRUE>>=
+mle.d.l <- find.mle(f.l, coef(mle.l, TRUE), control=control, verbose=0)
+mle.d.s <- find.mle(f.s, coef(mle.s, TRUE), control=control, verbose=0)
+mle.d.h <- find.mle(f.h, coef(mle.h, TRUE), control=control, verbose=0)
+@ 
+
+\begin{figure}
+  \centering
+<<fig=TRUE,echo=FALSE,results=hide>>=
+xmin <- 2
+xmax <- max(mass)
+
+i0 <- c(1, 48, 53, 137, 153)
+i1 <- c(47, 52, 136, 152, 233)
+
+par(mfrow=c(1, 1), mar=c(2.5, .5, .5, .5), mgp=c(3, .5, 0))
+plot(phy, cex=.9, label.offset=1.5, tip.color="white",
+     x.lim=c(0, 107))
+
+lastPP <- get("last_plot.phylo", envir=.PlotPhyloEnv)
+xx <- lastPP$xx[1:lastPP$Ntip]
+yy <- lastPP$yy[1:lastPP$Ntip]
+
+p.h <- coef(mle.h)
+y <- diff(p.h[1:2]) * .1 + p.h[1]
+f <- function(x) noroptimal.x(x, p.h[1], p.h[2], p.h[3], p.h[4]) - y
+peak <- c(uniroot(f, c(min(mass), p.h[3]))$root,
+          uniroot(f, c(max(mass), p.h[3]))$root)
+
+x0 <- max(xx) + 0.02 * diff(par("usr")[1:2])
+x1 <- max(xx) + 0.15 * diff(par("usr")[1:2])
+mass2 <- (mass - xmin) / (xmax - xmin)
+mass3 <- mass2 * (x1 - x0) + x0
+segments(x0, yy, mass3, yy, 
+         col=ifelse(mass < peak[1] | mass > peak[2], "black", "red"))
+
+peak3 <- (peak - xmin)/(xmax - xmin) * (x1 - x0) + x0
+abline(v=peak3, lty=2)
+
+axis.at <- pretty(c(mass, xmin, xmax))
+axis.at <- axis.at[axis.at >= xmin & axis.at <= xmax]
+axis(1, (axis.at - xmin)/(xmax - xmin) * (x1 - x0) + x0, axis.at, cex.axis=.7)
+axisPhylo(cex.axis=.7)
+
+dx <- diff(par("usr")[1:2])
+dy <- diff(par("usr")[3:4])
+
+text(mean(range(lastPP$xx)), min(yy) - 0.11 * dy, "Time (Ma)",
+     xpd=NA, cex=.7)
+text(mean(c(x1, x0)),        min(yy) - 0.11 * dy, "ln(mass)",
+     xpd=NA, cex=.7)
+
+## This is not correct.
+## segments(x1 + 0.01 * dx, yy[i0]+.3, x1 + 0.01 * dx, yy[i1]-.3)
+## text(x1 + 0.02 * dx, (yy[i0] + yy[i1])/2,
+##     c("Strepsirhini", "Tarsiidae", "Platyrrhini", "Hominoidea",
+##       "Cercopithecoidea"), cex=.7, adj=c(0, .5))
+@ 
+\caption{The primate tree from \citet{Vos-2006}. Log body size (in
+  grams) is shown by the horizontal bar for each species \citep[data
+  from][]{Redding-2009-1052}.  The vertical dashed lines indicate the
+  approximate ranges of body masses in which elevated speciation rates
+  were inferred, and extant species whose mass falls in this range
+  have their mass coloured red.}
+\label{fig:primate-tree}
+\end{figure}
+
+The fits can then be compared.  These are all against the constant
+speciation rate fit (listed as ``full'' in the table).  The support is
+strongest for the ``hump'' shaped fit.
+<<>>=
+anova(mle.c, linear=mle.l, sigmoidal=mle.s, hump=mle.h)
+@ 
+
+Next, consider splitting the tree.  MEDUSA \citep{Alfaro-2009-13410}
+identified a shift in diversification rates at the base of the
+superfamily Cercopithecoidea (old world monkeys).  In this tree, this
+corresponds to node $153$.  It's easiest to work with node names, so
+I'm going to add some here
+<<>>=
+phy$node.label <- paste("nd", 1:phy$Nnode, sep="")
+@ 
+Then, we can construct ``split'' QuaSSE objects.  For the constant
+speciation rate case:
+<<>>=
+f.cc <- make.quasse.split(phy, mass, mass.sd, constant.x, constant.x, 
+                            "nd153", Inf)
+argnames(f.cc)
+@ 
+Here, the speciation and extinction functions may either be a single
+function (as above), in which case all partitions get the same
+function for speciation and extinction.  Alternatively, lists of
+functions can be added, in which case different partitions may have
+different functions.  The \code{Inf} indicates that the split should
+go at the base of the internal edge subtending node \code{nd153},
+which is consistent with MEDUSA.  Passing in 0 would put it
+immediately prior to the node, and any other numeric value would place
+it at that point in time from the present.
+
+The first set of parameters refers to the ``background'' group, the
+second refers refers to the ``foreground'' clade rooted at
+\code{nd153}.
+
+To simplify things, we will constrain drift to be zero and assume that
+both partitions have the same diffusion coefficient.
+<<>>=
+g.cc <- constrain(f.cc, drift.1 ~ 0, drift.2 ~ 0, 
+                  diffusion.2 ~ diffusion.1)
+argnames(g.cc)
+@ 
+
+Generate a starting point from the single partition ML point:
+<<>>=
+p.cc <- c(p.c, p.c[1:2])
+names(p.cc) <- argnames(g.cc)
+@ 
+
+At this point, the split function should have basically the same
+likelihood as the single partition function:
+<<cache=TRUE>>=
+mle.c$lnLik - g.cc(p.cc)
+@ 
+
+And run the ML search
+<<cache=TRUE>>=
+mle.cc <- find.mle(g.cc, p.cc, control=control, lower=0, verbose=0)
+@ 
+
+Repeat this for linear speciation functions:
+<<>>=
+f.ll <- make.quasse.split(phy, mass, mass.sd, linear.x, constant.x,
+                            "nd153", Inf)
+g.ll <- constrain(f.ll, drift.1 ~ 0, drift.2 ~ 0, 
+                  diffusion.2 ~ diffusion.1)
+g.lc <- constrain(g.ll, l.m.2 ~ 0)
+g.cl <- constrain(g.ll, l.m.1 ~ 0)
+@ 
+
+Generate a starting points: start with the function where both
+speciation rates are linear functions.
+<<>>=
+p.cc <- coef(mle.cc)
+p.ll <- c(p.cc[1], 0, p.cc[2:4], 0, p.cc[5])
+names(p.ll) <- argnames(g.ll)
+@ 
+
+The functions with just one speciation rate as a linear function can
+then be generated from this, by subsetting against the argument names
+<<>>=
+p.lc <- p.ll[argnames(g.lc)]
+p.cl <- p.ll[argnames(g.cl)]
+@ 
+
+Run the ML searches for these models:
+<<cache=TRUE>>=
+mle.lc <- find.mle(g.lc, p.lc, control=control, verbose=0)
+mle.cl <- find.mle(g.cl, p.cl, control=control, verbose=0)
+mle.ll <- find.mle(g.ll, p.ll, control=control, verbose=0)
+@ 
+
+<<>>=
+g.cl(coef(mle.ll)[argnames(g.cl)])
+@ 
+
+We can then compare the models again:
+<<>>=
+anova(mle.cc, linear=mle.l, sigmoidal=mle.s, hump=mle.h,
+      part.constant=mle.cc,
+      part.linear.bg=mle.lc,
+      part.linear.fg=mle.cl,
+      part.linear=mle.ll)
+@ 
+This supports the model with a linear ``foreground'' rate of
+speciation (lowest AIC value).  Looking at the coefficients for this model:
+<<>>=
+coef(mle.cl)
+@ 
+The speciation rate is a negative function of body size -- increasing
+body size decreases the speciation rate.
+
+\subsection{Controlling the calculations}
+
+There are a number of ways to control the behaviour of the integrator:
+most of these are a speed/accuracy trade-off.  These should be
+supplied in the list passed in as the argument \code{control}.  The
+\code{make.quasse} function attempts to select defaults that result in
+acceptable performance and accuracy, but this is not always possible.
+
+\begin{itemize}
+\item \code{method}: one of \code{fftC} or \code{fftR} to switch
+  between \code{C} (fast) and \R (slow) back-ends for the integration.
+  Both use non-adaptive fft-based convolutions.  Eventually, an
+  adaptive methods-of-lines approach will be available.
+  
+\item \code{dt.max}: Maximum time step to use for the integration.
+  By default, this will be set to 1/1000 of the tree depth.  Smaller
+  values will slow down calculations, but improve accuracy.
+
+\item \code{nx}: The number of bins into which the character space
+  is divided (default=1024).  Larger values will be slower and more
+  accurate.  For the \code{fftC} integration method, this should be an
+  integer power of 2 (512, 2048, etc).
+
+\item \code{r}: Scaling factor that multiplies \code{nx} for a "high
+  resolution" section at the tips of the tree (default=4, giving a
+  high resolution character space divided into 4096 bins).  This helps
+  improve accuracy while possibly tight initial probability
+  distributions flatten out as time progresses towards the root.
+  Larger values will be slower and more accurate.  For the \code{fftC}
+  integration method, this should be a power of 2 (2, 4, 8, so that
+  \code{nx*r} is a power of 2).
+  
+\item \code{tc}: where in the tree to switch to the low-resolution
+  integration (zero corresponds to the present, larger numbers moving
+  towards the root).  By default, this happens at 10\% of the tree
+  depth.  Smaller values will be faster, but less accurate.
+
+\item \code{xmid}: Mid point to center the character space.  By
+  default this is at the mid point of the extremes of the character
+  states.
+
+\item \code{tips.combined}: Get a modest speed-up by simultaneously
+  integrating all tips?  By default, this is \code{FALSE}, but
+  speedups of up to 25\% are possible with this set to \code{TRUE}.
+
+\item \code{w}: Number of standard deviations of the normal
+  distribution induced by Brownian motion to use when doing the
+  convolutions (default=5).  Probably best to leave this one alone.
+\end{itemize}
+
 \section{Topics not covered}
 
 I have not covered several included models here, but information can
@@ -981,15 +1377,20 @@ be found in the online documentation.
   the tree to have different parameters.  This is implemented for
   birth-death models (\code{make.bd.split}, which is identical to
   MEDUSA), \BiSSE (\code{?make.bisse.split}), and \MuSSE\
-  (?make.musse.split).
+  (\code{?make.musse.split}).
 \item Time-dependent models.  In these, time is divided into
   ``epochs'', each of which may have different parameters.  This is
   implemented for \BiSSE\ (\code{?make.bisse.td}) and \MuSSE\
-  (\code{?make.musse.td}).
+  (\code{?make.musse.td}).  Another model of time-dependence is also
+  possible, where rates are arbitrary functions of time: implemented
+  for plain birth-death models (\code{?make.bd.t}), \BiSSE\
+  (\code{?make.bisse.td}) and \MuSSE\ (\code{?make.musse.td}).
 \item Brownian motion.  A very simple-minded Brownian motion
   likelihood calculation is included.  This allows estimation of the
   diffusion parameter of a Brownian motion process for the evolution
   of a single continuous trait (\code{?make.bm}).
+\item Stochastic character mapping.  Currently implemented only for
+  Markov models of discrete character evolution (?asr.stoch.mkn).
 \end{itemize}
 
 \bibliographystyle{refstyle}
@@ -997,12 +1398,12 @@ be found in the online documentation.
 
 \end{document}
 
-%%% Local Variables:
-%%% TeX-master: t
-%%% End:
-
-% LocalWords:  phy mle lik coef anova mk mcmc nsteps las xlab ylab abline eb yy
-% LocalWords:  lnLik argnames rbind tmp sapply eval Rdata topright lty setdiff
-% LocalWords:  len csv dimorph tipmap plt loc cbind rowSums cumsum rect mfrow
-% LocalWords:  cex sqrt rle ym Chionidae Thinocoridae ifelse Dromas nex
-% LocalWords:  Nc musse bm
+% LocalWords:  Bollback ip Gorjanc's Sweave ld Rnw bd phy lik argnames surv mle
+% LocalWords:  nlm coef logLik lnLik anova lrt mcmc nsteps las ylab xlab abline
+% LocalWords:  topright lty mk eb rbind tmp sapply setdiff len csv dimorph plt
+% LocalWords:  tipmap yy loc cbind rowSums cumsum rect mfrow cex sqrt rle ym Nc
+% LocalWords:  Chionidae Thinocoridae ifelse Dromas nex musse quasse sd nodrift
+% LocalWords:  parscale xmid xr lc sc noroptimal reltol xmin xmax mgp lim dx
+% LocalWords:  lastPP phylo envir PlotPhyloEnv Ntip uniroot usr dy xpd ln nd dt
+% LocalWords:  Tarsiidae Hominoidea Cercopithecoidea superfamily Nnode sep
+% LocalWords:  fftC fftR fft nx tc bm

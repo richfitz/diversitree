@@ -7,7 +7,7 @@ diversitree-tutorial.pdf: diversitree-tutorial.tex
 	pdflatex diversitree-tutorial
 
 diversitree-tutorial.tex: diversitree-tutorial.Rnw
-	R CMD Sweave diversitree-tutorial.Rnw
+	Sweave.sh -c diversitree-tutorial.Rnw
 	rm -f Rplots.pdf
 
 tidy:
