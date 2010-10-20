@@ -1060,7 +1060,7 @@ Here, I will recreate the analysis of primate diversification from
 keep things relatively simple.
 <<>>=
 phy <- read.nexus("data/Vos-2006.nex")
-d <- read.csv("data/Redding-2006.csv")
+d <- read.csv("data/Redding-2010.csv")
 mass <- log(d$mass)
 names(mass) <- d$tip.label
 @ 
@@ -1196,7 +1196,7 @@ text(mean(c(x1, x0)),        min(yy) - 0.11 * dy, "ln(mass)",
 @ 
 \caption{The primate tree from \citet{Vos-2006}. Log body size (in
   grams) is shown by the horizontal bar for each species \citep[data
-  from][]{Redding-2009-1052}.  The vertical dashed lines indicate the
+  from][]{Redding-2010-1052}.  The vertical dashed lines indicate the
   approximate ranges of body masses in which elevated speciation rates
   were inferred, and extant species whose mass falls in this range
   have their mass coloured red.}
