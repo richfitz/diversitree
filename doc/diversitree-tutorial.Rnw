@@ -1302,7 +1302,7 @@ g.cl(coef(mle.ll)[argnames(g.cl)])
 
 We can then compare the models again:
 <<>>=
-anova(mle.cc, linear=mle.l, sigmoidal=mle.s, hump=mle.h,
+anova(mle.c, linear=mle.l, sigmoidal=mle.s, hump=mle.h,
       part.constant=mle.cc,
       part.linear.bg=mle.lc,
       part.linear.fg=mle.cl,
@@ -1376,7 +1376,7 @@ be found in the online documentation.
   \citep{Alfaro-2009-13410}, these models allow different regions of
   the tree to have different parameters.  This is implemented for
   birth-death models (\code{make.bd.split}, which is identical to
-  MEDUSA), \BiSSE (\code{?make.bisse.split}), and \MuSSE\
+  MEDUSA), \BiSSE\ (\code{?make.bisse.split}), and \MuSSE\
   (\code{?make.musse.split}).
 \item Time-dependent models.  In these, time is divided into
   ``epochs'', each of which may have different parameters.  This is

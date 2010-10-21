@@ -1,14 +1,13 @@
 syntax: glob
 *.o
 *.so
-diversitree.unrel/src/Makevars
-diversitree.unrel/configure
-diversitree.unrel/a.out.dSYM
-diversitree.unrel/config.log
-diversitree.unrel/config.status
-diversitree.unrel/autom4te.cache
-diversitree.unrel/src/config.h
-diversitree.unrel/src/config.h.in
+diversitree/configure
+diversitree/a.out.dSYM
+diversitree/config.log
+diversitree/config.status
+diversitree/autom4te.cache
+diversitree/src/config.h
+diversitree/src/config.h.in
 diversitree.unrel/test
 old
 .DS_Store
@@ -21,6 +20,8 @@ doc/*.bbl
 doc/*.blg
 doc/*.dvi
 doc/*.log
+doc/*.toc
+doc/*.out
 doc/*.tex
 doc/*.Rdata
 logo
@@ -28,3 +29,7 @@ www
 future-ideas
 doc/cache
 doc/auto
+diversitree.skel
+pub/*.aux
+pub/*.log
+pub/*.pdf
