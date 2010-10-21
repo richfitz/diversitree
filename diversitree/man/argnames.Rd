@@ -2,8 +2,10 @@
 \alias{argnames}
 \alias{argnames<-}
 \alias{argnames.bisse}
+\alias{argnames.geosse}
 \alias{argnames.constrained}
 \alias{argnames<-.bisse}
+\alias{argnames<-.geosse}
 \alias{argnames<-.constrained}
 
 \title{Argument Names for Vector-Argument Functions}
@@ -33,7 +35,7 @@ argnames(x) <- value
   \item{...}{Ignored arguments to future methods.}
 }
 
-\details{Methods exist for all models: \code{bisse}, \code{bd},
+\details{Methods exist for all models: \code{bisse}, \code{geosse}, \code{bd},
   \code{yule}, \code{mk2}, and \code{mkn}.  These are particulary useful
   for \code{mkn} as the number of parameters for the Q matrix can be
   very large.}

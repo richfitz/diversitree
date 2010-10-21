@@ -210,11 +210,12 @@ plot(lambda0 ~ mu0, out)
 
 
 \seealso{
-  \code{\link{make.bd}}, \code{\link{make.bisse}}, and
-  \code{\link{make.mkn}}, all of which provide likelihood functions that
-  are suitable for use with this function.  The help page for
-  \code{\link{make.bd}} has further examples of using MCMC, and
-  \code{\link{make.bisse}} has examples of using priors with MCMC.
+  \code{\link{make.bd}}, \code{\link{make.bisse}},
+  \code{\link{make.geosse}}, and \code{\link{make.mkn}}, all of which
+  provide likelihood functions that are suitable for use with this
+  function.  The help page for \code{\link{make.bd}} has further
+  examples of using MCMC, and \code{\link{make.bisse}} has examples of
+  using priors with MCMC.
 }
 
 \references{

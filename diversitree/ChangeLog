@@ -1,3 +1,7 @@
+2010-10-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* many: Added GeoSSE to the package.
+
 2010-10-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* many: Added QuaSSE to the package, including the configure build

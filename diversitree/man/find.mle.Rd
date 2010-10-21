@@ -4,11 +4,6 @@
 \alias{logLik.fit.mle}
 \alias{anova.fit.mle}
 
-% \alias{find.mle.bisse}
-% \alias{starting.point.bisse}
-% \alias{starting.point} % DEP
-% \alias{bisse.starting.point} % DEP
-
 \title{Maximimum Likelihood Inference}
 
 \description{Find the maximum likelihood point of a model by nonlinear
@@ -20,9 +15,6 @@ find.mle(func, x.init, method, ...)
 \method{coef}{fit.mle}(object, full=FALSE, extra=FALSE, ...)
 \method{logLik}{fit.mle}(object, ...)
 \method{anova}{fit.mle}(object, ..., sequential=FALSE)
-%\method{find.mle}{bisse}(func, x.init, method, fail.value=NA, ...)
-%bisse.starting.point(tree, q.div=5)
-%starting.point(tree, q.div=5)
 }
 
 \arguments{
@@ -61,10 +53,10 @@ find.mle(func, x.init, method, ...)
 
   Different methods will be dispatched for different types of likelihood
   functions.  Currently all models in \code{diversitree} are supported
-  (\code{bisse}, \code{mk2}, \code{mkn}, \code{bd}, and \code{yule}).
-  With the exception of the Yule pure-birth process, these methods just
-  specify different default arguments for the underlying optimisation
-  routines (the Yule model has an analytical solution, and no
+  (\code{bisse}, \code{geosse}, \code{mk2}, \code{mkn}, \code{bd}, and 
+  \code{yule}).  With the exception of the Yule pure-birth process, these
+  methods just specify different default arguments for the underlying
+  optimisation routines (the Yule model has an analytical solution, and no
   optimisation step is required).  Generally, it will not be necessary
   to specify the \code{method} argument to \code{find.mle} as a sensible
   method is chosen during dispatch.

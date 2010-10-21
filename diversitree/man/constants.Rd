@@ -18,9 +18,9 @@ ROOT.ALL
 }
 
 \description{
-  These constants are used by \code{\link{make.bisse}} and
-  \code{\link{make.mkn}} for specifying root behaviour.
+  These constants are used by \code{\link{make.bisse}}, 
+  \code{\link{make.geosse}} and \code{\link{make.mkn}}
+  for specifying root behaviour.
 }
 
 \keyword{internal}
-
