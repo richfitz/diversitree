@@ -17,6 +17,8 @@ make.quasse <- function(tree, states, states.sd, lambda, mu,
                                    cache$tips)
   } else if ( control$method == "fftR" ) {
     branches <- make.branches.quasse.fftR(control)
+  } else if ( control$method == "mol" ) {
+    branches <- make.branches.quasse.mol(control)
   }
 
   initial.conditions <- make.initial.conditions.quasse(control)

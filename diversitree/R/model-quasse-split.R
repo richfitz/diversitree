@@ -77,7 +77,7 @@ make.cache.quasse.split <- function(tree, states, states.sd,
                                     lambda, mu, nodes, split.t,
                                     control, sampling.f) {
   ## 1: tree
-  tree <- check.tree(tree)
+  tree <- check.tree(tree, node.labels=TRUE)
 
   ## 2: states & errors
   tmp <- check.states.quasse(tree, states, states.sd)

@@ -48,7 +48,7 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
                                    unresolved=NULL, sampling.f=NULL,
                                    nt.extra=10) {
   ## 1: tree
-  tree <- check.tree(tree)
+  tree <- check.tree(tree, node.labels=TRUE)
 
   ## 2: states:
   states <- check.states(tree, states)

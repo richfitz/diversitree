@@ -1,3 +1,20 @@
+2010-10-25  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/check.R: No longer check node labels by default (duplicates
+	are not a problem for non-split methods).
+
+	* R/model-quasse-mol.R, R/model-quasse-common.R, R/model-quasse.R:
+	Methods-of-lines integration now works,	albeit slowly.
+
+	* R/util.R: deSolve 1.8.1 OK
+
+	* cleanup: added
+
+	* configure.win, src/Makevars.win: Hopefully build on windows
+	(untested).
+
+	* 
+
 2010-10-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* many: Added GeoSSE to the package.

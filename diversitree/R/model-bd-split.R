@@ -72,7 +72,7 @@ argnames.bd.split <- function(x, ...) {
 ## 5: make.cache
 make.cache.bd.split <- function(tree, nodes, split.t=Inf,
                                 sampling.f=NULL, unresolved=NULL) {
-  tree <- check.tree(tree)
+  tree <- check.tree(tree, node.labels=TRUE)
 
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")

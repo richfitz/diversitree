@@ -5,8 +5,8 @@
 ## approach:
 ##   - BiSSE (model-bisse.R)
 ##   - MuSSE (multi-state BiSSE - model-musse.R)
-##   - BiSSEtd (time-dependent BiSSE - model-bissetd.R)
-##   - QuaSSE (MOL integrator only)
+##   - QuaSSE
+##   - Time-dependent BiSSE, MuSSE
 ##   - BD2 (HIV model)
 
 ## I have abstracted most of the calculations in a (hopefully) general

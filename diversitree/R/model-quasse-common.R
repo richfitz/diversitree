@@ -67,7 +67,9 @@ check.control.quasse <- function(control, tree, states) {
                    w=5,
                    method="fftC",
                    tips.combined=FALSE,
-                   flags=FFTW.MEASURE,
+                   flags=FFTW.MEASURE, # fftC only
+                   atol=1e-6, # mol only
+                   rtol=1e-6, # nol only
                    verbose=FALSE)
 
   nx.changed <- "nx" %in% names(control)
@@ -80,7 +82,7 @@ check.control.quasse <- function(control, tree, states) {
     control$dx <- xr * xr.mult / control$nx
 
   ## Eventually, this will contain "mol"
-  method <- match.arg(control$method, c("fftC", "fftR"))
+  method <- match.arg(control$method, c("fftC", "fftR", "mol"))
 
   if ( control$tips.combined && method != "fftC" )
     stop("'tips.combined' can only be used with method 'fftC'")
@@ -102,7 +104,7 @@ check.control.quasse <- function(control, tree, states) {
   ## These will be passed through to some C code, so type safety is
   ## important.
   ctrl.int <- c("nx", "flags", "verbose")
-  ctrl.num <- c("tc", "dt.max", "r", "xmid", "w")
+  ctrl.num <- c("tc", "dt.max", "r", "xmid", "w", "atol", "rtol")
   control[ctrl.int] <- sapply(control[ctrl.int], as.integer)
   control[ctrl.num] <- sapply(control[ctrl.num], as.numeric)
 
@@ -140,14 +142,22 @@ quasse.extent <- function(control, drift, diffusion) {
   r  <- control$r
   w <- control$w
 
-  mean <- drift * dt
-  sd   <- sqrt(diffusion * dt)
+  if ( control$method == "mol" ) {
+    ndat <- nx*c(r, 1)
+    padding <- NULL
+  } else {
+    mean <- drift * dt
+    sd   <- sqrt(diffusion * dt)
 
   ## Another option here is to compute all the possible x values and
-  ## then just drop the ones that are uninteresting?
-  nkl <- ceiling(-(mean - w * sd)/dx) * c(r, 1)
-  nkr <- ceiling( (mean + w * sd)/dx) * c(r, 1)
-  ndat <- nx*c(r, 1) - (nkl + 1 + nkr)
+    ## then just drop the ones that are uninteresting?
+    nkl <- ceiling(-(mean - w * sd)/dx) * c(r, 1)
+    nkr <- ceiling( (mean + w * sd)/dx) * c(r, 1)
+    ndat <- nx*c(r, 1) - (nkl + 1 + nkr)
+
+    padding <- cbind(nkl, nkr)
+    storage.mode(padding) <- "integer"
+  }
 
   x0.2 <- xmid - dx*ceiling((ndat[2] - 1)/2)
   x0.1 <- x0.2 - dx*(1 - 1/r)
@@ -156,8 +166,6 @@ quasse.extent <- function(control, drift, diffusion) {
   ## calculations work for both spaces simultaneously.
   x <- list(seq(x0.1, length=ndat[1], by=dx/r),
             seq(x0.2, length=ndat[2], by=dx))
-  padding <- cbind(nkl, nkr)
-  storage.mode(padding) <- "integer"
 
   tr <- seq(r, length=ndat[2], by=r)
 

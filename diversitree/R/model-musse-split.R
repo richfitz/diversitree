@@ -56,7 +56,7 @@ find.mle.musse.split <- function(func, x.init, method, fail.value=NA,
 make.cache.musse.split <- function(tree, states, k, nodes, split.t,
                                    sampling.f, strict) {
   ## 1: tree
-  tree <- check.tree(tree)
+  tree <- check.tree(tree, node.labels=TRUE)
 
   ## 2: states:
   states <- check.states(tree, states,

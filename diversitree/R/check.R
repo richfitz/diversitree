@@ -1,7 +1,7 @@
 ## Checking utilities.  These are things that happen over and over
 ## again, and are tedious to have to write into each function.
 check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
-                       node.labels=TRUE) {
+                       node.labels=FALSE) {
   if ( !inherits(tree, "phylo") )
     stop("'tree' must be a valid phylo tree")
   if ( ultrametric && !is.ultrametric(tree) )

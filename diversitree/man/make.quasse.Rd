@@ -97,6 +97,16 @@ starting.point.quasse(tree, states, states.sd=NULL)
   not be made within a call to \code{mclapply}, or they will not share
   memory with the main \R thread, and will not work (this will cause an
   error, but should no longer crash \R).
+
+  The method has less general testing than BiSSE, and is a little more
+  fragile.  In particular, because of the way that I chose to implement
+  the integrator, there is a very real chance of likelihood calculation
+  failure when your data are a poor fit to the model; this can be
+  annoyingly difficult to diagnose (you will just get a \code{-Inf} log
+  likelihood, but the problem is often just caused by two sister species
+  on short branches with quite different states).  There are also a
+  large number of options for fine tuning the integration, but these
+  aren't really discussed in any great detail anywhere.
 }
 
 \examples{
@@ -127,7 +137,6 @@ control.C.1 <- list(dt.max=1/200)
 control.C.2 <- c(control.C.1, tips.combined=TRUE)
 
 control.R.1 <- list(dt.max=1/200, method="fftR")
-
 lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.1)
 (ll.C.1 <- lik.C.1(pars)) # -43.84827
 
