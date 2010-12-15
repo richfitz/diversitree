@@ -96,14 +96,16 @@ do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
     states <- 1:k
   }
   
-  state.beg <- anc.state[edge[,1]]
-  state.end <- anc.state[edge[,2]]
+  state.beg <- as.integer(anc.state[edge[,1]])
+  state.end <- as.integer(anc.state[edge[,2]])
 
   f <- function(i)
     stoch.branch.mkn(pars, edge.length[i],
                      state.beg[i], state.end[i], k, as.01)
 
   history <- lapply(seq_along(state.beg), f)
+
+  
   make.history(NULL, tip.state, node.state, history, TRUE, states,
                FALSE)
 }
@@ -119,6 +121,28 @@ stoch.branch.mkn <- function(pars, len, state.beg, state.end, k,
   ## this can be done faster in C for any number of states.  Probably
   ## also changing the first time to sample from a conditional
   ## exponential when state.beg != state.end?
+
+  ## Following Nielsen [30], when the beginning and end states differ,
+  ## there must be at least one change along the branch and we can
+  ## condition on this.  Let t_1 be the time of the first change, and
+  ## t be the length of the branch over which a change occurs
+  ## (0 < t_1 < t).  Then
+  ##   f(t_1 | t_1 < t) = (-q exp(-(-q)t_1)) / (1 - exp(-(-q)t))
+  ## To do this, compute the CDF:
+  ##   Integrate[pdf,{t_1,0,t_1}]
+  ##   F(t_1 | t_1 < t) = (exp(t(-q)) - exp((t-t_1)(-q)))/(exp(t(-q))-1)
+  ## and invert the CDF:
+  ##   ... = t(-q)-log((1-exp(t(-q)))(
+  ##   invcdf <- function(p, t, qii) {
+  ##     tq <- t * (-qii)
+  ##     etq <- exp(tq)
+  ##     (tq - log(1 - etq) - log(etq / (1-etq) + p)) / (-qii)
+  ##   }
+  ##   q <- q.diag[state.beg]
+  ##   curve((-qii*exp(-(-qii)*x)) / (1 - exp(-(-qii)*len)), 0, len)
+  ##   integrate(function(x) (-qii*exp(-(-qii)*x)) / (1 - exp(-(-qii)*len)),
+  ##             0, len)
+  ##   curve((exp(len*(-qii)) - exp((len-x)*(-qii)))/(exp(len*(-qii))-1), 0, len)
   f2 <- function(state) {
     t <- 0
     changes <- list(c(t, state))
@@ -132,8 +156,8 @@ stoch.branch.mkn <- function(pars, len, state.beg, state.end, k,
   f3 <- function(state) {
     t <- 0
     changes <- list(c(t, state))
-    while ( (t <- t + rexp(1, pars[state])) < len ) {
-      state <- i[[state]][sample(k-1, 1, FALSE, pars[1,])]
+    while ( (t <- t + rexp(1, q.diag[state])) < len ) {
+      state <- i[[state]][sample(k-1, 1, FALSE, pars[state,])]
       changes[[length(changes)+1]] <- c(t, state)      
     }
     list(state, changes)    

@@ -27,6 +27,7 @@ boxconstrain <- function(f, lower, upper, fail.value=-Inf) {
 }
 
 big.brother <- function(f, interval=1) {
+  f <- f # force argument to prevent recursion (pass by value)
   .x.eval <- list()
   .y.eval <- list()
   function(x, ...) {

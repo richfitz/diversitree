@@ -175,7 +175,7 @@ make.branches.bisse <- function(safe=FALSE) {
   bisse.ode <- make.ode("derivs_bisse", "diversitree",
                         "initmod_bisse", 4, safe)
   branches <- function(y, len, pars, t0)
-    t(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+    t.default(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
   
   make.branches(branches, 3:4)
 }

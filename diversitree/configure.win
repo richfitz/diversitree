@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ## Simple configure script for windows.
-if [ -f $LIB_FFTW/include/fftw3.h ]; then
+if [ -f $LIB_FFTW/fftw3.h ]; then
     echo '#define HAVE_FFTW3_H 1' > src/config.h
     echo "Using fftw for QuaSSE FFT calculations"    
 else

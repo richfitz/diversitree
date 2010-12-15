@@ -122,7 +122,6 @@ make.split.phylo.vec <- function(phy, nodes, group=NULL) {
 
   edge <- phy$edge
 
-  descendants <- diversitree:::descendants
   descendants.idx <- function(node)
     which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
   

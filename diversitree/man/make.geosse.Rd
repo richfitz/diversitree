@@ -136,7 +136,9 @@ lik(pars) # -297.6749
 ## A poorly-informed guess at a starting point.
 p <- starting.point.geosse(phy)
 
-## Start an ML search from this point (takes several seconds to run).
+## Start an ML search from this point (takes several seconds to run, and
+## is not run by default).
+\dontrun{
 fit <- find.mle(lik, p)    # default method is "subplex"
 logLik(fit) # -295.0275
 
@@ -150,8 +152,10 @@ logLik(fit.d) # -296.5956
 
 ## A model with constraints on the speciation rates.
 lik.s <- constrain(lik, sA ~ sB, sAB ~ 0)
+lik.s(p[-c(2,3)]) # NaN?
 fit.s <- find.mle(lik.s, p[-c(2,3)])
 logLik(fit.s) # -302.5542
+}
 
 ## "Skeletal tree" sampling is supported.  For example, if your tree
 ## includes all AB species, half of A species, and a third of B species,

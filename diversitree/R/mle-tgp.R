@@ -8,9 +8,7 @@
 ## will require substantially more tweaking than normal to make this
 ## work well.  An iterative strategy may be required, and it may not
 ## be possible to run this totally unsupervised.
-do.mle.search.tgp <- function(func, x.init, fail.value=-Inf,
-                              control=list(), lower=-Inf, upper=Inf,
-                              prev=NULL, ...) {
+do.mle.search.tgp <- function(func, x.init, control, lower, upper) {
   if ( !require(tgp) )
     stop("This method requires the tgp package")
   make.f.tgp <- function(func, parallel=FALSE) {
@@ -22,7 +20,8 @@ do.mle.search.tgp <- function(func, x.init, fail.value=-Inf,
       -as.numeric(unlist(lapply(matrix.to.list(x),
                                 function(x) func(x))))
   }
-  
+
+  prev <- control$prev
   if ( is.null(prev) ) {
     ## Brand new
     if ( is.vector(x.init) )

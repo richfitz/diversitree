@@ -13,8 +13,6 @@
 	* configure.win, src/Makevars.win: Hopefully build on windows
 	(untested).
 
-	* 
-
 2010-10-21  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* many: Added GeoSSE to the package.

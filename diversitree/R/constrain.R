@@ -185,3 +185,23 @@ update.constrained <- function(object, free, ...) {
   else
     func
 }
+
+## This is a simple constraining function...information coming soon
+## (not exported)
+constrain.i <- function(f, p, i) {
+  n <- length(i)
+  g <- function(x) {
+    if ( length(x) != n )
+      stop(sprintf("Incorrect parameter length: expected %d, got %d",
+                   n, length(x)))
+    p[i] <- x
+    f(p)
+  }
+
+  class(g) <- c("constrained.i", class(f)) # HACK!
+  tmp <- try(argnames(f), silent=TRUE)
+  if ( !inherits(tmp, "try-error") && !is.null(tmp) )
+    attr(g, "argnames") <- tmp[i]
+  attr(g, "func") <- f
+  g
+}

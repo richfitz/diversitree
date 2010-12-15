@@ -20,7 +20,7 @@ void initmod_quasse_mol(void (* odeparms)(int *, double *)) {
      this is going to get an R object, it should be much easier to the
      checking there. */
   DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparmms");
+    R_GetCCallable("deSolve", "get_deSolve_gparms");
   parms_quasse = REAL(get_deSolve_gparms());
 } 
 

@@ -21,8 +21,8 @@ profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50, ...)
   \item{...}{Additional arguments passed through to \code{\link{plot}}.}
 }
 
-\usage{
-## For usage, see the example in \code{\link{make.bd}}
+\examples{
+## For usage, see the example in ?make.bd
 }
 
 \keyword{hplot}

@@ -19,5 +19,10 @@ where the path will be the path so that the files
   /path/to/fftw/lib/lib/fftw3.so
 exist.
 
+On Windows, set the environment variable LIB_FFTW to point to the
+directory that contains include/fftw.h, and install the package.
+
 If fftw is not found, installation will continue, but the (relatively)
-fast C based QuaSSE integration will not be available.
+fast C based QuaSSE integration will not be available.  The R based
+fft integrator and the method-of-lines integrator will be available.
+

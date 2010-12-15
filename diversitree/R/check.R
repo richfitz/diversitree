@@ -120,3 +120,10 @@ check.par.multipart <- function(pars, n.part, n.per) {
   }
   pars
 }
+
+## Check that a number can reasonably be considered an integer.
+check.integer <- function(x) {
+  if ( max(abs(x - round(x))) > 1e-8 )
+    stop("Non-integer argument for ", deparse(substitute(x)))
+  as.integer(x)
+}

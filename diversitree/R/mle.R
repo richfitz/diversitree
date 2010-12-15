@@ -9,12 +9,6 @@
 ## new("mle", call = call, coef = coef, fullcoef = unlist(fullcoef), 
 ##     vcov = vcov, min = min, details = oout, minuslogl = minuslogl, 
 ##     method = method)
-
-## TODO: These all assume that the function is "protectable" by
-## passing in 'fail.value' - this is not always the case.  However, if
-## I move the "protect" call *inside* of find.mle/mcmc this infelicity
-## goes away.
-
 find.mle <- function(func, x.init, method, ...) {
   UseMethod("find.mle")
 }
@@ -29,100 +23,108 @@ find.mle.default <- function(func, x.init, method,
   ans
 }
 
-do.mle.search <- function(func, x.init, method, fail.value=NA,
-                          hessian=FALSE, verbose=0,
-                          ...) {
+do.mle.search <- function(func, x.init, method, fail.value=-Inf,
+                          control=list(), lower=-Inf, upper=Inf,
+                          hessian=FALSE, verbose=0, ...) {
   method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm",
-                                "tgp"))
+                                "minqa", "tgp", "optimize", "int1d",
+                                "mixed", "subplexR"))
 
-  if ( verbose > 0 )
-    func2 <- big.brother(protect(func), verbose)
-  else
-    func2 <- protect(func)
+  control$y.init <- y.init <- func(x.init, ...)
+  if ( inherits(y.init, "try-error") )
+    stop("The above error occured when testing the starting position")
+  if ( !is.finite(y.init) )
+    stop("Starting point must have finite probability")
 
+  if ( is.null(control$fail.penalty) )
+    control$fail.penalty <- 1000
+
+  ## Can handle -Inf: subplex, nlminb, int1d, mixed, tgp
+  ## Require finite values: optim, nlm, minqa, optimize
+  if ( is.na(fail.value) ) {
+    if ( method %in% c("optim", "nlm", "minqa", "optimize") )
+      fail.value <- y.init - control$fail.penalty
+    else if ( method %in% c("subplex", "nlminb", "int1d", "mixed",
+                            "tgp", "subplexR") )
+      fail.value <- -Inf
+  }
+
+  ## Protect the function, and combine in the function arguments:
+  func2 <- protect(function(x) func(x, ...), fail.value)
+  
+  ## Add in verbosity, if needed:
+  control$verbose <- verbose > 0
+  if ( control$verbose )
+    func2 <- func2 <- big.brother(func2, verbose)
+
+  ## Remember the names of the input vector, or try and get it from
+  ## the supplied function.
   if ( is.null(names(x.init)) && !is.null(x.init) ) {
     names.v <- try(argnames(func), silent=TRUE)
-    if ( !inherits(names.v, "try-error") ) {
+    if ( inherits(names.v, "try-error") ) {
+      names.v <- NULL
+    } else {
       if ( length(names.v) != length(x.init) )
         stop("Invalid parameter names length: expected ",
              length(names.v), ", got ", length(x.init))
       names(x.init) <- names.v
     }
+  } else {
+    names.v <- names(x.init)
   }
 
-  ## TODO: check starting position like so.  However, doing this
-  ## fails because things like lower are passed through "...".
-  ## y0 <- try(func(x.init, ...))
-  ## if ( inherits(y0, "try-error") )
-  ##   stop("The above error occured when testing the starting position")
-  ## if ( !is.finite(y0) )
-  ##   stop("Starting point must have finite probability")
-
   mle.search <- get(sprintf("do.mle.search.%s", method))
-  ans <- mle.search(func2, x.init, fail.value, ...)
+  ans <- mle.search(func2, x.init, control, lower, upper)
+
   if ( verbose )
     cat("\n")
 
   if ( hessian ) {
     if ( !require(numDeriv) )
       stop("The package numDeriv is required to compute the hessian")
-    ans$hessian <- hessian(func, ans$par, ...)
+    ans$hessian <- hessian(func, ans$par)
   }
 
-  ans$func <- func
+  names(ans$par) <- names.v
+  ans$func <- func # drop or make option - this can be annoying
   ans$method <- method
   class(ans) <- "fit.mle"
   ans
 }
 
-do.mle.search.optim <- function(func, x.init, fail.value=NA,
-                                control=list(), lower=-Inf, upper=Inf,
-                                dx=1e-5, optim.method="L-BFGS-B",
-                                ...) {
-  if ( is.null(fail.value) || is.na(fail.value) )
-    fail.value <- func(x.init, ...) - 1000
+do.mle.search.optim <- function(func, x.init, control, lower, upper) {
   control <- modifyList(list(fnscale=-1,
-                             ndeps=rep(dx, length(x.init))), control)
-  ans <- optim(x.init, func, fail.value=fail.value,
-               control=control, lower=lower, upper=upper,
-               method=optim.method, ...)
-  names(ans)[names(ans) == "value"] <- "lnLik"
+                             ndeps=rep(1e-5, length(x.init)),
+                             optim.method="L-BFGS-B"), control)
 
+  optim.method <- control$optim.method
+  control.optim <- control[c("fnscale", "ndeps")]
+
+  ans <- optim(x.init, func, method=optim.method,
+               control=control.optim, lower=lower, upper=upper)
+  names(ans)[names(ans) == "value"] <- "lnLik"  
+  ans$optim.method <- optim.method
+  
   if ( ans$convergence != 0 )
     warning("Convergence problems in find.mle (optim): ",
             tolower(ans$message))
 
-  ans$optim.method <- optim.method
   ans
 }
 
-do.mle.search.subplex <- function(func, x.init, fail.value=NA,
-                                  control=list(), lower=-Inf,
-                                  upper=Inf, ...) {
-  if ( is.null(fail.value) || is.na(fail.value) )
-    fail.value <- -Inf
-  ## By default, a less agressive tolerance that is more likely to be
-  ## met.
-  control <- modifyList(list(reltol=.Machine$double.eps^0.25),
+do.mle.search.subplex <- function(func, x.init, control, lower, upper) {
+  ## By default, lower tolerance-- more likely to be met
+  control <- modifyList(list(reltol=.Machine$double.eps^0.25,
+                             parscale=rep(.1, length(x.init))),
                         control)
 
-  ## This is fairly simple minded treatment of box constraints
-  ## compared with optim.  In particular, no check is made to see if
-  ## the best solution falls at the edge of parameter space.
-  ## Realistically, this would not be too difficult to do (though
-  ## fairly expensive); we could check at the end of the optimisation
-  ## if the best point was close to a boundary (say, 10 * control
-  ## within boundaries) and set those points to their boundary
-  ## values.  Constrain the problem and start again.  I'm not sure if
-  ## this is worth the effort though.
   check.bounds(lower, upper, x.init)
   if ( any(is.finite(lower) | is.finite(upper)) )
     func2 <- invert(boxconstrain(func, lower, upper))
   else
     func2 <- invert(func)
 
-  ans <- subplex(x.init, func2, fail.value=fail.value,
-                 control=control, ...)
+  ans <- subplex(x.init, func2, control)
   ans$value <- -ans$value
   names(ans)[names(ans) == "value"] <- "lnLik"
 
@@ -133,13 +135,12 @@ do.mle.search.subplex <- function(func, x.init, fail.value=NA,
   ans
 }
 
-do.mle.search.nlminb <- function(func, x.init, fail.value=NA,
-                                 control=list(), lower=-Inf,
-                                 upper=Inf, ...) {
-  if ( is.null(fail.value) || is.na(fail.value) )
-    fail.value <- -Inf
-  ans <- nlminb(x.init, invert(func), fail.value=fail.value,
-                control=control, lower=lower, upper=upper, ...)
+do.mle.search.nlminb <- function(func, x.init, control, lower, upper) {
+  control.nlminb.ok <- c("eval.max", "iter.max", "trace", "abs.tol",
+                         "rel.tol", "x.tol", "step.min")
+  control.nlminb <- control[names(control) %in% control.nlminb.ok]
+  ans <- nlminb(x.init, invert(func), control=control.nlminb,
+                lower=lower, upper=upper)
   names(ans)[names(ans) == "objective"] <- "lnLik"
   names(ans)[names(ans) == "evaluations"] <- "counts"
   ans$lnLik <- -ans$lnLik
@@ -151,19 +152,25 @@ do.mle.search.nlminb <- function(func, x.init, fail.value=NA,
   ans
 }
 
-do.mle.search.nlm <- function(func, x.init, fail.value=NA,
-                              control=list(), lower=-Inf,
-                              upper=Inf, ...) {
-  if ( is.null(fail.value) || is.na(fail.value) )
-    fail.value <- func(x.init, ...) - 1000    
+do.mle.search.nlm <- function(func, x.init, control, lower, upper) {
+  nlm.defaults <-
+    list(typsize=rep(1, length(x.init)), print.level=0, ndigit=12,
+         gradtol=1e-06, steptol=1e-06, iterlim=100,
+         check.analyticals=TRUE)
+  control <- modifyList(nlm.defaults, control)
+  if ( is.null(control$stepmax) )
+    control$stepmax <- max(1000*sqrt(sum((x.init/control$typsize)^2)), 1000)
 
-  ans <- nlm(invert(func), x.init, fail.value=fail.value, ...)
+  ans <- nlm(invert(func), x.init, typsize=control$typsize,
+             print.level=control$print.level, ndigit=control$ndigit,
+             gradtol=control$gradtol, stepmax=control$stepmax,
+             steptol=control$steptol, iterlim=control$iterlim,
+             check.analyticals=control$check.analyticals)
 
   names(ans)[names(ans) == "estimate"] <- "par"
   names(ans)[names(ans) == "minimum"] <- "lnLik"
   names(ans)[names(ans) == "iterations"] <- "counts"
   ans$lnLik <- -ans$lnLik 
-  names(ans$par) <- names(x.init)
   ans <- ans[c("par", "lnLik", "counts", "code", "gradient")]
   
   if ( ans$code > 2 )
@@ -172,6 +179,36 @@ do.mle.search.nlm <- function(func, x.init, fail.value=NA,
 
   ans
 }
+
+do.mle.search.minqa <- function(func, x.init, control, lower, upper) {
+  if ( !require(minqa) )
+    stop("This method requires the minqa package")
+  
+  control <- modifyList(list(minqa.method="newuoa"), control)
+  minqa.method <- match.arg(control$minqa.method,
+                            c("bobyqa", "newuoa", "uobyqa"))
+
+  control.minqa.ok <- c("npt", "rhobeg", "rhoend", "iprint", "rho",
+                        "maxfun")
+  control.minqa <- control[names(control) %in% control.minqa.ok]
+
+  check.bounds(lower, upper, x.init)
+  if ( any(is.finite(lower) | is.finite(upper)) )
+    func2 <- invert(boxconstrain(func, lower, upper))
+  else
+    func2 <- invert(func)
+
+  opt <- get(minqa.method, "package:minqa")
+  if ( minqa.method == "bobyqa" )
+    ans <- opt(x.init, func2, lower=lower, upper=upper,
+               control=control.minqa)
+  else
+    ans <- opt(x.init, func2, control=control.minqa)
+  
+  list(par=ans$par, lnLik=ans$fval, counts=ans$feval,
+       minqa.method=minqa.method)
+}
+
 
 ## For want of a better name, this does the initial parameter
 ## guessing.
