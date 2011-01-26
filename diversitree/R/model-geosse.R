@@ -201,20 +201,42 @@ stationary.freq.geosse <- function(pars) {
   evA$vectors[,i] / sum(evA$vectors[,i])
 }
 
-## dunno if this is much better than nothing... should come up with
-## something more sensible
-starting.point.geosse <- function(tree, q.div=5, yule=FALSE) {
-  ## RGF: Use qs estimated from Mk2?  Can be slow is the only reason
-  ## I have not set this up by default.
-  ## find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~ q01), .1)$par
-  pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
-  if  ( pars.bd[1] > pars.bd[2] )
-    p <- rep(c(pars.bd, (pars.bd[1] - pars.bd[2]) / q.div), each=2)
-  else
-    p <- rep(c(pars.bd, pars.bd[1] / q.div), each=2)
-  p <- c(p[1], p)
-  names(p) <- argnames.geosse(NULL)
-  p
+## ## dunno if this is much better than nothing... should come up with
+## ## something more sensible
+## starting.point.geosse <- function(tree, q.div=5, yule=FALSE) {
+##   ## RGF: Use qs estimated from Mk2?  Can be slow is the only reason
+##   ## I have not set this up by default.
+##   ## find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~ q01), .1)$par
+##   pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
+##   if  ( pars.bd[1] > pars.bd[2] )
+##     p <- rep(c(pars.bd, (pars.bd[1] - pars.bd[2]) / q.div), each=2)
+##   else
+##     p <- rep(c(pars.bd, pars.bd[1] / q.div), each=2)
+##   p <- c(p[1], p)
+##   names(p) <- argnames.geosse(NULL)
+##   p
+## }
+
+## Replacement function from Emma, 4 Nov 2010.
+## from Magallon & Sanderson (2001), rather than a bd fit
+starting.point.geosse <- function(tree, yule=FALSE) {
+ if (yule) {
+   s <- (log(Ntip(tree)) - log(2)) / max(branching.times(tree))
+   x <- 0
+   d <- s/10
+ } else {
+   eps <- 0.5
+   n <- Ntip(tree)
+   r <- ( log( (n/2) * (1 - eps*eps) + 2*eps + (1 - eps)/2 *
+          sqrt( n * (n*eps*eps - 8*eps + 2*n*eps + n))) - log(2)
+        ) / max(branching.times(tree))
+   s <- r / (1 - eps)
+   x <- s * eps
+   d <- x
+ }
+ p <- c(s, s, s, x, x, d, d)
+ names(p) <- argnames.geosse(NULL)
+ p
 }
 
 ## For GeoSSE, think about what a sensible set of default models would be.

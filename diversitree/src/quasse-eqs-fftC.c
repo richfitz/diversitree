@@ -118,15 +118,16 @@ SEXP r_do_integrate(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
 		    SEXP drift, SEXP diffusion, SEXP nt, SEXP dt, 
 		    SEXP padding) {
   quasse_fft *obj = (quasse_fft*)R_ExternalPtrAddr(extPtr);
-  if ( obj == NULL )
-    error("Corrupt QuaSSE integrator: ptr is NULL (are you using multicore?)");
   SEXP ret;
   int nkl = INTEGER(padding)[0], nkr = INTEGER(padding)[1];
   int ndat = LENGTH(lambda);
   double c_dt = REAL(dt)[0], c_nt = INTEGER(nt)[0];
   double *c_lambda=REAL(lambda), *c_mu=REAL(mu);
   double c_drift=REAL(drift)[0], c_diffusion=REAL(diffusion)[0];
-  int i, idx, nd = LENGTH(vars) / obj->nx;
+  int i, idx, nd;
+  if ( obj == NULL )
+    error("Corrupt QuaSSE integrator: ptr is NULL (are you using multicore?)");
+  nd = LENGTH(vars) / obj->nx;
   
   idx = lookup(nd, obj->nd, obj->n_fft);
   if ( idx < 0 )
@@ -246,7 +247,7 @@ quasse_fft* make_quasse_fft(int n_fft, int nx, double dx, int *nd,
   obj->nd = nd;
 
   obj->x   = fftw_malloc(max_nd *  nx    * sizeof(double));
-  obj->y   = fftw_malloc(max_nd * (ny+1) * sizeof(complex));
+  obj->y   = fftw_malloc(max_nd * (ny+1) * sizeof(fftw_complex));
 
   obj->z   = (double*)calloc(nx, sizeof(double));
   obj->wrk = (double*)calloc(nx, sizeof(double));
@@ -260,7 +261,7 @@ quasse_fft* make_quasse_fft(int n_fft, int nx, double dx, int *nd,
   
   /* Brownian kernel */
   obj->kern_x = fftw_malloc(nx     * sizeof(double));
-  obj->kern_y = fftw_malloc((ny+1) * sizeof(complex));
+  obj->kern_y = fftw_malloc((ny+1) * sizeof(fftw_complex));
   obj->kernel = make_rfftw_plan_real(1, nx, DIR_COLS, 
 				     obj->kern_x, obj->kern_y, flags);
   
@@ -425,11 +426,11 @@ void propagate_x(quasse_fft *obj, int idx) {
   }
 }
 
-void convolve(rfftw_plan_real *obj, complex *fy) {
+void convolve(rfftw_plan_real *obj, fftw_complex *fy) {
   int nx = obj->nx, ny = obj->ny, nd = obj->nd, i, j;
   int nxd = nx * nd;
   double *x = obj->x;
-  complex *y = obj->y;
+  fftw_complex *y = obj->y;
 
   fftw_execute(obj->plan_f);
 

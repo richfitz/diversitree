@@ -9,7 +9,7 @@
 #include "rfftw.h"
 
 rfftw_plan_real* make_rfftw_plan_real(int nd, int nx, int dir,
-				      double *x, complex *y, 
+				      double *x, fftw_complex *y, 
 				      int flags) {
   rfftw_plan_real *obj =
     (rfftw_plan_real*)calloc(1, sizeof(rfftw_plan_real));
@@ -50,9 +50,12 @@ rfftw_plan_real* make_rfftw_plan_real(int nd, int nx, int dir,
 /* Next, the R interface */
 static void rfftw_plan_real_finalize(SEXP extPtr);
 SEXP r_make_rfftw_plan_real(SEXP r_nd, SEXP r_nx, SEXP r_dir) {
+  const int flags = FFTW_PATIENT;
+  SEXP extPtr;
+  rfftw_plan_real *obj;  
   int nd, nx, ny, dir;
   double *x;
-  complex *y;
+  fftw_complex *y;
   PROTECT(r_nd  = AS_INTEGER(r_nd));
   PROTECT(r_nx  = AS_INTEGER(r_nx));
   PROTECT(r_dir = AS_INTEGER(r_dir));
@@ -64,12 +67,10 @@ SEXP r_make_rfftw_plan_real(SEXP r_nd, SEXP r_nx, SEXP r_dir) {
   ny = ((int)floor(nx/2)) + 1;
 
   x = fftw_malloc(nd * nx * sizeof(double));	  
-  y = fftw_malloc(nd * (ny+1) * sizeof(complex));
+  y = fftw_malloc(nd * (ny+1) * sizeof(fftw_complex));
 
-  const int flags = FFTW_PATIENT;
-  rfftw_plan_real *obj = make_rfftw_plan_real(nd, nx, dir, x, y, flags);
-  SEXP extPtr = R_MakeExternalPtr(obj, install("test_ptr"),
-				  R_NilValue);
+  obj = make_rfftw_plan_real(nd, nx, dir, x, y, flags);
+  extPtr = R_MakeExternalPtr(obj, install("test_ptr"), R_NilValue);
 
   R_RegisterCFinalizer(extPtr, rfftw_plan_real_finalize);
 
@@ -92,7 +93,7 @@ SEXP r_rfftw_forw(SEXP extPtr, SEXP r_x_in) {
     (rfftw_plan_real*)R_ExternalPtrAddr(extPtr);
   int i, nxd, nyd;
   double  *x_in,  *x = obj->x;
-  complex *y_out, *y = obj->y;
+  fftw_complex *y_out, *y = obj->y;
   SEXP ret;
 
   PROTECT(r_x_in = AS_NUMERIC(r_x_in));
@@ -106,7 +107,8 @@ SEXP r_rfftw_forw(SEXP extPtr, SEXP r_x_in) {
   fftw_execute(obj->plan_f);
 
   PROTECT(ret = allocVector(CPLXSXP, nyd));
-  y_out = (complex*)COMPLEX(ret);
+  /* TODO: There is a change that I should be using Rcomplex here */
+  y_out = (fftw_complex*)COMPLEX(ret);
   for ( i = 0; i < nyd; i++ )
     y_out[i] = y[i];
 
@@ -118,12 +120,13 @@ SEXP r_rfftw_back(SEXP extPtr, SEXP r_y_in) {
   rfftw_plan_real *obj = 
     (rfftw_plan_real*)R_ExternalPtrAddr(extPtr);
   int i, nxd, nyd;
-  complex *y_in,  *y = obj->y;
+  fftw_complex *y_in,  *y = obj->y;
   double  *x_out, *x = obj->x;
   SEXP ret;
   
   PROTECT(r_y_in = AS_COMPLEX(r_y_in));
-  y_in = (complex*)COMPLEX(r_y_in);
+  /* TODO: There is a change that I should be using Rcomplex here */
+  y_in = (fftw_complex*)COMPLEX(r_y_in);
   nxd = obj->nx * obj->nd;
   nyd = obj->ny * obj->nd;
 

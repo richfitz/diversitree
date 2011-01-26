@@ -12,40 +12,32 @@
 
 \usage{
 make.geosse(tree, states, sampling.f=NULL, strict=TRUE, safe=FALSE)
-starting.point.geosse(tree, q.div=5, yule=FALSE)
+starting.point.geosse(tree, yule=FALSE)
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
-  
   \item{states}{A vector of character states, each of which must be 0
     (in both regions/widespread; AB), 1 or 2 (endemic to one region; A or
     B), or \code{NA} if the state is unknown.  This vector must have names
     that correspond to the tip labels in the phylogenetic tree
     (\code{tree$tip.label}).}
-  
-  %  \item{unresolved}{Unresolved clades are not yet implemented for geosse.}
-
+%  \item{unresolved}{Unresolved clades are not yet implemented for geosse.}
   \item{sampling.f}{Vector of length 3 with the estimated proportion of
     extant species in states 0, 1 and 2 that are included in the
     phylogeny.  A value of \code{c(0.5, 0.75, 1)} means that half of
     species in state 0, three quarters of species in state 1, and all the
     species in state 2 are included in the phylogeny.  By default all
     species are assumed to be known.}
-
+  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
+    crashes are happening.}
   \item{strict}{The \code{states} vector is always checked to make sure
     that the values are 0, 1 and 2 only.  If \code{strict} is \code{TRUE}
     (the default), then the additional check is made that \emph{every}
     state is present.  The likelihood models tend to be poorly behaved
     where states are missing.}
-  
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
-  
-  \item{q.div}{Ratio of diversification rate to state change rate.}
-  
-  \item{yule}{Should starting parameters be Yule estimates rather than
-    birth-death estimates?}
+  \item{yule}{Should starting parameters have zero extinction?  If not,
+    the extinction rate is half the speciation rate.}
 }
 
 \details{
@@ -96,8 +88,8 @@ starting.point.geosse(tree, q.div=5, yule=FALSE)
     information on these.
   }
   
-  \code{starting.point.geosse} produces a not-that-great starting point
-  based on \code{starting.point.bisse}.
+  \code{starting.point.geosse} produces a first-guess set of parameters,
+    ignoring character states.
 
   Note that unresolved clade methods are not (yet?) available for GeoSSE.
 }
@@ -106,7 +98,7 @@ starting.point.geosse(tree, q.div=5, yule=FALSE)
 \seealso{
   \code{\link{constrain}} for making submodels, \code{\link{find.mle}}
   for ML parameter estimation, \code{\link{mcmc}} for MCMC integration,
-  \code{\link{make.bisse}} for further relevant examples..
+  \code{\link{make.bisse}} for further relevant examples.
 
   The help page for \code{\link{find.mle}} has further examples of ML
   searches on full and constrained BiSSE models.  Things work similarly
@@ -122,24 +114,22 @@ pars <- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
 data("geosse")
 
 ## The likelihood function
-lik <- make.geosse(phy, phy$tip.state)
+lik <- make.geosse(geosse.phy, geosse.phy$tip.state)
 
 ## See the data
-statecols <- c("purple", "blue", "red")
-# state ordering is AB, A, B
-plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5)
+statecols <- c("AB"="purple", "A"="blue", "B"="red")
+plot(geosse.phy, tip.color=statecols[geosse.phy$tip.state+1], cex=0.5)
 
 ## With "true" parameter values
 names(pars) <- argnames(lik)
 lik(pars) # -297.6749
 
-## A poorly-informed guess at a starting point.
-p <- starting.point.geosse(phy)
+## A guess at a starting point.
+p <- starting.point.geosse(geosse.phy)
 
-## Start an ML search from this point (takes several seconds to run, and
-## is not run by default).
+## Start an ML search from this point (takes several seconds to run).
 \dontrun{
-fit <- find.mle(lik, p)    # default method is "subplex"
+fit <- find.mle(lik, p, method="subplex")
 logLik(fit) # -295.0275
 
 ## Compare with sim values.
@@ -152,7 +142,6 @@ logLik(fit.d) # -296.5956
 
 ## A model with constraints on the speciation rates.
 lik.s <- constrain(lik, sA ~ sB, sAB ~ 0)
-lik.s(p[-c(2,3)]) # NaN?
 fit.s <- find.mle(lik.s, p[-c(2,3)])
 logLik(fit.s) # -302.5542
 }
@@ -160,7 +149,8 @@ logLik(fit.s) # -302.5542
 ## "Skeletal tree" sampling is supported.  For example, if your tree
 ## includes all AB species, half of A species, and a third of B species,
 ## create the likelihood function like this:
-lik.f <- make.geosse(phy, phy$tip.state, sampling.f=c(1, 0.5, 1/3))
+lik.f <- make.geosse(geosse.phy, geosse.phy$tip.state,
+                     sampling.f=c(1, 0.5, 1/3))
 
 ## If you have external evidence that the base of your tree must have
 ## been in state 1, say (endemic to region A), you can fix the root 

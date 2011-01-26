@@ -4,7 +4,7 @@ typedef struct {
   long nx;     /* number of x positions */
   long ny;     /* floor(nx/2) + 1 */
   double *x;
-  complex *y;
+  fftw_complex *y;
   fftw_plan plan_f;
   fftw_plan plan_b;
   int dir; /* DIR_ROWS | DIR_COLS */
@@ -26,7 +26,8 @@ typedef struct {
 #define DIR_ROWS 2
 
 rfftw_plan_real* make_rfftw_plan_real(int nd, int nx, int dir,
-				      double *x, complex *y, int flags);
+				      double *x, fftw_complex *y, 
+				      int flags);
 SEXP r_make_rfftw_plan_real(SEXP r_nd, SEXP r_nx, SEXP r_dir);
 SEXP r_rfftw_forw(SEXP extPtr, SEXP r_x_in);
 SEXP r_rfftw_back(SEXP extPtr, SEXP r_y_in);

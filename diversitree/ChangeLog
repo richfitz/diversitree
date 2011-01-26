@@ -1,3 +1,19 @@
+2011-01-26  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bumped to 0.6-3
+
+	* R/asr-musse.R: Added marginal ASR for MuSSE models
+
+	* R/model-geosse.R: Improved starting point function from Emma.
+	
+	* R/model-musse.R, R/model-mkn.R: Support for models with >9
+	states (preventing duplicated argument names).
+
+	* R/util.R: deSolve 1.9 OK
+
+	* configure.win, src/Makevars.win, src/config.h.win: Hopefully
+	fixed windows build.
+
 2010-10-25  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/check.R: No longer check node labels by default (duplicates

@@ -20,7 +20,7 @@ typedef struct {
 
   /* Data */
   double *x;
-  complex *y;
+  fftw_complex *y;
 
   /* Diversification information */
   double *lambda;
@@ -39,7 +39,7 @@ typedef struct {
 
   /* Kernel information (space propagation) */
   double ny;      /* Fourier space extent */
-  complex *fkern; /* Gaussian kernel transformation */
+  fftw_complex *fkern; /* Gaussian kernel transformation */
   int nkl;        /* Kernel width to the left */
   int nkr;        /* Kernel width to the right */
   int npad;       /* nkl + nkr + 1 */
@@ -47,7 +47,7 @@ typedef struct {
 
   /* The kernel itself */
   double  *kern_x;
-  complex *kern_y;
+  fftw_complex *kern_y;
   rfftw_plan_real *kernel;
 } quasse_fft;
 
@@ -61,6 +61,6 @@ void integrate(quasse_fft *obj, double *lambda, double *mu,
 	       double drift, double diffusion, double *padding);
 void propagate_t(quasse_fft *obj, int idx);
 void propagate_x(quasse_fft *obj, int idx);
-void convolve(rfftw_plan_real *obj, complex *fy);
+void convolve(rfftw_plan_real *obj, fftw_complex *fy);
 int lookup(int x, int *v, int len);
 void do_integrate(quasse_fft *obj, int nt, int idx);

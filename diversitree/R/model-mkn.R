@@ -76,7 +76,10 @@ argnames.mkn <- function(x, k, ...) {
     else
       if ( !is.null(x) )
         stop("k can only be be given if x is null")
-    sprintf("q%d%d", rep(1:k, each=k-1),
+
+    base <- ceiling(log10(k + .5))
+    fmt <- sprintf("q%%0%dd%%0%dd", base, base)
+    sprintf(fmt, rep(1:k, each=k-1),
             unlist(lapply(1:k, function(i) (1:k)[-i])))
   } else {
     ret
@@ -93,6 +96,8 @@ argnames.mk2 <- function(x, ...) {
   k <- environment(x)$cache$k  
   if ( length(value) != k*(k-1) )
     stop("Invalid names length")
+  if ( any(duplicated(value)) )
+    stop("Duplicate argument names")
   attr(x, "argnames") <- value
   x  
 }

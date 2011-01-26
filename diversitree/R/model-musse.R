@@ -45,10 +45,12 @@ print.musse <- function(x, ...) {
 argnames.musse <- function(x, k=attr(x, "k"), ...) {
   ret <- attr(x, "argnames")
   if ( is.null(ret) ) {
-    c(sprintf("lambda%d", 1:k),
-      sprintf("mu%d", 1:k),
-      sprintf("q%d%d", rep(1:k, each=k-1),
-              unlist(lapply(1:k, function(i) (1:k)[-i]))))
+    fmt <- sprintf("%%0%dd", ceiling(log10(k + .5)))
+    str <- sprintf(fmt, 1:k)
+    c(sprintf("lambda%s", str),
+      sprintf("mu%s", str),
+      sprintf("q%s%s", rep(str, each=k-1),
+              unlist(lapply(1:k, function(i) str[-i]))))
   } else {
     ret
   }
@@ -58,6 +60,8 @@ argnames.musse <- function(x, k=attr(x, "k"), ...) {
   ## k <- environment(x)$cache$k  
   if ( length(value) != k*(k+1) )
     stop("Invalid names length")
+  if ( any(duplicated(value)) )
+    stop("Duplicate argument names")
   attr(x, "argnames") <- value
   x
 }

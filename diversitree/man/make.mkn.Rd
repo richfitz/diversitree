@@ -76,6 +76,11 @@ make.mkn(tree, states, k, use.mk2=FALSE)
     \item \code{intermediates}: Add intermediates to the returned value as
     attributes.  Currently undocumented.
   }
+
+  With more than 9 states, qij can be ambiguous (e.g. is q113 1->13 or
+  11->3?).  To avoid this, the numbers are zero padded (so that the
+  above would be q0113 or q1103 for 1->13 and 11->3 respectively).  It
+  might be easier to rename the arguments in practice though.
 }
 
 \seealso{

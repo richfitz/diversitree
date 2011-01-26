@@ -58,6 +58,13 @@ starting.point.musse(tree, k, q.div=5, yule=FALSE)
     rather than birth-death estimates?}
 }
 
+\details{
+  With more than 9 states, qij can be ambiguous (e.g. is q113 1->13 or
+  11->3?).  To avoid this, the numbers are zero padded (so that the
+  above would be q0113 or q1103 for 1->13 and 11->3 respectively).  It
+  might be easier to rename the arguments in practice though.
+}  
+
 \examples{
 ## 1: BiSSE equivalence
 pars <- c(.1, .2, .03, .04, 0.05, 0.1)
