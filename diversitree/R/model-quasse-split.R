@@ -52,12 +52,13 @@ print.quasse.split <- function(x, ...) {
 ## 3: argnames / argnames<-
 ## Argnames for QuaSSE/split is complicated compared with BiSSE/split,
 ## because there are infinite possible functions that may be used for
-## the different functions.
+## the different functions.  Also, each different component may have
+## different functions, so the basic "twopart" idea does not work here.
 argnames.quasse.split <- function(x, ...) {
   ## TODO: update to use the argsnames system
   args.names <- environment(x)$cache$args.names
   n <- length(args.names)
-  if ( n != attr(x, "n") )
+  if ( n != attr(x, "n.part") )
     stop("Corrupt QuaSSE/split function")
   m <- sapply(args.names, length)
   sprintf("%s.%d", unlist(args.names), rep(seq_len(n), m))

@@ -1,3 +1,18 @@
+2011-02-18  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/mcmc.R: Removed check.par() from mcmc().  Changed order of
+	arguments for mcmc.lowerzero() to avoid an odd argument matching
+	bug.
+
+	* R/mle-mixed.R: Extra effort for QuaSSE models.
+
+	* R/model-quasse-split.R: Standardise attribute names
+
+	* R/util.R: Added count.eval(), added interval=0 support to
+	big.brother()
+
+	* man/asr-bisse.Rd, man/asr-mkn.Rd: Fixed examples
+
 2011-01-26  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bumped to 0.6-3

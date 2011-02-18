@@ -56,12 +56,12 @@ nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
 ## Try integrating over parameter uncertainty and comparing the BiSSE
 ## with Mk2 output:
 prior <- make.prior.exponential(2)
-samples <- mcmc(lik, coef(fit), 1000, rep(1, 6), 0, prior=prior,
+samples <- mcmc(lik, coef(fit), 1000, w=1, prior=prior,
                 print.every=100)
 st.b <- apply(samples[2:7], 1, function(x) asr.marginal(lik, x)[2,])
 st.b.avg <- rowMeans(st.b)
 
-samples.m <- mcmc(lik.m, coef(fit.m), 1000, rep(1, 2), 0, prior=prior,
+samples.m <- mcmc(lik.m, coef(fit.m), 1000, w=1, prior=prior,
                   print.every=100)
 st.m <- apply(samples.m[2:3], 1, function(x) asr.marginal(lik.m, x)[2,])
 st.m.avg <- rowMeans(st.m)
@@ -69,7 +69,8 @@ st.m.avg <- rowMeans(st.m)
 ## These end up being more striking in their similarity than their
 ## differences, except for the root node, where BiSSE remains more sure
 ## that is in state 0 (there is about 0.05 red there).
-plot(h, phy, main="Marginal ASR, BiSSE", show.node.state=FALSE)
+plot(h, phy, main="Marginal ASR, BiSSE (left), Mk2 (right)",
+     show.node.state=FALSE)
 nodelabels(thermo=1-st.b.avg, piecol=1:2, cex=.5)
 nodelabels(thermo=1-st.m.avg, piecol=1:2, cex=.5, adj=-.5)
 }

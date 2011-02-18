@@ -42,16 +42,6 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
   if ( !is.finite(y.init) || y.init == fail.value )
     stop("Starting point must have finite probability")
 
-  check.par <- function(x) {
-    if ( length(x) == 1 )
-      rep(x, npar)
-    else if ( length(x) == npar )
-      x
-    else
-      stop(sprintf("'%s' of incorrect length",
-                   deparse(substitute(x))))
-  }
-
   lower <- check.par.length(lower, npar)
   upper <- check.par.length(upper, npar)
   w     <- check.par.length(w,     npar) # TODO: may need revisiting.
@@ -96,7 +86,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
 }
 
 ## This is common, so this helps reduce code duplication.
-mcmc.lowerzero <- function(lik, x.init, nsteps, lower=0, ...)
+mcmc.lowerzero <- function(lik, x.init, nsteps, ..., lower=0)
   NextMethod("mcmc", lower=lower)
 
 make.unipar <- function(f, x, i) {

@@ -42,7 +42,12 @@ make.mixed <- function(f, i, xmid, dx) {
     f(x, ...)
   }
 
-  attributes(ret) <- attributes(f)[c("f.lambda", "f.mu")]
+  ## WARNING: HACK (needed so that 'constrain' below works correctly).
+  if ( inherits(f, "quasse") ) {
+    cache <- environment(f)$cache
+    attributes(ret) <- attributes(f)[c("n.part", "f.lambda", "f.mu")]
+  }
+
   class(ret) <- c("mixed", class(f))
 
   if ( is.constrained ) {

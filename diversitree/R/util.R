@@ -30,17 +30,27 @@ big.brother <- function(f, interval=1) {
   f <- f # force argument to prevent recursion (pass by value)
   .x.eval <- list()
   .y.eval <- list()
+  if ( interval < 0 )
+    stop("Interval must be >= 0")
   function(x, ...) {
     i <- length(.x.eval) + 1
-    if ( i %% interval == 0 )
+    if ( interval > 0 && i %% interval == 0 )
       cat(sprintf("[%s]", paste(formatC(x, 5), collapse=", ")))
-    else
+    else if (interval > 0 )
       cat(".")
     .x.eval[[i]] <<- x
     .y.eval[[i]] <<- ans <- f(x, ...)
-    if ( i %% interval == 0 )
+    if ( interval > 0 && i %% interval == 0 )
       cat(sprintf("\t -> %2.5f\n", ans))
     ans
+  }
+}
+
+count.eval <- function(f) {
+  n <- 0
+  function(...) {
+    n <<- n + 1
+    f(...)
   }
 }
 

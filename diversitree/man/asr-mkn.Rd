@@ -120,8 +120,7 @@ summary(lm(colMeans(st2.j) - 1 ~ colMeans(st.j2) - 1))
 \dontrun{
 set.seed(1)
 prior <- make.prior.exponential(.5)
-samples <- mcmc(lik, pars[5:6], 1000, c(1, 1), 0, prior=prior,
-                print.every=100)
+samples <- mcmc(lik, pars[5:6], 1000, w=1, prior=prior, print.every=100)
 st.m.avg <- rowMeans(apply(samples[2:3], 1, asr.joint, lik=lik))
 
 plot(h, phy, main="MCMC Averaged ASR", show.node.state=FALSE)
