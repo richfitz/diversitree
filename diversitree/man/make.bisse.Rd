@@ -12,7 +12,7 @@
 
 \usage{
 make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10,
-           strict=TRUE, safe=FALSE)
+           strict=TRUE, control=list())
 starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
@@ -36,9 +36,9 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
-  
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+
+  \item{control}{List of control parameters for the ODE solver.  See
+    details below.}
   
   \item{strict}{The \code{states} vector is always checked to make sure
     that the values are 0 and 1 only.  If \code{strict} is \code{TRUE}
@@ -134,6 +134,30 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
   unresolved clades.)
 }
 
+\section{ODE solver control}{
+  The differential equations that define the BiSSE model are solved
+  numerically using the LSODA ODE solver.  The \code{control} argument
+  to \code{make.bisse} controls the behaviour of the integrator.  This
+  is a list that may contain elements:
+  \itemize{
+    \item{safe}{(logical) Use a safer, slower, integrator?  Leave this
+      alone unless crashes are happening.}
+    
+    \item{tol}{Numerical tolerance used for the calculations.  The
+      default value of \code{1e-8} should be a reasonable trade-off
+      between speed and accuracy.  Do not expect too much more than this
+      from the abilities of most machines!}
+
+    \item{eps}{A value that when the sum of the D values drops below,
+      the integration results will be discarded and the integration will
+      be attempted again (the second-chance integration will divide a
+      branch in two and try again, recursively until the desired
+      accuracy is reached).  The default value of \code{0} will only
+      discard integration results when the parameters go negative.
+      However, for some problems more restrictive values (on the order
+      of \code{control$tol}) will give better stability.}
+  }
+}
 
 \seealso{
   \code{\link{constrain}} for making submodels, \code{\link{find.mle}}

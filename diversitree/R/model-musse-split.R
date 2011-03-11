@@ -12,11 +12,16 @@
 
 ## 1: make
 make.musse.split <- function(tree, states, k, nodes, split.t,
-                             sampling.f=NULL, strict=TRUE, safe=FALSE) {
+                             sampling.f=NULL, strict=TRUE,
+                             control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
   cache <- make.cache.musse.split(tree, states, k, nodes, split.t,
                                   sampling.f, strict)
-  branches <- make.branches.musse(k, safe)
-  branches.aux <- make.branches.aux.musse(k, cache$sampling.f, safe)
+  branches <- make.branches.musse(k, control$safe, control$tol,
+                                  control$eps)
+  branches.aux <- make.branches.aux.musse(k, cache$sampling.f,
+                                          control$safe, control$tol,
+                                          control$eps)
   ll <- function(pars, ...)
     ll.musse.split(cache, pars, branches, branches.aux, ...)
   class(ll) <- c("musse.split", "musse", "function")
@@ -117,9 +122,10 @@ ll.musse.split <- function(cache, pars, branches, branches.aux,
 ## TODO: this would be nicer if it did not compute the Ds at all.
 ## Also, it can just use the non-clever function as I do not need the
 ## log compensation worked out.
-make.branches.aux.musse <- function(k, sampling.f, safe=FALSE) {
+make.branches.aux.musse <- function(k, sampling.f, safe=FALSE,
+                                    tol=1e-8, eps=0) {
   y <- lapply(sampling.f, function(x) c(1-x, rep(1, k)))
-  branches <- make.branches.musse(k, safe)
+  branches <- make.branches.musse(k, safe, tol, eps)
   n <- length(y)
   j <- 2:(k+1)
   branches.aux.musse <- function(i, len, pars) {

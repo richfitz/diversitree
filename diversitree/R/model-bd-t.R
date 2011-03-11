@@ -15,7 +15,8 @@
 
 ## 1: make
 make.bd.t <- function(tree, functions, sampling.f=NULL,
-                      unresolved=NULL, safe=FALSE) {
+                      unresolved=NULL, control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
   cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
 
   if ( is.null(names(functions)) && length(functions) == 2 )
@@ -25,7 +26,8 @@ make.bd.t <- function(tree, functions, sampling.f=NULL,
   n.args <- attr(pars.t, "n.args")
   is.constant.arg <- attr(pars.t, "is.constant.arg")
   
-  branches <- make.branches.bd.t(safe)
+  branches <- make.branches.bd.t(control$safe, control$tol,
+                                 control$eps)
   initial.conditions <-
     make.initial.conditions.t(initial.conditions.bd.ode)
   const <- lfactorial(length(tree$tip.label) - 1)
@@ -53,8 +55,8 @@ make.bd.t <- function(tree, functions, sampling.f=NULL,
   .NotYetImplemented()
 }
 
-make.branches.bd.t <- function(safe=FALSE) {
-  RTOL <- ATOL <- 1e-8
+make.branches.bd.t <- function(safe=FALSE, tol=1e-8, eps=0) {
+  RTOL <- ATOL <- tol
   e <- new.env()
 
   bd.t <- make.ode("derivs_bd_t", "diversitree", "initmod_bd_t",
@@ -63,6 +65,6 @@ make.branches.bd.t <- function(safe=FALSE) {
     t(bd.t(y, c(t0, t0+len), list(pars, e), rtol=RTOL,
            atol=ATOL)[-1,-1])
 
-  make.branches(branches, 2)
+  make.branches(branches, 2, eps)
 }
 

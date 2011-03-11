@@ -11,9 +11,9 @@
 
 \usage{
 make.bisse.td(tree, states, n.epoch, unresolved=NULL, sampling.f=NULL,
-              nt.extra=10, strict=TRUE, safe=FALSE)
+              nt.extra=10, strict=TRUE, control=list())
 make.bisse.t(tree, states, functions, sampling.f=NULL, unresolved=NULL,
-             nt.extra=10, strict=TRUE, safe=FALSE)
+             nt.extra=10, strict=TRUE, control=list())
 }
 
 \arguments{
@@ -46,8 +46,8 @@ make.bisse.t(tree, states, functions, sampling.f=NULL, unresolved=NULL,
     state is present.  The likelihood models tend to be poorly behaved
     where states are missing.}
   
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 \details{

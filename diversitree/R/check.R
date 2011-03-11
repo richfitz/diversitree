@@ -6,6 +6,8 @@ check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
     stop("'tree' must be a valid phylo tree")
   if ( ultrametric && !is.ultrametric(tree) )
     stop("'tree' must be ultrametric")
+  if ( any(tree$eddge.length < 0) )
+    stop("Negative branch lengths in tree")
   ## ape's is.binary.tree() can let a few nasties through - for
   ## e.g. each tritomy, an unbranched node and this gets through.
   ## This expression is a little stricter, even if a touch slower.

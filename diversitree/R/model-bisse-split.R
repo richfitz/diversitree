@@ -13,11 +13,15 @@
 ## 1: make
 make.bisse.split <- function(tree, states, nodes, split.t,
                              unresolved=NULL, sampling.f=NULL,
-                             nt.extra=10, safe=FALSE) {
+                             nt.extra=10, control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
                                   unresolved, sampling.f, nt.extra)
-  branches <- make.branches.bisse(safe)
-  branches.aux <- make.branches.aux.bisse(cache$sampling.f, safe)
+  branches <- make.branches.bisse(control$safe, control$tol,
+                                  control$eps)
+  branches.aux <- make.branches.aux.bisse(cache$sampling.f,
+                                          control$safe, control$tol,
+                                          control$eps)
   ll <- function(pars, ...)
     ll.bisse.split(cache, pars, branches, branches.aux, ...)
   class(ll) <- c("bisse.split", "bisse", "function")
@@ -132,9 +136,10 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
 ## TODO: this would be nicer if it did not compute the Ds at all.
 ## Also, it can just use the non-clever function as I do not need the
 ## log compensation worked out.
-make.branches.aux.bisse <- function(sampling.f, safe=FALSE) {
+make.branches.aux.bisse <- function(sampling.f, safe=FALSE, tol=1e-8,
+                                    eps=0) {
   y <- lapply(sampling.f, function(x) c(1-x, 1, 1))
-  branches <- make.branches.bisse(safe)
+  branches <- make.branches.bisse(safe, tol, eps)
   n <- length(y)
   branches.aux.bisse <- function(i, len, pars) {
     if ( i > n )

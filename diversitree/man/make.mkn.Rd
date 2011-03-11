@@ -16,18 +16,32 @@
 }
 
 \usage{
-make.mk2(tree, states)
-make.mkn(tree, states, k, use.mk2=FALSE)
+make.mk2(tree, states, strict=TRUE, control=list())
+make.mkn(tree, states, k, use.mk2=FALSE, strict=TRUE, control=list())
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  
   \item{states}{A vector of character states, each of which must be 0 or
     1 for \code{make.mk2} or 1 to \code{k} for \code{make.mkn}.}
+  
   \item{k}{Number of states to model.}
+  
   \item{use.mk2}{Use Mk2 where \code{k==2} for a slight speedup?  This
     is disabled by default to make likelihoods more comparable without
     introducing approximation errors.}
+
+  \item{strict}{The \code{states} vector is always checked to make sure
+    that the values are integers on \code{0:1} (\code{mk2}) or
+    \code{1:k} (\code{mkn}).  If \code{strict} is \code{TRUE} (the
+    default), then the additional check is made that \emph{every} state
+    is present.  The likelihood models tend to be poorly behaved where
+    states are missing, but there are cases (missing intermediate states
+    for meristic characters) where allowing such models may be useful.}
+  
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 \details{

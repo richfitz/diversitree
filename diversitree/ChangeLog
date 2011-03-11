@@ -1,3 +1,27 @@
+2011-03-11  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: Added start of mkn-with-derivatives.
+
+	* R/check.R: Check for negative branch lengths in trees.
+
+	* R/diversitree-branches.R: Better treatment of root when one
+	lambda value is zero (*Will change calculations*)
+
+	* R/model-{bd-ode,bd-t,bisse-split,bisse-t,bisse-td,bisse,
+	geosse,musse-split,musse,musse-t,musse-td,musse}.R (and associated
+	documentation): Replaced safe=FALSE argument with control list
+	that also allows controlling precision of integration and quality
+	of results.
+
+	* R/mcmc-hmc.R: Hamiltonian (Hybrid) Monte Carlo sampler.  Not yet
+	wired up to work with mcmc().
+
+	* R/model-linear-deriv.R, man/make.mkn.deriv.Rd,
+	src/linear-deriv.{c,h}: Preliminary code for mkn-with-derivatives
+
+	* src/util-complex.{c,h}, src/util-linalg.c,
+	src/util-matrix.{c,h}: Utilities for mkn-with-derivatives.
+
 2011-02-18  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/mcmc.R: Removed check.par() from mcmc().  Changed order of

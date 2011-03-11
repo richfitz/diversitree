@@ -1,7 +1,8 @@
 ## 1: make
 make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
                           sampling.f=NULL, nt.extra=10, strict=TRUE,
-                          safe=FALSE) {
+                          control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=nt.extra,
                             strict=strict)
@@ -9,7 +10,9 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
   if ( !is.null(cache$unresolved) )
     stop("Cannot (yet) use unresolved clades with time-dependent BiSSE")
 
-  branches <- make.branches.td(make.branches.bisse(safe))
+  branches <- make.branches.td(make.branches.bisse(control$safe,
+                                                   control$tol,
+                                                   control$eps))
   initial.conditions <-
     make.initial.conditions.td(initial.conditions.bisse)
 

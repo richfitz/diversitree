@@ -17,7 +17,7 @@
 
 \usage{
 make.bd(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
-make.bd.ode(tree, sampling.f=NULL, unresolved=NULL, safe=FALSE)
+make.bd.ode(tree, sampling.f=NULL, unresolved=NULL, control=list())
 make.yule(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
 starting.point.bd(tree, yule=FALSE)
 }
@@ -46,8 +46,8 @@ starting.point.bd(tree, yule=FALSE)
   \item{yule}{Should the starting point function return a Yule model
     (zero extinction rate)?}
 
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 \details{

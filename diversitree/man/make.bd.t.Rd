@@ -7,7 +7,8 @@
   where birth and/or death rates are arbitrary functions of time.}
 
 \usage{
-make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL, safe=FALSE)
+make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL,
+          control=list())
 }
 
 \arguments{
@@ -22,8 +23,8 @@ make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL, safe=FALSE)
   \item{unresolved}{Not yet included: present in the argument list for
     future compatibility with \code{\link{make.bd}}.}
   
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 \details{

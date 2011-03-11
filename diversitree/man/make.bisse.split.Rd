@@ -8,7 +8,7 @@
 
 \usage{
 make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
-                 sampling.f=NULL, nt.extra=10, safe=FALSE)
+                 sampling.f=NULL, nt.extra=10, control=list())
 }
 
 \arguments{
@@ -37,8 +37,8 @@ make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
   
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 

@@ -17,13 +17,19 @@
 
 ## This version does not use all.branches, but is substantially faster
 ## (c.f. model-mkn-legacy, left for didactic purposes).
-make.mk2 <- function(tree, states) {
-  ll <- make.mkn(tree, states + 1, 2, TRUE)
+make.mk2 <- function(tree, states, strict=TRUE, control=list()) {
+  ll <- make.mkn(tree, states + 1, 2, TRUE, strict, control)
   class(ll) <- c("mk2", "mkn", "function")
   ll
 }
-make.mkn <- function(tree, states, k, use.mk2=FALSE) {
-  cache <- make.cache.mkn(tree, states, k, use.mk2)
+make.mkn <- function(tree, states, k, use.mk2=FALSE, strict=TRUE,
+                     control=list()) {
+  ## (eps is ignored for this model)
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
+  cache <- make.cache.mkn(tree, states, k, use.mk2, strict)
+
+  cache$f.pij <- if ( k == 2 && use.mk2 )
+    pij.mk2 else make.pij.mkn(k, control$safe, control$tol)
 
   qmat <- matrix(0, k, k)
   idx <- cbind(rep(1:k, each=k-1),
@@ -117,9 +123,9 @@ mcmc.mkn <- mcmc.lowerzero
 
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
-make.cache.mkn <- function(tree, states, k, use.mk2) {
+make.cache.mkn <- function(tree, states, k, use.mk2, strict) {
   tree <- check.tree(tree)
-  states <- check.states(tree, states)
+  states <- check.states(tree, states, strict=strict, strict.vals=1:k)
 
   cache <- make.cache(tree)
   cache$k <- k
@@ -139,8 +145,6 @@ make.cache.mkn <- function(tree, states, k, use.mk2) {
   cache$children0 <- as.integer(t(cache$children-1))
   cache$order0 <- as.integer(cache$order-1)
   cache$use.mk2 <- use.mk2
-  cache$f.pij <- if ( k == 2 && use.mk2 )
-    pij.mk2 else make.pij.mkn(k)
   
   cache
 }
@@ -210,10 +214,10 @@ pij.mk2 <- function(len, pars) {
         (x*q10 + q01)) / (q01 + q10)
 }
 
-make.pij.mkn <- function(k) {
+make.pij.mkn <- function(k, safe=FALSE, tol=1e-8) {
   pij.ode <- make.ode("derivs_mkn_pij", "diversitree",
-                      "initmod_mkn", k*k, FALSE)
-  ATOL <- RTOL <- 1e-8
+                      "initmod_mkn", k*k, safe)
+  ATOL <- RTOL <- tol
   yi <- diag(k)
   
   function(len, pars)

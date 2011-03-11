@@ -8,7 +8,7 @@
 
 \usage{
 make.musse.split(tree, states, k, nodes, split.t,
-                 sampling.f=NULL, strict=TRUE, safe=FALSE)
+                 sampling.f=NULL, strict=TRUE, control=list())
 }
 
 \arguments{
@@ -42,8 +42,8 @@ make.musse.split(tree, states, k, nodes, split.t,
     (missing intermediate states for meristic characters) where allowing
     such models may be useful.}
 
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 \details{Branching times can be controlled with the \code{split.t}

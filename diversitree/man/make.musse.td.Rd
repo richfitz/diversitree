@@ -11,9 +11,9 @@
 
 \usage{
 make.musse.td(tree, states, k, n.epoch, sampling.f=NULL,
-              strict=TRUE, safe=FALSE)
+              strict=TRUE, control=list())
 make.musse.t(tree, states, k, functions, sampling.f=NULL,
-              strict=TRUE, safe=FALSE)
+              strict=TRUE, control=list())
 }
 
 \arguments{
@@ -47,8 +47,8 @@ make.musse.t(tree, states, k, functions, sampling.f=NULL,
     (missing intermediate states for meristic characters) where allowing
     such models may be useful.}
 
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 }
 
 \details{

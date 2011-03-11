@@ -12,15 +12,17 @@
 ##   8. branches
 
 ## 1: make
-make.geosse <- function(tree, states, sampling.f=NULL,
-                        strict=TRUE, safe=FALSE) {
+make.geosse <- function(tree, states, sampling.f=NULL, strict=TRUE,
+                        control=list()) {
   ## RGF: Removed from argument list to reflect docs.
   unresolved <- NULL
   nt.extra <- 10
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
   cache <- make.cache.geosse(tree, states, unresolved=unresolved,
                              sampling.f=sampling.f, nt.extra=nt.extra,
                              strict=strict)
-  branches <- make.branches.geosse(safe)
+  branches <- make.branches.geosse(control$safe, control$tol,
+                                   control$eps)
   ll <- function(pars, ...) ll.geosse(cache, pars, branches, ...)
   class(ll) <- c("geosse", "function")
   ll
@@ -163,14 +165,14 @@ initial.conditions.geosse <- function(init, pars, t, is.root=FALSE) {
 }
 
 ## 8: branches
-make.branches.geosse <- function(safe=FALSE) {
-  RTOL <- ATOL <- 1e-8
+make.branches.geosse <- function(safe=FALSE, tol=1e-8, eps=0) {
+  RTOL <- ATOL <- tol
   geosse.ode <- make.ode("derivs_geosse", "diversitree",
                          "initmod_geosse", 6, safe)
   branches <- function(y, len, pars, t0)
     t(geosse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
   
-  make.branches(branches, 4:6)
+  make.branches(branches, 4:6, eps)
 }
 
 ## 9: branches.unresolved

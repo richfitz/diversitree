@@ -11,9 +11,11 @@
 
 ## 1: make
 make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
-                       safe=FALSE) {
+                       control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
   cache <- make.cache.musse(tree, states, k, sampling.f, strict)
-  branches <- make.branches.musse(k, safe)
+  branches <- make.branches.musse(k, control$safe, control$tol,
+                                  control$eps)
 
   ll.musse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                        root.p=NULL, intermediates=FALSE) {
@@ -125,8 +127,8 @@ initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
 }
 
 ## 8: branches (separate for mk2 and mkn)
-make.branches.musse <- function(k, safe=FALSE) {
-  RTOL <- ATOL <- 1e-8
+make.branches.musse <- function(k, safe=FALSE, tol=1e-8, eps=0) {
+  RTOL <- ATOL <- tol
 
   qmat <- matrix(0, k, k)
   idx.qmat <- cbind(rep(1:k, each=k-1),
@@ -145,7 +147,7 @@ make.branches.musse <- function(k, safe=FALSE) {
     pars <- c(pars[idx.lm], qmat)
     t(musse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
   }
-  make.branches(branches.musse, (k+1):(2*k))
+  make.branches(branches.musse, (k+1):(2*k), eps)
 }
 
 ## Historical interest: This function creates a function for computing

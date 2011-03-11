@@ -11,31 +11,37 @@
   inference.}
 
 \usage{
-make.geosse(tree, states, sampling.f=NULL, strict=TRUE, safe=FALSE)
+make.geosse(tree, states, sampling.f=NULL, strict=TRUE, control=list())
 starting.point.geosse(tree, yule=FALSE)
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  
   \item{states}{A vector of character states, each of which must be 0
     (in both regions/widespread; AB), 1 or 2 (endemic to one region; A or
     B), or \code{NA} if the state is unknown.  This vector must have names
     that correspond to the tip labels in the phylogenetic tree
     (\code{tree$tip.label}).}
-%  \item{unresolved}{Unresolved clades are not yet implemented for geosse.}
-  \item{sampling.f}{Vector of length 3 with the estimated proportion of
+  
+  %  \item{unresolved}{Unresolved clades are not yet implemented for geosse.}
+
+\item{sampling.f}{Vector of length 3 with the estimated proportion of
     extant species in states 0, 1 and 2 that are included in the
     phylogeny.  A value of \code{c(0.5, 0.75, 1)} means that half of
     species in state 0, three quarters of species in state 1, and all the
     species in state 2 are included in the phylogeny.  By default all
     species are assumed to be known.}
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
+  
   \item{strict}{The \code{states} vector is always checked to make sure
     that the values are 0, 1 and 2 only.  If \code{strict} is \code{TRUE}
     (the default), then the additional check is made that \emph{every}
     state is present.  The likelihood models tend to be poorly behaved
     where states are missing.}
+  
   \item{yule}{Should starting parameters have zero extinction?  If not,
     the extinction rate is half the speciation rate.}
 }

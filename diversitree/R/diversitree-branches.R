@@ -260,8 +260,9 @@ root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
   d.root <- vals[-i]
   
   if ( condition.surv )
-    d.root <- d.root / (lambda * (1-e.root)^2)
-
+    ##  d.root <- d.root / (lambda * (1-e.root)^2) # old
+    d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
+  
   if ( is.null(root.p) ) # ROOT.BOTH
     loglik <- log(d.root) + logcomp
   else

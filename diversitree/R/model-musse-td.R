@@ -1,10 +1,13 @@
 ## 1: make
 make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
-                          strict=TRUE, safe=FALSE) {
+                          strict=TRUE, control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
   cache <- make.cache.musse(tree, states, k, sampling.f, strict)
   cache$n.epoch <- n.epoch
 
-  branches <- make.branches.td(make.branches.musse(k, safe))
+  branches <- make.branches.td(make.branches.musse(k, control$safe,
+                                                   control$tol,
+                                                   control$eps))
 
   initial.conditions <-
     make.initial.conditions.td(initial.conditions.musse)

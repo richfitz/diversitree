@@ -11,11 +11,12 @@
 
 ## 1: make
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
-                       nt.extra=10, strict=TRUE, safe=FALSE) {
+                       nt.extra=10, strict=TRUE, control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=nt.extra,
                             strict=strict)
-  branches <- make.branches.bisse(safe)
+  branches <- make.branches.bisse(control$safe, control$tol, control$eps)
   ll <- function(pars, ...) ll.bisse(cache, pars, branches, ...)
   class(ll) <- c("bisse", "function")
   ll
@@ -170,14 +171,14 @@ initial.conditions.bisse <- function(init, pars, t, is.root=FALSE)
     init[[1]][c(3,4)] * init[[2]][c(3,4)] * pars[c(1,2)])
 
 ## 8: branches
-make.branches.bisse <- function(safe=FALSE) {
-  RTOL <- ATOL <- 1e-8
+make.branches.bisse <- function(safe=FALSE, tol=1e-8, eps=0) {
+  RTOL <- ATOL <- tol
   bisse.ode <- make.ode("derivs_bisse", "diversitree",
                         "initmod_bisse", 4, safe)
   branches <- function(y, len, pars, t0)
     t.default(bisse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
   
-  make.branches(branches, 3:4)
+  make.branches(branches, 3:4, eps)
 }
 
 ## 9: branches.unresolved

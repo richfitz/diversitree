@@ -13,9 +13,10 @@
 
 ## 1: make
 make.bd.ode <- function(tree, sampling.f=NULL, unresolved=NULL,
-                        safe=FALSE) {
+                        control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
   cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
-  branches <- make.branches.bd.ode(safe)
+  branches <- make.branches.bd.ode(control$safe, control$tol, control$eps)
   const <- lfactorial(length(tree$tip.label) - 1)
 
   ll.bd.ode <- function(pars, condition.surv=TRUE,
@@ -73,11 +74,11 @@ initial.conditions.bd.ode <- function(init, pars, t, is.root=FALSE)
   c(init[[1]][1], init[[1]][2] * init[[2]][2] * pars[1])
 
 ## 8: branches
-make.branches.bd.ode <- function(safe=FALSE) {
-  RTOL <- ATOL <- 1e-8
+make.branches.bd.ode <- function(safe=FALSE, tol=1e-8, eps=0) {
+  RTOL <- ATOL <- tol
   bd.ode <- make.ode("derivs_bd", "diversitree", "initmod_bd", 2, safe)
   branches <- function(y, len, pars, t0)
     t(bd.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
-  make.branches(branches, 2)
+  make.branches(branches, 2, eps)
 }
 

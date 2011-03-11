@@ -14,6 +14,7 @@ export(make.bm)
 export(make.geosse)
 export(make.mk2)
 export(make.mkn)
+export(make.mkn.deriv)
 export(make.musse)
 export(make.musse.split)
 export(make.musse.t)
@@ -30,6 +31,7 @@ S3method(print, bisse.split)
 S3method(print, bisse.td)
 S3method(print, bm)
 S3method(print, mkn)
+S3method(print, mkn.deriv)
 S3method(print, musse)
 S3method(print, yule)
 
@@ -175,7 +177,6 @@ S3method(asr.marginal, bisse)
 
 ## ASR/MuSSE
 S3method(asr.marginal, musse)
-
 
 ## Support for "clade.tree"s
 ## TODO: polytomies.to.clades -> clades.from.polytomies

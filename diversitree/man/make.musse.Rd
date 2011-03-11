@@ -17,7 +17,8 @@
 }
 
 \usage{
-make.musse(tree, states, k, sampling.f=NULL, strict=TRUE, safe=FALSE)
+make.musse(tree, states, k, sampling.f=NULL, strict=TRUE,
+           control=list())
 starting.point.musse(tree, k, q.div=5, yule=FALSE)
 }
 
@@ -47,8 +48,8 @@ starting.point.musse(tree, k, q.div=5, yule=FALSE)
     (missing intermediate states for meristic characters) where allowing
     such models may be useful.}
 
-  \item{safe}{Use a safer, slower, integrator?  Leave this alone unless
-    crashes are happening.}
+  \item{control}{List of control parameters for the ODE solver.  See
+    details in \code{\link{make.bisse}}.}
 
   \item{q.div}{Ratio of diversification rate to character change rate.
     Eventually this will be changed to allow for Mk2 to be used for
