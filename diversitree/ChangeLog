@@ -1,3 +1,12 @@
+2011-03-17  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* data/geosse.R: Remove save=TRUE argument from require()
+	(defunct in R 2.13).
+
+2011-03-14  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Version bump to 0.6-4
+
 2011-03-11  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE: Added start of mkn-with-derivatives.
