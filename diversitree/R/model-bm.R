@@ -71,6 +71,8 @@ make.bm <- function(tree, states, meserr=NULL) {
     lik <- function(x) {
       if ( x < 0 )
         return(-Inf)
+      if ( length(x) != 1 )
+        return(-Inf)
       VI <- VI.tmp / x
       ## By my calculations t(1) %*% VI %*% 1 = sum(VI)
       ## t(one) %*% VI %*% states = sum(colSums(VI) * states)
@@ -82,6 +84,8 @@ make.bm <- function(tree, states, meserr=NULL) {
   } else {
     lik <- function(x) {
       if ( x < 0 )
+        return(-Inf)
+      if ( length(x) != 1 )
         return(-Inf)
       vv <- x*vcv
       if ( !is.null(meserr) )
@@ -132,7 +136,7 @@ mcmc.bm <- mcmc.lowerzero
 ## Make requires the usual functions:
 ## 5: make.cache
 make.cache.bm <- function(tree, states, meserr) {
-  tree <- check.tree(tree)
+  tree <- check.tree(tree, ultrametric=FALSE)
   states <- check.states(tree, states)
   
   n.tip <- length(tree$tip.label)
@@ -140,9 +144,9 @@ make.cache.bm <- function(tree, states, meserr) {
   if ( is.null(meserr) )
     meserr <- NULL
   else if ( length(meserr) == 1 )
-    meserr <- rep(meserr^2, n.tip)
+    meserr <- rep(meserr, n.tip)
   else
-    meserr <- check.states(tree, meserr)^2
+    meserr <- check.states(tree, meserr)
       
   list(tree=tree,
        states=states,

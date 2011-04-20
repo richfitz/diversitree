@@ -30,6 +30,33 @@ check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
 
 check.states <- function(tree, states, allow.unnamed=FALSE,
                          strict=FALSE, strict.vals=NULL) {
+  if ( is.matrix(states) ) {
+    n <- rowSums(states > 0)
+    if ( any(n == 0) )
+      stop(sprintf("No state found for taxa: %s",
+                   paste(names(tmp)[n == 0], collapse=", ")))
+    ## TODO:
+    ## (that said, multistates are only interesting for >2 states,
+    ## and clade trees won't behave for those anyway)
+    if ( inherits(tree, "clade.tree") )
+      stop("Clade trees won't work with multistate tips yet")
+
+    i.mono <- which(n == 1)
+    i.mult <- which(n >  1)
+
+    tmp <- matrix.to.list(states)
+    names(tmp) <- rownames(states)
+
+    states.mult <- lapply(tmp[i.mult], as.numeric)
+
+    states <- rep(NA, length(tmp))
+    names(states) <- names(tmp)
+    states[i.mono] <- sapply(tmp[i.mono], function(x)
+                             which(x != 0))
+
+    attr(states, "multistate") <- list(i=i.mult, states=states.mult)
+  }
+  
   if ( is.null(names(states)) ) {
     if ( allow.unnamed ) {
       if ( length(states) == length(tree$tip.label) ) {
@@ -47,6 +74,7 @@ check.states <- function(tree, states, allow.unnamed=FALSE,
   if ( !all(tree$tip.label %in% names(states)) )
     stop("Not all species have state information")
 
+  ## TODO: When multistate characters are present, this will fail...
   if ( strict && !is.null(strict.vals) )
     if ( !isTRUE(all.equal(sort(strict.vals),
                            sort(unique(na.omit(states))))) )
@@ -60,7 +88,10 @@ check.states <- function(tree, states, allow.unnamed=FALSE,
       stop("Species in 'clades' do not have states information")
     states[union(tree$tip.label, spp.clades)]
   } else {
-    states[tree$tip.label]
+    ret <- states[tree$tip.label]
+    ## Ugly hack...
+    attr(ret, "multistate") <- attr(states, "multistate")
+    ret
   }
 }
 
@@ -125,7 +156,10 @@ check.par.multipart <- function(pars, n.part, n.per) {
 
 ## Check that a number can reasonably be considered an integer.
 check.integer <- function(x) {
-  if ( max(abs(x - round(x))) > 1e-8 )
+  nna <- !is.na(x)
+  if ( max(abs(x[nna] - round(x[nna]))) > 1e-8 )
     stop("Non-integer argument for ", deparse(substitute(x)))
-  as.integer(x)
+  ## as.integer(x)
+  storage.mode(x) <- "integer"
+  x
 }

@@ -1,7 +1,7 @@
 Package: diversitree
 Title: diversitree: comparative phylogenetic tests of diversification
-Version: 0.6-4
-Date: 2010-03-11
+Version: 0.6-5
+Date: 2010-04-20
 Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE by
   Emma E. Goldberg <eeg@uic.edu>.
 Maintainer: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>
@@ -15,8 +15,8 @@ Description: Contains a number of comparative phylogenetic methods,
   701) and its unresolved tree extensions (FitzJohn et al. 2009:
   Syst. Biol. 58: 595), MuSSE (Multiple State Speciation and
   Extinction), QuaSSE (Quantitative State Speciation and Extinction;
-  FitzJohn 2010: Syst. Biol. in press), and GeoSSE (Geographic State
-  Speciation and Extinction; Goldberg et al. 2010: Syst. Biol.).
+  FitzJohn 2010: Syst. Biol. 69: 619), and GeoSSE (Geographic State
+  Speciation and Extinction; Goldberg et al. 2011: Syst. Biol.).
   Other included methods include Markov models of discrete and
   continuous trait evolution and constant rate speciation and
   extinction.

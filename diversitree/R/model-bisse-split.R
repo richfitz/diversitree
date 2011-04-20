@@ -86,8 +86,9 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
         x$tip.state <- x$tip.state[-x$unresolved$i]
       }
     }
-    
-    x$y <- initial.tip.bisse(x)
+
+    if ( x$n.tip > 0 )
+      x$y <- initial.tip.bisse(x)
     cache$cache[[i]] <- x
   }
 

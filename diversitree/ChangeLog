@@ -1,3 +1,27 @@
+2011-04-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* NAMESPACE: new ROOT.MAX constant for maximising the root
+	state probability
+
+	* R/check.R: Simple support for multistate/polymorphic tip
+	states.  Slightly improved "almost-integer" checking.
+
+	* R/mle.R: Additional arguments not being passed through to
+	hessian calculations.
+
+	* R/model-bisse-split.R: Work around corner case.
+
+	* R/model-bm.R: Check on parameter length.  Don't require an
+	ultrametric tree.  Measurement error handling was slightly off.
+
+	* R/model-musse.R: Simple support for multistate/polymorphic tip
+	states.
+
+	* man/constants.Rd: Added ROOT.MAX
+
+	* man/make.quasse.Rd: Update correct likelihood numbers.  Disable
+	fftR run, as it is far too slow.
+
 2011-03-17  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* data/geosse.R: Remove save=TRUE argument from require()

@@ -138,21 +138,24 @@ control.C.2 <- c(control.C.1, tips.combined=TRUE)
 
 control.R.1 <- list(dt.max=1/200, method="fftR")
 lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.1)
-(ll.C.1 <- lik.C.1(pars)) # -43.84827
+(ll.C.1 <- lik.C.1(pars)) # -46.34493
 
 lik.C.2 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.2)
-(ll.C.2 <- lik.C.2(pars)) # -43.79007
+(ll.C.2 <- lik.C.2(pars)) # -46.34493
 
+\dontrun{
+## slow...
 lik.R.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.R.1)
-(ll.R.1 <- lik.R.1(pars)) # -43.77852
+(ll.R.1 <- lik.R.1(pars)) # -46.34493
+}
 
 lik.s.C.1 <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x, constant.x,
                                nodes, split.t, control.C.1)
-(ll.s.C.1 <- lik.s.C.1(pars4)) # -43.76443
+(ll.s.C.1 <- lik.s.C.1(pars4)) # -46.32513
 
 lik.s.C.2 <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x, constant.x,
                                nodes, split.t, control.C.2)
-(ll.s.C.2 <- lik.s.C.2(pars4)) # -43.80149
+(ll.s.C.2 <- lik.s.C.2(pars4)) # -46.32514
 }
 
 \author{Richard G. FitzJohn}

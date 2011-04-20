@@ -81,8 +81,9 @@ do.mle.search <- function(func, x.init, method, fail.value=-Inf,
 
   if ( hessian ) {
     if ( !require(numDeriv) )
-      stop("The package numDeriv is required to compute the hessian")
-    ans$hessian <- hessian(func, ans$par)
+      warning("The package numDeriv is required to compute the hessian")
+    else
+      ans$hessian <- hessian(func2, ans$par)
   }
 
   names(ans$par) <- names.v

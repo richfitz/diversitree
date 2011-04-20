@@ -5,6 +5,7 @@
 \alias{ROOT.GIVEN}
 \alias{ROOT.BOTH}
 \alias{ROOT.ALL}
+\alias{ROOT.MAX}
 
 \title{Constants Used by Diversitree}
 
@@ -15,6 +16,7 @@ ROOT.OBS
 ROOT.GIVEN
 ROOT.BOTH
 ROOT.ALL
+ROOT.MAX
 }
 
 \description{
