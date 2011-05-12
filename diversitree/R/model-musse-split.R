@@ -28,7 +28,6 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
   n.part <- cache$n.part
   np <- k * (k + 1)
   
-  qmat <- matrix(0, k, k)
   idx.qmat <- cbind(rep(1:k, each=k-1),
                unlist(lapply(1:k, function(i) (1:k)[-i])))
   idx.lm <- 1:(2*k)
@@ -45,6 +44,7 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
     ## Set up all the Q matrices:
     for ( i in seq_len(n.part) ) {
       pars.i <- pars[[i]]
+      qmat <- matrix(0, k, k)
       qmat[idx.qmat] <- pars.i[idx.q]
       diag(qmat) <- -rowSums(qmat)
       pars[[i]] <- c(pars.i[idx.lm], qmat)

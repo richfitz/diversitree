@@ -74,7 +74,7 @@ plot(h, phy, show.node.label=TRUE, font=1, cex=.75, no.margin=TRUE)
 
 ## Here is a plain MuSSE function for later comparison:
 lik.m <- make.musse(phy, phy$tip.state, 3)
-lik.m(pars) # -110.7533
+lik.m(pars) # -110.8364
 
 ## Split this phylogeny at three points: nd16 and nd25, splitting it
 ## into three chunks
@@ -98,7 +98,7 @@ argnames(lik.s)
 pars.s <- rep(pars, 3)
 names(pars.s) <- argnames(lik.s)
 
-lik.s(pars.s) # -110.7533
+lik.s(pars.s) # -110.8364
 
 ## This is basically identical (to acceptable tolerance) to the plain
 ## MuSSE version:

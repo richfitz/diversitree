@@ -204,7 +204,7 @@ p <- starting.point.bisse(phy)
 
 ## Start an ML search from this point.  This takes some time (~7s)
 fit <- find.mle(lik, p, method="subplex")
-logLik(fit) # -158.69
+logLik(fit) # -158.6875
 
 ## The estimated parameters aren't too far away from the real ones, even
 ## with such a small tree
@@ -215,7 +215,7 @@ rbind(real=pars,
 ## (takes ~4s).
 lik.l <- constrain(lik, lambda1 ~ lambda0)
 fit.l <- find.mle(lik.l, p[-1], method="subplex")
-logLik(fit.l) # -158.74
+logLik(fit.l) # -158.7357
 
 ## Despite the difference in the estimated parameters, there is no
 ## statistical support for this difference:
@@ -229,10 +229,11 @@ prior <- make.prior.exponential(1 / (2 * (p[1] - p[3])))
 
 ## This takes quite a while to run, so is not run by default
 \dontrun{
-tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior, w=.1)
+tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior, w=.1, print.every=0)
 
 w <- diff(sapply(tmp[2:7], range))
-samples <- mcmc(lik, fit$par, nsteps=1000, prior=prior, w=w)
+samples <- mcmc(lik, fit$par, nsteps=1000, prior=prior, w=w,
+                print.every=100)
 
 ## See \link{profiles.plot} for more information on plotting these
 ## profiles.
@@ -313,6 +314,7 @@ diff(range(c(ll.1, ll.2, ll.3)))
 ## However, the CVODES version is quite a bit faster than the other two
 ## (cvodes is often a bit slower than deSolve).
 \dontrun{
+## Timings are on a 2008 Mac Pro
 system.time(fit.1 <- find.mle(lik.1, pars)) # 4.5s
 system.time(fit.2 <- find.mle(lik.2, pars)) # 6.0s
 system.time(fit.3 <- find.mle(lik.3, pars)) # 1.6s

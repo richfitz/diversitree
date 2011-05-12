@@ -123,7 +123,7 @@ p <- c(.1, .1) # initial parameter guess
 lik <- make.mk2(phy, phy$tip.state)
 fit.mk2 <- find.mle(lik, p)
 coef(fit.mk2)   # q10 >> q01
-logLik(fit.mk2) # -10.90
+logLik(fit.mk2) # -10.9057
 
 ## This can also be done using the more general Mk-n (ignore warning).
 ## This uses an approximation for the likelihood calculations.  make.mkn
@@ -134,7 +134,7 @@ fit.mkn <- find.mle(lik.mkn, p)
 fit.mkn[1:2]
 
 ## These are the same (except for the naming of arguments)
-all.equal(fit.mkn[-8], fit.mk2[-8], check.attr=FALSE, tolerance=1e-7)
+all.equal(fit.mkn[-7], fit.mk2[-7], check.attr=FALSE, tolerance=1e-7)
 
 ## Equivalence to ape's \link{ace} function:
 model <- matrix(c(0, 2, 1, 0), 2)

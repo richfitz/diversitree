@@ -2,9 +2,20 @@
 asr.marginal.bisse <- function(lik, pars, nodes=NULL,
                                condition.surv=TRUE,
                                root=ROOT.FLAT, root.p=NULL, ...) {
+  e <- environment(lik)
   states.idx <- 3:4
-  cache <- environment(lik)$cache
-  branches <- environment(lik)$branches
+  cache <- e$cache
+  branches <- e$branches
+
+  if ( is.null(branches) ) {
+    control <- e$control
+    if ( control$backend == "CVODES" ) {
+      control$backend <- "cvodes"
+      branches <- make.branches.bisse(cache, control)
+    } else {
+      stop("'branches' missing from likelihood function")
+    }
+  }
 
   if ( !is.null(cache$unresolved) )
     cache$preset <- 

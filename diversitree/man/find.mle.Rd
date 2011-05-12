@@ -158,20 +158,15 @@ fit <- find.mle(lik, pars)
 fit[1:2]
 
 coef(fit)   # Named vector of six parameters
-logLik(fit) # -659.92
-AIC(fit)    # 1331.85
-
-## Subplex can sometimes find better solutions, though not this time:
-fit.s <- find.mle(lik, pars, method="subplex")
-logLik(fit.s) - logLik(fit)
+logLik(fit) # -659.93
+AIC(fit)    # 1331.86
 
 ## find.mle works with constrained models (see \link{constrain}).  Here
 ## the two speciation rates are constrained to be the same as each
-## other.  Optimisation here is done with subplex because it *does*
-## return a better point than the default.
+## other.
 lik.l <- constrain(lik, lambda0 ~ lambda1)
-fit.l <- find.mle(lik.l, pars[-2], method="subplex")
-logLik(fit.l) # 663.40
+fit.l <- find.mle(lik.l, pars[-2])
+logLik(fit.l) # 663.41
 
 ## Compare the models with \link{anova} - this shows that the more
 ## complicated model with two separate speciation rates fits
