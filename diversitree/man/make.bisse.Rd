@@ -136,26 +136,38 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 
 \section{ODE solver control}{
   The differential equations that define the BiSSE model are solved
-  numerically using the LSODA ODE solver.  The \code{control} argument
-  to \code{make.bisse} controls the behaviour of the integrator.  This
-  is a list that may contain elements:
+  numerically using deSolve's LSODA ODE solver or the CVODES solver from
+  the SUNDIALS suite of solves.  The \code{control} argument to
+  \code{make.bisse} controls the behaviour of the integrator.  This is a
+  list that may contain elements:
+  
   \itemize{
-    \item{safe}{(logical) Use a safer, slower, integrator?  Leave this
-      alone unless crashes are happening.}
-    
-    \item{tol}{Numerical tolerance used for the calculations.  The
-      default value of \code{1e-8} should be a reasonable trade-off
+    \item{\code{tol}: Numerical tolerance used for the calculations.
+      The default value of \code{1e-8} should be a reasonable trade-off
       between speed and accuracy.  Do not expect too much more than this
       from the abilities of most machines!}
 
-    \item{eps}{A value that when the sum of the D values drops below,
-      the integration results will be discarded and the integration will
-      be attempted again (the second-chance integration will divide a
-      branch in two and try again, recursively until the desired
-      accuracy is reached).  The default value of \code{0} will only
-      discard integration results when the parameters go negative.
+    \item{\code{eps}: A value that when the sum of the D values drops
+      below, the integration results will be discarded and the
+      integration will be attempted again (the second-chance integration
+      will divide a branch in two and try again, recursively until the
+      desired accuracy is reached).  The default value of \code{0} will
+      only discard integration results when the parameters go negative.
       However, for some problems more restrictive values (on the order
       of \code{control$tol}) will give better stability.}
+
+    \item{\code{backend}: Select the solver.  The three options here are
+      \itemize{
+	\item{\code{deSolve}: (the default for now).  Use the LSODA
+	  solver from the \code{deSolve} package.}
+	\item{\code{cvodes}: Use the CVODES solver from the SUNDIALS
+	  suite.}
+	\item{\code{CVODES}: Use the CVODES solver, but also use an
+	  experimental, faster, function for the tree traversal.}}}
+
+    \item{safe}{(logical) Use a safer, slower, integrator when using the
+      deSolve integrator?  Leave this alone (this will be automatically
+      selected when appropriate).}
   }
 }
 
@@ -285,6 +297,29 @@ lik.bd3 <- make.bd(phy, unresolved=unresolved.bd)
 ## Difference of -167.1523
 lik.bisse3.bd(pars) - lik.bd3(pars)
 lik.bisse3.bd(pars*2) - lik.bd3(pars*2)
+
+## Different backends:
+lik.1 <- make.bisse(phy, phy$tip.state, control=list(backend="deSolve"))
+lik.2 <- make.bisse(phy, phy$tip.state, control=list(backend="cvodes"))
+lik.3 <- make.bisse(phy, phy$tip.state, control=list(backend="CVODES"))
+
+## All the calculations are very similar
+pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+(ll.1 <- lik.1(pars))
+(ll.2 <- lik.2(pars))
+(ll.3 <- lik.3(pars))
+diff(range(c(ll.1, ll.2, ll.3)))
+
+## However, the CVODES version is quite a bit faster than the other two
+## (cvodes is often a bit slower than deSolve).
+\dontrun{
+system.time(fit.1 <- find.mle(lik.1, pars)) # 4.5s
+system.time(fit.2 <- find.mle(lik.2, pars)) # 6.0s
+system.time(fit.3 <- find.mle(lik.3, pars)) # 1.6s
+
+## All found the same ML point:
+diff(range(fit.1$lnLik, fit.2$lnLik, fit.3$lnLik))
+}
 }
 
 \references{

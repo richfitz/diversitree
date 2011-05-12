@@ -1,49 +1,15 @@
-/* Multi-state BiSSE compiled code */
+/* Multi-state BiSSE (MuSSE) compiled code */
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
 #include <R_ext/Rdynload.h>
 #include "util.h"
 
-void do_derivs_musse(int k, double *pars, double *y, double *ydot);
+/* For CVODES */
+#include <nvector/nvector_serial.h>
+#include <user_data.h>
 
-static double *parms_musse;
-void initmod_musse(void (* odeparms)(int *, double *)) {
-  /* TODO: I should check here about the lengths of parameters, but I
-     won't bother; it is not clear how best to do this, anyway.  Most
-     of the checking should be done in the R end of things.  Because
-     this is going to get an R object, it should be much easier to the
-     checking there. */
-  DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparms");
-  parms_musse = REAL(get_deSolve_gparms());
-} 
-
-void derivs_musse(int *neq, double *t, double *y, double *ydot,
-		   double *yout, int *ip) {
-
-  do_derivs_musse(*neq / 2, parms_musse, y, ydot);
-  /*
-  const int k = *neq / 2;
-  double *e = y, *d = y + k;
-  double *dEdt = ydot, *dDdt = ydot + k;
-  double *lambda = parms_musse, *mu = parms_musse + k, 
-    *Q = parms_musse + 2*k;
-  int i;
-  double tmp, ei, di;
-  for ( i = 0; i < k; i++ ) {
-    ei = e[i];
-    di = d[i];
-    tmp = - lambda[i] - mu[i];
-    dEdt[i] = mu[i] + tmp * ei +     lambda[i] * ei * ei;
-    dDdt[i] =         tmp * di + 2 * lambda[i] * ei * di;
-  }
-
-  do_gemm2(Q, k, k, y, k, 2, ydot);
-  */
-}
-
-/* This gives a skeleton for the final version */
+/* This is the core function that actually evaluates the deriative */
 void do_derivs_musse(int k, double *pars, double *y, double *ydot) {
   double *e = y, *d = y + k;
   double *dEdt = ydot, *dDdt = ydot + k;
@@ -59,39 +25,125 @@ void do_derivs_musse(int k, double *pars, double *y, double *ydot) {
     dDdt[i] =         tmp * di + 2 * lambda[i] * ei * di;
   }
 
+  /* TODO: Replace with mult_mv() from util-matrix.c */
+  /* mult_mv(k, Q, y, 1.0, ydot); */
   do_gemm2(Q, k, k, y, k, 2, ydot);
 }
 
-/* This might go in its own file; this is the extent of the
-   time-dependent MuSSE code - it's not much to look at. 
+/* Plain MuSSE */
+/* deSolve / LSODA */
+static double *parms_musse;
 
-   This is based on the section in R-exts on "evaluating R expressions
-   from C".
- */
-static SEXP func_musse;
-static SEXP rho_musse;
+void initmod_musse(void (* odeparms)(int *, double *)) {
+  DL_FUNC get_deSolve_gparms = 
+    R_GetCCallable("deSolve", "get_deSolve_gparms");
+  parms_musse = REAL(get_deSolve_gparms());
+} 
 
+void derivs_musse(int *neq, double *t, double *y, double *ydot,
+		   double *yout, int *ip) {
+  do_derivs_musse(*neq / 2, parms_musse, y, ydot);
+}
+
+/* CVODES */
+int derivs_musse_cvode(realtype t, N_Vector y, N_Vector ydot,
+		       void *user_data) {
+  const UserData *data = (UserData*) user_data;
+  do_derivs_musse(data->neq/2,
+		  data->p,
+		  NV_DATA_S(y),
+		  NV_DATA_S(ydot));
+  return 0;
+}
+
+void initial_conditions_musse(int neq, double *vars_l, double *vars_r,
+			      double *pars, double t, 
+			      double *vars_out) {
+  const int k = neq/2;
+  int i, j;
+  /* E: */
+  memcpy(vars_out, vars_l, k * sizeof(double));
+  /* D: */
+  for ( i = 0, j = k; i < k; i++, j++ )
+    vars_out[j] = vars_l[j] * vars_r[j] * pars[i];
+}
+
+/* Time-dependent MuSSE */
+/* The time dependent models are quite a bit different to the other
+   models; rather than passing in a parameter vector, we pass in a (R)
+   function of time.
+
+   Each time step, evaluate this function to get the *actual*
+   parameter vector, which is passed through to the underlying
+   derivative calculation.
+
+   The CVODES integrator requires that the model 'parameters' is a
+   real vector, so we are going to pass around something trivial here
+   instead.
+
+   The actual function to be evaluated is tfunc_musse, and the required
+   environment is trho_musse. */
+static SEXP tfunc_musse;
+static SEXP trho_musse;
+
+void set_tfunc_musse_t(SEXP r_tfunc, SEXP r_trho) {
+  if ( !isFunction(r_tfunc) )
+    error("tfunc is not a function");
+  if ( !isEnvironment(r_trho) )
+    error("tenv is not an environment");
+
+  tfunc_musse = r_tfunc;
+  trho_musse  = r_trho;
+}
+
+void do_derivs_musse_t(int k, double t, double *y, double *ydot) {
+  SEXP R_fcall, r_pars;
+  double *pars;
+  int i;
+  const int np = k*(k+2), ncheck = 2*k;
+
+  PROTECT(R_fcall = lang2(tfunc_musse, ScalarReal(t)));
+  PROTECT(r_pars = eval(R_fcall, trho_musse));
+  pars = REAL(r_pars);
+
+  if ( LENGTH(r_pars) != np )
+    error("Invalid parameter length");
+  /* TODO: Only check for negative parameters in lambda and mu right
+    now; the time varying Q matrix is still not done.  Once it is, we
+    need to check the nondiagonal elements of the Q matrix */
+  for ( i = 0; i < ncheck; i++ )
+    if ( pars[i] < 0 )
+      error("Illegal negative parameter at time %2.5f", t);
+
+  do_derivs_musse(k, pars, y, ydot);
+
+  UNPROTECT(2);
+}
+
+/* deSolve / LSODA */
 void initmod_musse_t(void (* odeparms)(int *, double *)) {
   DL_FUNC get_deSolve_gparms = 
     R_GetCCallable("deSolve", "get_deSolve_gparms");
   SEXP obj = get_deSolve_gparms();
-
-  func_musse  = VECTOR_ELT(obj, 0);
-  rho_musse   = VECTOR_ELT(obj, 1);
-
-  if ( !isFunction(func_musse) )
-    error("First element must be a function");
-  if ( !isEnvironment(rho_musse) )
-    error("Second element must be an environment");
+  set_tfunc_musse_t(VECTOR_ELT(obj, 0), VECTOR_ELT(obj, 1));
 }
 
 void derivs_musse_t(int *neq, double *t, double *y, double *ydot, 
-		    double *yout, int *ip) {
-  SEXP R_fcall;
-  double *pars;
+		 double *yout, int *ip) {
+  do_derivs_musse_t(*neq / 2, *t, y, ydot);
+}
 
-  PROTECT(R_fcall = lang2(func_musse, ScalarReal(*t)));
-  pars = REAL(eval(R_fcall, rho_musse));
-  do_derivs_musse(*neq / 2, pars, y, ydot);
-  UNPROTECT(1);
+/* CVODES */
+SEXP r_set_tfunc_musse_t(SEXP r_tfunc, SEXP r_trho) {
+  set_tfunc_musse_t(r_tfunc, r_trho);
+  return R_NilValue;
+}
+
+int derivs_musse_t_cvode(realtype t, N_Vector y, N_Vector ydot,
+			 void *user_data) {
+  do_derivs_musse_t(((UserData*) user_data)->neq/2,
+		    t,
+		    NV_DATA_S(y),
+		    NV_DATA_S(ydot));
+  return 0;
 }

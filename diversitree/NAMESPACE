@@ -163,9 +163,17 @@ export(starting.point)
 export(asr.marginal)
 export(asr.joint)
 export(asr.stoch)
+export(make.asr.marginal)
+export(make.asr.joint)
+export(make.asr.stoch)
+
 S3method(asr.marginal, constrained)
 S3method(asr.joint, constrained)
 S3method(asr.stoch, constrained)
+
+S3method(make.asr.marginal, constrained)
+S3method(make.asr.joint, constrained)
+S3method(make.asr.stoch, constrained)
 
 ## ASR/Mkn
 S3method(asr.marginal, mkn)

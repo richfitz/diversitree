@@ -12,31 +12,16 @@
 
 #include <R.h>
 
-static double parms[7];
+/* For CVODES */
+#include <nvector/nvector_serial.h>
+#include <user_data.h>
 
-#define sA parms[0]     /* speciation within region A */
-#define sB parms[1]     /* speciation within region B */
-#define sAB parms[2]    /* between-region speciation */
-#define xA parms[3]     /* extinction from region A */
-#define xB parms[4]     /* extinction from region B */
-#define dA parms[5]     /* dispersal from A to B */
-#define dB parms[6]     /* dispersal from B to A */
-
-void initmod_geosse(void (* odeparms)(int *, double *))
-{
-  int N = 7;
-  odeparms(&N, parms);
-}
-
-/* states:
- * 1 = in both regions
- * 2 = region A endemic
- * 3 = region B endemic
- */
-
-void derivs_geosse(int *neq, double *t, double *y, double *ydot, double *yout,
-                   int *ip)
-{
+void do_derivs_geosse(double *pars, double *y, double *ydot) {
+  /* states:
+   * 1 = in both regions
+   * 2 = region A endemic
+   * 3 = region B endemic
+   */
   double E_1 = y[0];
   double E_2 = y[1];
   double E_3 = y[2];
@@ -44,7 +29,16 @@ void derivs_geosse(int *neq, double *t, double *y, double *ydot, double *yout,
   double D_N1 = y[3];
   double D_N2 = y[4];
   double D_N3 = y[5];
-           
+
+  double 
+    sA  = pars[0],     /* speciation within region A */
+    sB  = pars[1],     /* speciation within region B */
+    sAB = pars[2],     /* between-region speciation  */
+    xA  = pars[3],     /* extinction from region A   */
+    xB  = pars[4],     /* extinction from region B   */
+    dA  = pars[5],     /* dispersal from A to B      */
+    dB  = pars[6];     /* dispersal from B to A      */
+
   /*  dE_1 / dt  */
   ydot[0] = -(sA + sB + xA + xB + sAB) * E_1 
             + xA * E_3 + xB * E_2 
@@ -72,4 +66,46 @@ void derivs_geosse(int *neq, double *t, double *y, double *ydot, double *yout,
   /*  dD_N3 / dt  */
   ydot[5] = -(sB + dB + xB) * D_N3 
             + dB * D_N1 + 2 * sB * D_N3 * E_3;
+}
+
+/* deSolve / LSODA */
+static double parms_geosse[7];
+
+void initmod_geosse(void (* odeparms)(int *, double *))
+{
+  int N = 7;
+  odeparms(&N, parms_geosse);
+}
+
+void derivs_geosse(int *neq, double *t, double *y, double *ydot, 
+		  double *yout, int *ip) {
+  do_derivs_geosse(parms_geosse, y, ydot);
+}
+
+/* CVODES */
+int derivs_geosse_cvode(realtype t, N_Vector y, N_Vector ydot,
+		       void *user_data) {
+  do_derivs_geosse(((UserData*) user_data)->p,
+		   NV_DATA_S(y),
+		   NV_DATA_S(ydot));
+  return 0;
+}
+
+void initial_conditions_geosse(int neq, double *vars_l, double *vars_r,
+			       double *pars, double t, 
+			       double *vars_out) {
+  /* E.AB, E.A, E.B */
+  vars_out[0] = vars_l[0];
+  vars_out[1] = vars_l[1];
+  vars_out[2] = vars_l[2];
+
+  /* D.CAB (Eq. 2c) */
+  vars_out[3] =
+    0.5 * ((vars_l[3] * vars_r[4] + vars_l[4] * vars_r[3]) * pars[0] +
+	   (vars_l[3] * vars_r[5] + vars_l[5] * vars_r[3]) * pars[1] +
+	   (vars_l[4] * vars_r[5] + vars_l[5] * vars_r[4]) * pars[2]);
+
+  /* D.CA, D.CB  (Eq. 2ab) */
+  vars_out[4] = vars_l[4] * vars_r[4] * pars[0];
+  vars_out[5] = vars_l[5] * vars_r[5] * pars[1];
 }

@@ -169,3 +169,18 @@ make.pars.t <- function(functions) {
   ret
 }
 
+make.ode.branches.t <- function(model, dll, neq, np, comp.idx, control) {
+  br <- make.ode.branches(model, dll, neq, np, comp.idx, control)
+  e <- new.env()
+  if ( control$backend == "deSolve" ) {
+    function(y, len, pars, t0)
+      br(y, len, list(pars, e), t0)
+  } else {
+    setfunc <- sprintf("r_set_tfunc_%s", model)
+    dummy <- rep(0.0, np)
+    function(y, len, pars, t0) {
+      .Call(setfunc, pars, e, PACKAGE=dll)
+      br(y, len, dummy, t0)
+    }
+  }
+}

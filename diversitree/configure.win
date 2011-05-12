@@ -1,1 +1,2 @@
 cp src/config.h.win src/config.h
+cp -f src/cvodes/*.c src

@@ -2,7 +2,10 @@
 make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
                           sampling.f=NULL, nt.extra=10, strict=TRUE,
                           control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
+  control <- check.control.ode(control)
+  if ( control$backend == "CVODES" )
+    stop("Cannot use CVODES backend with bisse.td")
+  
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=nt.extra,
                             strict=strict)
@@ -10,9 +13,7 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
   if ( !is.null(cache$unresolved) )
     stop("Cannot (yet) use unresolved clades with time-dependent BiSSE")
 
-  branches <- make.branches.td(make.branches.bisse(control$safe,
-                                                   control$tol,
-                                                   control$eps))
+  branches <- make.branches.td(make.branches.bisse(cache, control))
   initial.conditions <-
     make.initial.conditions.td(initial.conditions.bisse)
 
@@ -20,9 +21,8 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
   i.t <- seq_len(n.epoch - 1)
   i.p <- n.epoch:npar
 
-  ll.bisse.td <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-
     if ( length(pars) != npar )
       stop(sprintf("Invalid length parameters (expected %d)", npar))
     if ( any(!is.finite(pars)) || any(pars < 0) )
@@ -37,7 +37,6 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
                 condition.surv, root, root.p, intermediates)
   }
   
-  ll <- function(pars, ...) ll.bisse.td(pars, ...)
   class(ll) <- c("bisse.td", "bisse", "function")
   attr(ll, "n.epoch") <- n.epoch
   ll

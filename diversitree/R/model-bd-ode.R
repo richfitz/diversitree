@@ -14,9 +14,16 @@
 ## 1: make
 make.bd.ode <- function(tree, sampling.f=NULL, unresolved=NULL,
                         control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
+  control <- check.control.ode(control)
+  backend <- control$backend
+
   cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
-  branches <- make.branches.bd.ode(control$safe, control$tol, control$eps)
+
+  if ( backend == "CVODES" )
+    all.branches <- make.all.branches.C.bd(cache, control)
+  else
+    branches <- make.branches.bd(cache, control)
+    
   const <- lfactorial(length(tree$tip.label) - 1)
 
   ll.bd.ode <- function(pars, condition.surv=TRUE,
@@ -26,9 +33,14 @@ make.bd.ode <- function(tree, sampling.f=NULL, unresolved=NULL,
     if ( any(pars < 0) || any(!is.finite(pars)) )
       return(-Inf)
 
-    ll.xxsse(pars, cache, initial.conditions.bd.ode,
-             branches, condition.surv, ROOT.FLAT, NULL,
-             intermediates) + const
+    if ( backend == "CVODES" )
+      ll.xxsse.C(pars, all.branches,
+                 condition.surv, ROOT.FLAT, NULL,
+                 intermediates) + const
+    else
+      ll.xxsse(pars, cache, initial.conditions.bd.ode,
+               branches, condition.surv, ROOT.FLAT, NULL,
+               intermediates) + const
   }
   
   class(ll.bd.ode) <- c("bd.ode", "bd", "function")
@@ -74,11 +86,17 @@ initial.conditions.bd.ode <- function(init, pars, t, is.root=FALSE)
   c(init[[1]][1], init[[1]][2] * init[[2]][2] * pars[1])
 
 ## 8: branches
-make.branches.bd.ode <- function(safe=FALSE, tol=1e-8, eps=0) {
-  RTOL <- ATOL <- tol
-  bd.ode <- make.ode("derivs_bd", "diversitree", "initmod_bd", 2, safe)
-  branches <- function(y, len, pars, t0)
-    t(bd.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
-  make.branches(branches, 2, eps)
+make.branches.bd <- function(cache, control) {
+  neq <- 2L
+  np <- 2L
+  comp.idx <- 2L
+  make.ode.branches("bd", "diversitree", neq, np, comp.idx, control)
 }
 
+make.all.branches.C.bd <- function(cache, control) {
+  neq <- 2L
+  np <- 2L
+  comp.idx <- 2L
+  make.all.branches.C(cache, "bd", "diversitree",
+                      neq, np, comp.idx, control)
+}

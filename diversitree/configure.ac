@@ -32,7 +32,6 @@ CPPFLAGS="${CPPFLAGS} ${PKG_CPPFLAGS}"
 dnl AC_CHECK_HEADERS([fftw3.h], AC_DEFINE(HAVE_FFTW3_H, 1, Define to 1 if you have FFTW))
 AC_CHECK_HEADERS([fftw3.h])
 if test "${ac_cv_header_fftw3_h}" = no; then
-dnl AC_MSG_ERROR("FFTW header fftw3.h not found")
    AC_MSG_WARN(No fftw found - QuaSSE/fftC will not be available)
 else
    echo "Using fftw for QuaSSE FFT calculations"
@@ -52,16 +51,28 @@ else
 	echo "Using default options"
 fi
 
-AC_ARG_ENABLE([gcc-strict],
-	AS_HELP_STRING([--enable-gcc-strict],
-		[use strict gcc error checking]),
-	[gcc_strict=$enableval])
-if [ test x"$gcc_strict" = xyes ]; then
+dnl AC_ARG_ENABLE([gcc-strict],
+dnl 	AS_HELP_STRING([--enable-gcc-strict],
+dnl 		[use strict gcc error checking]),
+dnl 	[gcc_strict=$enableval])
+dnl if [ test x"$gcc_strict" = xyes ]; then
+dnl    echo "Using strict C checking"
+dnl    PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
+dnl else
+dnl    echo "Using normal C checking"
+dnl fi
+
+dnl If we are using GCC, enable strict checking of the code. 
+if test "${GCC}" = yes; then
    echo "Using strict C checking"
    PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
-else
-   echo "Using normal C checking"
 fi
+
+## Because the R coding standards (in R-ints), we cannot assume GNU
+## make anywhere except windows, here I copy the cvodes source into
+# the main directory.
+echo "Copying CVODES files into package src directory"
+cp -fp src/cvodes/*.c src
 
 AC_SUBST(PKG_CPPFLAGS)
 AC_SUBST(PKG_CFLAGS)

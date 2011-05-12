@@ -26,3 +26,7 @@ If fftw is not found, installation will continue, but the (relatively)
 fast C based QuaSSE integration will not be available.  The R based
 fft integrator and the method-of-lines integrator will be available.
 
+We use the Sundials CVODE ode solver; code for this is in src/cvodes
+to keep it separate from the base diversitree code and to allow easy
+updating.  See the file cvodes-notes.txt for more information.
+

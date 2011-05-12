@@ -163,3 +163,34 @@ check.integer <- function(x) {
   storage.mode(x) <- "integer"
   x
 }
+
+check.scalar <- function(x) {
+  if ( length(x) != 1 )
+    stop(deparse(substitute(x)), "must be a scalar")
+  x
+}
+
+check.control.ode <- function(control=list()) {
+  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0,
+                             backend="deSolve"), control)
+
+  backends <- c("deSolve", "cvodes", "CVODES")
+  if ( length(control$backend) != 1 )
+    stop("'backend' must be a single element")
+  control$backend <- backends[pmatch(control$backend, backends)]
+  if ( is.na(control$backend) )
+    stop("Invalid backend selected")
+
+  control$tol <- check.scalar(control$tol)
+  control$eps <- check.scalar(control$eps)
+  control$safe <- check.scalar(control$safe)
+
+  if ( !is.numeric(control$tol) )
+    stop("control$tol must be numeric")
+  if ( !is.numeric(control$eps) )
+    stop("control$eps must be numeric")
+  if ( !is.logical(control$safe) )
+    stop("control$eps must be logical")
+
+  control
+}

@@ -189,6 +189,7 @@ make.cache <- function(tree) {
     anc[[i]] <- c(parent[i], anc[[parent[i]]])
   
   ans <- list(tip.label=tree$tip.label,
+              node.label=tree$node.label,
               len=len,
               children=children,
               parent=parent,
@@ -231,23 +232,26 @@ root.p.xxsse <- function(vals, pars, root, root.p=NULL) {
   k <- length(vals) / 2
   d.root <- vals[(k+1):(2*k)]
 
-  if ( root == ROOT.FLAT )
+  if ( root == ROOT.FLAT ) {
     p <- 1/k
-  else if ( root == ROOT.EQUI )
-    if ( k == 2 )
+  } else if ( root == ROOT.EQUI ) {
+    if ( k == 2 ) {
       p <- stationary.freq.bisse(pars)
-    else
-      stop("ROOT.EQUI only possible when k = 2")
-  else if ( root == ROOT.OBS )
+      p <- c(p, 1-p)
+    } else {
+      stop("ROOT.EQUI only implemented for BiSSE")
+    }
+  } else if ( root == ROOT.OBS ) {
     p <- d.root / sum(d.root)
-  else if ( root == ROOT.GIVEN ) {
+  } else if ( root == ROOT.GIVEN ) {
     if ( length(root.p) != length(d.root) )
       stop("Invalid length for root.p")
     p <- root.p
-  } else if ( root == ROOT.ALL )
+  } else if ( root == ROOT.ALL ) {
     p <- NULL
-  else
+  } else {
     stop("Invalid root mode")
+  }
   p
 }
 
@@ -321,6 +325,34 @@ make.branches <- function(branches, idx, eps=0) {
       cbind(0, branches(y, len, pars, t0), deparse.level=0)
 }
 
+make.ode.branches <- function(model, dll, neq, np, comp.idx, control) {
+  backend <- control$backend
+  safe <- control$safe
+  tol <- control$tol
+  eps <- control$eps
+  
+  if ( backend == "deSolve" ) {
+    initfunc <- sprintf("initmod_%s", model)
+    derivs <- sprintf("derivs_%s", model)
+
+    RTOL <- ATOL <- tol
+    ode <- make.ode(derivs, dll, initfunc, neq, safe)
+    branches <- function(y, len, pars, t0)
+      t.default(ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
+  } else if ( backend == "cvodes" ) {
+    derivs <- sprintf("derivs_%s_cvode", model)
+
+    RTOL <- ATOL <- tol
+    ode <- cvodes(neq, np, derivs, RTOL, ATOL, dll)
+    branches <- function(y, len, pars, t0)
+      ode(pars, y, c(t0, t0+len))[-1,,drop=FALSE]
+  } else {
+    stop("Invalid backend", backend)
+  }
+
+  make.branches(branches, comp.idx, eps)
+}
+
 ## Utility functions for organising initial conditions.
 ## TODO: Document.
 dt.tips.grouped <- function(y, y.i, tips, t) {
@@ -361,3 +393,4 @@ dt.tips.ordered <- function(y, tips, t) {
        t=t[i],
        y=y[i])
 }
+

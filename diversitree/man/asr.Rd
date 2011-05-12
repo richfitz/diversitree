@@ -4,6 +4,10 @@
 \alias{asr.joint}
 \alias{asr.stoch}
 
+\alias{make.asr.marginal}
+\alias{make.asr.joint}
+\alias{make.asr.stoch}
+
 \title{Ancestral State Reconstruction}
 
 \description{Perform ancestral state reconstruction.  These functions
@@ -15,6 +19,10 @@
 asr.marginal(lik, pars, nodes=NULL, ...)
 asr.joint(lik, pars, n=1, simplify=TRUE, ...)
 asr.stoch(lik, pars, n=1, ...) 
+
+make.asr.marginal(lik, ...)
+make.asr.joint(lik, ...)
+make.asr.stoch(lik, ...)
 }
 
 \arguments{
@@ -33,7 +41,8 @@ asr.stoch(lik, pars, n=1, ...)
 
 \details{
   These three functions compute marginal, joint, and stochastic
-  ancestral reconstructions.
+  ancestral reconstructions.  The \code{make} versions return functions
+  that can efficiently be used many times over.
 }
 
 \value{

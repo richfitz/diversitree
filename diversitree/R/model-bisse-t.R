@@ -2,7 +2,10 @@
 make.bisse.t <- function(tree, states, functions, sampling.f=NULL,
                          unresolved=NULL, nt.extra=10, strict=TRUE,
                          control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
+  control <- check.control.ode(control)
+  if ( control$backend == "CVODES" )
+    stop("Cannot use CVODES backend with bisse.t")
+
   cache <- make.cache.bisse(tree, states, unresolved=unresolved,
                             sampling.f=sampling.f, nt.extra=nt.extra,
                             strict=strict)
@@ -13,8 +16,7 @@ make.bisse.t <- function(tree, states, functions, sampling.f=NULL,
   n.args <- attr(pars.t, "n.args")
   is.constant.arg <- attr(pars.t, "is.constant.arg")
 
-  branches <- make.branches.bisse.t(control$safe, control$tol,
-                                    control$eps)
+  branches <- make.branches.bisse.t(cache, control)
   initial.conditions <-
     make.initial.conditions.t(initial.conditions.bisse)
 
@@ -43,14 +45,10 @@ make.bisse.t <- function(tree, states, functions, sampling.f=NULL,
 }
 
 ## 8: branches
-make.branches.bisse.t <- function(safe=FALSE, tol=1e-8, eps=0) {
-  RTOL <- ATOL <- tol
-  e <- new.env()
-  
-  bisse.t.ode <- make.ode("derivs_bisse_t", "diversitree",
-                          "initmod_bisse_t", 4, safe)
-  branches <- function(y, len, pars, t0)
-    t(bisse.t.ode(y, c(t0, t0+len), list(pars, e),
-                  rtol=RTOL, atol=ATOL)[-1,-1])
-  make.branches(branches, 3:4, eps)
+make.branches.bisse.t <- function(cache, control) {
+  neq <- 4L
+  np <- 6L # not used
+  comp.idx <- as.integer(3:4)
+  make.ode.branches.t("bisse_t", "diversitree", neq, np, comp.idx,
+                      control)
 }

@@ -1,3 +1,4 @@
 #!/bin/sh
-rm -f config.* src/Makevars src/Makedeps src/config.h src/*.o src/*.so src/*.dll src/*.def 
+rm -f config.* src/Makevars src/Makedeps src/config.h src/*.o src/*.so src/*.dll src/*.def src/cvodes/*.o
 rm -fR autom4te.cache a.out.dSYM
+rm -f `ls src/cvodes/*.c | sed 's/cvodes\///'`

@@ -63,7 +63,7 @@ plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
 
 ## Here is a plain BiSSE function for comparison:
 lik.b <- make.bisse(phy, phy$tip.state)
-lik.b(pars) # -93.61627
+lik.b(pars) # -93.62479
 
 ## Split this phylogeny at three points: nd15, nd18 and nd26
 nodes <- c("nd15", "nd18", "nd26")
@@ -89,7 +89,7 @@ pars4 <- rep(list(pars), 4)
 pars4
 
 ## Run the likelihod calculation:
-lik.s(pars4) # -93.61627
+lik.s(pars4) # -93.62479
 
 ## These are basically identical (to acceptable tolerance)
 lik.s(pars4) - lik.b(pars)

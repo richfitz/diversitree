@@ -1,3 +1,63 @@
+2011-05-11  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bump version number to 0.7, and require deSolve >=
+	1.7.
+
+	* NAMESPACE: New make.asr.* functions around the different asr
+	functions (more changes to ASR code coming soon)
+
+	* README;cvodes-notes.txt: Information about CVODES 
+
+	* configure.ac;configure.win;cleanup: Copy/delete CVODES files
+	when building and cleaning up.  Strict GCC checks now enabled
+	whenever configure detects GCC is being used.
+
+	* R/asr-bisse.R;R/asr-mkn.R;R/asr-musse.R: More flexible root
+	treatment now possible.
+
+	* R/asr.R: New make.asr.* functions around the different asr
+	functions (more changes to ASR code coming soon).  Switch internal
+	data from list to matrix.
+
+	* R/check.R: New check.control.ode() function for testing the ODE
+	tuning parameters.  check.scalar() for checking things are length
+	1.
+
+	* R/cvodes.R;R/diversitree-branches-C.R: Support for the new
+	CVODES integrator.
+
+	* R/diversitree-branches.R: ROOT.EQUI was only using the
+	stationary frequency of state 0 (thanks to Gregory Imholte for
+	reporting).  New function make.ode.branches(), which is the
+	preferred way of making branches functions.  Allows switching
+	between the deSolve and CVODES integrators.
+
+	* R/model-bd-*.R;R/model-bisse*;R/model-geosse.R;R/model-musse*:
+	New CVODES integrator and branches interface added.
+
+	* R/t.R: make.ode.branches.t() is the new preferred way of making
+	time-dependent branches functions.
+
+	* R/util.R: Massive cleanup of the make.ode function.  Will not
+	fail when using unknown deSolve, but will fall back on safe
+	version with a warning.  Support for deSolve < 1.7 removed, and
+	support for deSolve 1.10 confirmed.
+
+	* inst/include: CVODES header files that are needed for making
+	CVODES based models.
+
+	* man/*: Documentation updates.
+
+	* src/Makevars.in;src/Makevars.win: New include flags needed for
+	CVODES
+
+	* src/bd-eqs.c;src/bisse-eqs.c;src/geosse-eqs.c;src/musse-eqs.c:
+	Support for CVODES models added.
+
+	* src/cvodes: Almost entirely unmodified CVODES package.
+
+	* src/cvodes_*: Wrapper around CVODES.
+	
 2011-04-20  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* NAMESPACE: new ROOT.MAX constant for maximising the root

@@ -1,14 +1,14 @@
 ## 1: make
 make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
                           strict=TRUE, control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
+  control <- check.control.ode(control)
+  if ( control$backend == "CVODES" )
+    stop("Cannot use CVODES backend with musse.td")
+
   cache <- make.cache.musse(tree, states, k, sampling.f, strict)
   cache$n.epoch <- n.epoch
 
-  branches <- make.branches.td(make.branches.musse(k, control$safe,
-                                                   control$tol,
-                                                   control$eps))
-
+  branches <- make.branches.td(make.branches.musse(cache, control))
   initial.conditions <-
     make.initial.conditions.td(initial.conditions.musse)
 
@@ -16,8 +16,13 @@ make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
   i.t <- seq_len(n.epoch - 1)
   i.p <- n.epoch:npar
 
-  ll.musse.td <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                          root.p=NULL, intermediates=FALSE) {
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.lm <- 1:(2*k)
+  idx.q <- (2*k+1):(k*(1+k))
+
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
     if ( length(pars) != npar )
       stop(sprintf("Invalid length parameters (expected %d)", npar))
     if ( any(!is.finite(pars)) || any(pars < 0) )
@@ -25,15 +30,20 @@ make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
 
-    pars <- cbind(c(pars[i.t], Inf),
-                  matrix(pars[i.p], n.epoch, k * (k + 1), TRUE))
+    pars2 <- matrix(NA, n.epoch, k * (k + 2) + 1)
+    pars2[,1] <- c(pars[i.t], Inf)
+    tmp <- matrix(pars[i.p], n.epoch, k * (k + 1), TRUE)
+    for ( i in seq_len(n.epoch) ) {
+      qmat <- matrix(0, k, k)
+      qmat[idx.qmat] <- tmp[i,idx.q]
+      diag(qmat) <- -rowSums(qmat)
+      pars2[i,-1] <- c(tmp[i,idx.lm], qmat)
+    }
 
-    ll.xxsse.td(pars, cache, initial.conditions, branches,
+    ll.xxsse.td(pars2, cache, initial.conditions, branches,
                 condition.surv, root, root.p, intermediates)
   }
   
-  ll <- function(pars, ...) ll.musse.td(pars, ...)
-
   class(ll) <- c("musse.td", "musse", "function")
   attr(ll, "n.epoch") <- n.epoch
   attr(ll, "k") <- k

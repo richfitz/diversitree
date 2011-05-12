@@ -21,7 +21,10 @@
 ## again).
 make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
                          strict=TRUE, control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
+  control <- check.control.ode(control)
+  if ( control$backend == "CVODES" )
+    stop("Cannot use CVODES backend with musse.t")
+
   cache <- make.cache.musse(tree, states, k, sampling.f, strict)
 
   if ( is.null(names(functions)) && length(functions) == k*(k+1) )
@@ -31,8 +34,7 @@ make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
   n.args <- attr(pars.t, "n.args")
   is.constant.arg <- attr(pars.t, "is.constant.arg")
 
-  branches <- make.branches.musse.t(k, control$safe, control$tol,
-                                    control$eps)
+  branches <- make.branches.musse.t(cache, control)
   initial.conditions <-
     make.initial.conditions.t(initial.conditions.musse)
 
@@ -122,14 +124,11 @@ make.pars.t.musse <- function(functions, k) {
 ## this gets here.  Normally this is done on the way in (TODO:
 ## arguably, it should be done in the likelihood funtion, and this may
 ## change in the future)
-make.branches.musse.t <- function(k, safe=FALSE, tol=1e-8, eps=0) {
-  RTOL <- ATOL <- tol
-  e <- new.env()
-  
-  musse.t.ode <- make.ode("derivs_musse_t", "diversitree",
-                          "initmod_musse_t", 2*k, safe)
-  branches <- function(y, len, pars, t0)
-    t(musse.t.ode(y, c(t0, t0+len), list(pars, e),
-                  rtol=RTOL, atol=ATOL)[-1,-1])
-  make.branches(branches, (k+1):(2*k), eps)
+make.branches.musse.t <- function(cache, control) {
+  k <- cache$k
+  np <- as.integer(k * (k + 2))
+  neq <- as.integer(2 * k)
+  comp.idx <- as.integer((k+1):(2*k))
+  make.ode.branches.t("musse_t", "diversitree", neq, np, comp.idx,
+                      control)
 }

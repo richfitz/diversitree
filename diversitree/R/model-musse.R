@@ -12,11 +12,22 @@
 ## 1: make
 make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
                        control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
-  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
-  branches <- make.branches.musse(k, control$safe, control$tol,
-                                  control$eps)
+  control <- check.control.ode(control)
+  backend <- control$backend
 
+  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
+
+  if ( backend == "CVODES" )
+    all.branches <- make.all.branches.C.musse(cache, control)
+  else
+    branches <- make.branches.musse(cache, control)
+
+  qmat <- matrix(0, k, k)
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.lm <- 1:(2*k)
+  idx.q <- (2*k+1):(k*(1+k))
+  
   ll.musse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                        root.p=NULL, intermediates=FALSE) {
     if ( length(pars) != k*(k+1) )
@@ -27,8 +38,16 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
 
-    ll.xxsse(pars, cache, initial.conditions.musse, branches,
-             condition.surv, root, root.p, intermediates)
+    qmat[idx.qmat] <- pars[idx.q]
+    diag(qmat) <- -rowSums(qmat)
+    pars2 <- c(pars[idx.lm], qmat)
+
+    if ( backend == "CVODES" )
+      ll.xxsse.C(pars2, all.branches,
+                 condition.surv, root, root.p, intermediates)
+    else
+      ll.xxsse(pars2, cache, initial.conditions.musse, branches,
+               condition.surv, root, root.p, intermediates)
   }
 
   ll <- function(pars, ...) ll.musse(pars, ...)
@@ -130,54 +149,52 @@ initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
     init[[1]][j] * init[[2]][j] * pars[i])
 }
 
-## 8: branches (separate for mk2 and mkn)
-make.branches.musse <- function(k, safe=FALSE, tol=1e-8, eps=0) {
-  RTOL <- ATOL <- tol
-
-  qmat <- matrix(0, k, k)
-  idx.qmat <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  idx.lm <- 1:(2*k)
-  idx.q <- (2*k+1):(k*(1+k))
-
+## 8: branches
+make.branches.musse <- function(cache, control) {
+  k <- cache$k
   if ( k == 2 )
     warning("Two states is faster with BiSSE")
-  musse.ode <- make.ode("derivs_musse", "diversitree",
-                        "initmod_musse", 2*k, FALSE)
+  np <- as.integer(k * (k + 2))
+  neq <- as.integer(2 * k)
+  comp.idx <- as.integer((k+1):(2*k))
+  make.ode.branches("musse", "diversitree", neq, np, comp.idx,
+                    control)
+}
 
-  branches.musse <- function(y, len, pars, t0) {
-    qmat[idx.qmat] <- pars[idx.q]
-    diag(qmat) <- -rowSums(qmat)
-    pars <- c(pars[idx.lm], qmat)
-    t(musse.ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1])
-  }
-  make.branches(branches.musse, (k+1):(2*k), eps)
+make.all.branches.C.musse <- function(cache, control) {
+  k <- cache$k
+  np <- as.integer(k * (k + 2))
+  neq <- as.integer(2 * k)
+  comp.idx <- as.integer((k+1):(2*k))
+ 
+  make.all.branches.C(cache, "musse", "diversitree",
+                      neq, np, comp.idx, control)
 }
 
 ## Historical interest: This function creates a function for computing
-## derivatives under MuSSE.
-make.musse.eqs.R <- function(k) {
-  qmat <- matrix(0, k, k)
-  idx.qmat <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  idx.e <- 1:k
-  idx.d <- (k+1):(2*k)
-  idx.l <- 1:k
-  idx.m <- (k+1):(2*k)
-  idx.q <- (2*k+1):(k*(1+k))
-
-  function(t, y, parms, ...) {
-    e <- y[idx.e]
-    d <- y[idx.d]
-    lambda <- parms[idx.l]
-    mu     <- parms[idx.m]
-    qmat[idx.qmat] <- parms[idx.q]  
-    diag(qmat) <- -rowSums(qmat)
-
-    list(c(mu - (lambda + mu) * e + lambda * e * e + qmat %*% e,
-           -(lambda + mu) * d + 2 * lambda * d * e + qmat %*% d))
-  }
-}
+## derivatives under MuSSE.  However, it uses the wrong argument setup
+## right now, so I've commented it out.  It probably should not have
+## been used.
+## make.musse.eqs.R <- function(k) {
+##   qmat <- matrix(0, k, k)
+##   idx.qmat <- cbind(rep(1:k, each=k-1),
+##                unlist(lapply(1:k, function(i) (1:k)[-i])))
+##   idx.e <- 1:k
+##   idx.d <- (k+1):(2*k)
+##   idx.l <- 1:k
+##   idx.m <- (k+1):(2*k)
+##   idx.q <- (2*k+1):(k*(1+k))
+##   function(t, y, parms, ...) {
+##     e <- y[idx.e]
+##     d <- y[idx.d]
+##     lambda <- parms[idx.l]
+##     mu     <- parms[idx.m]
+##     qmat[idx.qmat] <- parms[idx.q]  
+##     diag(qmat) <- -rowSums(qmat)
+##     list(c(mu - (lambda + mu) * e + lambda * e * e + qmat %*% e,
+##            -(lambda + mu) * d + 2 * lambda * d * e + qmat %*% d))
+##   }
+## }
 
 ## This makes the Q matrix from a set of parameters.
 musse.Q <- function(pars, k) {

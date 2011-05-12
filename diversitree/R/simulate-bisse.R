@@ -126,6 +126,7 @@ tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf,
 }
 
 make.tree.bisse.C <- function(pars, max.taxa, max.t, x0, n=100) {
+  stop("I belive that this is broken and should not be used.")
   ans <- make.tree.bisse.C.core(pars, max.taxa, max.t, x0, n)
 
   i <- seq_len(ans$n.entries)

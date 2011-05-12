@@ -10,6 +10,24 @@
 ## methods can be found in the unreleased package diversitree.unrel
 
 ## Core generics
+make.asr.marginal <- function(lik, ...) {
+  UseMethod("make.asr.marginal")
+}
+make.asr.joint <- function(lik, ...) {
+  UseMethod("make.asr.joint")  
+}
+make.asr.stoch <- function(lik, ...) {
+  UseMethod("make.asr.stoch")
+}
+
+## TODO: This is going to be heaps easier to mantain
+## asr.marginal <- function(lik, pars, nodes=NULL, ...)
+##   make.asr.marginal(lik)(pars, nodes, ...)
+## asr.joint <- function(lik, pars, n=1, simplify=TRUE, ...)
+##   make.asr.joint(lik)(pars, n, simplify, ...)
+## asr.stoch <- function(lik, pars, n=1, ...)
+##   make.asr.stoch(lik)(pars, n, ...)
+
 asr.marginal <- function(lik, pars, nodes=NULL, ...) {
   UseMethod("asr.marginal")
 }
@@ -45,6 +63,23 @@ asr.stoch.constrained <- function(lik, pars, n=1, ...) {
   lik <- attr(lik, "func")
   NextMethod("asr.stoch")
 }
+
+## Similar for the function-returning versions
+make.asr.marginal.constrained <- function(lik, ...) {
+  lik <- attr(lik, "func")
+  NextMethod("asr.marginal")
+}
+
+make.asr.joint.constrained <- function(lik, ...) {
+  lik <- attr(lik, "func")
+  NextMethod("asr.joint")
+}
+
+make.asr.stoch.constrained <- function(lik, ...) {
+  lik <- attr(lik, "func")
+  NextMethod("asr.stoch")
+}
+
 
 ## Next, the utility functions for the different types of models
 ## This is to asr.marginal what all.branches is for the core models.
@@ -149,9 +184,17 @@ do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
   len <- length(cache$len)
   root <- cache$root
   tips <- seq_len(cache$n.tip)
-  k <- length(li[[1]])
-  pij2 <- array(pij, c(len, k, k))
 
+  if ( is.list(li) )
+    li <- do.call(rbind, li)
+  if ( nrow(li) != len )
+    stop("Incorrect length li")
+  k <- ncol(li)
+
+  if ( nrow(pij) != len || ncol(pij) != k * k  )
+    stop("Incorrect dimension pij")
+  pij2 <- array(pij, c(len, k, k))
+  
   anc.states <- matrix(NA, n, len)
   anc.states[,root] <- sample(k, n, TRUE, root.p)
   for ( i in rev(cache$order)[-1] ) {
@@ -160,7 +203,7 @@ do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
       idx <- parent.state == j
       nj <- sum(idx)
       if ( nj > 0 ) {
-        p <- li[[i]] * pij2[i,j,] # di * pij
+        p <- li[i,] * pij2[i,j,] # di * pij
         anc.states[idx,i] <- sample(k, nj, TRUE, p)
       }
     }

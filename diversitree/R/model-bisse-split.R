@@ -14,14 +14,16 @@
 make.bisse.split <- function(tree, states, nodes, split.t,
                              unresolved=NULL, sampling.f=NULL,
                              nt.extra=10, control=list()) {
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)
+  control <- check.control.ode(control)
+  if ( control$backend == "CVODES" )
+    stop("Cannot use CVODES backend with bisse.split")
+
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
                                   unresolved, sampling.f, nt.extra)
-  branches <- make.branches.bisse(control$safe, control$tol,
-                                  control$eps)
-  branches.aux <- make.branches.aux.bisse(cache$sampling.f,
-                                          control$safe, control$tol,
-                                          control$eps)
+
+  branches <- make.branches.bisse(cache, control)
+  branches.aux <- make.branches.aux.bisse(cache, control)
+
   ll <- function(pars, ...)
     ll.bisse.split(cache, pars, branches, branches.aux, ...)
   class(ll) <- c("bisse.split", "bisse", "function")
@@ -137,17 +139,17 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
 ## TODO: this would be nicer if it did not compute the Ds at all.
 ## Also, it can just use the non-clever function as I do not need the
 ## log compensation worked out.
-make.branches.aux.bisse <- function(sampling.f, safe=FALSE, tol=1e-8,
-                                    eps=0) {
-  y <- lapply(sampling.f, function(x) c(1-x, 1, 1))
-  branches <- make.branches.bisse(safe, tol, eps)
+make.branches.aux.bisse <- function(cache, control) {
+  idx.e <- 2:3
+  y <- lapply(cache$sampling.f, function(x) c(1-x, 1, 1))
   n <- length(y)
-  branches.aux.bisse <- function(i, len, pars) {
+  branches <- make.branches.bisse(cache, control)
+
+  function(i, len, pars) {
     if ( i > n )
       stop("No such partition")
-    branches(y[[i]], len, pars, 0)[,2:3,drop=FALSE]
+    branches(y[[i]], len, pars, 0)[,idx.e,drop=FALSE]
   }
 }
-
 
 ## 9: branches.unresolved: from bisse

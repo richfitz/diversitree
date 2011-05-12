@@ -133,7 +133,7 @@ lik(pars) # -297.6749
 ## A guess at a starting point.
 p <- starting.point.geosse(geosse.phy)
 
-## Start an ML search from this point (takes several seconds to run).
+## Start an ML search from this point (takes several minutes to run).
 \dontrun{
 fit <- find.mle(lik, p, method="subplex")
 logLik(fit) # -295.0275

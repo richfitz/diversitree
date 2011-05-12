@@ -1,4 +1,5 @@
-asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
+asr.marginal.mkn <- function(lik, pars, nodes=NULL,
+                             root=ROOT.FLAT, root.p=NULL, ...) {
   k <- attr(lik, "k")
   states.idx <- seq_len(k)
   cache <- environment(lik)$cache
@@ -8,8 +9,12 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
   res <- all.branches.mkn(qmat, cache)
   pij <- res$pij
 
-  root.p <- rep(1/k, k)
-
+  ## This is a bit of a hack, I think.  Basically; I have all of the
+  ## pij values computed (which hold for every branch), but there is
+  ## nowhere that I actually compute the branch for an arbitrary
+  ## length.  Here, I match the given length with a table of length,
+  ## find the pij for that branch, and multiply it by the input
+  ## conditions.
   branches <- function(y, len.i, pars, t0) {
     if ( length(len.i) != 1 )
       stop("Should not happen.")
@@ -18,7 +23,8 @@ asr.marginal.mkn <- function(lik, pars, nodes=NULL, ...) {
     cbind(log(q), res/q, deparse.level=0)
   }
   root.f <- function(pars, vals, lq)
-    root.mkn(vals, lq, root.p)
+    root.mkn(vals, lq,
+             root.p.mkn(vals, pars, root, root.p))
   
   do.asr.marginal(pars, cache, res, nodes, states.idx,
                   initial.conditions.mkn,
@@ -98,6 +104,8 @@ do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
   
   state.beg <- as.integer(anc.state[edge[,1]])
   state.end <- as.integer(anc.state[edge[,2]])
+
+  
 
   f <- function(i)
     stoch.branch.mkn(pars, edge.length[i],
