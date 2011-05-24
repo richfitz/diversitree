@@ -181,6 +181,9 @@ check.control.ode <- function(control=list()) {
   if ( is.na(control$backend) )
     stop("Invalid backend selected")
 
+  if ( tolower(control$backend) == "cvodes" )
+    check.cvodes(error=TRUE)
+
   control$tol <- check.scalar(control$tol)
   control$eps <- check.scalar(control$eps)
   control$safe <- check.scalar(control$safe)

@@ -41,8 +41,6 @@ typedef struct {
   double *depth;     /* vector of branch depths             */
   int     root;      /* root node                           */
 
-  
-
   /* Storage of results */
   double *init;
   double *base;

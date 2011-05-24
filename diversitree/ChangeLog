@@ -1,6 +1,33 @@
+2011-05-12  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bump to 0.7-2
+
+	* NAMESPACE: Actually export the make.asr.marginal functions
+
+	* R/asr-bisse.R, R/asr-musse.R: Tidy up, and enable CVODES to be
+	used for the ASR.
+
+	* R/check.R;R/cvodes.R: check to see if we have CVODES support
+	before trying to use it.
+
+	* R/diversitree-branches-C.R: Expose toC.int().  New do
+	asr.marginal.C(), for doing faster ASR.
+
+	* configure.ac: Changes to detect CVODES presence.
+
+	* configure.win: Disable CVODES.
+
+	* src/cvodes*: Check to see if CVODES enabled (WITH_CVODES)
+
+	* src/cvodes/cvodes_lapack.c: Minor fix to align with R's Lapack
+
+	* src/sundials_config.h: Disable unused sections
+
+	* src/.../sundials_lapack.h: Remove F77 cludging and use R's Lapack
+
 2011-05-11  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
-	* DESCRIPTION: Bump version number to 0.7, and require deSolve >=
+	* DESCRIPTION: Bump version number to 0.7-1, and require deSolve >=
 	1.7.
 
 	* NAMESPACE: New make.asr.* functions around the different asr

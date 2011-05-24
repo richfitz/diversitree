@@ -248,7 +248,7 @@ mkn.Q <- function(pars, k) {
 }
 
 ## The new integrator.
-all.branches.mkn <- function(pars, cache) {
+all.branches.mkn <- function(pars, cache, transpose=TRUE) {
   ## At this point, the parameters are assumed to be a Q matrix
   k <- cache$k
 
@@ -284,8 +284,15 @@ all.branches.mkn <- function(pars, cache) {
             lq       = lq,
             NAOK=TRUE, DUP=FALSE)
 
-  list(init=matrix.to.list(t(ans$init)),
-       base=matrix.to.list(t(ans$base)),
-       lq=ans$lq, pij=pij)
+  if ( transpose ) {
+    list(init=matrix.to.list(t(ans$init)),
+         base=matrix.to.list(t(ans$base)),
+         lq=ans$lq, pij=pij)
+  } else {
+    list(init=ans$init,
+         base=ans$base,
+         lq=ans$lq,
+         pij=pij)
+  }
 }
 

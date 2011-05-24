@@ -26,8 +26,6 @@ if test [ -n $fftw_path ]; then
   fi
 fi
 
-AC_CONFIG_HEADERS([src/config.h])
-
 CPPFLAGS="${CPPFLAGS} ${PKG_CPPFLAGS}"
 dnl AC_CHECK_HEADERS([fftw3.h], AC_DEFINE(HAVE_FFTW3_H, 1, Define to 1 if you have FFTW))
 AC_CHECK_HEADERS([fftw3.h])
@@ -51,6 +49,20 @@ else
 	echo "Using default options"
 fi
 
+AC_ARG_ENABLE([cvodes],
+	AS_HELP_STRING([--enable-cvodes],
+		[enable the cvodes integrator]),
+	[cvodes=$enableval])
+if [ test x"$cvodes" = xno ]; then
+	echo "Disabling cvodes integrator"
+else
+	echo "Enabling cvodes integrator"
+	echo "Copying CVODES files into package src directory"
+	cp -fp src/cvodes/*.c src
+	AC_DEFINE(WITH_CVODES, 1, Define to enable CVODES)
+fi
+
+
 dnl AC_ARG_ENABLE([gcc-strict],
 dnl 	AS_HELP_STRING([--enable-gcc-strict],
 dnl 		[use strict gcc error checking]),
@@ -68,14 +80,9 @@ if test "${GCC}" = yes; then
    PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
 fi
 
-## Because the R coding standards (in R-ints), we cannot assume GNU
-## make anywhere except windows, here I copy the cvodes source into
-# the main directory.
-echo "Copying CVODES files into package src directory"
-cp -fp src/cvodes/*.c src
-
 AC_SUBST(PKG_CPPFLAGS)
 AC_SUBST(PKG_CFLAGS)
 AC_SUBST(PKG_LIBS)
 AC_CONFIG_FILES([src/Makevars])
+AC_CONFIG_HEADERS([src/config.h])
 AC_OUTPUT

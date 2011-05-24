@@ -5,6 +5,8 @@
 ## Create a CVODES function.  This is similar in spirit to make.ode(),
 ## though the function definition of the returned functions differs.
 cvodes <- function(n.var, n.par, derivs, rtol, atol, package=NULL) {
+  check.cvodes(error=TRUE)
+ 
   n.var <- as.integer(n.var)
   n.par <- as.integer(n.par)
   if ( is.null(package) ) package <- ""
@@ -36,6 +38,8 @@ cvodes <- function(n.var, n.par, derivs, rtol, atol, package=NULL) {
 
 cvodes.sens <- function(n.var, n.par, derivs, sens1, rtol, atol,
                         package=NULL) {
+  check.cvodes(error=TRUE)
+
   ## Directly copied from above...
   n.var <- as.integer(n.var)
   n.par <- as.integer(n.par)
@@ -73,4 +77,12 @@ cvodes.sens <- function(n.var, n.par, derivs, sens1, rtol, atol,
     .Call("r_cvodes_fwd_run", ptr, vars, vars.sens, times,
           PACKAGE="diversitree")
   }
+}
+
+## See check.fftC()
+check.cvodes <- function(error=TRUE) {
+  ok <- is.loaded("r_make_cvodes", "diversitree")
+  if ( error && !ok )
+    stop("diversitree built without CVODES support")
+  ok
 }

@@ -299,6 +299,10 @@ lik.bd3 <- make.bd(phy, unresolved=unresolved.bd)
 lik.bisse3.bd(pars) - lik.bd3(pars)
 lik.bisse3.bd(pars*2) - lik.bd3(pars*2)
 
+\dontrun{
+## This only works when diversitree was built with CVODES support
+## (currently not on Windows).  This support is still experimental.
+
 ## Different backends:
 lik.1 <- make.bisse(phy, phy$tip.state, control=list(backend="deSolve"))
 lik.2 <- make.bisse(phy, phy$tip.state, control=list(backend="cvodes"))
@@ -313,7 +317,7 @@ diff(range(c(ll.1, ll.2, ll.3)))
 
 ## However, the CVODES version is quite a bit faster than the other two
 ## (cvodes is often a bit slower than deSolve).
-\dontrun{
+
 ## Timings are on a 2008 Mac Pro
 system.time(fit.1 <- find.mle(lik.1, pars)) # 4.5s
 system.time(fit.2 <- find.mle(lik.2, pars)) # 6.0s

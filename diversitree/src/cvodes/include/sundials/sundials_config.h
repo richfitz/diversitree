@@ -17,6 +17,9 @@
 /* Define SUNDIALS version number */
 #define SUNDIALS_PACKAGE_VERSION "2.4.0"
 
+/* RGF: None of the Fortran name-mangling is used, as we use R's
+   Lapack routines directly */
+
 /* FCMIX: Define Fortran name-mangling macro for C identifiers.
  * Depending on the inferred scheme, one of the following six
  * macros will be defined:
@@ -27,12 +30,12 @@
  *     #define SUNDIALS_F77_FUNC(name,NAME) NAME ## _
  *     #define SUNDIALS_F77_FUNC(name,NAME) NAME ## __
  */
-#define SUNDIALS_F77_FUNC(name,NAME) name ## _
+/*#define SUNDIALS_F77_FUNC(name,NAME) name ## _*/
 
 /* FCMIX: Define Fortran name-mangling macro for C identifiers
  *        which contain underscores.
  */
-#define SUNDIALS_F77_FUNC_(name,NAME) name ## _
+/*#define SUNDIALS_F77_FUNC_(name,NAME) name ## _*/
 
 /* Define precision of SUNDIALS data type 'realtype' 
  * Depending on the precision level, one of the following 
@@ -57,7 +60,7 @@
  * otherwise
  *     #define SUNDIALS_BLAS_LAPACK 0
  */
-#define SUNDIALS_BLAS_LAPACK 1
+/*#define SUNDIALS_BLAS_LAPACK 1*/
 
 /* FNVECTOR: Allow user to specify different MPI communicator
  * If it was found that the MPI implementation supports MPI_Comm_f2c, then
@@ -65,7 +68,6 @@
  * otherwise
  *      #define SUNDIALS_MPI_COMM_F2C 0
  */
-
 
 /* Mark SUNDIALS API functions for export/import
  * When building shared SUNDIALS libraries under Windows, use

@@ -180,9 +180,16 @@ S3method(asr.marginal, mkn)
 S3method(asr.joint, mkn)
 S3method(asr.stoch, mkn)
 
+S3method(make.asr.marginal, mkn)
+S3method(make.asr.joint, mkn)
+S3method(make.asr.stoch, mkn)
+
 ## ASR/BiSSE
 S3method(asr.marginal, bisse)
 S3method(asr.marginal, bisse.t)
+
+S3method(make.asr.marginal, bisse)
+S3method(make.asr.marginal, musse)
 
 ## ASR/MuSSE
 S3method(asr.marginal, musse)

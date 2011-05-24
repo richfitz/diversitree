@@ -2,6 +2,9 @@
 #include <R.h>
 #include <Rinternals.h>
 
+#include "config.h"
+#ifdef WITH_CVODES
+
 /* Sundials Header Files */
 #include "cvodes/include/cvodes/cvodes.h"
 #include "cvodes/include/cvodes/cvodes_dense.h"
@@ -91,3 +94,5 @@ SEXP r_test(SEXP extPtr) {
 
   return R_NilValue;
 }
+
+#endif

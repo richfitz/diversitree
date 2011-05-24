@@ -2,6 +2,9 @@
 #include <R.h>
 #include <Rinternals.h>
 
+#include "config.h"
+#ifdef WITH_CVODES
+
 /* Sundials Header Files */
 #include "cvodes/include/cvodes/cvodes.h"
 #include "cvodes/include/cvodes/cvodes_dense.h"
@@ -68,3 +71,4 @@ SEXP r_cvodes_fwd_run(SEXP extPtr, SEXP r_y0, SEXP r_ys0,
   return r_ret;
 }
   
+#endif

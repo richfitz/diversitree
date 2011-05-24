@@ -454,7 +454,9 @@ static int cvLapackDenseSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
   
   bd = N_VGetArrayPointer(b);
 
-  dgetrs_f77("N", &n, &one, M->data, &(M->ldim), pivots, bd, &n, &ier, 1); 
+  /* RGF: dropping final arg here */
+  /*dgetrs_f77("N", &n, &one, M->data, &(M->ldim), pivots, bd, &n, &ier, 1);*/
+  dgetrs_f77("N", &n, &one, M->data, &(M->ldim), pivots, bd, &n, &ier); 
   if (ier > 0) return(1);
 
   /* For BDF, scale the correction to account for change in gamma */
@@ -601,7 +603,9 @@ static int cvLapackBandSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
 
   bd = N_VGetArrayPointer(b);
 
-  dgbtrs_f77("N", &n, &ml, &mu, &one, M->data, &(M->ldim), pivots, bd, &n, &ier, 1);
+  /* RGF: dropping final arg here */
+  /*dgbtrs_f77("N", &n, &ml, &mu, &one, M->data, &(M->ldim), pivots, bd, &n, &ier, 1);*/
+  dgbtrs_f77("N", &n, &ml, &mu, &one, M->data, &(M->ldim), pivots, bd, &n, &ier);
   if (ier > 0) return(1);
 
   /* For BDF, scale the correction to account for change in gamma */

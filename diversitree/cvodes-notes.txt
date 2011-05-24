@@ -10,10 +10,8 @@ want to do is keep my work separate from the main CVODES code.
 
 In the 'configure' script, I just copy all the files into the src
 directory.  The 'cleanup' script undoes this, deleting all these
-files.
-
-
-
+files.  Passing in --disable-cvodes prevents this (also diabled on
+Windows).
 
 Download cvodes-2.6.0.tar.gz from 
   https://computation.llnl.gov/casc/sundials/download/download.html
@@ -64,7 +62,10 @@ sundials_spgmr.c
 sundials_sptfqmr.c
 
 include
-Contains all files from include/, but with sundials_config.h file.
+Contains all files from include/, but:
+
+  sundials_config.h file is tweaked
+  sundials_lapack.h rewritten to use R's Lapack
 
 ## My code:
 

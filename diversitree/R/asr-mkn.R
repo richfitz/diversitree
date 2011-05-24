@@ -1,55 +1,88 @@
-asr.marginal.mkn <- function(lik, pars, nodes=NULL,
-                             root=ROOT.FLAT, root.p=NULL, ...) {
-  k <- attr(lik, "k")
+asr.marginal.mkn <- function(lik, ...)
+  make.asr.marginal.mkn(lik)(...)
+asr.joint.mkn <- function(lik, ...)
+  make.asr.joint.mkn(lik)(...)
+asr.stoch.mkn <- function(lik, ...)
+  make.asr.stoch.mkn(lik)(...)
+
+make.asr.marginal.mkn <- function(lik, ...) {
+  k <- as.integer(attr(lik, "k"))
   states.idx <- seq_len(k)
   cache <- environment(lik)$cache
   len <- cache$len
 
-  qmat <- mkn.Q(pars)
-  res <- all.branches.mkn(qmat, cache)
-  pij <- res$pij
+  cache.C <- list(parent=toC.int(cache$parent),
+                  children=toC.int(t(cache$children)),
+                  root=toC.int(cache$root))
+  env <- new.env()
+  nodes.all.C <- toC.int(cache$root:max(cache$order))
 
-  ## This is a bit of a hack, I think.  Basically; I have all of the
-  ## pij values computed (which hold for every branch), but there is
-  ## nowhere that I actually compute the branch for an arbitrary
-  ## length.  Here, I match the given length with a table of length,
-  ## find the pij for that branch, and multiply it by the input
-  ## conditions.
-  branches <- function(y, len.i, pars, t0) {
-    if ( length(len.i) != 1 )
-      stop("Should not happen.")
-    res <- t(matrix(pij[,match(len.i, len)], k, k) %*% y)
-    q <- rowSums(res)
-    cbind(log(q), res/q, deparse.level=0)
+  function(pars, nodes=NULL, root=ROOT.FLAT, root.p=NULL, ...) {
+    root.f <- function(pars, vals, lq)
+      root.mkn(vals, lq,
+               root.p.mkn(vals, pars, root, root.p))
+
+    qmat <- mkn.Q(pars)
+    res <- all.branches.mkn(qmat, cache, FALSE)
+
+    ## TODO: ugly!  This is basically duplicated in do.asr.marginal()
+    ## and do.asr.marginal.C(); there should be nicer way of doing
+    ## this.
+    if ( is.null(nodes) )
+      nodes.C <- nodes.all.C
+    else
+      nodes.C <- toC.int(nodes + cache$n.tip)
+
+    .Call("r_asr_marginal_mkn", k, pars, nodes.C, cache.C, res,
+          root.f, env)
   }
-  root.f <- function(pars, vals, lq)
-    root.mkn(vals, lq,
-             root.p.mkn(vals, pars, root, root.p))
-  
-  do.asr.marginal(pars, cache, res, nodes, states.idx,
-                  initial.conditions.mkn,
-                  branches, root.f)
 }
 
-asr.joint.mkn <- function(lik, pars, n=1, simplify=TRUE,
-                          intermediates=FALSE, ...) {
+make.asr.joint.mkn <- function(lik, ...) {
   k <- attr(lik, "k")
   cache <- environment(lik)$cache
 
-  obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
+  function(pars, n=1, simplify=TRUE, intermediates=FALSE, ...) {
+    obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
 
-  li <- obj$init
-  pij <- t(obj$pij)
-  root.p <- obj$root.p
+    li <- obj$init
+    pij <- t(obj$pij)
+    root.p <- obj$root.p
 
-  x <- do.asr.joint(n, cache, li, pij, root.p, simplify)
-  
-  if ( inherits(lik, "mk2") )
-    x <- x - 1
+    x <- do.asr.joint(n, cache, li, pij, root.p, simplify)
+    
+    if ( inherits(lik, "mk2") )
+      x <- x - 1
 
-  if ( intermediates )
-    attr(x, "intermediates") <- obj
-  x
+    if ( intermediates )
+      attr(x, "intermediates") <- obj
+    x
+  }
+}
+
+make.asr.stoch.mkn <- function(lik, slim.default=FALSE, ...) {
+  is.mk2 <- inherits(lik, "mk2")
+  k <- attr(lik, "k")
+  cache <- environment(lik)$cache
+  edge <- cache$edge
+  edge.length <- cache$edge.length
+
+  ## TODO: This is fragile, and should be stored in the cache anyway.
+  n.node <- nrow(cache$edge)/2
+
+  function(pars, n=1, node.state=NULL, slim=slim.default, ...) {
+    if ( n > 1 )
+      stop("Not yet implemented (n>1)")
+    
+    if ( is.null(node.state) )
+      node.state <- asr.joint(lik, pars, n, intermediates=FALSE, ...)
+    else if ( length(node.state) != n.node )
+      stop("Incorrect length for given node state")
+    
+
+    do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
+                         edge, edge.length, k, is.mk2, slim)
+  }
 }
 
 asr.jointmean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
@@ -70,29 +103,9 @@ asr.jointmean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
   x
 }
 
-asr.stoch.mkn <- function(lik, pars, n=1, ...) {
-  is.mk2 <- inherits(lik, "mk2")
-  k <- attr(lik, "k")
-  cache <- environment(lik)$cache
-  edge <- cache$edge
-  edge.length <- cache$edge.length
-
-  node.state <- asr.joint(lik, pars, n, intermediates=TRUE, ...)
-
-  if ( n == 1 )
-    do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
-                         edge, edge.length, k, is.mk2)
-  else {
-    stop("Broken?")
-    replicate(n,
-              do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
-                                   edge, edge.length, k, is.mk2),
-              simplify=FALSE)
-  }
-}
 
 do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
-                                 edge, edge.length, k, as.01) {
+                                 edge, edge.length, k, as.01, slim) {
   if ( as.01 ) {
     anc.state <- c(tip.state, node.state + 1)
     tip.state <- tip.state - 1
@@ -104,7 +117,6 @@ do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
   
   state.beg <- as.integer(anc.state[edge[,1]])
   state.end <- as.integer(anc.state[edge[,2]])
-
   
 
   f <- function(i)
@@ -113,9 +125,16 @@ do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
 
   history <- lapply(seq_along(state.beg), f)
 
-  
-  make.history(NULL, tip.state, node.state, history, TRUE, states,
-               FALSE)
+  if ( slim ) {
+    tmp <- lapply(history, function(x) x[-1,,drop=FALSE])
+    keep <- which(sapply(tmp, length) > 0)
+    names(node.state) <- NULL
+    ret <- list(node.state=node.state,
+                history=list(idx=keep, tmp[keep]))
+  } else {
+    make.history(NULL, tip.state, node.state, history, TRUE, states,
+                 FALSE)
+  }
 }
 
 stoch.branch.mkn <- function(pars, len, state.beg, state.end, k,

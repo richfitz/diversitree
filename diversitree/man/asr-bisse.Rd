@@ -11,30 +11,28 @@
 }
 
 \usage{
-\method{asr.marginal}{bisse}(lik, pars, nodes=NULL, condition.surv=TRUE,
-                             root=ROOT.FLAT, root.p=NULL, ...)
+\method{asr.marginal}{bisse}(lik, ...)
 }
 
 \arguments{
   \item{lik}{A likelihood function, returned by \code{make.mk2} or
     \code{make.mkn}.}
   
-  \item{pars}{A vector of parameters, suitable for \code{lik}.}
+  %  \item{pars}{A vector of parameters, suitable for \code{lik}.}
+  %   \item{nodes}{For \code{asr.marginal} only; an optional vector of
+  %     nodes to return ancestral states for (using ape's index).  By
+  %     default, all nodes are returned.}
   
-  \item{nodes}{For \code{asr.marginal} only; an optional vector of
-    nodes to return ancestral states for (using ape's index).  By
-    default, all nodes are returned.}
+  %   \item{condition.surv}{(logical) should the likelihood
+  %     calculation condition on survival of two lineages and the speciation
+  %     event subtending them?  This is done by default, following Nee et
+  %     al. 1994.}
   
-  \item{condition.surv}{(logical) should the likelihood
-    calculation condition on survival of two lineages and the speciation
-    event subtending them?  This is done by default, following Nee et
-    al. 1994.}
+  %   \item{root}{Behaviour at the root.  See \code{\link{make.bisse}} for
+  %     details and possible values.}
   
-  \item{root}{Behaviour at the root.  See \code{\link{make.bisse}} for
-    details and possible values.}
-  
-  \item{root.p}{Root weightings for use when \code{root=ROOT.GIVEN}.
-    See \code{\link{make.bisse}} for details.}
+  %   \item{root.p}{Root weightings for use when \code{root=ROOT.GIVEN}.
+  %     See \code{\link{make.bisse}} for details.}
   
   \item{...}{Additional arguments passed through to future methods.
     Currently unused.}

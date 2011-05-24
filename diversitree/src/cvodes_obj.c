@@ -1,5 +1,8 @@
 #include <R.h>
 
+#include "config.h"
+#ifdef WITH_CVODES
+
 /* Sundials Header Files */
 #include "cvodes/include/cvodes/cvodes.h"
 #include "cvodes/include/cvodes/cvodes_dense.h"
@@ -199,3 +202,5 @@ int cvodes_check_flag(void *flagvalue, char *funcname, int opt) {
 
   return(0);
 }
+
+#endif

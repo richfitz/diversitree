@@ -1,13 +1,13 @@
 ## For all the xxSSE models, this converts and tidies the cache ready
 ## to be used in the C code.  The tip treatment is hardest, but I
 ## think that it is correct.
+toC.int <- function(x) {
+  x <- x - 1
+  storage.mode(x) <- "integer"
+  x
+}
+
 toC.cache <- function(cache, comp.idx) {
-  toC.int <- function(x) {
-    x <- x - 1
-    storage.mode(x) <- "integer"
-    x
-  }
-  
   ## Translate tips...
   if ( is.null(cache$y) || length(cache$y) == 0 )
     stop("Can't do tipless yet...")
@@ -33,6 +33,8 @@ toC.cache <- function(cache, comp.idx) {
 
 make.all.branches.C <- function(cache, model, dll, neq, np, comp.idx,
                                 control) {
+  check.cvodes(error=TRUE)
+
   tol <- control$tol
   eps <- control$eps
 
@@ -80,4 +82,20 @@ ll.xxsse.C <- function(pars, all.branches,
   }
 
   loglik
+}
+
+do.asr.marginal.C <- function(pars, cache, ptr, nodes, states.idx.C,
+                              parent.C, all.branches.C, root.f, env) {
+  if ( is.null(nodes) )
+    nodes <- cache$root:max(cache$order)
+  else
+    nodes <- nodes + cache$n.tip
+
+  ## Initial run through sets up the internal data structures (never
+  ## used here)
+  ignore <- all.branches.C(pars)
+
+  ## Then we actually compute the marginal ASRs:
+  .Call("r_asr_marginal", ptr, pars, toC.int(nodes),
+        states.idx.C, parent.C, root.f, env)
 }

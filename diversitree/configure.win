@@ -1,2 +1,4 @@
+## -*-makefile-*-
 cp src/config.h.win src/config.h
-cp -f src/cvodes/*.c src
+## CVODES does not work on Windows, so disabling for now.
+## cp -f src/cvodes/*.c src

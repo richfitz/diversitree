@@ -1,6 +1,9 @@
 #include <R.h>
 #include <Rinternals.h>
 
+#include "config.h"
+#ifdef WITH_CVODES
+
 #include "cvodes/include/cvodes/cvodes.h"
 #include "cvodes/include/nvector/nvector_serial.h"  
 #include "cvodes/include/sundials/sundials_types.h"
@@ -435,3 +438,4 @@ SEXP getListElement(SEXP list, const char *str) {
   return elmt;
 } 
 
+#endif

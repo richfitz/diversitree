@@ -2,6 +2,9 @@
 #include <R.h>
 #include <Rinternals.h>
 
+#include "config.h"
+#ifdef WITH_CVODES
+
 /* Sundials Header Files */
 #include "cvodes/include/cvodes/cvodes.h"
 #include "cvodes/include/cvodes/cvodes_dense.h"
@@ -195,3 +198,5 @@ void copy_yS_in(int neq, int nS, int nt, N_Vector *yS, double *in) {
       ySi[j] = in[k];
   }
 }
+
+#endif
