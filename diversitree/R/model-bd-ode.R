@@ -64,6 +64,7 @@ make.cache.bd.ode <- function(tree, unresolved, sampling.f) {
     sampling.f <- check.sampling.f(sampling.f, 1)
 
   cache <- make.cache(tree)
+  cache$ny <- 2L
   cache$unresolved <- unresolved
   cache$sampling.f <- sampling.f
   cache$y <- initial.tip.bd.ode(cache)
@@ -83,7 +84,7 @@ initial.tip.bd.ode <- function(cache) {
 
 ## 7: initial.conditions:
 initial.conditions.bd.ode <- function(init, pars, t, is.root=FALSE)
-  c(init[[1]][1], init[[1]][2] * init[[2]][2] * pars[1])
+  c(init[1,1], init[2,1] * init[2,2] * pars[1])
 
 ## 8: branches
 make.branches.bd <- function(cache, control) {

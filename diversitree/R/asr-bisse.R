@@ -42,13 +42,12 @@ make.asr.marginal.bisse <- function(lik, use.CVODES=FALSE, ...) {
         cache$preset <- 
           branches.unresolved.bisse(pars, cache$unresolved)
 
-      res <- all.branches(pars, cache, initial.conditions.bisse,
-                          branches)
+      res <- all.branches.matrix(pars, cache,
+                                 initial.conditions.bisse,
+                                 branches)
       do.asr.marginal(pars, cache, res, nodes, states.idx,
                       initial.conditions.bisse,
                       branches, root.f)
     }
   }
 }
-
-

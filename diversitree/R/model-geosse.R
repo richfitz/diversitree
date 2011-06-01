@@ -111,6 +111,7 @@ make.cache.geosse <- function(tree, states, unresolved=NULL,
     sampling.f <- check.sampling.f(sampling.f, 3)
 
   cache <- make.cache(tree)
+  cache$ny <- 6L
   cache$tip.state  <- states
   cache$sampling.f <- sampling.f
   ##cache$unresolved <- unresolved # would need more here
@@ -156,15 +157,15 @@ initial.tip.geosse <- function(cache) {
 ## 7: initial.conditions:
 initial.conditions.geosse <- function(init, pars, t, is.root=FALSE) {
   ## E.0, E.1, E.2
-  e <- init[[1]][c(1,2,3)]
+  e <- init[c(1,2,3),1]
 
   ## D.1, D.2  (Eq. 6bc)
-  d12 <- init[[1]][c(5,6)] * init[[2]][c(5,6)] * pars[c(1,2)]
+  d12 <- init[c(5,6),1] * init[c(5,6),2] * pars[c(1,2)]
 
   ## D.0 (Eq. 6a)
-  d0 <- 0.5 * sum(init[[1]][c(4,5)] * init[[2]][c(5,4)] * pars[1] + 
-                  init[[1]][c(4,6)] * init[[2]][c(6,4)] * pars[2] +
-                  init[[1]][c(5,6)] * init[[2]][c(6,5)] * pars[3])
+  d0 <- 0.5 * sum(init[c(4,5),1] * init[c(5,4),2] * pars[1] + 
+                  init[c(4,6),1] * init[c(6,4),2] * pars[2] +
+                  init[c(5,6),1] * init[c(6,5),2] * pars[3])
   d <- c(d0, d12)
 
   c(e, d)
@@ -319,12 +320,18 @@ root.geosse <- function(vals, pars, lq, condition.surv, root.p) {
 ll.xxsse.geosse <- function(pars, cache, initial.conditions,
                             branches, condition.surv, root, root.p,
                             intermediates) {
-  ans <- all.branches(pars, cache, initial.conditions, branches)
-  vals <- ans$init[[cache$root]]
+  ans <- all.branches.matrix(pars, cache, initial.conditions, branches)
+  vals <- ans$init[,cache$root]
   root.p <- root.p.geosse(vals, pars, root, root.p)
   loglik <- root.geosse(vals, pars, ans$lq, condition.surv, root.p)
-  ans$root.p <- root.p
-  cleanup(loglik, pars, intermediates, cache, ans)
+
+  if ( intermediates ) {
+    ans$root.p <- root.p
+    attr(loglik, "intermediates") <- ans
+    attr(loglik, "vals") <- vals
+  }
+
+  loglik
 }
 
 ll.xxsse.geosse.C <- function(pars, all.branches,
@@ -336,7 +343,6 @@ ll.xxsse.geosse.C <- function(pars, all.branches,
   loglik <- root.geosse(vals, pars, ans[[1]], condition.surv, root.p)
 
   if ( intermediates ) {
-    ## attr(loglik, "cache") # can't provide this one
     ans$intermediates$root.p <- root.p
     attr(loglik, "intermediates") <- ans$intermediates
     attr(loglik, "vals") <- vals

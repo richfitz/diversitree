@@ -55,7 +55,6 @@ count.eval <- function(f) {
 }
 
 ## Known to work on 1.3-1.6
-## TODO: fall back on "safe" with a warning if the an unknown version.
 make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
   if (!is.character(func)) 
     stop("`func' must be a character vector")
@@ -63,9 +62,12 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
     stop("You need to specify the name of the dll or shared library where func can be found (without extension)")
 
   if ( safe ) {
-    function(y, times, parms, rtol, atol)
-      t(lsoda(y, times, parms, rtol=rtol, atol=atol,
-              initfunc=initfunc, func=func, dllname=dllname))
+    function(y, times, parms, rtol, atol) {
+      ret <- t(lsoda(y, times, parms, rtol=rtol, atol=atol,
+                     initfunc=initfunc, func=func, dllname=dllname))
+      dimnames(ret) <- NULL
+      ret
+    }
   } else {
     initfunc.addr <- getNativeSymbolInfo(initfunc, PACKAGE=dllname)$address
     derivfunc.addr <- getNativeSymbolInfo(func, PACKAGE=dllname)$address

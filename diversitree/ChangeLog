@@ -1,3 +1,9 @@
+2011-06-01  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* Many files: reworked internals to use matrices rather than lists
+	where possible to simplify the ASR code.  Slight efficiency gain,
+	too.
+
 2011-05-31  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/asr-mkn.R: Faster joint and stochastic reconstructions through

@@ -22,11 +22,7 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
   else
     branches <- make.branches.musse(cache, control)
 
-  qmat <- matrix(0, k, k)
-  idx.qmat <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  idx.lm <- 1:(2*k)
-  idx.q <- (2*k+1):(k*(1+k))
+  f.pars <- make.musse.pars(k)
   
   ll.musse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                        root.p=NULL, intermediates=FALSE) {
@@ -38,15 +34,11 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
 
-    qmat[idx.qmat] <- pars[idx.q]
-    diag(qmat) <- -rowSums(qmat)
-    pars2 <- c(pars[idx.lm], qmat)
-
     if ( backend == "CVODES" )
-      ll.xxsse.C(pars2, all.branches,
+      ll.xxsse.C(f.pars(pars), all.branches,
                  condition.surv, root, root.p, intermediates)
     else
-      ll.xxsse(pars2, cache, initial.conditions.musse, branches,
+      ll.xxsse(f.pars(pars), cache, initial.conditions.musse, branches,
                condition.surv, root, root.p, intermediates)
   }
 
@@ -108,8 +100,9 @@ make.cache.musse <- function(tree, states, k, sampling.f=NULL,
   sampling.f <- check.sampling.f(sampling.f, k)
 
   cache <- make.cache(tree)
-  cache$tip.state <- states
+  cache$ny <- 2*k
   cache$k <- k
+  cache$tip.state <- states
   cache$sampling.f <- sampling.f
   cache$y <- initial.tip.musse(cache)
   cache
@@ -141,12 +134,12 @@ initial.tip.musse <- function(cache) {
 
 ## 7: initial.conditions:
 initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
-  k <- length(init[[1]])/2
+  k <- nrow(init)/2
   i <- seq_len(k)
   j <- i + k
 
-  c(init[[1]][i],
-    init[[1]][j] * init[[2]][j] * pars[i])
+  c(init[i,1],
+    init[j,1] * init[j,2] * pars[i])
 }
 
 ## 8: branches
@@ -218,4 +211,18 @@ starting.point.musse <- function(tree, k, q.div=5, yule=FALSE) {
   p <- rep(c(pars.bd, r / q.div), c(k, k, k * (k-1)))
   names(p) <- argnames.musse(NULL, k)
   p
+}
+
+make.musse.pars <- function(k) {
+  qmat <- matrix(0, k, k)
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.lm <- 1:(2*k)
+  idx.q <- (2*k+1):(k*(1+k))
+
+  function(pars) {
+    qmat[idx.qmat] <- pars[idx.q]
+    diag(qmat) <- -rowSums(qmat)
+    c(pars[idx.lm], qmat)
+  }
 }

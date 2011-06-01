@@ -1,11 +1,11 @@
 \name{asr-mkn}
-\alias{asr.mkn}
-\alias{asr.marginal.mk2}
-\alias{asr.marginal.mkn}
-\alias{asr.joint.mk2}
-\alias{asr.joint.mkn}
-\alias{asr.stoch.mk2}
-\alias{asr.stoch.mkn}
+\alias{asr.mkn} % for cross referencing
+\alias{make.asr.marginal.mk2}
+\alias{make.asr.joint.mk2}
+\alias{make.asr.stoch.mk2}
+\alias{make.asr.marginal.mkn}
+\alias{make.asr.joint.mkn}
+\alias{make.asr.stoch.mkn}
 
 \title{Ancestral State Reconstruction Under Mk2/Mkn}
 
@@ -15,16 +15,18 @@
   stage, and mostly in terms of examples.}
 
 \usage{
-\method{asr.marginal}{mkn}(lik, ...)
-\method{asr.joint}{mkn}(lik, ...)
-\method{asr.stoch}{mkn}(lik, ...)
+\method{make.asr.marginal}{mkn}(lik, ...)
+\method{make.asr.joint}{mkn}(lik, ...)
+\method{make.asr.stoch}{mkn}(lik, slim=FALSE, ...)
 }
 
 \arguments{
   \item{lik}{A likelihood function, returned by \code{make.mk2} or
     \code{make.mkn}.}
 
-  \item{...}{Additional arguments; see Details.}
+  \item{slim}{Should the history object be slimmed down?}
+
+  \item{...}{Additional arguments; currently ignored.}
   % TODO: This needs documenting.
   
 %   \item{pars}{A vector of parameters, suitable for \code{lik}.}
@@ -58,6 +60,11 @@
   \code{mkn} uses 1/2.
 
   This is all quite slow.  Faster versions are coming eventually.
+
+  These functions all return functions that generate different types of
+  ancestral reconstruction.
+  %The function returned by \code{make.asr.marginal} generates marginal
+  %ancestral reconstructions, and has definition
 }
 
 \examples{

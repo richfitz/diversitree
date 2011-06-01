@@ -46,7 +46,7 @@ make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
       ll.xxsse.C(pars, all.branches,
                  condition.surv, root, root.p, intermediates)
     else
-      ll.xxsse(pars, cache, initial.conditions.musse, branches,
+      ll.xxsse(pars, cache, initial.conditions.bisse, branches,
                condition.surv, root, root.p, intermediates)
   }
 
@@ -117,10 +117,11 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
   ## the future).
 
   cache <- make.cache(tree)
+  cache$ny <- 4L
+  cache$k <- 2L
   cache$tip.state  <- states
   cache$unresolved <- unresolved
   cache$sampling.f <- sampling.f
-  cache$k <- 2L # for compatibility with mkn methods
 
   unresolved <- check.unresolved(cache, unresolved, nt.extra)
   cache$unresolved <- unresolved
@@ -171,8 +172,8 @@ initial.tip.bisse <- function(cache) {
 
 ## 7: initial.conditions:
 initial.conditions.bisse <- function(init, pars, t, is.root=FALSE)
-  c(init[[1]][c(1,2)],
-    init[[1]][c(3,4)] * init[[2]][c(3,4)] * pars[c(1,2)])
+  c(init[c(1,2),1],
+    init[c(3,4),1] * init[c(3,4),2] * pars[c(1,2)])
 
 ## 8: branches
 make.branches.bisse <- function(cache, control) {
@@ -211,9 +212,10 @@ branches.unresolved.bisse <- function(pars, unresolved) {
   q <- rowSums(base[,3:4,drop=FALSE])
   base[,3:4] <- base[,3:4] / q
 
+  ## Note the transpose here.
   list(target=unresolved$target,
        lq=log(q),
-       base=matrix.to.list(base))
+       base=t(base))
 }
 
 ## Additional functions

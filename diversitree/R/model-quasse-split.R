@@ -200,7 +200,7 @@ ll.quasse.split <- function(cache, pars, branches, branches.aux,
 
   ## Normal:
   ans <- all.branches.split(pars.l, cache, initial.conditions,
-                           branches, branches.aux)
+                            branches, branches.aux, TRUE)
 
   vars <- matrix(ans[[1]]$base, cache$control$nx, 2)
   lq <- unlist(lapply(ans, "[[", "lq"))

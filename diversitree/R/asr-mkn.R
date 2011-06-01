@@ -1,10 +1,3 @@
-asr.marginal.mkn <- function(lik, ...)
-  make.asr.marginal.mkn(lik)(...)
-asr.joint.mkn <- function(lik, ...)
-  make.asr.joint.mkn(lik)(...)
-asr.stoch.mkn <- function(lik, ...)
-  make.asr.stoch.mkn(lik)(...)
-
 make.asr.marginal.mkn <- function(lik, ...) {
   k <- as.integer(attr(lik, "k"))
   states.idx <- seq_len(k)
@@ -38,41 +31,24 @@ make.asr.marginal.mkn <- function(lik, ...) {
   }
 }
 
-make.asr.joint.mkn <- function(lik, use.C=FALSE, ...) {
+make.asr.joint.mkn <- function(lik, ...) {
   k <- as.integer(attr(lik, "k"))
   cache <- environment(lik)$cache
-  as.01 <- inherits(lik, "mk2")
+  is.mk2 <- inherits(lik, "mk2")
 
-  if ( use.C ) {
-    order.C <- toC.int(rev(cache$order))
-    parent.C <- toC.int(cache$parent)
-  }
+  order.C <- toC.int(rev(cache$order))
+  parent.C <- toC.int(cache$parent)
 
-  function(pars, n=1, simplify=TRUE, intermediates=FALSE, ...) {
+  function(pars, n=1, ...) {
     obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
-
-    root.p <- obj$root.p
-    if ( use.C ) {
-      if ( n != 1 || !simplify )
-        stop("Cannot yet do n > 1")
-      
-      li <- t.default(obj$init)
-      pij <- obj$pij
-      x <- .Call("r_do_asr_joint", k, order.C, parent.C, li, pij,
-                 root.p, as.01, PACKAGE="diversitree")
-    } else {
-      li <- obj$init
-      pij <- t.default(obj$pij)
-      x <- do.asr.joint.R(n, cache, li, pij, root.p, as.01, simplify)
-    }
-
-    if ( intermediates )
-      attr(x, "intermediates") <- obj
-    x
+    ##.Call("r_do_asr_joint", k, order.C, parent.C, obj$init, obj$pij,
+    ##      obj$root.p, as.01, PACKAGE="diversitree")
+    do.asr.joint(n, k, order.C, parent.C, obj$init, obj$pij,
+                 obj$root.p, is.mk2)
   }
 }
 
-make.asr.stoch.mkn <- function(lik, slim.default=FALSE, ...) {
+make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
   is.mk2 <- inherits(lik, "mk2")
   cache <- environment(lik)$cache
   k <- as.integer(attr(lik, "k"))
@@ -103,14 +79,12 @@ make.asr.stoch.mkn <- function(lik, slim.default=FALSE, ...) {
   ## TODO: This is fragile, and should be stored in the cache anyway.
   n.node <- nrow(cache$edge)/2
 
-  function(pars, n=1, node.state=NULL, slim=slim.default, ...) {
+  function(pars, n=1, ...) {
     if ( n > 1 )
       stop("Not yet implemented (n>1)")
-    
-    if ( is.null(node.state) )
-      node.state <- joint(pars, n, intermediates=FALSE, ...)
-    else if ( length(node.state) != n.node )
-      stop("Incorrect length for given node state")
+
+    ## 1: Draw a random sample from the nodes' joint distribution:
+    node.state <- joint(pars, n, ...)
 
     ## If we are using mkn, we need to deflate the node states onto
     ## base-0 indices for the simulation code.
@@ -147,24 +121,6 @@ make.asr.stoch.mkn <- function(lik, slim.default=FALSE, ...) {
                    pos.states, check=FALSE)
     }
   }
-}
-
-asr.jointmean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
-  k <- attr(lik, "k")
-  cache <- environment(lik)$cache
-
-  obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
-
-  li <- obj$init
-  pij <- t(obj$pij) # because mkn has peculiar transpose.
-  root.p <- obj$root.p
-
-  x <- do.asr.jointmean(cache, li, pij, root.p)
-  
-  if ( intermediates )
-    attr(x, "intermediates") <- obj
-
-  x
 }
 
 summarise.histories.mk2 <- function(x, phy) {

@@ -20,25 +20,13 @@ make.asr.stoch <- function(lik, ...) {
   UseMethod("make.asr.stoch")
 }
 
-## TODO: This is going to be heaps easier to mantain
-## asr.marginal <- function(lik, pars, nodes=NULL, ...)
-##   make.asr.marginal(lik)(pars, nodes, ...)
-## asr.joint <- function(lik, pars, n=1, simplify=TRUE, ...)
-##   make.asr.joint(lik)(pars, n, simplify, ...)
-## asr.stoch <- function(lik, pars, n=1, ...)
-##   make.asr.stoch(lik)(pars, n, ...)
-
-asr.marginal <- function(lik, pars, nodes=NULL, ...) {
-  UseMethod("asr.marginal")
-}
-
-asr.joint <- function(lik, pars, n=1, simplify=TRUE, ...) {
-  UseMethod("asr.joint")
-}
-
-asr.stoch <- function(lik, pars, n=1, ...) {
-  UseMethod("asr.stoch")
-}
+## Short cuts for one shot ASR:
+asr.marginal <- function(lik, pars, nodes=NULL, ...)
+  make.asr.marginal(lik)(pars, nodes, ...)
+asr.joint <- function(lik, pars, n=1, ...)
+  make.asr.joint(lik)(pars, n, ...)
+asr.stoch <- function(lik, pars, n=1, ...)
+  make.asr.stoch(lik)(pars, n, ...)
 
 ## Method for constrained function dispatch on the next class down: a
 ## constrained mkn model has class:
@@ -46,36 +34,39 @@ asr.stoch <- function(lik, pars, n=1, ...) {
 ## so asr.xxx dispatches to asr.xxx.constrained -> asr.xxx.mkn
 ## with the appropriate parameters filled in by asr.xxx.constrained.
 ## This trick works for all three functions:
-asr.marginal.constrained <- function(lik, pars, nodes=NULL, ...) {
-  pars <- lik(pars, pars.only=TRUE)
-  lik <- attr(lik, "func")
-  NextMethod("asr.marginal")
-}
+## asr.marginal.constrained <- function(lik, pars, nodes=NULL, ...) {
+##   pars <- lik(pars, pars.only=TRUE)
+##   lik <- attr(lik, "func")
+##   NextMethod("asr.marginal")
+## }
 
-asr.joint.constrained <- function(lik, pars, n=1, simplify=TRUE, ...) {
-  pars <- lik(pars, pars.only=TRUE)
-  lik <- attr(lik, "func")
-  NextMethod("asr.joint")
-}
+## asr.joint.constrained <- function(lik, pars, n=1, simplify=TRUE, ...) {
+##   pars <- lik(pars, pars.only=TRUE)
+##   lik <- attr(lik, "func")
+##   NextMethod("asr.joint")
+## }
 
-asr.stoch.constrained <- function(lik, pars, n=1, ...) {
-  pars <- lik(pars, pars.only=TRUE)
-  lik <- attr(lik, "func")
-  NextMethod("asr.stoch")
-}
+## asr.stoch.constrained <- function(lik, pars, n=1, ...) {
+##   pars <- lik(pars, pars.only=TRUE)
+##   lik <- attr(lik, "func")
+##   NextMethod("asr.stoch")
+## }
 
 ## Similar for the function-returning versions
 make.asr.marginal.constrained <- function(lik, ...) {
+  .NotYetImplemented()
   lik <- attr(lik, "func")
   NextMethod("asr.marginal")
 }
 
 make.asr.joint.constrained <- function(lik, ...) {
+  .NotYetImplemented()  
   lik <- attr(lik, "func")
   NextMethod("asr.joint")
 }
 
 make.asr.stoch.constrained <- function(lik, ...) {
+  .NotYetImplemented()  
   lik <- attr(lik, "func")
   NextMethod("asr.stoch")
 }
@@ -123,26 +114,24 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
       lq <- res$lq
       branch.init <- res$init
       branch.base <- res$base
-      branch.init[[nd]][states.idx[-st]] <- 0
-      y.in <- branch.init[[nd]]
-      ## j <- nd # Needed for when nd == root.idx - TODO:poss no longer?
+      branch.init[states.idx[-st],nd] <- 0
+      y.in <- branch.init[,nd]
 
       for ( i in anc.nd ) {
         ans <- branches(y.in, len[i], pars, depth[i])
-        lq[i] <- ans[1]
-        branch.base[[i]] <- ans[-1]
+        lq[i] <- ans[[1]]
+        branch.base[,i] <- ans[[2]]
         j <- parent[i]
-        y.in <- initial.conditions(branch.base[children[j,]], pars,
+        y.in <- initial.conditions(branch.base[,children[j,]], pars,
                                    depth[j], j == root.idx)
-        branch.init[[j]] <- y.in
+        branch.init[,j] <- y.in
       }
 
-      ans <- root(pars, branch.init[[root.idx]], lq)
-      
-      if ( is.na(ans) )
-        p[st] <- -Inf # explots R's exp(-Inf) == 0
-      else
-        p[st] <- ans
+      ## TODO: Could just do y.in here?
+      ans <- root(pars, branch.init[,root.idx], lq)
+
+      ## explots R's exp(-Inf) == 0
+      p[st] <- if ( is.na(ans) ) -Inf else ans
     }
 
     pp <- exp(p - max(p))
@@ -160,117 +149,27 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
 ## in state i; this can probably replace root.state, as the two just
 ## fight each other.
 
-## li is len * k matrix; for a node n, li[n,] comes in the order
+## li is k * len matrix; for a node n, li[,n] comes in the order
 ##   Pr(D_n|1), Pr(D_n|2), ..., Pr(D_n|k)
 ## Pr(D|i) is the conditional probability of the data conditional on a
 ## node being in the state 'i'.  It .
 
-## pij is a len * (k*k) column matrix; the row n comes in the order
+## pij is a (k*k) * len column matrix; the column n comes in the order
 ##   p11, p21, ..., pk1, p12, ..., pkk
 ## so that
-##   matrix(pij[nd,], k, k)
+##   matrix(pij[,nd], k, k)
 ## is a matrix with where m[i,j] is the probability of moving from
-## state i to state j.  This means that
-##   pij2 <- array(pij, c(nrow(pij), k, k))
-## gives an array where
-##   pij2[nd, i, j]
-## is the probability of an i->j transition along the branch leading
-## to nd.  Note that the sums of all rows (pij2[n,i,] for all n, i)
-## equals 1, as a branch ends at some state with probability 1:
-##   all(abs(apply(pij2, 1:2, sum)[-root,] - 1) < 1e-8)
-do.asr.joint <- function(n, cache, li, pij, root.p, as.01, simplify=TRUE,
-                         ...) {
-  parent <- cache$parent
-  len <- length(cache$len)
-  root <- cache$root
-  tips <- seq_len(cache$n.tip)
-
-  if ( is.list(li) )
-    li <- do.call(rbind, li)
-  if ( nrow(li) != len )
-    stop("Incorrect length li")
-  k <- ncol(li)
-
-  if ( nrow(pij) != len || ncol(pij) != k * k  )
-    stop("Incorrect dimension pij")
-  pij2 <- array(pij, c(len, k, k))
-
-  anc.states <- matrix(NA, n, len)
-  anc.states[,root] <- sample(k, n, TRUE, root.p)
-  for ( i in rev(cache$order)[-1] ) {
-    parent.state <- anc.states[,parent[i]]
-    for ( j in seq_len(k) ) {
-      idx <- parent.state == j
-      nj <- sum(idx)
-      if ( nj > 0 ) {
-        p <- li[i,] * pij2[i,j,] # di * pij
-        anc.states[idx,i] <- sample(k, nj, TRUE, p)
-      }
-    }
+## state i to state j.
+do.asr.joint <- function(n, k, order.C, parent.C, li, pij, root.p,
+                         as.01) {
+  if ( n > 1 ) {
+    ret <- matrix(NA, n, length(order.C))
+    for ( i in seq_len(n) )
+      ret[i,] <- .Call("r_do_asr_joint", k, order.C, parent.C, li,
+                       pij, root.p, as.01, PACKAGE="diversitree")
+    ret
+  } else {
+    .Call("r_do_asr_joint", k, order.C, parent.C, li,
+          pij, root.p, as.01, PACKAGE="diversitree")
   }
-    
-  ret <- anc.states[,-tips,drop=simplify]
-  if ( as.01 )
-    ret <- ret - 1
-
-  ret
-}
-
-do.asr.joint.R <- function(n, cache, li, pij, root.p, as.01, simplify=TRUE,
-                           ...) {
-  parent <- cache$parent
-  len <- length(cache$len)
-  root <- cache$root
-  tips <- seq_len(cache$n.tip)
-
-  if ( is.list(li) )
-    li <- do.call(rbind, li)
-  if ( nrow(li) != len )
-    stop("Incorrect length li")
-  k <- ncol(li)
-
-  if ( nrow(pij) != len || ncol(pij) != k * k  )
-    stop("Incorrect dimension pij")
-  pij2 <- array(pij, c(len, k, k))
-
-  anc.states <- matrix(NA, n, len)
-  anc.states[,root] <- sample(k, n, TRUE, root.p)
-  for ( i in rev(cache$order)[-1] ) {
-    parent.state <- anc.states[,parent[i]]
-    for ( j in seq_len(k) ) {
-      idx <- parent.state == j
-      nj <- sum(idx)
-      if ( nj > 0 ) {
-        p <- li[i,] * pij2[i,j,] # di * pij
-        anc.states[idx,i] <- sample(k, nj, TRUE, p)
-      }
-    }
-  }
-  
-  ret <- anc.states[,-tips,drop=simplify]
-  if ( as.01 )
-    ret <- ret - 1
-  
-  ret
-}
-
-## TODO: explain this one...
-do.asr.jointmean <- function(cache, li, pij, root.p, ...) {
-  parent <- cache$parent
-  len <- length(cache$len)
-  root <- cache$root
-  tips <- seq_len(cache$n.tip)
-  k <- length(li[[1]])
-  pij2 <- array(pij, c(len, k, k))
-
-  anc.states <- matrix(NA, k, len)  
-  anc.states[,root] <- root.p
-
-  for ( i in rev(cache$order)[-1] ) {
-    pp <- anc.states[,parent[i]]
-    tmp <- t((li[[i]] * t(pij2[i,,])))
-    anc.states[,i] <- (c(pp) / sum(pp)) %*% (tmp/rowSums(tmp))
-  }
-
-  anc.states[,-tips]
 }

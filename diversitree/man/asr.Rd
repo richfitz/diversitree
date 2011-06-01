@@ -17,7 +17,7 @@
 
 \usage{
 asr.marginal(lik, pars, nodes=NULL, ...)
-asr.joint(lik, pars, n=1, simplify=TRUE, ...)
+asr.joint(lik, pars, n=1, ...)
 asr.stoch(lik, pars, n=1, ...) 
 
 make.asr.marginal(lik, ...)
@@ -27,14 +27,16 @@ make.asr.stoch(lik, ...)
 
 \arguments{
   \item{lik}{A likelihood function.}
+  
   \item{pars}{A vector of parameters, suitable for \code{lik}.}
+
   \item{nodes}{For \code{asr.marginal} only; an optional vector of
     nodes to return ancestral states for (using ape's index).  By
     default, all nodes are returned.}
+  
   \item{n}{The number of samples to draw from the joint distribution, or
     number of stochastic reconstructions to make.}
-  \item{simplify}{For \code{asr.joint}, return a vector of states when
-    \code{n=1}? Otherwise leaves as a one row matrix.}
+  
   \item{...}{Additional arguments passed through to future methods}
 }
 

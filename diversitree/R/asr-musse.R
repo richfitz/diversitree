@@ -1,8 +1,4 @@
 ## (1) Marginal ASR:
-asr.marginal.musse <- function(lik, ...) {
-  make.asr.marginal(lik)(...)
-}
-
 make.asr.marginal.musse <- function(lik, ...) {
   e <- environment(lik)  
   k <- attr(lik, "k") # I think, or possibly from cache?
@@ -39,8 +35,9 @@ make.asr.marginal.musse <- function(lik, ...) {
       do.asr.marginal.C(pars, cache, ptr, nodes, states.idx.C,
                         parent.C, all.branches.C, root.f, env)
     } else {
-      res <- all.branches(pars, cache, initial.conditions.musse,
-                          branches)
+      res <- all.branches.matrix(pars, cache,
+                                 initial.conditions.musse,
+                                 branches)
       do.asr.marginal(pars, cache, res, nodes, states.idx,
                       initial.conditions.musse,
                       branches, root.f)

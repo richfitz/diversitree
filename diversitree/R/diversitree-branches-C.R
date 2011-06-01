@@ -75,7 +75,6 @@ ll.xxsse.C <- function(pars, all.branches,
   loglik <- root.xxsse(vals, pars, ans[[1]], condition.surv, root.p)
 
   if ( intermediates ) {
-    ## attr(loglik, "cache") # can't provide this one
     ans$intermediates$root.p <- root.p
     attr(loglik, "intermediates") <- ans$intermediates
     attr(loglik, "vals") <- vals

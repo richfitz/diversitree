@@ -167,7 +167,7 @@ dt.split.order <- function(daughters, parents) {
 }
 
 all.branches.split <- function(pars, cache, initial.conditions, branches,
-                               branches.aux) {
+                               branches.aux, as.list=FALSE) {
   n.part <- cache$n.part
   res <- vector("list", n.part)
 
@@ -179,22 +179,33 @@ all.branches.split <- function(pars, cache, initial.conditions, branches,
     if ( length(x$daughters) > 0 ) {
       ## Add the daughters
       y <- res[x$daughters]
-      preset <- list(target=x$daughters.i,
-                     base=vector("list", length(x$daughters)),
-                     lq=numeric(length(x$daughters)))
-      
+      if ( as.list ) 
+        preset <- list(target=x$daughters.i,
+                       base=vector("list", length(x$daughters)),
+                       lq=numeric(length(x$daughters)))
+      else
+        preset <- list(target=x$daughters.i,
+                       base=matrix(NA, x$ny, length(x$daughters)),
+                       lq=numeric(length(x$daughters)))
+            
       aux <- branches.aux(i, x$depth[x$daughters.i], pars[[i]])
-      if ( is.matrix(aux) )
-        aux <- matrix.to.list(aux)
       
       for ( j in seq_along(x$daughters) ) {
         yj <- res[[x$daughters[j]]]$base
-        yj[aux.i] <- aux[[j]]
+        if ( as.list ) 
+          yj[aux.i] <- aux[[j]]
+        else
+          yj[aux.i] <- aux[,j]
         idx <- x$daughters.i[j]
 
         tmp <- branches(yj, x$len[idx], pars[[i]], x$depth[idx])
-        preset$lq[j] <- tmp[1]
-        preset$base[[j]] <- tmp[-1]
+        if ( as.list ) {
+          preset$lq[j]     <- tmp[1]
+          preset$base[[j]] <- tmp[-1]
+        } else {
+          preset$lq[j]    <- tmp[[1]]
+          preset$base[,j] <- tmp[[2]]
+        }
       }
 
       if ( is.null(x$preset) ) {
@@ -207,15 +218,26 @@ all.branches.split <- function(pars, cache, initial.conditions, branches,
     }
 
     ## Run the traversal.
-    obj <- all.branches(pars[[i]], x, initial.conditions, branches)
+    if ( as.list ) {
+      obj <- all.branches.list(pars[[i]], x, initial.conditions,
+                               branches)
+      base <- obj$init[[x$root]]      
+    } else {
+      obj <- all.branches.matrix(pars[[i]], x, initial.conditions,
+                                 branches)
+      base <- obj$init[,x$root]
+    }
 
-    ## Trailing branch:
-    base <- obj$init[[x$root]]
     if ( !is.na(cache$parent[i]) ) { # trailing to deal with...
       tmp <- branches(base, x$trailing.len, pars[[i]], x$trailing.t0)
-      res[[i]] <- list(lq=tmp[1] + sum(obj$lq),
-                       base=tmp[-1],
-                       intermediates=obj)
+      if ( as.list )
+        res[[i]] <- list(lq=tmp[1] + sum(obj$lq),
+                         base=tmp[-1],
+                         intermediates=obj)
+      else
+        res[[i]] <- list(lq=tmp[[1]] + sum(obj$lq),
+                         base=tmp[[2]],
+                         intermediates=obj)
     } else {
       res[[i]] <- list(lq=sum(obj$lq),
                        base=base,

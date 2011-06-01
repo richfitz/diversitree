@@ -172,7 +172,7 @@ ll.quasse <- function(cache, pars, branches, initial.conditions, tips,
     cache$y <- init
   }
 
-  ans <- all.branches(pars, cache, initial.conditions, branches)
+  ans <- all.branches.list(pars, cache, initial.conditions, branches)
   
   vals <- matrix(ans$init[[cache$root]], cache$control$nx, 2)
 

@@ -62,7 +62,7 @@ SEXP r_cvodes_run(SEXP extPtr, SEXP r_y0, SEXP r_times) {
   int nt = LENGTH(r_times), flag;
   SEXP r_ret;
 
-  PROTECT(r_ret = allocMatrix(REALSXP, nt, obj->neq));  
+  PROTECT(r_ret = allocMatrix(REALSXP, obj->neq, nt));  
 
   flag = cvodes_run(obj, REAL(r_y0), REAL(r_times), nt, REAL(r_ret));
   if ( flag != 0 )

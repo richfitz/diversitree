@@ -159,7 +159,7 @@ int cvodes_run(RCvodesObj *obj, double *y0, double *times, int nt,
 
   /* Initialise y */
   for( i = 0; i < neq; i++ )
-    ret[nt*i] = ydat[i] = y0[i];
+    ret[i] = ydat[i] = y0[i];
 
   CVodeReInit(cvode_mem, times[0], y);
 
@@ -171,8 +171,7 @@ int cvodes_run(RCvodesObj *obj, double *y0, double *times, int nt,
     if ( flag != CV_TOO_CLOSE && cvodes_check_flag(&flag, "CVode", 1) )
       return -1;
 
-    for ( j = 0; j < neq; j++ )
-      ret[i + nt*j] = ydat[j];
+    memcpy(ret + i*neq, ydat, neq * sizeof(double));
   }
   return 0;
 }

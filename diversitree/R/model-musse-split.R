@@ -114,9 +114,10 @@ make.cache.musse.split <- function(tree, states, k, nodes, split.t,
 
   for ( i in seq_along(cache$cache) ) {
     x <- cache$cache[[i]]
+    x$ny <- 2*k
+    x$k <- k
     x$tip.state  <- states[x$tip.label]
     x$sampling.f <- sampling.f[[i]]
-    x$k <- k
     x$y <- initial.tip.musse(x)
     cache$cache[[i]] <- x
   }
@@ -138,7 +139,7 @@ make.cache.musse.split <- function(tree, states, k, nodes, split.t,
 ## log compensation worked out.
 make.branches.aux.musse <- function(cache, control) {
   k <- cache$k
-  idx.e <- 2:(k+1)  
+  idx.e <- seq_len(k)
   y <- lapply(cache$sampling.f, function(x) c(1-x, rep(1, k)))
   n <- length(y)
   branches <- make.branches.musse(cache, control)
@@ -146,6 +147,6 @@ make.branches.aux.musse <- function(cache, control) {
   function(i, len, pars) {
     if ( i > n )
       stop("No such partition")
-    branches(y[[i]], len, pars, 0)[,idx.e,drop=FALSE]
+    branches(y[[i]], len, pars, 0)[[2]][idx.e,,drop=FALSE]
   }
 }

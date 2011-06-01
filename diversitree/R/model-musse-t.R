@@ -119,11 +119,6 @@ make.pars.t.musse <- function(functions, k) {
 }
 
 ## 8: branches
-## Note that this is quite different to the normal
-## make.musse.branches, as the assembly of the Q matrix is done before
-## this gets here.  Normally this is done on the way in (TODO:
-## arguably, it should be done in the likelihood funtion, and this may
-## change in the future)
 make.branches.musse.t <- function(cache, control) {
   k <- cache$k
   np <- as.integer(k * (k + 2))

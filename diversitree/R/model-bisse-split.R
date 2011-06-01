@@ -75,6 +75,8 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
 
   for ( i in seq_along(cache$cache) ) {
     x <- cache$cache[[i]]
+    x$ny <- 4L
+    x$k <- 2L
     x$tip.state  <- states[x$tip.label]
     x$sampling.f <- sampling.f[[i]]
 
@@ -140,7 +142,7 @@ ll.bisse.split <- function(cache, pars, branches, branches.aux,
 ## Also, it can just use the non-clever function as I do not need the
 ## log compensation worked out.
 make.branches.aux.bisse <- function(cache, control) {
-  idx.e <- 2:3
+  idx.e <- 1:2
   y <- lapply(cache$sampling.f, function(x) c(1-x, 1, 1))
   n <- length(y)
   branches <- make.branches.bisse(cache, control)
@@ -148,7 +150,7 @@ make.branches.aux.bisse <- function(cache, control) {
   function(i, len, pars) {
     if ( i > n )
       stop("No such partition")
-    branches(y[[i]], len, pars, 0)[,idx.e,drop=FALSE]
+    branches(y[[i]], len, pars, 0)[[2]][idx.e,,drop=FALSE]
   }
 }
 

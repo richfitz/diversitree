@@ -55,9 +55,7 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE, strict=TRUE,
     root.p <- root.p.mkn(d.root, pars, root, root.p)
     loglik <- root.mkn(d.root, ans$lq, root.p)
     if ( intermediates ) {
-      ans$init <- t.default(ans$init)
-      ans$init[cache$tips,] <- cache$y$y[cache$y$i,]
-      ans$base <- t.default(ans$base)
+      ans$init[,cache$tips] <- cache$y$y[cache$y$i,]
       ans$root.p <- root.p
     }
 
