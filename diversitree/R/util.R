@@ -137,7 +137,17 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
       ret
     }
 
-    vers <-  packageVersion("deSolve")
+
+    ## Temporary fix so that I can work on the cluster.  This will be
+    ## removed and DESCRIPTION updated to require R 2.12.0 or
+    ## greater.
+    if ( getRversion() >= "2.12.0" ) {
+      vers <-  packageVersion("deSolve")
+    } else {
+      vers <- package_version(packageDescription("deSolve",
+                                                 fields="Version"))
+    }
+    ## Update here when deSolve is updated.
     max.deSolve <- package_version("1.10")
     if ( vers > max.deSolve ) {
       str <- paste("diversitree is not known to work with deSolve > ",

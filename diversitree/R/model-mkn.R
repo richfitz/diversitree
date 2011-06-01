@@ -50,15 +50,23 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE, strict=TRUE,
     qmat[idx] <- pars
     diag(qmat) <- -rowSums(qmat)
     ans <- all.branches.mkn(qmat, cache)
-    d.root <- ans$init[[cache$root]]
+
+    d.root <- ans$init[,cache$root]
     root.p <- root.p.mkn(d.root, pars, root, root.p)
     loglik <- root.mkn(d.root, ans$lq, root.p)
     if ( intermediates ) {
-      ans$init[seq_len(n.tip)] <- matrix.to.list(cache$y$y[cache$y$i,])
+      ans$init <- t.default(ans$init)
+      ans$init[cache$tips,] <- cache$y$y[cache$y$i,]
+      ans$base <- t.default(ans$base)
       ans$root.p <- root.p
     }
 
-    cleanup(loglik, pars, intermediates, cache, ans)
+    ## Replaces cleanup()
+    if ( intermediates ) {
+      attr(loglik, "intermediates") <- ans
+      attr(loglik, "vals") <- d.root
+    }
+    loglik
   }
 
   ll <- function(pars, ...) ll.mkn(cache, pars, ...)
@@ -198,8 +206,8 @@ root.mkn <- function(vals, lq, root.p) {
 ## 6: ll (done within make.mkn)
 
 ## 7: initial.conditions:
-initial.conditions.mkn <- function(init, pars, t, is.root=FALSE)
-  init[[1]] * init[[2]]
+## initial.conditions.mkn <- function(init, pars, t, is.root=FALSE)
+##   init[[1]] * init[[2]]
 
 ## 8: branches (separate for mk2 and mkn)
 pij.mk2 <- function(len, pars) {
@@ -248,7 +256,10 @@ mkn.Q <- function(pars, k) {
 }
 
 ## The new integrator.
-all.branches.mkn <- function(pars, cache, transpose=TRUE) {
+## Returns slightly different output than all.branches at this point
+## (the init and base values are transposed relative to all.branches,
+## but this will change there eventually).
+all.branches.mkn <- function(pars, cache) {
   ## At this point, the parameters are assumed to be a Q matrix
   k <- cache$k
 
@@ -269,7 +280,7 @@ all.branches.mkn <- function(pars, cache, transpose=TRUE) {
   ## tips
   ans <- matrix(pij[idx.tip], n.tip, k)
   q <- rowSums(ans)
-  branch.base[,seq_len(n.tip)] <- t(ans/q)
+  branch.base[,seq_len(n.tip)] <- t.default(ans/q)
   lq[seq_len(n.tip)] <- log(q)
 
   ## branches
@@ -284,15 +295,9 @@ all.branches.mkn <- function(pars, cache, transpose=TRUE) {
             lq       = lq,
             NAOK=TRUE, DUP=FALSE)
 
-  if ( transpose ) {
-    list(init=matrix.to.list(t(ans$init)),
-         base=matrix.to.list(t(ans$base)),
-         lq=ans$lq, pij=pij)
-  } else {
-    list(init=ans$init,
-         base=ans$base,
-         lq=ans$lq,
-         pij=pij)
-  }
+  list(init=ans$init,
+       base=ans$base,
+       lq=ans$lq,
+       pij=pij)
 }
 

@@ -1,3 +1,21 @@
+2011-05-31  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/asr-mkn.R: Faster joint and stochastic reconstructions through
+	the new C code; (still optional)
+
+	* R/asr.R: Faster joint reconstructions through the new C
+	code; (still optional)
+
+	* R/diversitree-branches.R: Prepping for big change
+
+	* R/mcmc.R: Additional ... arguments being passed to prior with
+	poor effects.
+
+	* R/model-mkn.R: No longer ever return lists as intermediate
+	output.
+
+	* R/util.R: Temporary fix for older R versions
+
 2011-05-12  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bump to 0.7-2

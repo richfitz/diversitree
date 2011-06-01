@@ -23,7 +23,7 @@ make.asr.marginal.mkn <- function(lik, ...) {
                root.p.mkn(vals, pars, root, root.p))
 
     qmat <- mkn.Q(pars)
-    res <- all.branches.mkn(qmat, cache, FALSE)
+    res <- all.branches.mkn(qmat, cache)
 
     ## TODO: ugly!  This is basically duplicated in do.asr.marginal()
     ## and do.asr.marginal.C(); there should be nicer way of doing
@@ -34,25 +34,37 @@ make.asr.marginal.mkn <- function(lik, ...) {
       nodes.C <- toC.int(nodes + cache$n.tip)
 
     .Call("r_asr_marginal_mkn", k, pars, nodes.C, cache.C, res,
-          root.f, env)
+          root.f, env, PACKAGE="diversitree")
   }
 }
 
-make.asr.joint.mkn <- function(lik, ...) {
-  k <- attr(lik, "k")
+make.asr.joint.mkn <- function(lik, use.C=FALSE, ...) {
+  k <- as.integer(attr(lik, "k"))
   cache <- environment(lik)$cache
+  as.01 <- inherits(lik, "mk2")
+
+  if ( use.C ) {
+    order.C <- toC.int(rev(cache$order))
+    parent.C <- toC.int(cache$parent)
+  }
 
   function(pars, n=1, simplify=TRUE, intermediates=FALSE, ...) {
     obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
 
-    li <- obj$init
-    pij <- t(obj$pij)
     root.p <- obj$root.p
-
-    x <- do.asr.joint(n, cache, li, pij, root.p, simplify)
-    
-    if ( inherits(lik, "mk2") )
-      x <- x - 1
+    if ( use.C ) {
+      if ( n != 1 || !simplify )
+        stop("Cannot yet do n > 1")
+      
+      li <- t.default(obj$init)
+      pij <- obj$pij
+      x <- .Call("r_do_asr_joint", k, order.C, parent.C, li, pij,
+                 root.p, as.01, PACKAGE="diversitree")
+    } else {
+      li <- obj$init
+      pij <- t.default(obj$pij)
+      x <- do.asr.joint.R(n, cache, li, pij, root.p, as.01, simplify)
+    }
 
     if ( intermediates )
       attr(x, "intermediates") <- obj
@@ -62,10 +74,31 @@ make.asr.joint.mkn <- function(lik, ...) {
 
 make.asr.stoch.mkn <- function(lik, slim.default=FALSE, ...) {
   is.mk2 <- inherits(lik, "mk2")
-  k <- attr(lik, "k")
   cache <- environment(lik)$cache
-  edge <- cache$edge
-  edge.length <- cache$edge.length
+  k <- as.integer(attr(lik, "k"))
+
+  if ( is.mk2 ) {
+    tip.state <- as.integer(cache$tip.state - 1L)
+    pos.states <- c(0L, 1L)
+  } else {
+    tip.state <- as.integer(cache$tip.state)
+    pos.states <- seq_len(k)
+  }
+
+  edge.1 <- cache$edge[,1]
+  edge.2 <- cache$edge[,2]
+  edge.length <- cache$edge.length # == cache$len[edge.2]
+
+  ## Joint distribution
+  joint <- make.asr.joint(lik)
+
+  ## Single branch simulator
+  ptr <- .Call("r_smkn_alloc", k, 100L, PACKAGE="diversitree")
+  sim.set.pars <- function(pars)
+    .Call("r_smkn_set_pars", ptr, pars, PACKAGE="diversitree")
+  sim1 <- function(len, state.beg, state.end)
+    .Call("r_smkn_scm_run", ptr, len, state.beg, state.end, is.mk2,
+          PACKAGE="diversitree")
 
   ## TODO: This is fragile, and should be stored in the cache anyway.
   n.node <- nrow(cache$edge)/2
@@ -75,13 +108,44 @@ make.asr.stoch.mkn <- function(lik, slim.default=FALSE, ...) {
       stop("Not yet implemented (n>1)")
     
     if ( is.null(node.state) )
-      node.state <- asr.joint(lik, pars, n, intermediates=FALSE, ...)
+      node.state <- joint(pars, n, intermediates=FALSE, ...)
     else if ( length(node.state) != n.node )
       stop("Incorrect length for given node state")
-    
 
-    do.asr.stoch.mkn.one(pars, cache$tip.state, node.state,
-                         edge, edge.length, k, is.mk2, slim)
+    ## If we are using mkn, we need to deflate the node states onto
+    ## base-0 indices for the simulation code.
+    if ( is.mk2 )
+      anc.state <- as.integer(c(tip.state, node.state))
+    else
+      anc.state <- as.integer(c(tip.state - 1L, node.state - 1L))
+
+    ## 2: Simulate branches.
+    ## a: set the parameters; the same values will be used for all
+    ## branches.
+    sim.set.pars(pars)
+
+    ## b: Sort the state beginning, end and extinction into the order
+    ## that we will use.
+    state.beg <- anc.state[edge.1]
+    state.end <- anc.state[edge.2]
+
+    ## c: Actually simulate the histories
+    f <- function(i)
+      sim1(edge.length[i], state.beg[i], state.end[i])
+    history <- lapply(seq_along(state.beg), f)
+
+    if ( slim ) {
+      tmp <- lapply(history, function(x) x[-1,,drop=FALSE])
+      keep <- which(sapply(tmp, length) > 0)
+      names(node.state) <- NULL
+      ret <- list(node.state=node.state,
+                  history=list(idx=keep, tmp[keep]))
+    } else {
+      if ( !is.null(cache$node.label) )
+        names(node.state) <- cache$node.label
+      make.history(NULL, tip.state, node.state, history, TRUE,
+                   pos.states, check=FALSE)
+    }
   }
 }
 
@@ -101,107 +165,6 @@ asr.jointmean.mkn <- function(lik, pars, intermediates=FALSE, ...) {
     attr(x, "intermediates") <- obj
 
   x
-}
-
-
-do.asr.stoch.mkn.one <- function(pars, tip.state, node.state,
-                                 edge, edge.length, k, as.01, slim) {
-  if ( as.01 ) {
-    anc.state <- c(tip.state, node.state + 1)
-    tip.state <- tip.state - 1
-    states <- c(0, 1)
-  } else {
-    anc.state <- c(tip.state, node.state)
-    states <- 1:k
-  }
-  
-  state.beg <- as.integer(anc.state[edge[,1]])
-  state.end <- as.integer(anc.state[edge[,2]])
-  
-
-  f <- function(i)
-    stoch.branch.mkn(pars, edge.length[i],
-                     state.beg[i], state.end[i], k, as.01)
-
-  history <- lapply(seq_along(state.beg), f)
-
-  if ( slim ) {
-    tmp <- lapply(history, function(x) x[-1,,drop=FALSE])
-    keep <- which(sapply(tmp, length) > 0)
-    names(node.state) <- NULL
-    ret <- list(node.state=node.state,
-                history=list(idx=keep, tmp[keep]))
-  } else {
-    make.history(NULL, tip.state, node.state, history, TRUE, states,
-                 FALSE)
-  }
-}
-
-stoch.branch.mkn <- function(pars, len, state.beg, state.end, k,
-                             as.01) {
-  pars <- matrix(pars, k, k-1, TRUE)
-  q.diag <- rowSums(pars) 
-  idx <- seq_len(k)
-  i <- lapply(idx, function(i) idx[-i])
-
-  ## TODO: There is also a special case for three states, but I bet that
-  ## this can be done faster in C for any number of states.  Probably
-  ## also changing the first time to sample from a conditional
-  ## exponential when state.beg != state.end?
-
-  ## Following Nielsen [30], when the beginning and end states differ,
-  ## there must be at least one change along the branch and we can
-  ## condition on this.  Let t_1 be the time of the first change, and
-  ## t be the length of the branch over which a change occurs
-  ## (0 < t_1 < t).  Then
-  ##   f(t_1 | t_1 < t) = (-q exp(-(-q)t_1)) / (1 - exp(-(-q)t))
-  ## To do this, compute the CDF:
-  ##   Integrate[pdf,{t_1,0,t_1}]
-  ##   F(t_1 | t_1 < t) = (exp(t(-q)) - exp((t-t_1)(-q)))/(exp(t(-q))-1)
-  ## and invert the CDF:
-  ##   ... = t(-q)-log((1-exp(t(-q)))(
-  ##   invcdf <- function(p, t, qii) {
-  ##     tq <- t * (-qii)
-  ##     etq <- exp(tq)
-  ##     (tq - log(1 - etq) - log(etq / (1-etq) + p)) / (-qii)
-  ##   }
-  ##   q <- q.diag[state.beg]
-  ##   curve((-qii*exp(-(-qii)*x)) / (1 - exp(-(-qii)*len)), 0, len)
-  ##   integrate(function(x) (-qii*exp(-(-qii)*x)) / (1 - exp(-(-qii)*len)),
-  ##             0, len)
-  ##   curve((exp(len*(-qii)) - exp((len-x)*(-qii)))/(exp(len*(-qii))-1), 0, len)
-  f2 <- function(state) {
-    t <- 0
-    changes <- list(c(t, state))
-    while ( (t <- t + rexp(1, pars[state])) < len ) {
-      state <- i[[state]]
-      changes[[length(changes)+1]] <- c(t, state)
-    }
-    list(state, changes)
-  }
-  
-  f3 <- function(state) {
-    t <- 0
-    changes <- list(c(t, state))
-    while ( (t <- t + rexp(1, q.diag[state])) < len ) {
-      state <- i[[state]][sample(k-1, 1, FALSE, pars[state,])]
-      changes[[length(changes)+1]] <- c(t, state)      
-    }
-    list(state, changes)    
-  }
-
-  f <- if ( k == 2 ) f2 else f3
-
-  repeat {
-    tmp <- f(state.beg)
-    if ( state.end == tmp[[1]] )
-      break
-  }
-
-  ans <- do.call(rbind, tmp[[2]])
-  if ( as.01 )
-    ans[,2] <- ans[,2] - 1
-  ans
 }
 
 summarise.histories.mk2 <- function(x, phy) {

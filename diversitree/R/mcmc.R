@@ -34,7 +34,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     posterior <- protect(function(x) lik(x, ...),
                          fail.value.default=fail.value)
   else
-    posterior <- protect(function(x) lik(x, ...) + prior(x, ...),
+    posterior <- protect(function(x) lik(x, ...) + prior(x),
                          fail.value.default=fail.value)
 
   y.init <- posterior(x.init, fail.value=NULL)

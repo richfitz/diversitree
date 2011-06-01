@@ -178,7 +178,7 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
 ## to nd.  Note that the sums of all rows (pij2[n,i,] for all n, i)
 ## equals 1, as a branch ends at some state with probability 1:
 ##   all(abs(apply(pij2, 1:2, sum)[-root,] - 1) < 1e-8)
-do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
+do.asr.joint <- function(n, cache, li, pij, root.p, as.01, simplify=TRUE,
                          ...) {
   parent <- cache$parent
   len <- length(cache$len)
@@ -194,7 +194,45 @@ do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
   if ( nrow(pij) != len || ncol(pij) != k * k  )
     stop("Incorrect dimension pij")
   pij2 <- array(pij, c(len, k, k))
-  
+
+  anc.states <- matrix(NA, n, len)
+  anc.states[,root] <- sample(k, n, TRUE, root.p)
+  for ( i in rev(cache$order)[-1] ) {
+    parent.state <- anc.states[,parent[i]]
+    for ( j in seq_len(k) ) {
+      idx <- parent.state == j
+      nj <- sum(idx)
+      if ( nj > 0 ) {
+        p <- li[i,] * pij2[i,j,] # di * pij
+        anc.states[idx,i] <- sample(k, nj, TRUE, p)
+      }
+    }
+  }
+    
+  ret <- anc.states[,-tips,drop=simplify]
+  if ( as.01 )
+    ret <- ret - 1
+
+  ret
+}
+
+do.asr.joint.R <- function(n, cache, li, pij, root.p, as.01, simplify=TRUE,
+                           ...) {
+  parent <- cache$parent
+  len <- length(cache$len)
+  root <- cache$root
+  tips <- seq_len(cache$n.tip)
+
+  if ( is.list(li) )
+    li <- do.call(rbind, li)
+  if ( nrow(li) != len )
+    stop("Incorrect length li")
+  k <- ncol(li)
+
+  if ( nrow(pij) != len || ncol(pij) != k * k  )
+    stop("Incorrect dimension pij")
+  pij2 <- array(pij, c(len, k, k))
+
   anc.states <- matrix(NA, n, len)
   anc.states[,root] <- sample(k, n, TRUE, root.p)
   for ( i in rev(cache$order)[-1] ) {
@@ -209,7 +247,11 @@ do.asr.joint <- function(n, cache, li, pij, root.p, simplify=TRUE,
     }
   }
   
-  anc.states[,-tips,drop=simplify]
+  ret <- anc.states[,-tips,drop=simplify]
+  if ( as.01 )
+    ret <- ret - 1
+  
+  ret
 }
 
 ## TODO: explain this one...

@@ -45,7 +45,7 @@ RCvodesObj* make_cvodes(int neq, int np, CVRhsFn rhs, double rtol,
      in cvode_mem.     
    */
   /* For stiff problems, this is recommended */
-  /*   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON); */
+  /* cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);*/
   /* But I am assuming nonstiff and going with */
   cvode_mem = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
   if (cvodes_check_flag((void *)cvode_mem, "CVodeCreate", 0)) 

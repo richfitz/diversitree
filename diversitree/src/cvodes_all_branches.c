@@ -247,6 +247,9 @@ void dt_setup_tips(dt_obj *obj, SEXP cache) {
     obj->tip_len[i]    = calloc(n_i, sizeof(double));
     obj->tip_target[i] = calloc(n_i, sizeof(int));
 
+    if ( LENGTH(tip_y) != neq )
+      error("Incorrect size initial conditions");
+
     memcpy(obj->tip_y[i],   REAL(tip_y),   neq*sizeof(double));
     memcpy(obj->tip_len[i], REAL(tip_len), n_i*sizeof(double));
     memcpy(obj->tip_target[i], INTEGER(tip_target), n_i*sizeof(int));
@@ -437,5 +440,24 @@ SEXP getListElement(SEXP list, const char *str) {
 
   return elmt;
 } 
+
+/* I wonder if the problem is the tips? */
+SEXP r_dt_debug(SEXP extPtr) {
+  dt_obj *obj = (dt_obj*)R_ExternalPtrAddr(extPtr);
+  SEXP ret;
+  int tip_types = obj->tip_types, neq = obj->neq;
+  double *tmp;
+  int i;
+
+  PROTECT(ret = allocMatrix(REALSXP, neq, tip_types));
+  for ( i = 0; i < tip_types; i++ ) {
+    tmp = REAL(ret) + i*neq;
+    memcpy(tmp, obj->tip_y[i], neq*sizeof(double));
+  }
+
+  UNPROTECT(1);
+
+  return ret;
+}
 
 #endif

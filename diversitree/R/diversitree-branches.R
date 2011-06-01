@@ -69,7 +69,13 @@
 ##   Whether this is required or not depends on the initial conditions
 ##   produced by make.cache - see the documentation there and also for
 ##   the bisse initial.condition and branches functions.
-all.branches <- function(pars, cache, initial.conditions, branches) {
+
+## The 'as.list' argument is to handle cases, such as QuaSSE, where
+## the output from branches() is of variable length and the result
+## should be stored in a list, rather than a matrix.  It is *not* to
+## switch between a choice of what is returned.
+all.branches <- function(pars, cache, initial.conditions, branches,
+                         as.list=TRUE) {
   ## Inside all.branches:
   len <- cache$len
   depth <- cache$depth
@@ -87,7 +93,10 @@ all.branches <- function(pars, cache, initial.conditions, branches) {
   ## TODO: This should also move in the tip conditions perhaps?
   if ( !is.null(cache$preset) ) {
     lq[cache$preset$target] <- cache$preset$lq
-    branch.base[cache$preset$target] <- cache$preset$base
+    if ( as.list ) 
+      branch.base[cache$preset$target] <- cache$preset$base
+    else
+      branch.base[cache$preset$target,] <- cache$preset$base
   }
 
   ## TODO: better way of sorting between these.
