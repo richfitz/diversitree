@@ -39,3 +39,4 @@ int smkn_pick_state(smkn_info *obj, int state);
 void smkn_evolve(smkn_info* obj, int state, double t, int state_to);
 void smkn_grow_hist(smkn_info *obj);
 
+SEXP smkn_slim(SEXP obj);

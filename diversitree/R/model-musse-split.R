@@ -27,12 +27,8 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
   k <- cache$k
   n.part <- cache$n.part
   np <- k * (k + 1)
-  
-  idx.qmat <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  idx.lm <- 1:(2*k)
-  idx.q <- (2*k+1):(k*(1+k))
 
+  f.pars <- make.musse.pars(k)  
   
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
@@ -42,16 +38,11 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
       return(-Inf)
 
     ## Set up all the Q matrices:
-    for ( i in seq_len(n.part) ) {
-      pars.i <- pars[[i]]
-      qmat <- matrix(0, k, k)
-      qmat[idx.qmat] <- pars.i[idx.q]
-      diag(qmat) <- -rowSums(qmat)
-      pars[[i]] <- c(pars.i[idx.lm], qmat)
-    }
+    for ( i in seq_len(n.part) )
+      pars[[i]] <- f.pars(pars[[i]])
 
     ans <- all.branches.split(pars, cache, initial.conditions.musse,
-                              branches, branches.aux)
+                              branches, branches.aux, FALSE)
 
     vals <- ans[[1]]$base
     lq <- unlist(lapply(ans, "[[", "lq"))
@@ -60,8 +51,12 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
     root.p <- root.p.xxsse(vals, pars.root, root, root.p)
     loglik <- root.xxsse(vals, pars.root, lq, condition.surv, root.p)
 
-    ans$root.p <- root.p
-    cleanup(loglik, pars, intermediates, cache, ans)
+    if ( intermediates ) {
+      ans$root.p <- root.p
+      attr(loglik, "intermediates") <- ans
+      attr(loglik, "vals") <- vals
+    }
+    loglik
   }
  
   class(ll) <- c("musse.split", "musse", "function")
@@ -133,10 +128,6 @@ make.cache.musse.split <- function(tree, states, k, nodes, split.t,
 
 ## 8: branches: from musse.  However the 'branches.aux' function is
 ## required to compute the E0, E1 values after a partition.
-
-## TODO: this would be nicer if it did not compute the Ds at all.
-## Also, it can just use the non-clever function as I do not need the
-## log compensation worked out.
 make.branches.aux.musse <- function(cache, control) {
   k <- cache$k
   idx.e <- seq_len(k)

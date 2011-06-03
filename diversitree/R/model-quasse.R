@@ -5,8 +5,6 @@ make.quasse <- function(tree, states, states.sd, lambda, mu,
   cache <- make.cache.quasse(tree, states, states.sd, lambda, mu,
                              control, sampling.f)
 
-  ## TODO: branches here changes to allow backend switching, basd on
-  ## cache$control$method...
   control <- cache$control
   tips <- NULL
   
@@ -48,8 +46,6 @@ argnames.quasse <- function(x, ...) {
     "drift", "diffusion")
 }
 `argnames<-.quasse` <- function(x, value) {
-  ## It might be easier to get at cache?
-  ## TODO: fix this if the cache structure changes.
   if ( length(value) != environment(x)$cache$n.args )
     stop("Invalid names length")
   else
@@ -176,9 +172,8 @@ ll.quasse <- function(cache, pars, branches, initial.conditions, tips,
   
   vals <- matrix(ans$init[[cache$root]], cache$control$nx, 2)
 
-  ## TODO: this assumes that the root node is in the low-condition.  I
-  ## think that this is enforced by the checking, but I cannot
-  ## remember.
+  ## This assumes that the root node is in the low-condition, which is
+  ## enforced by the checking.
   loglik <- root.quasse(vals[seq_len(ext$ndat[2]),], ans$lq,
                         cache$control$dx, pars$lo$lambda,
                         condition.surv)
@@ -264,28 +259,18 @@ make.branches.quasse <- function(f.hi, f.lo, control) {
 
 
 ## TODO: A bunch more options to come in here for different root
-## styles, etc.  Then drop the 'old.style' bit (hence the inefficiency
-## there).
+## styles, etc.  See root.bbm in the BBM code for how to do this.
+##
 ## Still to do: ROOT.FLAT, ROOT.GIVEN (ROOT.GIVEN requires computing
 ## things against the x extent...)
-
-## Normally, the probability of speciation at the root and subsequent
-## survival is computed as
-##   lambda * (1 - E)^2
-## Here I will compute
-##   \int p(x) \lambda(x) (1 - E(x))^2 dx
 root.quasse <- function(vars, log.comp, dx, lambda, condition.surv) {
   e.root <- vars[,1]
   d.root <- vars[,2]
 
-  p.root <- d.root / (sum(d.root) * dx)
+  root.p <- d.root / (sum(d.root) * dx)
 
-  if ( condition.surv ) {
-    ## d.root <- d.root / (lambda * (1-e.root)^2)
-    p.surv <- sum(p.root * lambda * (1 - e.root)^2) * dx
-    d.root <- d.root / p.surv
-  }
+  if ( condition.surv )
+    d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2) * dx
 
-  log(sum(p.root * d.root) * dx) + sum(log.comp)
+  log(sum(root.p * d.root) * dx) + sum(log.comp)
 }
-

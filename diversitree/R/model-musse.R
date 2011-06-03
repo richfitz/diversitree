@@ -26,11 +26,7 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
   
   ll.musse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                        root.p=NULL, intermediates=FALSE) {
-    if ( length(pars) != k*(k+1) )
-      stop(sprintf("Invalid length parameters (expected %d)",
-                   k*(k+1)))
-    if ( any(!is.finite(pars)) || any(pars < 0) )
-      return(-Inf)
+    check.pars.musse(pars, k)
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
 
@@ -42,10 +38,9 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
                condition.surv, root, root.p, intermediates)
   }
 
-  ll <- function(pars, ...) ll.musse(pars, ...)
-  class(ll) <- c("musse", "function")
-  attr(ll, "k") <- k
-  ll
+  class(ll.musse) <- c("musse", "function")
+  attr(ll.musse, "k") <- k
+  ll.musse
 }
 
 ## 2: print
@@ -164,30 +159,20 @@ make.all.branches.C.musse <- function(cache, control) {
                       neq, np, comp.idx, control)
 }
 
-## Historical interest: This function creates a function for computing
-## derivatives under MuSSE.  However, it uses the wrong argument setup
-## right now, so I've commented it out.  It probably should not have
-## been used.
-## make.musse.eqs.R <- function(k) {
-##   qmat <- matrix(0, k, k)
-##   idx.qmat <- cbind(rep(1:k, each=k-1),
-##                unlist(lapply(1:k, function(i) (1:k)[-i])))
-##   idx.e <- 1:k
-##   idx.d <- (k+1):(2*k)
-##   idx.l <- 1:k
-##   idx.m <- (k+1):(2*k)
-##   idx.q <- (2*k+1):(k*(1+k))
-##   function(t, y, parms, ...) {
-##     e <- y[idx.e]
-##     d <- y[idx.d]
-##     lambda <- parms[idx.l]
-##     mu     <- parms[idx.m]
-##     qmat[idx.qmat] <- parms[idx.q]  
-##     diag(qmat) <- -rowSums(qmat)
-##     list(c(mu - (lambda + mu) * e + lambda * e * e + qmat %*% e,
-##            -(lambda + mu) * d + 2 * lambda * d * e + qmat %*% d))
-##   }
-## }
+## Additional functions:
+make.musse.pars <- function(k) {
+  qmat <- matrix(0, k, k)
+  idx.qmat <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+  idx.lm <- 1:(2*k)
+  idx.q <- (2*k+1):(k*(1+k))
+
+  function(pars) {
+    qmat[idx.qmat] <- pars[idx.q]
+    diag(qmat) <- -rowSums(qmat)
+    c(pars[idx.lm], qmat)
+  }
+}
 
 ## This makes the Q matrix from a set of parameters.
 musse.Q <- function(pars, k) {
@@ -204,6 +189,7 @@ musse.Q <- function(pars, k) {
   qmat
 }
 
+## Heuristic starting point
 starting.point.musse <- function(tree, k, q.div=5, yule=FALSE) {
   pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
   r <- if  ( pars.bd[1] > pars.bd[2] )
@@ -211,18 +197,4 @@ starting.point.musse <- function(tree, k, q.div=5, yule=FALSE) {
   p <- rep(c(pars.bd, r / q.div), c(k, k, k * (k-1)))
   names(p) <- argnames.musse(NULL, k)
   p
-}
-
-make.musse.pars <- function(k) {
-  qmat <- matrix(0, k, k)
-  idx.qmat <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  idx.lm <- 1:(2*k)
-  idx.q <- (2*k+1):(k*(1+k))
-
-  function(pars) {
-    qmat[idx.qmat] <- pars[idx.q]
-    diag(qmat) <- -rowSums(qmat)
-    c(pars[idx.lm], qmat)
-  }
 }

@@ -31,10 +31,7 @@ make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
 
   ll.bisse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                        root.p=NULL, intermediates=FALSE) {
-    if ( length(pars) != 6 )
-      stop("Invalid parameter length (expected 6)")
-    if ( any(pars < 0) || any(!is.finite(pars)) )
-      return(-Inf)
+    check.pars.bisse(pars)
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
 
@@ -93,9 +90,8 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
   ## TODO: There is a potential issue here with states, as
   ## 'unresolved' may contain one of the states.  For now I am
   ## disabling the check, but this is not great.
-  if ( strict && !is.null(unresolved) ) {
+  if ( strict && !is.null(unresolved) )
     strict <- FALSE
-  }
   
   tree <- check.tree(tree)
   states <- check.states(tree, states, strict=strict, strict.vals=0:1)
@@ -112,9 +108,6 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
     stop("Cannot specify both sampling.f and unresolved")
   else
     sampling.f <- check.sampling.f(sampling.f, 2)
-
-  ## Check 'unresolved' (there is certainly room to streamline this in
-  ## the future).
 
   cache <- make.cache(tree)
   cache$ny <- 4L
@@ -249,9 +242,6 @@ stationary.freq.bisse <- function(pars) {
 }
 
 starting.point.bisse <- function(tree, q.div=5, yule=FALSE) {
-  ## TODO: Use qs estimated from Mk2?  Can be slow is the only reason
-  ## I have not set this up by default.
-  ## find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~ q01), .1)$par
   pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
   if  ( pars.bd[1] > pars.bd[2] )
     p <- rep(c(pars.bd, (pars.bd[1] - pars.bd[2]) / q.div), each=2)

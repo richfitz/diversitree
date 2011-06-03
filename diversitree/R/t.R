@@ -1,9 +1,3 @@
-## TODO:
-## One complication here is that without evaluating the functions
-## (which requires an initial position) we have no way of knowing how
-## many parameters should/will be created.  This will need to be added
-## to the C code.
-
 ## There is a chance here that it will end up being just as efficient
 ## (and a bit clearer) to have the calculations done purely in R.  I
 ## should check this at some point.

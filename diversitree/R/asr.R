@@ -9,7 +9,7 @@
 ## Methods currently implemented are mk2/mkn, but bisse and musse
 ## methods can be found in the unreleased package diversitree.unrel
 
-## Core generics
+## Core generics:
 make.asr.marginal <- function(lik, ...) {
   UseMethod("make.asr.marginal")
 }
@@ -28,65 +28,31 @@ asr.joint <- function(lik, pars, n=1, ...)
 asr.stoch <- function(lik, pars, n=1, ...)
   make.asr.stoch(lik)(pars, n, ...)
 
-## Method for constrained function dispatch on the next class down: a
-## constrained mkn model has class:
-##   c("constrained", "mkn")
-## so asr.xxx dispatches to asr.xxx.constrained -> asr.xxx.mkn
-## with the appropriate parameters filled in by asr.xxx.constrained.
-## This trick works for all three functions:
-## asr.marginal.constrained <- function(lik, pars, nodes=NULL, ...) {
-##   pars <- lik(pars, pars.only=TRUE)
-##   lik <- attr(lik, "func")
-##   NextMethod("asr.marginal")
-## }
-
-## asr.joint.constrained <- function(lik, pars, n=1, simplify=TRUE, ...) {
-##   pars <- lik(pars, pars.only=TRUE)
-##   lik <- attr(lik, "func")
-##   NextMethod("asr.joint")
-## }
-
-## asr.stoch.constrained <- function(lik, pars, n=1, ...) {
-##   pars <- lik(pars, pars.only=TRUE)
-##   lik <- attr(lik, "func")
-##   NextMethod("asr.stoch")
-## }
-
-## Similar for the function-returning versions
+## Constrained functions require some care:
 make.asr.marginal.constrained <- function(lik, ...) {
-  .NotYetImplemented()
-  lik <- attr(lik, "func")
-  NextMethod("asr.marginal")
+  lik.full <- attr(lik, "func")
+  asr <- make.asr.marginal(lik.full, ...)
+  function(pars, ...)
+    asr(lik(pars, pars.only=TRUE), ...)
 }
 
 make.asr.joint.constrained <- function(lik, ...) {
-  .NotYetImplemented()  
-  lik <- attr(lik, "func")
-  NextMethod("asr.joint")
+  lik.full <- attr(lik, "func")
+  asr <- make.asr.joint(lik.full, ...)
+  function(pars, ...)
+    asr(lik(pars, pars.only=TRUE), ...)
 }
 
 make.asr.stoch.constrained <- function(lik, ...) {
-  .NotYetImplemented()  
-  lik <- attr(lik, "func")
-  NextMethod("asr.stoch")
+  lik.full <- attr(lik, "func")
+  asr <- make.asr.stoch(lik.full, ...)
+  function(pars, ...)
+    asr(lik(pars, pars.only=TRUE), ...)
 }
 
-
-## Next, the utility functions for the different types of models
-## This is to asr.marginal what all.branches is for the core models.
-## Unfortunately, it is a little unclear what one should do at the
-## root, so this is (for BD-based models) *not* conditioning on
-## survival and for all models is using ROOT.OBS to combine Ds at the
-## root.  I will probably have to allow for a "root" function to be
-## used here to get around this this though.
-##
-## The argument 'res' is the result of running all.branches
-##
-## TODO: There is a substantial optimisation for doing multiple
-## samples at once; at each node, we just have to interate over the
-## possible states at that node, as these will match for
-##   di * pij[nd,i,]
-## And then sample the appropriate number of points.
+## Next, the utility functions for the different types of models This
+## is to asr.marginal what all.branches is for the core models.  Here,
+## the argument 'res' is the result of running all.branches
 do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
                             initial.conditions,
                             branches, root,
@@ -141,13 +107,28 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
   matrix(unlist(lapply(nodes, f)), ncol=length(nodes))
 }
 
+## Quite different when the likelihood function uses the CVODES
+## backend; in that case we can do the entire thing in C, which is
+## much more efficient.
+do.asr.marginal.C <- function(pars, cache, ptr, nodes, states.idx.C,
+                              parent.C, all.branches.C, root.f, env) {
+  if ( is.null(nodes) )
+    nodes <- cache$root:max(cache$order)
+  else
+    nodes <- nodes + cache$n.tip
+
+  ## Initial run through sets up the internal data structures (these
+  ## are never used in the R side; we're calling this for its side
+  ## effects).
+  ignore <- all.branches.C(pars)
+
+  ## Then we actually compute the marginal ASRs:
+  .Call("r_asr_marginal", ptr, pars, toC.int(nodes),
+        states.idx.C, parent.C, root.f, env, PACKAGE="diversitree")
+}
+
 ## Utility function for drawing one or more samples from the joint
 ## distribution.
-## TODO: Allow root.state to be either a percentage or a function of
-## the parameters?  -- no need for the latter, as the parameters do
-## not change in this.  root.p[i] gives the probability that the root is
-## in state i; this can probably replace root.state, as the two just
-## fight each other.
 
 ## li is k * len matrix; for a node n, li[,n] comes in the order
 ##   Pr(D_n|1), Pr(D_n|2), ..., Pr(D_n|k)

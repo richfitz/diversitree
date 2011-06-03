@@ -150,7 +150,7 @@ void cvodes_set_pars(RCvodesObj* obj, double *pars) {
 
 int cvodes_run(RCvodesObj *obj, double *y0, double *times, int nt, 
 	       double *ret) {
-  int i, j, flag;
+  int i, flag;
   int neq = obj->neq;
   realtype t, tout;
   void *cvode_mem = obj->cvode_mem;

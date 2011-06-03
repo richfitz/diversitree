@@ -137,7 +137,7 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 \section{ODE solver control}{
   The differential equations that define the BiSSE model are solved
   numerically using deSolve's LSODA ODE solver or the CVODES solver from
-  the SUNDIALS suite of solves.  The \code{control} argument to
+  the SUNDIALS suite of solvers.  The \code{control} argument to
   \code{make.bisse} controls the behaviour of the integrator.  This is a
   list that may contain elements:
   
@@ -169,6 +169,8 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
       deSolve integrator?  Leave this alone (this will be automatically
       selected when appropriate).}
   }
+
+  \code{deSolve} is the only supported backend on Windows.
 }
 
 \seealso{

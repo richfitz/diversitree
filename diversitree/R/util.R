@@ -84,7 +84,7 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
     iwork[2] <- as.integer(1)    # bandup
     iwork[6] <- as.integer(5000) # maxsteps
 
-    rwork <- vector("double", 20) # TODO: 5, 6 do nothing.
+    rwork <- vector("double", 20)
     rwork[5] <- 0                     # hini
     rwork[6] <- 10                    # hmax (consider 0)
     rwork[7] <- 0                     # hmin

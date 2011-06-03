@@ -131,9 +131,6 @@ expand.pars.quasse <- function(lambda, mu, args, ext, pars) {
   pars.use
 }
 
-## TODO: Once a non-FFT backend is working, this will require some
-## tweaking.  Possibly it is enough to avoid the calculation of
-## padding altogether? 
 quasse.extent <- function(control, drift, diffusion) {
   nx <- control$nx
   dx <- control$dx

@@ -5,7 +5,7 @@
 /* #define VERBOSE */
 #define SMKN_GROWTH_RATE 4
 #define SMKN_MAX_SIZE    1000000
-#define SCM_MAX_ATTEMPTS 20000
+#define SCM_MAX_ATTEMPTS 100000
 #include "scm-mkn.h"
 
 static void smkn_info_finalize(SEXP extPtr);
@@ -55,6 +55,102 @@ SEXP r_smkn_scm_run(SEXP extPtr, SEXP len,
   }
 
   UNPROTECT(1);
+
+  return ret;
+}
+
+SEXP r_smkn_scm_run_all(SEXP extPtr, SEXP pars, SEXP r_len, 
+			SEXP r_state_beg, SEXP r_state_end, 
+			SEXP r_as01, SEXP r_slim) {
+  smkn_info *obj = (smkn_info*)R_ExternalPtrAddr(extPtr);
+  SEXP ret, hist;
+  int i, j, n_hist, n_hist_out, n = LENGTH(r_len);
+  double *len = REAL(r_len);
+  int *state_beg = INTEGER(r_state_beg), *state_end = INTEGER(r_state_end);
+  int as01 = LOGICAL(r_as01)[0], slim = LOGICAL(r_slim)[0];
+  double *hist_t, *out_t, *out_s;
+  int *hist_s;
+
+  if ( LENGTH(r_state_beg) != n )
+    error("state_beg incorrect length");
+  if ( LENGTH(r_state_end) != n )
+    error("state_end incorrect length");
+
+  smkn_set_pars(obj, REAL(pars));
+
+  PROTECT(ret = allocVector(VECSXP, n));
+
+  GetRNGstate();
+
+  for ( i = 0; i < n; i++ ) {
+    smkn_scm_run(obj, len[i], state_beg[i], state_end[i]);
+
+    n_hist = obj->n_hist;
+    n_hist_out = slim ? n_hist : n_hist + 1;
+
+    hist_t = obj->hist_t;
+    hist_s = obj->hist_to;
+    
+    /* List assignment protects the result so explicit
+       PROTECT/UNPROTECT not neededed */
+    SET_VECTOR_ELT(ret, i, allocMatrix(REALSXP, n_hist_out, 2));
+    hist = VECTOR_ELT(ret, i);
+    out_t = REAL(hist);
+    out_s = REAL(hist) + n_hist_out;
+
+    if ( slim ) {
+      memcpy(out_t, hist_t, n_hist * sizeof(double));
+      if ( as01 ) 
+	for ( j = 0; j < n_hist; j++ ) out_s[j] = hist_s[j];
+      else
+	for ( j = 0; j < n_hist; j++ ) out_s[j] = hist_s[j] + 1;
+    } else {
+      out_t[0] = 0.0;
+      out_s[0] = as01 ? state_beg[i] : state_beg[i]+1;
+
+      memcpy(out_t + 1, hist_t, n_hist * sizeof(double));
+      if ( as01 ) 
+	for ( j = 0; j < n_hist; j++ ) out_s[j+1] = hist_s[j];
+      else
+	for ( j = 0; j < n_hist; j++ ) out_s[j+1] = hist_s[j] + 1;
+    }
+  }
+
+  PutRNGstate();
+
+  if ( slim )
+    ret = smkn_slim(ret);
+
+  UNPROTECT(1);
+  return ret;
+}
+
+/* This function needs to be used carefully; In particular, the object
+   returned and the original object 'obj' must not both be returned
+   back to R */
+SEXP smkn_slim(SEXP obj) {
+  int i, j = 0, n = LENGTH(obj), nkeep = 0, *idx;
+  SEXP r_idx, hist, ret;
+
+  for ( i = 0; i < n; i++ )
+    if ( nrows(VECTOR_ELT(obj, i)) > 0 )
+      nkeep++;
+
+  PROTECT(ret = allocVector(VECSXP, 2));
+  PROTECT(r_idx = allocVector(INTSXP, nkeep));
+  PROTECT(hist = allocVector(VECSXP, nkeep));
+
+  idx = INTEGER(r_idx);
+  for ( i = 0; i < n; i++ )
+    if ( nrows(VECTOR_ELT(obj, i)) > 0 ) {
+      idx[j] = i + 1;
+      SET_VECTOR_ELT(hist, j, VECTOR_ELT(obj, i));
+      j++;
+    }
+
+  SET_VECTOR_ELT(ret, 0, r_idx);
+  SET_VECTOR_ELT(ret, 1, hist);
+  UNPROTECT(3);
 
   return ret;
 }

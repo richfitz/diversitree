@@ -24,8 +24,40 @@ make.bisse.split <- function(tree, states, nodes, split.t,
   branches <- make.branches.bisse(cache, control)
   branches.aux <- make.branches.aux.bisse(cache, control)
 
-  ll <- function(pars, ...)
-    ll.bisse.split(cache, pars, branches, branches.aux, ...)
+  n.part <- cache$n.part
+
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
+    pars <- check.par.multipart(pars, n.part, 6)
+    pars.n <- unlist(pars)
+    if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
+      return(-Inf)
+
+    for ( i in seq_len(n.part) ) {
+      unresolved.i <- cache$cache[[i]]$unresolved
+      if ( !is.null(unresolved.i) )
+        cache$cache[[i]]$preset <-
+          branches.unresolved.bisse(pars[[i]], unresolved.i)
+    }
+
+    ans <- all.branches.split(pars, cache, initial.conditions.bisse,
+                              branches, branches.aux, FALSE)
+
+    vals <- ans[[1]]$base
+    lq <- unlist(lapply(ans, "[[", "lq"))
+
+    pars.root <- pars[[1]]
+    root.p <- root.p.xxsse(vals, pars.root, root, root.p)
+    loglik <- root.xxsse(vals, pars.root, lq, condition.surv, root.p)
+
+    if ( intermediates ) {
+      ans$root.p <- root.p
+      attr(loglik, "intermediates") <- ans
+      attr(loglik, "vals") <- vals
+    }
+    loglik
+  }
+
   class(ll) <- c("bisse.split", "bisse", "function")
   attr(ll, "n.part") <- cache$n.part
   ll
@@ -46,7 +78,14 @@ argnames.bisse.split <- function(x, n.part=attr(x, "n.part"), ...) {
   argnames.twopart.set(x, value, 6, n.part)
 }
 
-## 4: find.mle: from bisse
+## 4: find.mle
+find.mle.bisse.split <- function(func, x.init, method, fail.value=NA,
+                                 ...) {
+  if ( missing(method) )
+    method <- "subplex"
+  NextMethod("find.mle", method=method,
+             class.append="fit.mle.bisse.split")
+}
 
 ## Make requires the usual functions:
 ## 5: make.cache (initial.tip, root)
@@ -62,14 +101,8 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
   ## Check 'sampling.f'
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
-  ## TODO: a sampling.f of length 2 can be expanded manually.
   n <- length(nodes) + 1 # +1 for base group
-  if ( is.list(sampling.f) ) {
-    check.sampling.f(unlist(sampling.f), 2*n)
-  } else {
-    sampling.f <- check.sampling.f(sampling.f, 2 * n)
-    sampling.f <- matrix.to.list(matrix(sampling.f, n, 2, TRUE))
-  }
+  sampling.f <- check.sampling.f.split(sampling.f, 2, n)
 
   cache <- make.cache.split(tree, nodes, split.t)
 
@@ -101,46 +134,10 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
   cache
 }
 
-ll.bisse.split <- function(cache, pars, branches, branches.aux,
-                           condition.surv=TRUE, root=ROOT.OBS,
-                           root.p=NULL, intermediates=FALSE) {
-  n.part <- cache$n.part
-
-  pars <- check.par.multipart(pars, n.part, 6)
-
-  pars.n <- unlist(pars)
-  if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
-    return(-Inf)
-
-  for ( i in seq_len(n.part) ) {
-    unresolved.i <- cache$cache[[i]]$unresolved
-    if ( !is.null(unresolved.i) )
-      cache$cache[[i]]$preset <-
-        branches.unresolved.bisse(pars[[i]], unresolved.i)
-  }
-
-  ans <- all.branches.split(pars, cache, initial.conditions.bisse,
-                            branches, branches.aux)
-
-  vals <- ans[[1]]$base
-  lq <- unlist(lapply(ans, "[[", "lq"))
-
-  pars.root <- pars[[1]]
-  root.p <- root.p.xxsse(vals, pars.root, root, root.p)
-  loglik <- root.xxsse(vals, pars.root, lq, condition.surv, root.p)
-
-  ans$root.p <- root.p
-  cleanup(loglik, pars, intermediates, cache, ans)
-}
-
 ## 7: initial.conditions: from bisse
 
 ## 8: branches: from bisse.  However the 'branches.aux' function is
 ## required to compute the E0, E1 values after a partition.
-
-## TODO: this would be nicer if it did not compute the Ds at all.
-## Also, it can just use the non-clever function as I do not need the
-## log compensation worked out.
 make.branches.aux.bisse <- function(cache, control) {
   idx.e <- 1:2
   y <- lapply(cache$sampling.f, function(x) c(1-x, 1, 1))
@@ -153,5 +150,3 @@ make.branches.aux.bisse <- function(cache, control) {
     branches(y[[i]], len, pars, 0)[[2]][idx.e,,drop=FALSE]
   }
 }
-
-## 9: branches.unresolved: from bisse

@@ -25,8 +25,8 @@ sampler.hmc.bounded <- function(f, q, fq, w, lower, upper,
   ## Make a half step for momentum at the beginning
   p <- p + epsilon * gq / 2
 
-  ## TODO: See p. 36-37 and figure 8 of Neal 2011 to see how to handle
-  ## constraints.  This needs adding in here.
+  ## See p. 36-37 and figure 8 of Neal 2011 to see how to handle
+  ## constraints.  These are added here, I think.
 
   ## Alternate full steps for position and momentum
   for (i in seq_len(L)) {

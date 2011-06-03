@@ -74,9 +74,14 @@
 ## the output from branches() is of variable length and the result
 ## should be stored in a list, rather than a matrix.  It is *not* to
 ## switch between a choice of what is returned.
+
+## TODO: the 'zero' in the tip branches() calls assume that the tree
+## is ultrametric.  I can pass in
+##   cache$depth[idx]
+## but I need to be careful with this, as some depths will be
+## 1e-15 and things like that.  This may not be a problem in reality.
 all.branches.matrix <- function(pars, cache, initial.conditions,
                                 branches) {
-  ## Inside all.branches:
   len <- cache$len
   depth <- cache$depth
   children <- cache$children
@@ -95,22 +100,15 @@ all.branches.matrix <- function(pars, cache, initial.conditions,
     branch.base[,cache$preset$target] <- cache$preset$base
   }
 
-  if ( is.null(names(y)) ) {
-    for ( x in y ) {
-      idx <- x$target
-      unpack <- x$unpack
-      branch.init[,idx] <- x$y
-      ## TODO: the 'zero' here assumes that the tree is ultrametric.
-      ## I can pass in
-      ##   cache$depth[idx]
-      ## but I need to be careful with this, as some depths will be
-      ## 1e-15 and things like that.
-      ans <- branches(x$y, x$t.uniq, pars, 0)#[,x$unpack,drop=FALSE]
-      lq[idx] <- ans[[1]][unpack]
-      branch.base[,idx] <- ans[[2]][,unpack]
-    }
-  } else {
-    stop("This is not yet checked after the rewrite...")
+  if ( !is.null(names(y)) )
+    stop("Individual tip conditions are not implemented")
+  for ( x in y ) {
+    idx <- x$target
+    unpack <- x$unpack
+    branch.init[,idx] <- x$y
+    ans <- branches(x$y, x$t.uniq, pars, 0)
+    lq[idx] <- ans[[1]][unpack]
+    branch.base[,idx] <- ans[[2]][,unpack]
   }
 
   for ( i in order ) {
@@ -123,7 +121,6 @@ all.branches.matrix <- function(pars, cache, initial.conditions,
     branch.base[,i] <- ans[[2]]
   }
 
-  ## This also changes to reflect the change in argument order.
   y.in <- initial.conditions(branch.base[,children[root,]], pars,
                              depth[root], TRUE)
   branch.init[,root] <- y.in
@@ -132,7 +129,6 @@ all.branches.matrix <- function(pars, cache, initial.conditions,
 
 all.branches.list <- function(pars, cache, initial.conditions,
                               branches) {
-  ## Inside all.branches:
   len <- cache$len
   depth <- cache$depth
   children <- cache$children
@@ -146,24 +142,15 @@ all.branches.list <- function(pars, cache, initial.conditions,
   y <- cache$y
   branch.init <- branch.base <- vector("list", n)
 
-  ## TODO: This should also move in the tip conditions perhaps?
   if ( !is.null(cache$preset) ) {
     lq[cache$preset$target] <- cache$preset$lq
     branch.base[cache$preset$target] <- cache$preset$base
   }
 
-  ## TODO: better way of sorting between these.
-  ## how about a tip.method=TIP.SORTED or TIP.GROUPED?
   if ( is.null(names(y)) ) {
     for ( x in y ) {
       idx <- x$target
-      
       branch.init[idx] <- list(x$y)
-      ## TODO: the 'zero' here assumes that the tree is ultrametric.
-      ## I can pass in
-      ##   cache$depth[idx]
-      ## but I need to be careful with this, as some depths will be
-      ## 1e-15 and things like that.
       ans <- branches(x$y, x$t.uniq, pars, 0)
       ans <- ans[x$unpack]
       lq[idx] <- unlist(lapply(ans, "[[", 1))
@@ -174,9 +161,6 @@ all.branches.list <- function(pars, cache, initial.conditions,
     tip.target <- y$target
     tip.y <- branch.init[tip.target] <- y$y
     for ( i in seq_along(tip.y) ) {
-      ## TODO: This (the zero) assumes that all branches terminate at
-      ## the present (not true for Mk2 style models, or extinct
-      ## species)
       j <- tip.target[i]
       ans <- branches(tip.y[[i]], tip.t[i], pars, 0)
       lq[j] <- ans[1]
@@ -194,7 +178,6 @@ all.branches.list <- function(pars, cache, initial.conditions,
     branch.base[[i]] <- ans[-1]
   }
 
-  ## This also changes to reflect the change in argument order.
   y.in <- initial.conditions(branch.base[children[root,]], pars,
                              depth[root], TRUE)
   branch.init[[root]] <- y.in
@@ -240,6 +223,9 @@ make.cache <- function(tree) {
   ## TODO: I don't need this ancestor thing for much - drop it here
   ## and move it to the asr code that actually uses it (this takes a
   ## lot of time, and is only used by the ASR code).
+  ## The only place that this is used at all is do.asr.marginal(); it
+  ## would be possible to make this as needed when making an
+  ## asr.marginal() function.
   anc <- vector("list", max(order))
   for ( i in c(rev(order[-length(order)]), tips) )
     anc[[i]] <- c(parent[i], anc[[parent[i]]])
@@ -332,15 +318,6 @@ root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
   loglik
 }
 
-cleanup <- function(loglik, pars, intermediates=FALSE, cache, vals) {
-  if ( intermediates ) {
-    attr(loglik, "cache") <- cache
-    attr(loglik, "intermediates") <- vals
-    attr(loglik, "vals") <- vals$init[[cache$root]]
-  }
-  loglik
-}
-
 ## Which leads to an all singing, all dancing function:
 ll.xxsse <- function(pars, cache, initial.conditions,
                      branches, condition.surv, root, root.p,
@@ -421,7 +398,6 @@ make.ode.branches <- function(model, dll, neq, np, comp.idx, control) {
 }
 
 ## Utility functions for organising initial conditions.
-## TODO: Document.
 dt.tips.grouped <- function(y, y.i, tips, t) {
   if ( !is.list(y) )
     stop("'y' must be a list of initial conditions")

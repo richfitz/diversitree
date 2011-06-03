@@ -14,8 +14,6 @@ do.mle.search.tgp <- function(func, x.init, control, lower, upper) {
   make.f.tgp <- function(func, parallel=FALSE) {
     if ( parallel && require(multicore) )
       lapply <- mclapply
-    ## TODO: This should be OK when x is not a matrix, but currently
-    ## fails.
     function(x)
       -as.numeric(unlist(lapply(matrix.to.list(x),
                                 function(x) func(x))))

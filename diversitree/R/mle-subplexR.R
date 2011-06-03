@@ -118,7 +118,6 @@ subplexR <- function(par, fn, control=list(), hessian=FALSE, ...) {
 }
 
 ## Simplified simplex, following the code directly.
-## TODO: Harmonise argument lists with the subplex calls.
 simplex <- function(func, x.init, scale, max.eval=1000, alpha=1.0,
                     beta=0.5, gamma=2.0, delta=0.5, psi=0.25,
                     y.init=NULL, dx=NULL) {
@@ -157,7 +156,6 @@ simplex <- function(func, x.init, scale, max.eval=1000, alpha=1.0,
     ne <- 1
   }
 
-  ## TODO: Enforce initial scale on dx.
   xx <- rbind(x.init, t(x.init + diag(nx) * scale), deparse.level=0)
   xl <- matrix.to.list(xx)
   if ( any(unlist(lapply(xl[-1], identical, x.init))) )

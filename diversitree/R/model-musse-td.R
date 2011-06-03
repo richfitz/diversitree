@@ -16,10 +16,7 @@ make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
   i.t <- seq_len(n.epoch - 1)
   i.p <- n.epoch:npar
 
-  idx.qmat <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  idx.lm <- 1:(2*k)
-  idx.q <- (2*k+1):(k*(1+k))
+  f.pars <- make.musse.pars(k)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
@@ -33,12 +30,8 @@ make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
     pars2 <- matrix(NA, n.epoch, k * (k + 2) + 1)
     pars2[,1] <- c(pars[i.t], Inf)
     tmp <- matrix(pars[i.p], n.epoch, k * (k + 1), TRUE)
-    for ( i in seq_len(n.epoch) ) {
-      qmat <- matrix(0, k, k)
-      qmat[idx.qmat] <- tmp[i,idx.q]
-      diag(qmat) <- -rowSums(qmat)
-      pars2[i,-1] <- c(tmp[i,idx.lm], qmat)
-    }
+    for ( i in seq_len(n.epoch) )
+      pars2[i,-1] <- f.pars(tmp[i,])
 
     ll.xxsse.td(pars2, cache, initial.conditions, branches,
                 condition.surv, root, root.p, intermediates)

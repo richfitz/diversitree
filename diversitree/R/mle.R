@@ -4,11 +4,6 @@
 ##   'nlminb'
 ##   'nlm'
 ## These now have a similar interface, though not identical.
-
-## TODO: consider making stats4 mle objects, rather than those below:
-## new("mle", call = call, coef = coef, fullcoef = unlist(fullcoef), 
-##     vcov = vcov, min = min, details = oout, minuslogl = minuslogl, 
-##     method = method)
 find.mle <- function(func, x.init, method, ...) {
   UseMethod("find.mle")
 }

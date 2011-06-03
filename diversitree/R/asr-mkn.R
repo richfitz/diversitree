@@ -10,21 +10,21 @@ make.asr.marginal.mkn <- function(lik, ...) {
   env <- new.env()
   nodes.all.C <- toC.int(cache$root:max(cache$order))
 
+  f.pars <- make.mkn.pars(k)
+
   function(pars, nodes=NULL, root=ROOT.FLAT, root.p=NULL, ...) {
     root.f <- function(pars, vals, lq)
       root.mkn(vals, lq,
                root.p.mkn(vals, pars, root, root.p))
 
-    qmat <- mkn.Q(pars)
-    res <- all.branches.mkn(qmat, cache)
-
-    ## TODO: ugly!  This is basically duplicated in do.asr.marginal()
-    ## and do.asr.marginal.C(); there should be nicer way of doing
-    ## this.
+    ## Note that this basically duplicates the do.asr.marginal() and
+    ## do.asr.marginal.C() code.
     if ( is.null(nodes) )
       nodes.C <- nodes.all.C
     else
       nodes.C <- toC.int(nodes + cache$n.tip)
+
+    res <- all.branches.mkn(f.pars(pars), cache)
 
     .Call("r_asr_marginal_mkn", k, pars, nodes.C, cache.C, res,
           root.f, env, PACKAGE="diversitree")
@@ -41,8 +41,6 @@ make.asr.joint.mkn <- function(lik, ...) {
 
   function(pars, n=1, ...) {
     obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
-    ##.Call("r_do_asr_joint", k, order.C, parent.C, obj$init, obj$pij,
-    ##      obj$root.p, as.01, PACKAGE="diversitree")
     do.asr.joint(n, k, order.C, parent.C, obj$init, obj$pij,
                  obj$root.p, is.mk2)
   }
@@ -70,14 +68,6 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
 
   ## Single branch simulator
   ptr <- .Call("r_smkn_alloc", k, 100L, PACKAGE="diversitree")
-  sim.set.pars <- function(pars)
-    .Call("r_smkn_set_pars", ptr, pars, PACKAGE="diversitree")
-  sim1 <- function(len, state.beg, state.end)
-    .Call("r_smkn_scm_run", ptr, len, state.beg, state.end, is.mk2,
-          PACKAGE="diversitree")
-
-  ## TODO: This is fragile, and should be stored in the cache anyway.
-  n.node <- nrow(cache$edge)/2
 
   function(pars, n=1, ...) {
     if ( n > 1 )
@@ -94,32 +84,21 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
       anc.state <- as.integer(c(tip.state - 1L, node.state - 1L))
 
     ## 2: Simulate branches.
-    ## a: set the parameters; the same values will be used for all
-    ## branches.
-    sim.set.pars(pars)
-
-    ## b: Sort the state beginning, end and extinction into the order
-    ## that we will use.
     state.beg <- anc.state[edge.1]
     state.end <- anc.state[edge.2]
-
-    ## c: Actually simulate the histories
-    f <- function(i)
-      sim1(edge.length[i], state.beg[i], state.end[i])
-    history <- lapply(seq_along(state.beg), f)
+    history <- .Call("r_smkn_scm_run_all", ptr, pars, edge.length,
+                     state.beg, state.end, is.mk2, slim,
+                     PACKAGE="diversitree")
 
     if ( slim ) {
-      tmp <- lapply(history, function(x) x[-1,,drop=FALSE])
-      keep <- which(sapply(tmp, length) > 0)
-      names(node.state) <- NULL
-      ret <- list(node.state=node.state,
-                  history=list(idx=keep, tmp[keep]))
+      ret <- list(node.state=node.state, history=history)
     } else {
       if ( !is.null(cache$node.label) )
         names(node.state) <- cache$node.label
-      make.history(NULL, tip.state, node.state, history, TRUE,
-                   pos.states, check=FALSE)
+      ret <- make.history(NULL, tip.state, node.state, history,
+                          TRUE, pos.states, check=FALSE)
     }
+    ret
   }
 }
 

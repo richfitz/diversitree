@@ -123,7 +123,7 @@ plot.history <- function(x, phy, cols=seq_along(states),
     pp.tippoints.phylogram(phy, xy, cex=cex, col=cols.tip)
 
 
-  ## TODO: This is a hack.
+  ## For ape compatibility.
   ret <- list(type="cladogram", use.edge.length=TRUE,
               node.pos=NULL, show.tip.label=show.tip.label,
               show.node.label=show.node.label, font=font,

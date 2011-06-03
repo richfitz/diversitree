@@ -31,13 +31,7 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE, strict=TRUE,
   cache$f.pij <- if ( k == 2 && use.mk2 )
     pij.mk2 else make.pij.mkn(k, control$safe, control$tol)
 
-  qmat <- matrix(0, k, k)
-  idx <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-
-  len.uniq <- cache$len.uniq
-  len.idx <- cache$len.idx
-  n.tip <- cache$n.tip
+  f.pars <- make.mkn.pars(k)
 
   ll.mkn <- function(cache, pars, prior=NULL, root=ROOT.OBS,
                      root.p=NULL, intermediates=FALSE) {
@@ -47,20 +41,16 @@ make.mkn <- function(tree, states, k, use.mk2=FALSE, strict=TRUE,
       stop(sprintf("Invalid length parameters (expected %d)", k*(k-1)))
     if ( any(!is.finite(pars)) || any(pars < 0) )
       return(-Inf)
-    qmat[idx] <- pars
-    diag(qmat) <- -rowSums(qmat)
-    ans <- all.branches.mkn(qmat, cache)
+    
+    ans <- all.branches.mkn(f.pars(pars), cache)
 
     d.root <- ans$init[,cache$root]
     root.p <- root.p.mkn(d.root, pars, root, root.p)
     loglik <- root.mkn(d.root, ans$lq, root.p)
+
     if ( intermediates ) {
       ans$init[,cache$tips] <- cache$y$y[cache$y$i,]
       ans$root.p <- root.p
-    }
-
-    ## Replaces cleanup()
-    if ( intermediates ) {
       attr(loglik, "intermediates") <- ans
       attr(loglik, "vals") <- d.root
     }
@@ -144,7 +134,7 @@ make.cache.mkn <- function(tree, states, k, use.mk2, strict) {
                          rep(seq_len(cache$n.tip), k))
   cache$len.uniq <- sort(unique(cache$len))
   cache$len.idx <- match(cache$len, cache$len.uniq)
-  cache$y <- initial.tip.mkn(cache) 
+  cache$y <- initial.tip.mkn(cache)
 
   ## Alter things to make it more speedy.  The '0' denotes base zero
   ## indices.
@@ -240,18 +230,29 @@ stationary.freq.mkn <- function(pars) {
   else
     .NotYetImplemented()
 }
+
+make.mkn.pars <- function(k) {
+  qmat <- matrix(0, k, k)
+  idx <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+
+  function(pars) {
+    qmat[idx] <- pars
+    diag(qmat) <- -rowSums(qmat)
+    qmat
+  }
+}
+
+## This is not the most efficient possible, but should not really be
+## used in code for which this is a problem.
 mkn.Q <- function(pars, k) {
   if ( missing(k) )
     k <- (1 + sqrt(1 + 4*(length(pars))))/2
   if ( abs(k - round(k)) > 1e-6 || length(pars) != k*(k-1) )
     stop("Invalid parameter length")
-  qmat <- matrix(0, k, k)
-  idx <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  qmat[idx] <- pars
-  diag(qmat) <- -rowSums(qmat)
-  qmat
+  make.mkn.pars(k)(pars)
 }
+
 
 ## The new integrator.
 ## Returns slightly different output than all.branches at this point
@@ -298,4 +299,3 @@ all.branches.mkn <- function(pars, cache) {
        lq=ans$lq,
        pij=pij)
 }
-

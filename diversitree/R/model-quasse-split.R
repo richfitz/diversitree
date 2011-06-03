@@ -7,8 +7,6 @@ make.quasse.split <- function(tree, states, states.sd, lambda, mu,
                                    control, sampling.f)
   control <- cache$control
 
-  ## TODO: This is an annoying limit, but requires shuffling around
-  ## aux.i in an unfortunate way.
   if ( min(branching.times(tree)[nodes]) < control$tc )
     stop("Sorry - all nodes must root below tc")
   
@@ -119,7 +117,8 @@ make.cache.quasse.split <- function(tree, states, states.sd,
     cache$cache[[i]] <- x    
   }
 
-  ## TODO: This causes a problem here: the auxillary information will
+  ## This should never happen (see check in make.quasse.split).
+  ## This would cause a problem:: the auxillary information will
   ## not go in the right place through aux.i...
   if ( any(split.t < control$tc) )
     stop("split.t < control$tc not yet handled")
@@ -191,7 +190,6 @@ ll.quasse.split <- function(cache, pars, branches, branches.aux,
       ## supress tip calculation now:
       cache$cache[[i]]$tips <- integer(0) 
       cache$cache[[i]]$y <- NULL
-      ## cache$cache[[i]]$y <- init[[i]]
     }
   } else {
     for ( i in seq_len(n.part) )
@@ -205,9 +203,8 @@ ll.quasse.split <- function(cache, pars, branches, branches.aux,
   vars <- matrix(ans[[1]]$base, cache$control$nx, 2)
   lq <- unlist(lapply(ans, "[[", "lq"))
 
-  ## TODO: this assumes that the root node is in the low-condition.  I
-  ## think that this is enforced by the checking, but I cannot
-  ## remember.
+  ## This assumes that the root node is in the low-condition, which is
+  ## enforced by the checking.
   loglik <- root.quasse(vars[seq_len(ext$ndat[2]),], lq,
                        cache$control$dx, pars.l[[1]]$lo$lambda,
                        condition.surv)

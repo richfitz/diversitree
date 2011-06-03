@@ -29,7 +29,6 @@ make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
                as.integer(nd), as.integer(flags),
                PACKAGE="diversitree")
   function(y, len, pars, t0) {
-    ## TODO: add basic error checking here
     nt <- as.integer(ceiling(len / dt.max))
     dt <- len / nt
     if ( !(length(y) %in% (nd * nx)) )
@@ -65,7 +64,7 @@ make.tips.quasse.fftC <- function(control, t, tips) {
 
   j <- which(tt > tc)[1]
   if ( is.na(j) )
-    ## TODO:
+    ## TODO: Fix this bug at some point (not a huge priority, really)
     stop("Please reduce tc (but this is a bug)!")
 
   nd.hi <- nd[1:j]

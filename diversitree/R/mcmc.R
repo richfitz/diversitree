@@ -5,12 +5,6 @@
 ## take the input x and return a vector of parameters 'y'
 ## corresponding to a new position.
 
-## TODO: I want to allow arbitrary proposal methods.  Importantly, one
-## useful feature will be to allow some integer positions to be
-## updated with a slice sampler, and the others from a discrete
-## distribution.  Hopefully this can be done via the 'proposal'
-## vector.
-
 ## The default MCMC method will return a half-finished MCMC sample if
 ## interrupted with Ctrl-C.  It is expected that the default method
 ## will be sufficiently general to be useful for most approaches.
@@ -44,7 +38,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
 
   lower <- check.par.length(lower, npar)
   upper <- check.par.length(upper, npar)
-  w     <- check.par.length(w,     npar) # TODO: may need revisiting.
+  w     <- check.par.length(w,     npar)
 
   check.bounds(lower, upper, x.init)
 

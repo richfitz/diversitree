@@ -3,18 +3,11 @@ argnames <- function(x, ...)
   UseMethod("argnames")
 `argnames<-` <- function(x, value)
   UseMethod("argnames<-")
-## argnames.default <- function(x, ...)
-##   attr(x, "argnames")
-## `argnames<-.default` <- function(x, value) {
-##   attr(x, "argnames") <- value
-##   x
-## }
 `argnames<-.constrained` <- function(x, value) {
   stop("Cannot set argnames on constrained function")
 }
 argnames.constrained <- function(x, ...)
   environment(x)$names.rhs
-
 
 ## The LHS of a formula must be a single variable name that exists in
 ## "names.lhs"
@@ -42,8 +35,6 @@ argnames.constrained <- function(x, ...)
 ## both:
 ##   foo(f, lambda0 ~ r0/(1 - e0), lambda1 ~ r1/(1 - e1),
 ##       r0 * e0 / (1 - e0), r1 * e1 / (1 - e1))
-
-## TODO: Check that lhs does not appear on the rhs
 constrain.parse <- function(formula, names.lhs, names.rhs,
                             extra=NULL) {
   formula <- as.formula(formula)
@@ -101,7 +92,6 @@ constrain.parse <- function(formula, names.lhs, names.rhs,
 ## the "paired" parameters here to avoid using eval where
 ## unnecessary.  However, this makes the function substantially uglier
 ## for a very minor speedup.
-
 constrain <- function(f, ..., formulae=NULL, names=argnames(f),
                       extra=NULL) {
   if ( inherits(f, "constrained") ) {

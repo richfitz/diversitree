@@ -1,6 +1,3 @@
-## TODO: Keep an R version handy?
-## TODO: mkn or linear-deriv?  Or have mkn.deriv be a special case of
-##   linear.deriv? (yes)
 make.mkn.deriv <- function(tree, states, k, strict=FALSE) {
   cache <- make.cache.mkn.deriv(tree, states, k, strict)
 
@@ -8,15 +5,13 @@ make.mkn.deriv <- function(tree, states, k, strict=FALSE) {
   np <- as.integer(k*(k-1))
   fail <- structure(-Inf, gr=rep(NA, np))
 
-  t <- cache$len
-  state0 <- cache$state0
-  order0 <- cache$order0
+  t         <- cache$len
+  state0    <- cache$state0
+  order0    <- cache$order0
   children0 <- cache$children0
+  Q.d       <- unlist(cache$Q.d)
 
-  Q <- matrix(0, k, k)
-  idx <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-  Q.d <- unlist(cache$Q.d)
+  f.pars <- make.mkn.pars(k)
 
   ll.mkn.deriv <- function(pars, with.gr=TRUE) {
     if ( length(pars) != np )
@@ -24,10 +19,7 @@ make.mkn.deriv <- function(tree, states, k, strict=FALSE) {
     if ( any(!is.finite(pars)) || any(pars < 0) )
       return(fail)
 
-    Q[idx] <- pars
-    diag(Q) <- -rowSums(Q)
-
-    es <- eigen(Q, FALSE)
+    es <- eigen(f.pars(pars), FALSE)
     d <- es$values
     Amat <- es$vectors
     Ainv <- solve(Amat)
@@ -35,7 +27,7 @@ make.mkn.deriv <- function(tree, states, k, strict=FALSE) {
     .Call("linear_deriv", nd, np,
           d, Amat, Ainv, Q.d, t,
           state0, order0, children0, as.logical(with.gr),
-          package="diversitree")
+          PACKAGE="diversitree")
   }
 
   class(ll.mkn.deriv) <- c("mkn.deriv", "mkn", "function")
@@ -75,40 +67,6 @@ make.cache.mkn.deriv <- function(tree, states, k, strict) {
 }
 
 ## 6: ll
-## make.ll.linear.deriv <- function(cache, nd, np) {
-##   nd <- as.integer(cache$nd)
-##   np <- as.integer(cache$np)
-##   fail <- structure(-Inf, gr=rep(NA, np))
-  
-##   t <- cache$len
-##   state0 <- cache$state0
-##   order0 <- cache$order0
-##   children0 <- cache$children0
-
-##   f.Q   <- cache$f.Q
-##   f.Q.d <- cache$f.Q.d
-
-##   ll.linear.deriv <- function(pars, with.gr=TRUE) {
-##     if ( length(pars) != np )
-##       stop(sprintf("Invalid length parameters (expected %d)", np))
-##     if ( any(!is.finite(pars)) || any(pars < 0) )
-##       return(fail)
-
-##     Q <- f.Q(pars)
-##     Q.d <- f.Q.d(pars)
-
-##     es <- eigen(Q, FALSE)
-##     d <- es$values
-##     Amat <- es$vectors
-##     Ainv <- solve(Amat)
-
-##     .Call("linear_deriv", nd, np,
-##           d, Amat, Ainv, Q.d, t,
-##           state0, order0, children0, as.logical(with.gr),
-##           package="diversitree")
-##   }
-## }
-
 
 ## Additional functions:
 make.deriv.Q.mkn <- function(k) {
@@ -125,4 +83,3 @@ make.deriv.Q.mkn <- function(k) {
   }
   out
 }
-

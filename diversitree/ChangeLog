@@ -1,3 +1,34 @@
+2011-06-03  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: bump to 0.7-4
+
+	* R/asr-bisse.R: General cleanup and remove obsolete options.
+
+	* R/asr-mkn.R: Cleanup, especially parameter handling and actual
+	simulation.
+
+	* R/asr-musse.R: General cleanup and remove obsolete options.
+	Simpler parameter handling.
+
+	* R/asr.R: Reimplimented asr on constrained models.  General tidy
+	up.
+
+	* R/check.R: New BiSSE/MuSSE parameter checking that will end up
+	applied to more functions over time.
+
+	* R/constrain.R: Tidy up
+
+	* R/diversitree-branches-C.R: Moved do.marginal.asr.C into asr.R.
+
+	* R/diversitree-branches.R: Substantial simplification to
+	all.branches.matrix().  Removed cleanup().
+
+	* R/model-bisse-split.R: Tidy to parallel model-musse-split.R
+
+	* R/model-mkn.R: Cleanup, especially parameter handling.
+
+	* Other files: General cleanup
+	
 2011-06-01  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* Many files: reworked internals to use matrices rather than lists

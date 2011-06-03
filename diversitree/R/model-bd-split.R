@@ -88,7 +88,6 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
   if ( is.null(unresolved) ) {
     n.taxa <- 1
   } else {
-    ## TODO: This might not be correct.
     n.taxa <- unresolved$n.taxa[match(tree$tip.label, unresolved$tip.label)]
     n.taxa[is.na(n.taxa)] <- 1
   }
