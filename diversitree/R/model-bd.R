@@ -133,40 +133,12 @@ make.cache.bd <- function(tree=NULL, times=NULL,
     times <- as.numeric(sort(times, decreasing=TRUE))
   }
 
-  if ( inherits(tree, "clade.tree") ) {
-    if ( !is.null(unresolved) )
-      stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
-    unresolved <- make.unresolved.bd(tree$clades)
-  }
+  unresolved <- check.unresolved.bd(tree, unresolved)
 
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
   else
     sampling.f <- check.sampling.f(sampling.f, 1)
-
-  if ( !is.null(unresolved) && length(unresolved) > 0 ) {
-    if ( is.null(names(unresolved)) || !is.numeric(unresolved) )
-      stop("'unresolved' must be a named numeric vector")
-    if ( !(all(names(unresolved) %in% tree$tip.label)) )
-      stop("Unknown species in 'unresolved'")
-    if ( any(unresolved < 1) )
-      stop("All unresolved entries must be > 0")
-
-    if ( any(unresolved == 1) ) {
-      warning("Removing unresolved entries that are one")
-      unresolved <- unresolved[unresolved != 1]
-    }
-
-    if ( length(unresolved) == 0 )
-      unresolved <- NULL
-    else {
-      i <- match(names(unresolved), tree$tip.label)
-      unresolved <- list(n=unresolved,
-                         t=tree$edge.length[match(i, tree$edge[,2])])
-    }
-  } else {
-    unresolved <- NULL
-  }
 
   x <- c(NA, times)
   N <- length(x)
@@ -204,8 +176,8 @@ ll.bd <- function(cache, pars, prior=NULL, condition.surv=TRUE) {
   if ( pars[1] <= 0 || pars[2] < 0 )
     return(-Inf)
 
-  r <- pars[1] - pars[2]
-  a <- pars[2] / pars[1]
+  r <- pars[[1]] - pars[[2]]
+  a <- pars[[2]] / pars[[1]]
 
   if ( f < 1 )
     loglik <- lfactorial(N - 1) +

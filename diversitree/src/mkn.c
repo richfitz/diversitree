@@ -4,6 +4,7 @@
 #include <R_ext/BLAS.h>
 #include <R_ext/Rdynload.h>
 #include "util.h"
+#include "mkn.h"
 
 static double *parms_mkn;
 void initmod_mkn(void (* odeparms)(int *, double *)) {
@@ -101,12 +102,6 @@ void r_mkn_core(int *k, int *n, int *order, int *children, double *pij,
 
    These need to be the *untransposed* calculations.
 */
-void asr_normalise(int n_states, double *vals);
-void asr_marginal_mkn_1(int k, int node, int root,
-			int *parent, int *children,
-			double *pij, double *branch_init, 
-			double *branch_base, double *lq);
-
 SEXP r_asr_marginal_mkn(SEXP r_k, SEXP r_pars, SEXP r_nodes, 
 			SEXP cache, SEXP res,
 			SEXP root_f, SEXP rho) {
@@ -217,4 +212,16 @@ void asr_marginal_mkn_1(int k, int node, int root,
 			   branch_base + neq*kids[0], 
 			   branch_base + neq*kids[1], y_in);
   }
+}
+
+void asr_normalise(int n_states, double *vals) {
+  int i;
+  double maxp = R_NegInf, tot = 0.0;
+  for ( i = 0; i < n_states; i++ )
+    if ( vals[i] > maxp )
+      maxp = vals[i];
+  for ( i = 0; i < n_states; i++ )
+    tot += vals[i] = exp(vals[i] - maxp);
+  for ( i = 0; i < n_states; i++ )
+    vals[i] /= tot;
 }

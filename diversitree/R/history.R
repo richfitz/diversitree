@@ -71,9 +71,11 @@ plot.history <- function(x, phy, cols=seq_along(states),
                          no.margin=FALSE,
                          cex=1, font=3,
                          srt=0, adj=0,
-                         label.offset=0,
+                         label.offset=NA,
+                         lwd=1,
                          ...) {
-  label.offset <- if ( show.tip.state ) 1 else 0
+  if ( is.na(label.offset) )
+    label.offset <- if ( show.tip.state ) 1 else 0
   discrete <- x$discrete
 
   xy <- pp.node.coords(phy)
@@ -109,7 +111,7 @@ plot.history <- function(x, phy, cols=seq_along(states),
     cols.tip <- cols[discretize(x$tip.state, length(cols), states)]
   }
 
-  with(obj, segments(x0, y0, x1, y1, col=cols.seg))
+  with(obj, segments(x0, y0, x1, y1, col=cols.seg, lwd=lwd))
 
   if ( show.tip.label )
     pp.tiplabel.phylogram(phy, xy, label.offset, col="black",

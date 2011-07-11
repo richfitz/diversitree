@@ -14,6 +14,11 @@
   modelled (following Pagel 1994).  Instead, a transition rate matrix
   amongst possible trait/state combinations is constructed and the
   analysis is conducted on this.
+
+  The helper function \code{\link{make.musse.multitrait}} wraps the
+  basic MuSSE model for the case of a combination of several binary
+  traits; its argument handling are a little different; please see the
+  help page for more information.
 }
 
 \usage{
@@ -64,7 +69,12 @@ starting.point.musse(tree, k, q.div=5, yule=FALSE)
   11->3?).  To avoid this, the numbers are zero padded (so that the
   above would be q0113 or q1103 for 1->13 and 11->3 respectively).  It
   might be easier to rename the arguments in practice though.
-}  
+}
+
+\seealso{
+  \code{\link{make.bisse}} for the basic binary model, and
+  \code{\link{make.musse.multitrait}} for the case where the data are
+  really combinations of binary traits.}
 
 \examples{
 ## 1: BiSSE equivalence
@@ -152,4 +162,5 @@ abline(v=c(.1, .15, .2), col=col)
 }
 }
 
+\author{Richard G. FitzJohn}
 \keyword{models}

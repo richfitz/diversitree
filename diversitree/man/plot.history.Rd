@@ -11,7 +11,7 @@
              xlim=NULL, ylim=NULL, show.tip.label=TRUE,
              show.node.label=FALSE, show.tip.state=TRUE,
              show.node.state=TRUE, no.margin=FALSE, cex=1, font=3,
-             srt=0, adj=0, label.offset=0, ...)
+             srt=0, adj=0, label.offset=NA, lwd=1, ...)
 }
 
 \arguments{
@@ -41,6 +41,7 @@
   \item{adj}{Label \code{adj}ustment (see \code{\link{par}}).}
   \item{label.offset}{Horizontal offset of tip and node labels, in
     branch length units.}
+  \item{lwd}{Line width}
   \item{...}{Additional arguments (currently ignored)}
 }
 

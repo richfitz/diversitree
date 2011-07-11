@@ -1,3 +1,36 @@
+2011-07-11  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: bump to 0.7-6
+
+	* NAMESPACE: New "musse.multitrait" exports (see below)
+
+	* R/check.R: There was an error in checking states when
+	strict=FALSE (values were never checked to see if they were valid,
+	as was advertised).  check.unresolved.bd added (taken from
+	make.bd, and used by make.bd.split).
+
+	* R/diversitree-branches.R: Individual tip conditions added for
+	make.branches.matrix.  dt.tips.ordered() rewritten.
+
+	* R/history.R: Minor tweaks
+
+	* R/model-bd-split.R: Use with unresolved clades was totally
+	broken (but failed to even run, so no harm done). 
+
+	* R/model-bd.R: Minor tweaks while tidying up model-bd-split.R
+
+	* R/model-musse-multitrait.R: Alternative reparametrisation of
+	MuSSE when the multistate character is really combinations of
+	binary traits.
+
+	* R/simulation.R: Simulation code was returning events in
+	incorrect order.
+
+	* man/*: minor documentation changes
+
+	* src/cvodes_asr_marginal.c,mkn.c,mkn.h: Tweaks to compile under
+	windows.
+
 2011-06-03  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: bump to 0.7-4

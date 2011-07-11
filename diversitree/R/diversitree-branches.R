@@ -100,15 +100,25 @@ all.branches.matrix <- function(pars, cache, initial.conditions,
     branch.base[,cache$preset$target] <- cache$preset$base
   }
 
-  if ( !is.null(names(y)) )
-    stop("Individual tip conditions are not implemented")
-  for ( x in y ) {
-    idx <- x$target
-    unpack <- x$unpack
-    branch.init[,idx] <- x$y
-    ans <- branches(x$y, x$t.uniq, pars, 0)
-    lq[idx] <- ans[[1]][unpack]
-    branch.base[,idx] <- ans[[2]][,unpack]
+  if ( !is.null(names(y)) ) {
+    tip.t <- y$t
+    tip.target <- y$target
+    tip.y <- branch.init[,tip.target] <- y$t
+    for ( i in seq_along(idx) ) {
+      j <- tip.target[i]
+      ans <- branches(tip.y[,i], tip.t[i], pars, 0)
+      lq[j] <- ans[[1]]
+      branch.base[,j] <- ans[[2]]
+    }
+  } else {
+    for ( x in y ) {
+      idx <- x$target
+      unpack <- x$unpack
+      branch.init[,idx] <- x$y
+      ans <- branches(x$y, x$t.uniq, pars, 0)
+      lq[idx] <- ans[[1]][unpack]
+      branch.base[,idx] <- ans[[2]][,unpack]
+    }
   }
 
   for ( i in order ) {
@@ -424,16 +434,26 @@ dt.tips.grouped <- function(y, y.i, tips, t) {
 }
 
 dt.tips.ordered <- function(y, tips, t) {
-  if ( !is.list(y) )
-    stop("'y' must be a list of initial conditions")
-  if ( length(y) != length(tips) )
-    stop("y must be same length as tips")
-  if ( length(y) != length(t) )
-    stop("y must be the same length as t")
-
   i <- order(t)
-  list(target=tips[i],
-       t=t[i],
-       y=y[i])
+
+  if ( is.list(y) ) {
+    if ( length(y) != length(tips) )
+      stop("y must be same length as tips")
+    if ( length(y) != length(t) )
+      stop("y must be the same length as t")
+    list(target=tips[i],
+         t=t[i],
+         y=y[i])
+  } else if ( is.matrix(y) ) {
+    if ( ncol(y) != length(tips) )
+      stop("y must be same length as tips")
+    if ( ncol(y) != length(t) )
+      stop("y must be the same length as t")
+    list(target=tips[i],
+         t=t[i],
+         y=y[,i])
+  } else {
+    stop("y must be a list or matrix")
+  }
 }
 

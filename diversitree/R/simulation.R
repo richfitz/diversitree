@@ -174,5 +174,5 @@ prune.hist <- function(phy, phy2) {
   ## Remake idx2 to point at the new tree.
   hist$idx2 <- match(hist$name2, phy2.names)
 
-  hist
+  hist[order(hist$idx2, hist$t),]
 }

@@ -22,8 +22,8 @@ make.bd.split <- function(tree, nodes, split.t, sampling.f=NULL,
     if ( length(pars) != 2 * n.part )
       stop(sprintf("Expected %d parameters, but got %d",
                    2 * n.part, length(pars)))
-  if ( any(pars < 0) || any(!is.finite(pars)) )
-    return(-Inf)
+    if ( any(pars < 0) || any(!is.finite(pars)) )
+      return(-Inf)
     
     pars <- matrix(pars, 2, n.part)
 
@@ -74,24 +74,21 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
                                 sampling.f=NULL, unresolved=NULL) {
   tree <- check.tree(tree, node.labels=TRUE)
 
-  if ( !is.null(sampling.f) && !is.null(unresolved) )
-    stop("Cannot specify both sampling.f and unresolved")
-
   if ( !isTRUE(all.equal(unique(split.t), Inf, check.attr=FALSE)) )
     stop("split.t cannot yet be changed")
   nodes <- check.split(tree, nodes, rep(Inf, length(nodes)))$nodes
   n <- length(nodes)
 
-  sampling.f <- check.sampling.f(sampling.f, n)
+  ## Process unresolved:
+  unresolved <- check.unresolved.bd(tree, unresolved)
 
-  ## Unresolved here is a different format to that expected by bisse.
-  if ( is.null(unresolved) ) {
-    n.taxa <- 1
-  } else {
-    n.taxa <- unresolved$n.taxa[match(tree$tip.label, unresolved$tip.label)]
-    n.taxa[is.na(n.taxa)] <- 1
-  }
+  if ( !is.null(sampling.f) && !is.null(unresolved) )
+    stop("Cannot specify both sampling.f and unresolved")
+  else
+    sampling.f <- check.sampling.f(sampling.f, n)
 
+  ## Unresolved here is a different format to that expected by bisse,
+  ## so this differs a little:
   edge <- tree$edge
   n.tip <- length(tree$tip.label)
   bt <- as.numeric(branching.times(tree))
@@ -104,13 +101,19 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
              t.len=tree$edge.length[j],
              n0=1, nt=NA,
              group=NA)
+  z[n.tip + 1,1] <- n.tip + 1 # Special index for root.
   z[,"t.0"] <- z[,"t.1"] - z[,"t.len"]
 
-  z[match(seq_len(n.tip), z[,2]),"nt"] <- n.taxa
-  z[n.tip + 1,1] <- n.tip + 1
-
+  if ( is.null(unresolved) ) {
+    z[match(seq_len(n.tip), z[,2]),"nt"] <- 1    
+  } else {
+    n.taxa <- unresolved$n[match(tree$tip.label, names(unresolved$n))]
+    n.taxa[is.na(n.taxa)] <- 1
+    z[match(seq_len(n.tip), z[,2]),"nt"] <- n.taxa
+  }
+  
   group <- make.split.phylo.vec(tree, nodes)[j]
-  group[n.tip + 1] <- 1
+  group[n.tip + 1] <- 1 # Root always in group 1
   z[,"group"] <- group
 
   obj <- list(z=z, n.taxa=n.tip, n.node=tree$Nnode,
@@ -121,7 +124,7 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
 make.bd.split.part <- function(cache, i) {
   z <- cache$z[cache$z[,"group"] == i,]
   f <- cache$sampling.f[i]
-  n.node <- sum(is.na(z[,"nt"]))    
+  n.node <- sum(is.na(z[,"nt"]))
 
   ## Determine if this is the root group, and if so remove the root
   ## (needs to be done after the node counting, as the root node still
@@ -146,6 +149,8 @@ make.bd.split.part <- function(cache, i) {
   t0 <- z[,"t.0"]
   t1 <- z[,"t.1"]
   dt <- z[,"t.len"]
+
+  unresolved <- z[which(z[,"nt"] > 1),]
   
   function(pars, condition.surv=TRUE) {
     lambda <- pars[1]
@@ -159,6 +164,13 @@ make.bd.split.part <- function(cache, i) {
          log(abs((f * exp(r * t1) + 1-f) * lambda - mu)))
 
     log.lik <- sum(d) + n.node * log(lambda)
+
+    if ( nrow(unresolved) > 0 ) {
+      a <- mu / lambda
+      ert <- exp(r * unresolved[,"t.1"])
+      log.lik <- log.lik +
+        sum((unresolved[,"nt"]-1) * (log(abs(ert - 1)) - log(abs(ert - a))))
+    }
 
     if ( is.root ) {
       log.lik <- log.lik + root.constant
