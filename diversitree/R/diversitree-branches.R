@@ -100,39 +100,44 @@ all.branches.matrix <- function(pars, cache, initial.conditions,
     branch.base[,cache$preset$target] <- cache$preset$base
   }
 
-  if ( !is.null(names(y)) ) {
+  if ( is.null(names(y)) ) { # dt.tips.grouped
+    for ( x in y ) {
+      if ( !is.null(x) ) {
+        ## The above is because sometimes 'x' will be NULL.  This
+        ## happens when there is no polymorphism across tips, usually
+        ## when most of the tips are unresolved clades.
+        idx <- x$target
+        branch.init[,idx] <- x$y
+        ans <- branches(x$y, x$t, pars, 0, idx)
+        lq[idx] <- ans[[1]]
+        branch.base[,idx] <- ans[[2]]
+      }
+    }
+  } else { # y$type == "ORDERED"
     tip.t <- y$t
     tip.target <- y$target
-    tip.y <- branch.init[,tip.target] <- y$t
-    for ( i in seq_along(idx) ) {
-      j <- tip.target[i]
-      ans <- branches(tip.y[,i], tip.t[i], pars, 0)
-      lq[j] <- ans[[1]]
-      branch.base[,j] <- ans[[2]]
-    }
-  } else {
-    for ( x in y ) {
-      idx <- x$target
-      unpack <- x$unpack
-      branch.init[,idx] <- x$y
-      ans <- branches(x$y, x$t.uniq, pars, 0)
-      lq[idx] <- ans[[1]][unpack]
-      branch.base[,idx] <- ans[[2]][,unpack]
+    tip.y <- branch.init[,tip.target] <- y$y
+    for ( i in seq_along(tip.t) ) {
+      idx <- tip.target[i]
+      ans <- branches(tip.y[,i], tip.t[i], pars, 0, idx)
+      lq[idx] <- ans[[1]]
+      branch.base[,idx] <- ans[[2]]
     }
   }
 
   for ( i in order ) {
-    y.in <- initial.conditions(branch.base[,children[i,]], pars, depth[i])
+    y.in <- initial.conditions(branch.base[,children[i,]], pars,
+                               depth[i], i)
     if ( !all(is.finite(y.in)) )
       stop("Bad initial conditions: calculation failure along branches?")
     branch.init[,i] <- y.in
-    ans <- branches(y.in, len[i], pars, depth[i])
+    ans <- branches(y.in, len[i], pars, depth[i], i)
     lq[i] <- ans[[1]]
     branch.base[,i] <- ans[[2]]
   }
 
   y.in <- initial.conditions(branch.base[,children[root,]], pars,
-                             depth[root], TRUE)
+                             depth[root], root)
   branch.init[,root] <- y.in
   list(init=branch.init, base=branch.base, lq=lq)
 }
@@ -157,39 +162,41 @@ all.branches.list <- function(pars, cache, initial.conditions,
     branch.base[cache$preset$target] <- cache$preset$base
   }
 
-  if ( is.null(names(y)) ) {
+  if ( is.null(names(y)) ) { # dt.tips.grouped
     for ( x in y ) {
-      idx <- x$target
-      branch.init[idx] <- list(x$y)
-      ans <- branches(x$y, x$t.uniq, pars, 0)
-      ans <- ans[x$unpack]
-      lq[idx] <- unlist(lapply(ans, "[[", 1))
-      branch.base[idx] <- lapply(ans, "[", -1)
+      if ( !is.null(x) ) {
+        idx <- x$target
+        branch.init[idx] <- list(x$y)
+        ans <- branches(x$y, x$t, pars, 0, idx)
+        lq[idx] <- unlist(lapply(ans, "[[", 1))
+        branch.base[idx] <- lapply(ans, "[", -1)
+      }
     }
-  } else {
+  } else { # dt.tips.ordered
     tip.t <- y$t
     tip.target <- y$target
     tip.y <- branch.init[tip.target] <- y$y
-    for ( i in seq_along(tip.y) ) {
-      j <- tip.target[i]
-      ans <- branches(tip.y[[i]], tip.t[i], pars, 0)
-      lq[j] <- ans[1]
-      branch.base[[j]] <- ans[-1]
+    for ( i in seq_along(tip.t) ) {
+      idx <- tip.target[i]
+      ans <- branches(tip.y[[i]], tip.t[i], pars, 0, idx)
+      lq[idx] <- ans[1]
+      branch.base[[idx]] <- ans[-1]
     }    
   }
 
   for ( i in order ) {
-    y.in <- initial.conditions(branch.base[children[i,]], pars, depth[i])
+    y.in <- initial.conditions(branch.base[children[i,]], pars,
+                               depth[i], i)
     if ( !all(is.finite(y.in)) )
       stop("Bad initial conditions: calculation failure along branches?")
     branch.init[[i]] <- y.in
-    ans <- branches(y.in, len[i], pars, depth[i])
+    ans <- branches(y.in, len[i], pars, depth[i], i)
     lq[i] <- ans[1]
     branch.base[[i]] <- ans[-1]
   }
 
   y.in <- initial.conditions(branch.base[children[root,]], pars,
-                             depth[root], TRUE)
+                             depth[root], root)
   branch.init[[root]] <- y.in
   list(init=branch.init, base=branch.base, lq=lq)
 }
@@ -348,14 +355,15 @@ ll.xxsse <- function(pars, cache, initial.conditions,
 
 ## Convert a branches function into one that adds log-compensation.
 ## This is not compulsary to use, but should make life easier.
-make.branches <- function(branches, idx, eps=0) {
-  if ( length(idx) > 0 )
-    function(y, len, pars, t0) {
-      ret <- branches(y, len, pars, t0)
-      if ( all(ret[idx,] >= eps) ) {
-        q <- colSums(ret[idx,,drop=FALSE])
+make.branches <- function(branches, comp.idx, eps=0) {
+  if ( length(comp.idx) > 0 )
+    function(y, len, pars, t0, idx) {
+      ret <- branches(y, len, pars, t0, idx)
+      if ( all(ret[comp.idx,] >= eps) ) {
+        q <- colSums(ret[comp.idx,,drop=FALSE])
         i <- q > 0
-        ret[idx,i] <- ret[idx,i] / rep(q[i], each=length(idx))
+        ret[comp.idx,i] <- ret[comp.idx,i] /
+          rep(q[i], each=length(comp.idx))
         lq <- q
         lq[i] <- log(q[i])
         list(lq, ret)
@@ -374,9 +382,9 @@ make.branches <- function(branches, idx, eps=0) {
       }
     }
   else
-    function(y, len, pars, t0)
+    function(y, len, pars, t0, idx)
       list(rep.int(0, length(len)),
-           branches(y, len, pars, t0))
+           branches(y, len, pars, t0, idx))
 }
 
 make.ode.branches <- function(model, dll, neq, np, comp.idx, control) {
@@ -391,14 +399,14 @@ make.ode.branches <- function(model, dll, neq, np, comp.idx, control) {
 
     RTOL <- ATOL <- tol
     ode <- make.ode(derivs, dll, initfunc, neq, safe)
-    branches <- function(y, len, pars, t0)
+    branches <- function(y, len, pars, t0, idx)
       ode(y, c(t0, t0+len), pars, rtol=RTOL, atol=ATOL)[-1,-1,drop=FALSE]
   } else if ( backend == "cvodes" ) {
     derivs <- sprintf("derivs_%s_cvode", model)
 
     RTOL <- ATOL <- tol
     ode <- cvodes(neq, np, derivs, RTOL, ATOL, dll)
-    branches <- function(y, len, pars, t0)
+    branches <- function(y, len, pars, t0, idx)
       ode(pars, y, c(t0, t0+len))[,-1,drop=FALSE]
   } else {
     stop("Invalid backend", backend)
@@ -417,18 +425,15 @@ dt.tips.grouped <- function(y, y.i, tips, t) {
     stop("y must be same length as tips")
   if ( length(y.i) != length(t) )
     stop("y must be the same length as t")
-  
+
   types <- sort(unique(y.i))
   res <- vector("list", length(types))
 
-  for ( i in seq_along(types) ) {
-    j <- which(y.i == types[i])
-    target <- tips[j]
-    t.i <- t[j]
-    t.uniq <- sort(unique(t.i))
-    unpack <- match(t.i, t.uniq)
-    res[[i]] <- list(y=y[[types[i]]], y.i=types[i], target=target,
-                     t.uniq=t.uniq, unpack=unpack)
+  for ( type in types ) {
+    j <- which(y.i == type)
+    i <- order(t[j])
+    res[[type]] <- list(y=y[[type]], y.i=type,
+                        target=tips[j][i], t=t[j][i])
   }
   res
 }
@@ -451,7 +456,7 @@ dt.tips.ordered <- function(y, tips, t) {
       stop("y must be the same length as t")
     list(target=tips[i],
          t=t[i],
-         y=y[,i])
+         y=y[,i], type="ORDERED")
   } else {
     stop("y must be a list or matrix")
   }

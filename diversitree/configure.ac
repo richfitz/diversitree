@@ -63,16 +63,16 @@ else
 fi
 
 
-dnl AC_ARG_ENABLE([gcc-strict],
-dnl 	AS_HELP_STRING([--enable-gcc-strict],
-dnl 		[use strict gcc error checking]),
-dnl 	[gcc_strict=$enableval])
-dnl if [ test x"$gcc_strict" = xyes ]; then
-dnl    echo "Using strict C checking"
-dnl    PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
-dnl else
-dnl    echo "Using normal C checking"
-dnl fi
+AC_ARG_ENABLE([gcc-strict],
+	AS_HELP_STRING([--enable-gcc-strict],
+		[use strict gcc error checking]),
+	[gcc_strict=$enableval])
+if [ test x"$gcc_strict" = xyes ]; then
+   echo "Using strict C checking"
+   PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
+else
+   echo "Using normal C checking"
+fi
 
 dnl If we are using GCC, enable strict checking of the code. 
 if test "${GCC}" = yes; then

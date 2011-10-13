@@ -128,7 +128,7 @@ initial.tip.musse <- function(cache) {
 ## 6: ll.musse is done within make.musse
 
 ## 7: initial.conditions:
-initial.conditions.musse <- function(init, pars, t, is.root=FALSE) {
+initial.conditions.musse <- function(init, pars, t, idx) {
   k <- nrow(init)/2
   i <- seq_len(k)
   j <- i + k

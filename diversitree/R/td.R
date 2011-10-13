@@ -3,7 +3,7 @@
 ## The make.branches.td function converts a normal "branches" function
 ## into a time-dependent function.
 make.branches.td <- function(branches) {
-  function(y, len, pars, t0) {
+  function(y, len, pars, t0, idx) {
     t <- pars[,1]
     bpars <- pars[,-1]
 
@@ -27,7 +27,7 @@ make.branches.td <- function(branches) {
       times <- c(t1[k], if (not.last) t[epoch])
       n <- length(times)
 
-      res <- branches(y, times-t0, bpars[epoch,], t0)
+      res <- branches(y, times-t0, bpars[epoch,], t0, idx)
       res[[1]] <- res[[1]] + lq.carry
 
       if ( any(k) ) {
@@ -47,9 +47,10 @@ make.branches.td <- function(branches) {
   }
 }
 
-make.initial.conditions.td <- function(initial.conditions)
-  function(init, pars, t, is.root=FALSE)
-  initial.conditions(init, get.par.td(pars, t), t, is.root)
+make.initial.conditions.td <- function(initial.conditions) {
+  function(init, pars, t, idx)
+    initial.conditions(init, get.par.td(pars, t), t, idx)
+}
 
 get.par.td <- function(pars, t)
   pars[which(pars[,1] > t)[1],-1]

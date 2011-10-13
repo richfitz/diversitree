@@ -148,8 +148,8 @@ quasse.extent <- function(control, drift, diffusion) {
 
   ## Another option here is to compute all the possible x values and
     ## then just drop the ones that are uninteresting?
-    nkl <- ceiling(-(mean - w * sd)/dx) * c(r, 1)
-    nkr <- ceiling( (mean + w * sd)/dx) * c(r, 1)
+    nkl <- max(ceiling(-(mean - w * sd)/dx)) * c(r, 1)
+    nkr <- max(ceiling( (mean + w * sd)/dx)) * c(r, 1)
     ndat <- nx*c(r, 1) - (nkl + 1 + nkr)
 
     padding <- cbind(nkl, nkr)

@@ -119,15 +119,9 @@ char <- make.brownian.with.drift(0, 0.025)
 set.seed(1)
 phy <- tree.quasse(c(lambda, mu, char), max.taxa=15, x0=0,
                    single.lineage=FALSE, verbose=TRUE)
-phy <- diversitree:::drop.tip.fixed(phy, "sp17")
 
 nodes <- c("nd13", "nd9", "nd5")
-nodes.i <- match(nodes, phy$node.label) + length(phy$tip.label)
-
-t0 <- branching.times(phy)[nodes.i - length(phy$tip.label)]
-t1 <- t0 + phy$edge.length[match(nodes.i, phy$edge[,2])]
-split.t <- (t0 + t1) / 2
-rm(t0, t1)
+split.t <- Inf
 
 pars <- c(.1, .2, 0, 2.5, .03, 0, .01)
 pars4 <- unlist(rep(list(pars), 4))
@@ -138,24 +132,20 @@ control.C.2 <- c(control.C.1, tips.combined=TRUE)
 
 control.R.1 <- list(dt.max=1/200, method="fftR")
 lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.1)
-(ll.C.1 <- lik.C.1(pars)) # -46.34493
+(ll.C.1 <- lik.C.1(pars)) # -62.06409
 
 lik.C.2 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.2)
-(ll.C.2 <- lik.C.2(pars)) # -46.34493
+(ll.C.2 <- lik.C.2(pars)) # -62.06409
 
 \dontrun{
 ## slow...
 lik.R.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.R.1)
-(ll.R.1 <- lik.R.1(pars)) # -46.34493
+(ll.R.1 <- lik.R.1(pars)) # -62.06409
 }
 
 lik.s.C.1 <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x, constant.x,
                                nodes, split.t, control.C.1)
-(ll.s.C.1 <- lik.s.C.1(pars4)) # -46.32513
-
-lik.s.C.2 <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x, constant.x,
-                               nodes, split.t, control.C.2)
-(ll.s.C.2 <- lik.s.C.2(pars4)) # -46.32514
+(ll.s.C.1 <- lik.s.C.1(pars4)) # -62.06409
 }
 
 \author{Richard G. FitzJohn}

@@ -64,7 +64,7 @@ find.mle.quasse <- function(func, x.init, method, fail.value=NA,
 
 ## 5: make.cache:
 make.cache.quasse <- function(tree, states, states.sd, lambda, mu,
-                              control, sampling.f) {
+                              control, sampling.f, for.split=FALSE) {
   ## 1: tree
   tree <- check.tree(tree)  
 
@@ -76,29 +76,32 @@ make.cache.quasse <- function(tree, states, states.sd, lambda, mu,
   ## 3: Control structure (lots of checking!)
   control <- check.control.quasse(control, tree, states)
 
-  ## 4: Speciation/extinction functions
-  n.lambda <- check.f.quasse(lambda)
-  n.mu     <- check.f.quasse(mu)
-  n.args   <- n.lambda + n.mu + 2
-  args <- list(lambda=seq_len(n.lambda),
-               mu=seq_len(n.mu) + n.lambda,
-               drift=n.lambda + n.mu + 1,
-               diffusion=n.lambda + n.mu + 2)
-
-  sampling.f <- check.sampling.f(sampling.f, 1)
-
-  ## The raw cache just provides the traversal information:
   cache <- make.cache(tree)
   cache$states  <- states
   cache$states.sd <- states.sd
-  cache$sampling.f <- sampling.f
-  cache$lambda <- lambda
-  cache$mu <- mu
-
   cache$control <- control
-  
-  cache$args <- args
-  cache$n.args <- n.args
+  ## Declare that the variables will be returned in a list, not in
+  ## matrix form...
+  cache$vars.in.list <- TRUE
+
+  if ( !for.split ) {
+    ## 4: Speciation/extinction functions
+    n.lambda <- check.f.quasse(lambda)
+    n.mu     <- check.f.quasse(mu)
+    n.args   <- n.lambda + n.mu + 2
+    args <- list(lambda=seq_len(n.lambda),
+                 mu=seq_len(n.mu) + n.lambda,
+                 drift=n.lambda + n.mu + 1,
+                 diffusion=n.lambda + n.mu + 2)
+
+    cache$lambda <- lambda
+    cache$mu <- mu
+    cache$args <- args
+    cache$n.args <- n.args
+
+    sampling.f <- check.sampling.f(sampling.f, 1)
+    cache$sampling.f <- sampling.f
+  }
 
   cache
 }
@@ -198,7 +201,7 @@ make.initial.conditions.quasse <- function(control) {
   ## nodes that finish right at the critical interval might have
   ## conflicting lengths.
   eps <- 1e-8
-  function(init, pars, t, is.root=FALSE) {
+  function(init, pars, t, idx) {
     if ( length(init[[1]]) != length(init[[2]]) )
       stop("Data have incompatible length")
 
@@ -233,7 +236,7 @@ make.branches.quasse <- function(f.hi, f.lo, control) {
   tc <- control$tc
   r <- control$r
   
-  function(y, len, pars, t0) {
+  function(y, len, pars, t0, idx) {
     if ( t0 >= tc ) {
       ans <- f.lo(y, len, pars$lo, t0)
     } else if ( t0 + len < tc ) {

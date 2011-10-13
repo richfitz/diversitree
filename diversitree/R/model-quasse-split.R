@@ -5,35 +5,81 @@ make.quasse.split <- function(tree, states, states.sd, lambda, mu,
   cache <- make.cache.quasse.split(tree, states, states.sd,
                                    lambda, mu, nodes, split.t,
                                    control, sampling.f)
-  control <- cache$control
+  control <- cache$control # TODO: hmmm? Different to BiSSE
 
-  if ( min(branching.times(tree)[nodes]) < control$tc )
+  if ( control$tips.combined )
+    ## TODO: Will not be too hard.
+    stop("tips.combined not yet implemented for split QuaSSE")
+
+  ## TODO (1): Should use sanitised nodes?
+  ## TODO (2): Remove this restriction.  This is an issue as the
+  ## auxilliary variables will go in the wrong place...
+  ## TODO (3): This might be moveable now.
+  nodes.i <- cache$nodes - length(tree$tip.label)
+  if ( min(branching.times(tree)[nodes.i]) < control$tc )
     stop("Sorry - all nodes must root below tc")
-  
+
+  initial.conditions.quasse <- make.initial.conditions.quasse(control) 
+
   if ( control$method == "fftC" ) {
-    branches <- make.branches.quasse.fftC(control)
+    ## TODO: Should take arguments cache, control, and return the
+    ## correct branches functions switching on control.
+    branches.main <- make.branches.quasse.fftC(control)
     branches.aux <- make.branches.aux.quasse.fftC(control,
                                                   cache$sampling.f)
-    tips <- vector("list", length(cache$cache))
-    if ( control$tips.combined ) {
-      for ( i in seq_along(tips) ) {
-        x <- cache$cache[[i]]
-        tips[[i]] <- make.tips.quasse.fftC(control, x$len[x$tips],
-                                           x$tips)
-      }
-    }
+    branches <- make.branches.split(cache, branches.main, branches.aux)
+    initial.conditions <-
+      make.initial.conditions.split(cache, initial.conditions.quasse)
   } else {
-    ## I am not sure what the technical reason for this not being
-    ## ready is, but it can't be that bad.
+    ## This is because the .aux functions are not done for these
+    ## methods...
     stop("Alternative methods not yet implemented")
   }
-    
-  initial.conditions <- make.initial.conditions.quasse(control)
 
-  ll <- function(pars, ...)
-    ll.quasse.split(cache, pars, branches, branches.aux,
-                    initial.conditions, tips, ...)
-  
+  n.part <- cache$n.part
+  args <- cache$args  
+
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
+    ## 1: Check parameters (move this to simplify...)
+    names(pars) <- NULL # Because of use of do.call, strip names
+    if ( length(pars) != cache$n.args )
+      stop(sprintf("Incorrect number of arguments (expected %d, got %d)",
+                   cache$n.args, length(pars)))
+    ## Checking and extent construction:
+    drift <- pars[unlist(args[,3])]
+    diffusion <- pars[unlist(args[,4])]
+
+    ext <- quasse.extent(cache$control, drift, diffusion)
+
+    ## expand the parameters, with our current extent.
+    pars.l <- lapply(seq_len(n.part), function(i)
+                     expand.pars.quasse(cache$lambda[[i]],
+                                        cache$mu[[i]],
+                                        args[i,], ext, pars))
+
+    ## *More* parameter checking:
+    lambda.x <- unlist(lapply(pars.l, function(x)
+                              c(x[[1]]$lambda, x[[2]]$lambda)))
+    mu.x <- unlist(lapply(pars.l, function(x) c(x[[1]]$mu, x[[2]]$mu)))
+    if ( any(lambda.x < 0) || any(mu.x < 0) || any(diffusion <= 0) )
+      stop("Illegal negative parameters")
+    if ( !any(lambda.x > 0) )
+      stop("No positive lambda; cannot compute likelihood")
+
+    cache$y <- initial.tip.quasse.split(cache, cache$control, ext$x[[1]])
+
+    ans <- all.branches.list(pars.l, cache, initial.conditions, branches)
+    vals <- matrix(ans$init[[cache$root]], cache$control$nx, 2)
+    pars.root <- pars.l[[cache$group.nodes[cache$root]]] # always 1
+    loglik <- root.quasse(vals[seq_len(ext$ndat[2]),], ans$lq,
+                          cache$control$dx, pars.root$lo$lambda,
+                          condition.surv)
+    if ( intermediates )
+      attr(loglik, "intermediates") <- ans
+    loglik  
+  }
+    
   attr(ll, "n.part") <- cache$n.part
   attr(ll, "f.lambda") <- lambda
   attr(ll, "f.mu") <- mu
@@ -65,8 +111,6 @@ argnames.quasse.split <- function(x, ...) {
   .NotYetImplemented()
 }
 
-
-
 ## 4: find.mle (inherited from quasse), though this will be changed
 ## soon to better deal with cases where single parameter moves are
 ## done.
@@ -75,56 +119,27 @@ argnames.quasse.split <- function(x, ...) {
 make.cache.quasse.split <- function(tree, states, states.sd,
                                     lambda, mu, nodes, split.t,
                                     control, sampling.f) {
-  ## 1: tree
-  tree <- check.tree(tree, node.labels=TRUE)
+  cache <- make.cache.quasse(tree, states, states.sd, lambda[[1]], mu,
+                             control, sampling.f, TRUE)
+  cache <- make.cache.split(tree, cache, nodes, split.t)
 
-  ## 2: states & errors
-  tmp <- check.states.quasse(tree, states, states.sd)
-  states <- tmp$states
-  states.sd <- tmp$states.sd
+  n.part <- cache$n.part
+  control <- cache$control
 
-  ## 3: Control structure
-  control <- check.control.quasse(control, tree, states)
-
-  n <- length(nodes) + 1 # +1 for base group
-
-  ## 4: Check sampling.f
-  sampling.f <- as.list(check.sampling.f(sampling.f, n))
-
+  cache$sampling.f <- check.sampling.f.split(sampling.f, 1, n.part)
+  cache$aux.i <- seq_len(control$nx)
+ 
   ## 5: Speciation/extinction functions
   ## Most of the processing of these is currently done below.
-  tmp <- check.f.quasse.split(lambda, n)
-  lambda <- tmp$f
+  tmp <- check.f.quasse.split(lambda, n.part)
+  cache$lambda <- tmp$f
   n.lambda <- tmp$n
   names.lambda <- tmp$names
 
-  tmp <- check.f.quasse.split(mu, n)
-  mu <- tmp$f
+  tmp <- check.f.quasse.split(mu, n.part)
+  cache$mu <- tmp$f
   n.mu <- tmp$n
   names.mu <- tmp$names
-  
-  ## 6: Generic cache splitting:
-  cache <- make.cache.split(tree, nodes, split.t)
-
-  for ( i in seq_len(n) ) {
-    x <- cache$cache[[i]]
-    x$states  <- states[x$tip.label]
-    x$states.sd <- states.sd[x$tip.label]
-    x$sampling.f <- sampling.f[[i]]
-    x$lambda <- lambda[[i]]
-    x$mu <- mu[[i]]
-
-    cache$cache[[i]] <- x    
-  }
-
-  ## This should never happen (see check in make.quasse.split).
-  ## This would cause a problem:: the auxillary information will
-  ## not go in the right place through aux.i...
-  if ( any(split.t < control$tc) )
-    stop("split.t < control$tc not yet handled")
-  cache$sampling.f <- sampling.f
-  cache$aux.i <- seq_len(control$nx)
-  cache$control <- control
 
   ## 6: Arguments and corresponding parameter names:
   i <- rbind(lambda=n.lambda, mu=n.mu, drift=1, diffusion=1)
@@ -134,7 +149,6 @@ make.cache.quasse.split <- function(tree, states, states.sd,
   
   cache$args <- t(j)
   cache$n.args <- sum(i)
-
   cache$args.names <-
     mapply(c, lapply(names.lambda, sprintf, fmt="l.%s"),
            lapply(names.mu, sprintf, fmt="m.%s"),
@@ -144,75 +158,6 @@ make.cache.quasse.split <- function(tree, states, states.sd,
 }
 
 ## 6: ll
-ll.quasse.split <- function(cache, pars, branches, branches.aux,
-                            initial.conditions, tips,
-                            condition.surv=TRUE, root=ROOT.OBS,
-                            root.p=NULL, intermediates=FALSE) {
-  n.part <- cache$n.part
-  args <- cache$args
-
-  names(pars) <- NULL # Because of use of do.call, strip names
-  if ( length(pars) != cache$n.args )
-    stop(sprintf("Incorrect number of arguments (expected %d, got %d)",
-                 cache$n.args, length(pars)))
-
-  ## Checking and extent construction:
-  drift <- pars[unlist(args[,3])]
-  diffusion <- pars[unlist(args[,4])]
-  if ( any(drift != 0) )
-    stop("Non-zero drift not yet implemented.") # TODO
-  if ( any(diffusion <= 0) )
-    stop("Strictly positive diffusion required")
-  ext <- quasse.extent(cache$control, 0, max(diffusion))
-
-  pars.l <- lapply(seq_len(n.part), function(i)
-                   expand.pars.quasse(cache$cache[[i]]$lambda,
-                                      cache$cache[[i]]$mu,
-                                      args[i,], ext, pars))
-
-  lambda.x <- unlist(lapply(pars.l, function(x)
-                            c(x[[1]]$lambda, x[[2]]$lambda)))
-  mu.x <- unlist(lapply(pars.l, function(x) c(x[[1]]$mu, x[[2]]$mu)))
-
-  if ( any(lambda.x < 0) || any(mu.x < 0) )
-    stop("Illegal negative parameters")
-  if ( !any(lambda.x > 0) )
-    stop("No positive lambda; cannot compute likelihood")
-
-  init <- lapply(cache$cache, initial.tip.quasse,
-                 cache$control, ext$x[[1]])
-
-  if ( cache$control$tips.combined ) {
-    for ( i in seq_len(n.part) ) {
-      ## TODO: This is where the tip calculations would go, following
-      ## along with the pattern in plain QuaSSE....
-      cache$cache[[i]]$preset <- tips[[i]](init[[i]]$y, pars.l[[i]])
-      ## supress tip calculation now:
-      cache$cache[[i]]$tips <- integer(0) 
-      cache$cache[[i]]$y <- NULL
-    }
-  } else {
-    for ( i in seq_len(n.part) )
-      cache$cache[[i]]$y <- init[[i]]
-  }
-
-  ## Normal:
-  ans <- all.branches.split(pars.l, cache, initial.conditions,
-                            branches, branches.aux, TRUE)
-
-  vars <- matrix(ans[[1]]$base, cache$control$nx, 2)
-  lq <- unlist(lapply(ans, "[[", "lq"))
-
-  ## This assumes that the root node is in the low-condition, which is
-  ## enforced by the checking.
-  loglik <- root.quasse(vars[seq_len(ext$ndat[2]),], lq,
-                       cache$control$dx, pars.l[[1]]$lo$lambda,
-                       condition.surv)
-
-  if ( intermediates )
-    attr(loglik, "intermediates") <- ans
-  loglik
-}
 
 ## 7: initial.conditions: from quasse
 
@@ -232,4 +177,16 @@ check.f.quasse.split <- function(f, rep) {
     names <- lapply(f, function(x) names(formals(x))[-1])
   }
   list(n=n, f=f, names=names)
+}
+
+initial.tip.quasse.split <- function(cache, control, x) {
+  nx <- control$nx * control$r
+  npad <- nx - length(x)
+  tips <- cache$tips
+  e0 <- lapply(cache$sampling.f, function(f)
+               rep(1 - f, nx))[cache$group.nodes[tips]]
+  y <- mapply(function(e0, mean, sd)
+              c(e0, dnorm(x, mean, sd), rep(0, npad)),
+              e0, cache$states, cache$states.sd, SIMPLIFY=FALSE)
+  dt.tips.ordered(y, tips, cache$len[tips])
 }

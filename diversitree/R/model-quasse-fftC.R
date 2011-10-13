@@ -151,44 +151,20 @@ make.branches.aux.quasse.fftC <- function(control, sampling.f) {
   function(i, len, pars) {
     if ( i > n )
       stop("No such partition")
-    ndat <- length(pars$lambda)
+    if ( length(len) > 1 )
+      stop("Can't do this any more.")
 
-    ## TODO: This is a hack - the depths should be sanitised before
-    ## getting here.
-    ## This is a bit of a hack.  However, the times should arrive more
-    ## or less sorted, and any differences should be rounding error.
-    ## This will perform badly where there are a number of very short
-    ## branches that have come out of a polytomy resolution.
-    dl <- diff(len)
-    if ( length(len) > 1 ) {
-      if ( min(dl) < -1e-8 ) 
-        stop("Invalid input")
-      else if ( min(dl) < 0 ) {
-        j <- which(dl < 0)
-        len[j+1] <- len[j]
-        if ( any(diff(len) < 0) )
-          stop("STILL have invalid input")
-      }
-    }
+    ndat.hi <- length(pars$hi$lambda)
+    npad.hi <- nx.hi - ndat.hi
+    npad.lo <- nx.lo - length(pars$lo$lambda)
 
-    is.hi <- len < tc
-    is.lo <- !is.hi
-    ans <- vector("list", length(len))
-    
-    if ( any(is.hi) ) {
-      len.hi <- len[is.hi]
-      y <- c(rep(e0[i], ndat), rep(0, nx.hi - ndat))
-      for ( j in seq_along(len.hi) )
-        ans[is.hi][[j]] <- y <-
-          pde.hi(y, len.hi[j], pars$hi, 0)[,1]
-    }
-
-    if ( any(is.lo) ) {
-      len.lo <- len[is.lo]
-      y <- c(rep(e0[i], ndat), rep(0, nx.lo - ndat))
-      for ( j in seq_along(len.lo) )
-        ans[is.lo][[j]] <- y <-
-          pde.lo(y, len.lo[j], pars$lo, 0)[,1]
+    y <- rep(c(e0[i], 0), c(ndat.hi, npad.hi))
+    if ( len < tc ) {
+      ans <- pde.hi(y, len,    pars$hi, 0 )[,1]
+    } else {
+      y   <- pde.hi(y, tc,     pars$hi, 0 )[,1]
+      y   <- c(y[pars$tr], rep(0, npad.lo))
+      ans <- pde.lo(y, len-tc, pars$lo, tc)[,1]
     }
     ans
   }

@@ -25,8 +25,8 @@ check.f.t <- function(f) {
 }
 
 make.initial.conditions.t <- function(initial.conditions) {
-  function(init, pars, t, is.root=FALSE)
-    initial.conditions(init, pars(t), t, is.root)
+  function(init, pars, t, idx)
+    initial.conditions(init, pars(t), t, idx)
 }
 
 ## This is identical to the version in diversitree-branches.R, except
@@ -118,14 +118,14 @@ make.ode.branches.t <- function(model, dll, neq, np, comp.idx, control) {
   br <- make.ode.branches(model, dll, neq, np, comp.idx, control)
   e <- new.env()
   if ( control$backend == "deSolve" ) {
-    function(y, len, pars, t0)
-      br(y, len, list(pars, e), t0)
+    function(y, len, pars, t0, idx)
+      br(y, len, list(pars, e), t0, idx)
   } else {
     setfunc <- sprintf("r_set_tfunc_%s", model)
     dummy <- rep(0.0, np)
-    function(y, len, pars, t0) {
+    function(y, len, pars, t0, idx) {
       .Call(setfunc, pars, e, PACKAGE=dll)
-      br(y, len, dummy, t0)
+      br(y, len, dummy, t0, idx)
     }
   }
 }

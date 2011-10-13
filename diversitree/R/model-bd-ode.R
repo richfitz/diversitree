@@ -83,7 +83,7 @@ initial.tip.bd.ode <- function(cache) {
 ## 6: ll: internal
 
 ## 7: initial.conditions:
-initial.conditions.bd.ode <- function(init, pars, t, is.root=FALSE)
+initial.conditions.bd.ode <- function(init, pars, t, idx)
   c(init[1,1], init[2,1] * init[2,2] * pars[1])
 
 ## 8: branches

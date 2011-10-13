@@ -18,7 +18,6 @@ toC.cache <- function(cache, comp.idx) {
          tip.target= toC.int(x$target[order(len)]))
   }
   cache$y <- lapply(cache$y, f)
-  
 
   cache$children <- toC.int(t(cache$children))
   cache$parent   <- toC.int(cache$parent)

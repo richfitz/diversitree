@@ -150,7 +150,7 @@ make.ode <- function(func, dllname, initfunc, ny, safe=FALSE) {
                                                  fields="Version"))
     }
     ## Update here when deSolve is updated.
-    max.deSolve <- package_version("1.10")
+    max.deSolve <- package_version("1.10-3")
     if ( vers > max.deSolve ) {
       str <- paste("diversitree is not known to work with deSolve > ",
                    max.deSolve, "\n\tfalling back on slow version")

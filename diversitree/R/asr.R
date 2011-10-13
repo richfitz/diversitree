@@ -84,12 +84,12 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
       y.in <- branch.init[,nd]
 
       for ( i in anc.nd ) {
-        ans <- branches(y.in, len[i], pars, depth[i])
+        ans <- branches(y.in, len[i], pars, depth[i], i)
         lq[i] <- ans[[1]]
         branch.base[,i] <- ans[[2]]
         j <- parent[i]
         y.in <- initial.conditions(branch.base[,children[j,]], pars,
-                                   depth[j], j == root.idx)
+                                   depth[j], j)
         branch.init[,j] <- y.in
       }
 

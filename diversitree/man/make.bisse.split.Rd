@@ -8,7 +8,7 @@
 
 \usage{
 make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
-                 sampling.f=NULL, nt.extra=10, control=list())
+                 sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())
 }
 
 \arguments{
@@ -36,6 +36,12 @@ make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
   
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}
+
+  \item{strict}{The \code{states} vector is always checked to make sure
+    that the values are 0 and 1 only.  If \code{strict} is \code{TRUE}
+    (the default), then the additional check is made that \emph{every}
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing.}
   
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
@@ -73,11 +79,8 @@ nodes.i <- match(nodes, phy$node.label) + length(phy$tip.label)
 
 nodelabels(node=nodes.i, pch=19, cex=2, col="#FF000099")
 
-## Split these half way down the branch, by specifying split.t:
-t0 <- branching.times(phy)[nodes.i - length(phy$tip.label)]
-t1 <- t0 + phy$edge.length[match(nodes.i, phy$edge[,2])]
-split.t <- (t0 + t1) / 2
-rm(t0, t1)
+## Split these at the base of the branch
+split.t <- Inf
 
 ## To make a split BiSSE function, pass the node locations and times in:
 lik.s <- make.bisse.split(phy, phy$tip.state, nodes.i, split.t)

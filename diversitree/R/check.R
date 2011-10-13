@@ -128,6 +128,9 @@ check.sampling.f <- function(sampling.f, n) {
 check.sampling.f.split <- function(sampling.f, n, n.part) {
   if ( is.null(sampling.f) )
     rep(list(rep(1, n)), n.part)
+  else if ( n == 1 && is.numeric(sampling.f) &&
+           length(sampling.f == n.part) )
+    check.sampling.f(sampling.f, n.part)
   else if ( is.numeric(sampling.f) )
     rep(list(check.sampling.f(sampling.f, n)), n.part)
   else if ( is.list(sampling.f) )

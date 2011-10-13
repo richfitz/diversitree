@@ -9,10 +9,8 @@
 ## decent reference implementation of the calculations.
 
 ## 1: make
-make.bd.split <- function(tree, nodes, split.t, sampling.f=NULL,
+make.bd.split <- function(tree, nodes, split.t=Inf, sampling.f=NULL,
                           unresolved=NULL) {
-  if ( missing(split.t) )
-    split.t <- rep(Inf, length(nodes))
   cache <- make.cache.bd.split(tree, nodes, split.t, sampling.f,
                                unresolved)
   n.part <- cache$n.part
@@ -76,7 +74,7 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
 
   if ( !isTRUE(all.equal(unique(split.t), Inf, check.attr=FALSE)) )
     stop("split.t cannot yet be changed")
-  nodes <- check.split(tree, nodes, rep(Inf, length(nodes)))$nodes
+  nodes <- check.split(tree, nodes, split.t)$nodes
   n <- length(nodes)
 
   ## Process unresolved:
@@ -111,10 +109,9 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
     n.taxa[is.na(n.taxa)] <- 1
     z[match(seq_len(n.tip), z[,2]),"nt"] <- n.taxa
   }
-  
-  group <- make.split.phylo.vec(tree, nodes)[j]
-  group[n.tip + 1] <- 1 # Root always in group 1
-  z[,"group"] <- group
+
+  z[,"group"] <-
+    make.cache.split(tree, list(), nodes[-1], split.t)$group.branches
 
   obj <- list(z=z, n.taxa=n.tip, n.node=tree$Nnode,
               sampling.f=sampling.f, t.root=max(bt),

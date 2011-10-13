@@ -189,7 +189,9 @@ S3method(make.asr.stoch, mkn)
 ## ASR/xxSSE
 S3method(make.asr.marginal, bisse)
 S3method(make.asr.marginal, bisse.t)
+S3method(make.asr.marginal, bisse.split)
 S3method(make.asr.marginal, musse)
+S3method(make.asr.marginal, musse.split)
 
 ## Support for "clade.tree"s
 ## TODO: polytomies.to.clades -> clades.from.polytomies

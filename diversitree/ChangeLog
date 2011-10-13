@@ -1,3 +1,50 @@
+2011-10-13  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: bump to 0.8-1
+
+	* NAMESPACE: New asr methods declared
+
+	* R/asr-bisse-split.R, asr-musse-split.R: New asr methods
+
+	* R/asr-bisse.R: Minor clarification in code
+
+	* R/asr.R, R/model-bd-ode.R, R/model-bisse.R, R/model-geosse.R,
+	R/model-musse.R, R/t.R, R/td.R:
+	branches() now takes 'index' argument.  Added.
+
+	* R/check.R: sampling.f check was incorrect.
+
+	* R/diversitree-branches.R: Added index argument to branches, and
+	other cleanup.
+
+	* R/model-bd-split.R: Cleanup
+
+	* R/model-bd-t.R: unresolved and sampling.f arguments were
+	transposed when checking, disabling sampling.f != 1. (reported by
+	Dan Rabosky).
+
+	* R/model-bisse-split.R, R/model-musse-split.R,
+	R/model-quasse-split.R: Reworked; should be more reliable now.
+
+	* R/model-quasse-common.R: Now allows different diffusion
+	parameters.
+
+	* R/model-quasse-fftC.R: Simpify away an old optimisation.
+
+	* R/model-quasse.R: Minor tidyup.
+
+	* R/plot-alt-extra.R, R/plot-alt-util.R: Pass additional arguments
+	of group.label.tip.rad() to radial.text() to text()
+
+	* R/split.R: Totally reworked.
+
+	* R/util.R: Updated to work with deSolve 1.10-3
+
+	* configure.ac: Revert to controllable strict gcc checking (off
+	again by default).
+
+	* man/*: Assorted documentation updates.
+
 2011-07-11  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: bump to 0.7-6
@@ -61,7 +108,7 @@
 	* R/model-mkn.R: Cleanup, especially parameter handling.
 
 	* Other files: General cleanup
-	
+
 2011-06-01  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* Many files: reworked internals to use matrices rather than lists

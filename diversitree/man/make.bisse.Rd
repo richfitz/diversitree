@@ -200,10 +200,6 @@ lik(pars) # -159.71
 ## birth-death model (uses \link{make.bd}).
 p <- starting.point.bisse(phy)
 
-%% This is code for better getting at the q's
-%% system.time(find.mle(constrain(make.mk2(phy, phy$tip.state), q10 ~
-%% q01), .1)$par)
-
 ## Start an ML search from this point.  This takes some time (~7s)
 fit <- find.mle(lik, p, method="subplex")
 logLik(fit) # -158.6875

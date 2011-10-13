@@ -23,9 +23,6 @@ make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
   else
     branches <- make.branches.bisse(cache, control)
 
-  ## Should fix this at some point, but it will be for the use of
-  ## "split" methods; the unresolved clade bit will be so slow
-  ## compared with this speedup.
   if ( backend == "CVODES" && !is.null(cache$unresolved) )
     stop("Cannot yet use CVODES backend with unresolved clades")
 
@@ -164,7 +161,8 @@ initial.tip.bisse <- function(cache) {
 ## 6: ll
 
 ## 7: initial.conditions:
-initial.conditions.bisse <- function(init, pars, t, is.root=FALSE)
+## Note that we ignore both 't' and 'idx'.
+initial.conditions.bisse <- function(init, pars, t, idx)
   c(init[c(1,2),1],
     init[c(3,4),1] * init[c(3,4),2] * pars[c(1,2)])
 

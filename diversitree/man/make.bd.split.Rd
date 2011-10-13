@@ -50,8 +50,8 @@ pars <- c(.1, .03)
 phy <- trees(pars, "bd", max.taxa=30)[[1]]
 
 ## Here is the phylogeny:
-plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
-     no.margin=TRUE)
+#plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
+#     no.margin=TRUE)
 
 ## Construct the plain likelihood function as a benchmark:
 lik <- make.bd(phy)
@@ -66,7 +66,7 @@ nodes.i <- match(nodes, phy$node.label) + length(phy$tip.label)
 nodelabels(node=nodes.i, pch=19, cex=2, col="#FF000099")
 
 ## To make a split likelihood function, pass the node locations and times in:
-lik.s <- make.bd.split(phy, nodes.i)
+lik.s <- make.bd.split(phy, nodes)
 
 ## The parameters must be a list of the same length as the number of
 ## partitions.  Partition '1' is the root partition, and partition i is

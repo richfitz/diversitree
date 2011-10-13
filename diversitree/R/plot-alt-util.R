@@ -64,7 +64,7 @@ sectors <- function(theta0, theta1, r0, r1, ..., np=1000) {
 }
 
 radial.text <- function(r, theta, labels, cex=1, col="black",
-                        font=1) {
+                        font=1, ...) {
   n <- length(labels)
   col <- rep(col, length=n)
   x <- r * cos(theta)
@@ -80,5 +80,5 @@ radial.text <- function(r, theta, labels, cex=1, col="black",
   
   for ( i in seq_len(n) )
     text(x[i], y[i], labels[i], cex=cex, col=col[i],
-         font=font, srt=srt[i], adj=adj[i])
+         font=font, srt=srt[i], adj=adj[i], ...)
 }

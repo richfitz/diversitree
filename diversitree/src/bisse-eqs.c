@@ -153,3 +153,34 @@ int derivs_bisse_t_cvode(realtype t, N_Vector y, N_Vector ydot,
 		    NV_DATA_S(ydot));
   return 0;
 }
+
+/* Auxilliary (just compute E) */
+void initmod_bisse_aux(void (* odeparms)(int *, double *)) {
+  int N = 6;
+  odeparms(&N, parms_bisse);
+}
+
+void do_derivs_bisse_aux(double *pars, double *y, double *ydot) {
+  double E0 = y[0], E1 = y[1];
+  const double la0 = pars[0], la1 = pars[1], 
+    mu0 = pars[2], mu1=pars[3],
+    q01 = pars[4], q10 = pars[5];
+
+  ydot[0] = -(mu0 + q01 + la0) * E0 + la0 * E0 * E0 + mu0 + q01 * E1;
+  ydot[1] = -(mu1 + q10 + la1) * E1 + la1 * E1 * E1 + mu1 + q10 * E0;
+}
+
+/* deSolve */
+void derivs_bisse_aux(int *neq, double *t, double *y, double *ydot, 
+		      double *yout, int *ip) {
+  do_derivs_bisse_aux(parms_bisse, y, ydot);
+}
+
+/* CVODES */
+int derivs_bisse_aux_cvode(realtype t, N_Vector y, N_Vector ydot,
+			   void *user_data) {
+  do_derivs_bisse_aux(((UserData*) user_data)->p,
+		      NV_DATA_S(y),
+		      NV_DATA_S(ydot));
+  return 0;
+}

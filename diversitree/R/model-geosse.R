@@ -155,7 +155,7 @@ initial.tip.geosse <- function(cache) {
 ## 6: ll
 
 ## 7: initial.conditions:
-initial.conditions.geosse <- function(init, pars, t, is.root=FALSE) {
+initial.conditions.geosse <- function(init, pars, t, idx) {
   ## E.0, E.1, E.2
   e <- init[c(1,2,3),1]
 

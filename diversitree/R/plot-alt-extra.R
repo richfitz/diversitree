@@ -7,7 +7,7 @@
 ## for the bar and label.
 group.label.tip.rad <- function(obj, lab, col.bar, col.lab, lwd=1,
                                 offset.bar=0, offset.lab=0, cex=1,
-                                font=1) {
+                                font=1, ...) {
   n.taxa <- obj$n.taxa
   n <- obj$n.spp
   if ( is.null(n.taxa) )
@@ -27,5 +27,5 @@ group.label.tip.rad <- function(obj, lab, col.bar, col.lab, lwd=1,
 
   if ( any(!is.na(col.lab)) )
     radial.text(r.lab, tm, sort(unique(lab)),
-                col=col.lab, font=font, cex=cex)
+                col=col.lab, font=font, cex=cex, ...)
 }

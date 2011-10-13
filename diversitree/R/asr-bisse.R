@@ -7,7 +7,7 @@ make.asr.marginal.bisse <- function(lik, ...) {
 
   use.CVODES <- is.null(branches)
 
-  if ( is.null(branches) ) {
+  if ( use.CVODES ) {
     control <- e$control
     if ( control$backend != "CVODES" )
       stop("'branches' missing from likelihood function")      

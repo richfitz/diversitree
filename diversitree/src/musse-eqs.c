@@ -147,3 +147,43 @@ int derivs_musse_t_cvode(realtype t, N_Vector y, N_Vector ydot,
 		    NV_DATA_S(ydot));
   return 0;
 }
+
+/* Auxilliary (just compute E) */
+void initmod_musse_aux(void (* odeparms)(int *, double *)) {
+  DL_FUNC get_deSolve_gparms = 
+    R_GetCCallable("deSolve", "get_deSolve_gparms");
+  parms_musse = REAL(get_deSolve_gparms());
+} 
+
+void do_derivs_musse_aux(int k, double *pars, double *y, double *ydot) {
+  double *e = y, *dEdt = ydot, ei;
+  double *lambda = pars, *mu = pars + k, *Q = pars + 2*k;
+  int i;
+
+  for ( i = 0; i < k; i++ ) {
+    ei = e[i];
+    dEdt[i] = mu[i] - (lambda[i] + mu[i]) * ei + lambda[i] * ei * ei;
+  }
+
+  do_gemm2(Q, k, k, y, k, 1, ydot);
+}
+
+/* deSolve */
+void derivs_musse_aux(int *neq, double *t, double *y, double *ydot, 
+		      double *yout, int *ip) {
+  do_derivs_musse_aux(*neq, parms_musse, y, ydot);
+}
+
+/* CVODES */
+/* TODO: This might not be the correct number of equations for the
+   CVODES version, as the data->neq is wrong... */
+int derivs_musse_aux_cvode(realtype t, N_Vector y, N_Vector ydot,
+			   void *user_data) {
+  const UserData *data = (UserData*) user_data;
+  do_derivs_musse_aux(data->neq,
+		      data->p,
+		      NV_DATA_S(y),
+		      NV_DATA_S(ydot));
+  return 0;
+}
+

@@ -20,7 +20,7 @@ make.bd.t <- function(tree, functions, sampling.f=NULL,
   if ( control$backend == "CVODES" )
     stop("Cannot use CVODES backend with bd.t")
   
-  cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
+  cache <- make.cache.bd.ode(tree, unresolved, sampling.f)
 
   if ( is.null(names(functions)) && length(functions) == 2 )
     names(functions) <- argnames.bd(NULL)

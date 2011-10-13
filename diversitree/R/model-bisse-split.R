@@ -13,53 +13,49 @@
 ## 1: make
 make.bisse.split <- function(tree, states, nodes, split.t,
                              unresolved=NULL, sampling.f=NULL,
-                             nt.extra=10, control=list()) {
+                             nt.extra=10, strict=TRUE,
+                             control=list()) {
   control <- check.control.ode(control)
-  if ( control$backend == "CVODES" )
-    stop("Cannot use CVODES backend with bisse.split")
+  backend <- control$backend
+  if ( backend == "CVODES" && !is.null(cache$unresolved) )
+    stop("Cannot yet use CVODES backend with unresolved clades")
 
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
-                                  unresolved, sampling.f, nt.extra)
-
-  branches <- make.branches.bisse(cache, control)
-  branches.aux <- make.branches.aux.bisse(cache, control)
+                                  unresolved, sampling.f, nt.extra,
+                                  strict)
+  if ( backend == "CVODES" )
+    stop("This will take some work...")
+  else {
+    branches.main <- make.branches.bisse(cache, control)
+    branches.aux <- make.branches.bisse.aux(cache, control)
+    branches <- make.branches.split(cache, branches.main, branches.aux)
+    initial.conditions <-
+      make.initial.conditions.split(cache, initial.conditions.bisse)
+  }
 
   n.part <- cache$n.part
-
+  unresolved <- cache$unresolved
+  
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    pars <- check.par.multipart(pars, n.part, 6)
-    pars.n <- unlist(pars)
-    if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
-      return(-Inf)
+    pars <- check.par.bisse.split(pars, n.part)
 
-    for ( i in seq_len(n.part) ) {
-      unresolved.i <- cache$cache[[i]]$unresolved
-      if ( !is.null(unresolved.i) )
-        cache$cache[[i]]$preset <-
-          branches.unresolved.bisse(pars[[i]], unresolved.i)
-    }
+    if ( !is.null(root.p) &&  root != ROOT.GIVEN )
+      warning("Ignoring specified root state")
 
-    ans <- all.branches.split(pars, cache, initial.conditions.bisse,
-                              branches, branches.aux, FALSE)
+    if ( !is.null(unresolved) )
+      cache$preset <-
+        branches.unresolved.bisse.split(pars, unresolved)
 
-    vals <- ans[[1]]$base
-    lq <- unlist(lapply(ans, "[[", "lq"))
-
-    pars.root <- pars[[1]]
-    root.p <- root.p.xxsse(vals, pars.root, root, root.p)
-    loglik <- root.xxsse(vals, pars.root, lq, condition.surv, root.p)
-
-    if ( intermediates ) {
-      ans$root.p <- root.p
-      attr(loglik, "intermediates") <- ans
-      attr(loglik, "vals") <- vals
-    }
-    loglik
+    if ( backend == "CVODES" )
+      stop("Not yet done...")
+    else
+      ll.xxsse.split(pars, cache, initial.conditions, branches,
+                     condition.surv, root, root.p, intermediates)
   }
 
   class(ll) <- c("bisse.split", "bisse", "function")
-  attr(ll, "n.part") <- cache$n.part
+  attr(ll, "n.part") <- cache$n.part  
   ll
 }
 
@@ -91,46 +87,41 @@ find.mle.bisse.split <- function(func, x.init, method, fail.value=NA,
 ## 5: make.cache (initial.tip, root)
 make.cache.bisse.split <- function(tree, states, nodes, split.t,
                                    unresolved=NULL, sampling.f=NULL,
-                                   nt.extra=10) {
-  ## 1: tree
-  tree <- check.tree(tree, node.labels=TRUE)
+                                   nt.extra=10, strict=TRUE) {
+  cache <- make.cache.bisse(tree, states, unresolved, NULL, nt.extra,
+                            strict)
+  cache <- make.cache.split(tree, cache, nodes, split.t)
+  cache$sampling.f <- check.sampling.f.split(sampling.f, 2, cache$n.part)
+  cache$aux.i <- 1:2
 
-  ## 2: states:
-  states <- check.states(tree, states)
+  unresolved <- cache$unresolved
+  n.part <- cache$n.part
 
-  ## Check 'sampling.f'
-  if ( !is.null(sampling.f) && !is.null(unresolved) )
-    stop("Cannot specify both sampling.f and unresolved")
-  n <- length(nodes) + 1 # +1 for base group
-  sampling.f <- check.sampling.f.split(sampling.f, 2, n)
+  if ( !is.null(unresolved) ) {
+    ## This ensures that the calculations should be slightly more
+    ## identical by running out to the same number of species as for
+    ## the non-split version.  Where one group mostly has smaller
+    ## clades, this will slow the calculations down more than needed
+    ## (will drop this after things settle down).
+    Nc.tot <- max(unresolved$Nc) + unresolved$nt.extra
 
-  cache <- make.cache.split(tree, nodes, split.t)
-
-  for ( i in seq_along(cache$cache) ) {
-    x <- cache$cache[[i]]
-    x$ny <- 4L
-    x$k <- 2L
-    x$tip.state  <- states[x$tip.label]
-    x$sampling.f <- sampling.f[[i]]
-
-    if ( !is.null(unresolved) ) {
-      ok <- unresolved$tip.label %in% x$tip.label
-      if ( any(ok) ) {
-        x$unresolved <-
-          check.unresolved(x, unresolved[ok,], nt.extra)
-        x$tips <- x$tips[-x$unresolved$i]
-        x$tip.label <- x$tip.label[-x$unresolved$i]
-        x$tip.state <- x$tip.state[-x$unresolved$i]
-      }
+    grp <- cache$group.branches[unresolved$target]
+    tmp <- data.frame(unresolved[names(unresolved) != "nt.extra"],
+                                   stringsAsFactors=FALSE)
+    unresolved.split <- vector("list", n.part)
+    
+    for ( i in seq_len(n.part)[tabulate(grp, n.part) > 0] ) {
+      j <- grp == i
+      unresolved.split[[i]] <- as.list(tmp[j,])
+      unresolved.split[[i]]$nt.extra <-
+        Nc.tot - max(unresolved.split[[i]]$Nc)
     }
 
-    if ( x$n.tip > 0 )
-      x$y <- initial.tip.bisse(x)
-    cache$cache[[i]] <- x
+    cache$unresolved <- unresolved.split
   }
 
-  cache$sampling.f <- sampling.f
-  cache$aux.i <- 1:2
+  cache$y <- make.initial.tip.xxsse.split(cache)
+  
   cache
 }
 
@@ -138,15 +129,45 @@ make.cache.bisse.split <- function(tree, states, nodes, split.t,
 
 ## 8: branches: from bisse.  However the 'branches.aux' function is
 ## required to compute the E0, E1 values after a partition.
-make.branches.aux.bisse <- function(cache, control) {
-  idx.e <- 1:2
-  y <- lapply(cache$sampling.f, function(x) c(1-x, 1, 1))
-  n <- length(y)
-  branches <- make.branches.bisse(cache, control)
+make.branches.bisse.aux <- function(cache, control) {
+  neq <- 2L
+  np <- 6L
+  comp.idx <- integer(0)
+  branches <- make.ode.branches("bisse_aux", "diversitree", neq, np,
+                                comp.idx, control)
+  y <- lapply(cache$sampling.f, function(x) 1-x)
+  n <- length(y)  
 
   function(i, len, pars) {
     if ( i > n )
       stop("No such partition")
-    branches(y[[i]], len, pars, 0)[[2]][idx.e,,drop=FALSE]
+    branches(y[[i]], len, pars, 0)[[2]]
   }
 }
+
+branches.unresolved.bisse.split <- function(pars, unresolved) {
+  browser()
+  ans <- list(target=integer(0), lq=numeric(0),
+                 base=matrix(NA, 4, 0))
+  for ( i in seq_along(pars) ) {
+    unresolved.i <- unresolved[[i]]
+    if ( !is.null(unresolved.i) ) {
+      tmp <- branches.unresolved.bisse(pars[[i]], unresolved.i)
+      ans$target <- c(ans$target, tmp$target)
+      ans$lq <- c(ans$lq, tmp$lq)
+      ans$base <- cbind(ans$base, tmp$base)
+    }
+  }
+  ans
+}
+
+check.par.musse.split <- function(pars, n.part, k) {
+  pars <- check.par.multipart(pars, n.part, k*(k+1))
+  pars.n <- unlist(pars) # for checking only...
+  if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
+    stop("All parameters must be nonnegative")
+  pars
+}
+
+check.par.bisse.split <- function(pars, n.part)
+  check.par.musse.split(pars, n.part, 2)
