@@ -109,7 +109,6 @@ constrain <- function(f, ..., formulae=NULL, names=argnames(f),
   for ( formula in formulae ) {
     res <- constrain.parse(formula, names.lhs, names.rhs, extra)
     if ( attr(res, "lhs.is.target") ) {
-      cat("experimental code\n")
       i <- which(sapply(rels, function(x) identical(x, res[[1]])))
       rels[i] <- res[[2]]
 
