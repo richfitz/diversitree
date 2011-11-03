@@ -46,8 +46,9 @@ constrain.parse <- function(formula, names.lhs, names.rhs,
   ## Checking the lhs is easy: is the lhs in the list of allowable
   ## names and of length 1?  Anything that does not match this is
   ## invalid.
-  if ( !is.name(lhs) || is.na(match(as.character(lhs), names.lhs)) )
+  if ( !is.name(lhs) )
     stop("Invalid target on LHS of formula" )
+  lhs.is.target <- is.na(match(as.character(lhs), names.lhs))
 
   ## Checking the rhs is more difficult.  We are OK if any of the
   ## following is met:
@@ -75,7 +76,9 @@ constrain.parse <- function(formula, names.lhs, names.rhs,
   } else if ( !is.numeric(rhs) ) {
     stop("RHS must be expression, variable or number")
   }
-  list(lhs, rhs)
+  res <- list(lhs, rhs)
+  attr(res, "lhs.is.target") <- lhs.is.target
+  res
 }
 
 ## First up, consider the one-shot case: don't worry about incremental
@@ -105,6 +108,21 @@ constrain <- function(f, ..., formulae=NULL, names=argnames(f),
   
   for ( formula in formulae ) {
     res <- constrain.parse(formula, names.lhs, names.rhs, extra)
+    if ( attr(res, "lhs.is.target") ) {
+      cat("experimental code\n")
+      i <- which(sapply(rels, function(x) identical(x, res[[1]])))
+      rels[i] <- res[[2]]
+
+      ## This will not work with *expressions* involving the LHS; that
+      ## would require rewriting the expressions themselves (which
+      ## would not be too hard to do).  But for now let's just cause
+      ## an error...
+      lhs.txt <- as.character(res[[1]])
+      if ( any(sapply(rels, function(x) lhs.txt %in% all.vars(x))) )
+        stop(sprintf("lhs (%s) is in an expression and can't be constrained",
+                     lhs.txt))
+    }
+    
     names.lhs <- setdiff(names.lhs, unlist(lapply(res, all.vars)))
     names.rhs <- setdiff(names.rhs, as.character(res[[1]]))
     rels <- c(rels, structure(res[2], names=as.character(res[[1]])))

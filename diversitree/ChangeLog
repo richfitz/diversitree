@@ -1,3 +1,8 @@
+2011-11-03  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/constrain.R: Allow variables used as constraints (on the RHS)
+	to be themselves constrained (on the LHS).
+
 2011-10-13  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: bump to 0.8-1
