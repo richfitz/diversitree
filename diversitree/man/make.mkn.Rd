@@ -17,7 +17,7 @@
 
 \usage{
 make.mk2(tree, states, strict=TRUE, control=list())
-make.mkn(tree, states, k, use.mk2=FALSE, strict=TRUE, control=list())
+make.mkn(tree, states, k, strict=TRUE, control=list())
 }
 
 \arguments{
@@ -28,10 +28,6 @@ make.mkn(tree, states, k, use.mk2=FALSE, strict=TRUE, control=list())
   
   \item{k}{Number of states to model.}
   
-  \item{use.mk2}{Use Mk2 where \code{k==2} for a slight speedup?  This
-    is disabled by default to make likelihoods more comparable without
-    introducing approximation errors.}
-
   \item{strict}{The \code{states} vector is always checked to make sure
     that the values are integers on \code{0:1} (\code{mk2}) or
     \code{1:k} (\code{mkn}).  If \code{strict} is \code{TRUE} (the
@@ -41,7 +37,7 @@ make.mkn(tree, states, k, use.mk2=FALSE, strict=TRUE, control=list())
     for meristic characters) where allowing such models may be useful.}
   
   \item{control}{List of control parameters for the ODE solver.  See
-    details in \code{\link{make.bisse}}.}
+    Details below.}
 }
 
 \details{
@@ -95,6 +91,28 @@ make.mkn(tree, states, k, use.mk2=FALSE, strict=TRUE, control=list())
   11->3?).  To avoid this, the numbers are zero padded (so that the
   above would be q0113 or q1103 for 1->13 and 11->3 respectively).  It
   might be easier to rename the arguments in practice though.
+
+  The \code{control} argument controls how the calculations will be
+  carried out.  It is a list, which may contain elements in
+  \code{\link{make.bisse}}.  In addition, the list element \code{method}
+  may be present, which selects between three different ways of
+  computing the likelihood:
+  \itemize{
+    \item \code{method="exp"}: Uses a matrix exponentiation approach,
+    where all transition probabilities are computed (i.e., for a rate
+    matrix \eqn{Q} and time interval \eqn{t}, it computes \eqn{P =
+      exp(Qt)}).
+
+    \item \code{method="mk2"}: As for \code{exp}, but for 2 states only.
+    Faster, direct, calculations are available here, rather than
+    numerically computing the exponentiation.
+
+    \item \code{method="ode"}: Uses an ODE-based approach to compute
+    only the \eqn{k} variables over time, rather than the \eqn{k^2}
+    transition probabilities in the \code{exp} approach.  This will be
+    much more efficient when \code{k} is large.  The \code{CVODES}
+    backend is also available here.
+  }
 }
 
 \seealso{
@@ -104,6 +122,7 @@ make.mkn(tree, states, k, use.mk2=FALSE, strict=TRUE, control=list())
 }
 
 \examples{
+library(diversitree)
 ## Simulate a tree and character distribution.  This is on a birth-death
 ## tree, with high rates of character evolution and an asymmetry in the
 ## character transition rates.
@@ -125,7 +144,7 @@ fit.mk2 <- find.mle(lik, p)
 coef(fit.mk2)   # q10 >> q01
 logLik(fit.mk2) # -10.9057
 
-## This can also be done using the more general Mk-n (ignore warning).
+## This can also be done using the more general Mk-n.
 ## This uses an approximation for the likelihood calculations.  make.mkn
 ## assumes that states are numbered 1, 2, ..., k, so 1 needs to be added
 ## to the states returned by trees.
@@ -150,7 +169,14 @@ fit.mk2 <- find.mle(lik, p, root=ROOT.GIVEN, root.p=c(1,1))
 all.equal(fit.ape[c("rates", "loglik")], fit.mk2[1:2],
           check.attributes=FALSE, tolerance=1e-4)
 
-%% TODO: add examples for three state model and show equivancy to ape.
+## The ODE calculation method may be useful when there are a large
+## number of possible states (say, over 20).
+lik.ode <- make.mkn(phy, phy$tip.state + 1, 2,
+                    control=list(method="ode"))
+fit.ode <- find.mle(lik.ode, p)
+fit.ode[1:2]
+
+all.equal(fit.ode[-7], fit.mkn[-7], tolerance=1e-7)
 }
 
 \author{Richard G. FitzJohn}

@@ -1,4 +1,6 @@
 make.asr.marginal.mkn <- function(lik, ...) {
+  if ( inherits(lik, "mkn.ode") )
+    stop("ASR not yet possible with ode-based Mkn")
   k <- as.integer(attr(lik, "k"))
   states.idx <- seq_len(k)
   cache <- environment(lik)$cache
@@ -24,7 +26,7 @@ make.asr.marginal.mkn <- function(lik, ...) {
     else
       nodes.C <- toC.int(nodes + cache$n.tip)
 
-    res <- all.branches.mkn(f.pars(pars), cache)
+    res <- all.branches.mkn.exp(f.pars(pars), cache)
 
     .Call("r_asr_marginal_mkn", k, pars, nodes.C, cache.C, res,
           root.f, env, PACKAGE="diversitree")

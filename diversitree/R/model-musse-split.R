@@ -19,6 +19,7 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
 
   cache <- make.cache.musse.split(tree, states, k, nodes, split.t,
                                   sampling.f, strict)
+  cache$control <- check.control.split(control)
   n.part <- cache$n.part
  
   if ( backend == "CVODES" )

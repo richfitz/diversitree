@@ -33,7 +33,8 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
 
   y.init <- posterior(x.init, fail.value=NULL)
 
-  if ( !is.finite(y.init) || y.init == fail.value )
+  if ( !is.finite(y.init) ||
+      (!is.null(fail.value) && y.init == fail.value) )
     stop("Starting point must have finite probability")
 
   lower <- check.par.length(lower, npar)

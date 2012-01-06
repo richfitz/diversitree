@@ -100,6 +100,7 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
   
   xy <- pp.node.coords(x)
   xy.seg <- pp.coords(x, xy)
+ 
   lims <- pp.lim(x, xy, x.lim, y.lim, cex,
                  show.tip.label, label.offset + pad)
   plot(NA, type="n", xlim=lims$xlim, ylim=lims$ylim, xlab="",
@@ -113,6 +114,9 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
       x$tip.label <- gsub("_", " ", x$tip.label)
     pp.tiplabel(x, xy, label.offset, adj, cex, tip.color, font)
   }
+
+  if ( type == "fan" )
+    xy <- pp.coords.fix.xy(x, xy)
 
   ## This has all the arguments below for compatibility with ape.
   ret <- list(type=type, use.edge.length=use.edge.length,
@@ -186,6 +190,17 @@ pp.coords.fan <- function(phy, xy) {
   xy.seg$r0 <- xy.seg$x0
   xy.seg$r1 <- xy.seg$x1
   xy.seg
+}
+
+pp.coords.fix.xy <- function(phy, xy) {
+  n <- length(phy$tip.label) + sum(phy$n.taxa - 1)  
+  xy$theta <- xy$y / (n + 1) * 2 * pi
+  xy$r <- xy$x
+
+  xy$xx <- with(xy, r * cos(theta))
+  xy$yy <- with(xy, r * sin(theta))
+
+  xy
 }
 
 ## Compute limits for the plot.

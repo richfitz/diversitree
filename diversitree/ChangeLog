@@ -1,3 +1,85 @@
+2012-01-05  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bump to 0.8-3
+
+	* NAMESPACE: New exports for mkn.ode, mkn.multitrait, ou,
+	geosse.split, sim.character, and others.
+
+	* R/asr-mkn.R: Adjust to the changes to mkn backends.
+
+	* R/check.R: BM parameter checking, split control checking.
+
+	* R/constrain.R: Constrained functions now handle additional
+	arguments.
+
+	* R/diversitree-branches-C.R: Fixed bug in cache translation for
+	some models (was failing to run previously).
+
+	* R/model-bisse-split.R: Abstract checking.
+
+	* R/model-bm-direct.R: New direct BM likelihood calculation (from
+	bbm).
+
+	* R/model-bm-vcv.R: Previous BM calculation
+
+	* R/model-bm.R: Now make.bm() has method argument to switch
+	between direct and vcv.
+
+	* R/model-geosse-split.R: Started adding (still unchecked).
+
+	* R/model-mkn-exp.R: Prevous mkn version (matrix exponentiation)
+
+	* R/model-mkn-multitrait.R: Multitrait version of the Mk model,
+	done as for MuSSE.
+
+	* R/model-mkn-ode.R: New ODE-based Mkn integrator, useful for high
+	k.
+
+	* R/model-mkn.R: Allows switching between ode and exp version.
+
+	* R/model-mkn-ode.R: ODE based branch-by-branch version of the Mk
+	model.  This is needed for very large trait space where it is
+	much more efficient to compute exp(Qt).v without storing
+	Pij=exp(Qt) directly.
+
+	* R/model-mkn.R: Allow switching backends.
+
+	* R/model-musse-multitrait.R: Change mcmc defaults
+
+	* R/model-musse-split.R: Abstract checking
+
+	* R/model-ou.R: Branch-by-branch calculation of OU, from bbm.
+
+	* R/model-quasse-common.R: Bring up to date with BM changes.
+
+	* R/model-quasse-{fftC,fftR,mol}.R: Bunchn of changes to handling
+	of badly behaved branches -- now split branches into parts if
+	integration fails.
+
+	* R/model-quasse-split.R: Now does caching branches so that only
+	some parts of the variables may need recomputing.  Will be
+	particularly useful during MCMC and ML searches with large
+	models.
+
+	* R/plot-alt.R: Fix x/y coordinates for fan plots.
+
+	* R/sim-character.R: Character simulation code.
+
+	* R/simulate-musse.R: Fixed bug that caused error when empty tree
+	was generated.
+
+	* R/split.R: Changes to allow caching branches.
+
+	* R/util.R: Uniform prior, and default setting function (modifies
+	a function's formals).
+
+	* man/*: Documentation updates.
+
+	* src/cvodes.c: Fixed compilation-preventing bug (reported by Jos
+	Kafer).
+
+	* src/mkn-eqs.c: Required support for the ODE based Mkn model.
+
 2011-11-03  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/constrain.R: Allow variables used as constraints (on the RHS)

@@ -28,9 +28,14 @@ make.pde.quasse.fftR <- function(nx, dx, dt.max, nd) {
     if ( !is.matrix(y) )
       y <- matrix(y, nx, nd)
 
-    quasse.integrate.fftR(y, pars$lambda, pars$mu, pars$drift,
-                          pars$diffusion, nt, dt, nx, ndat, dx,
-                          padding[1], padding[2])
+    ans <- quasse.integrate.fftR(y, pars$lambda, pars$mu, pars$drift,
+                                 pars$diffusion, nt, dt, nx, ndat, dx,
+                                 padding[1], padding[2])
+    ## Do the log compensation here, to make the careful calcuations
+    ## easier later.
+    q <- sum(ans[,2]) * dx
+    ans[,2] <- ans[,2] / q
+    list(log(q), ans)
   }
 }
 

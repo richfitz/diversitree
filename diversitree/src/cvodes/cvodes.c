@@ -8946,7 +8946,9 @@ void cvProcessError(CVodeMem cv_mem,
 
 #ifndef NO_FPRINTF_OUTPUT
     fprintf(stderr, "\n[%s ERROR]  %s\n  ", module, fname);
-    fprintf(stderr, msg);
+    /* This change to CVODES sources needed to compile on
+       security-hardened gcc versions */
+    fprintf(stderr, "%s", msg);
     fprintf(stderr, "\n\n");
 #endif
 

@@ -34,8 +34,8 @@ make.cache.split <- function(phy, cache, nodes, split.t) {
   cache$nodes <- tmp$nodes
   cache$group.nodes <- tmp$group.nodes
   cache$group.branches <- tmp$group.branches
-  cache$split.with.edge <- tmp$split.with.edge  
-  
+  cache$split.with.edge <- tmp$split.with.edge
+
   cache$n.part <- length(nodes)
   cache$aux.use <- rep(FALSE, length(cache$group.branches))
   cache$aux.use[nodes[-1]] <- TRUE
@@ -84,18 +84,18 @@ split.group <- function(phy, nodes, split.t) {
        split.with.edge=split.with.edge)
 }
 
-## TODO:
-## This function confuses me; I can't think of a time where we would
-## compute a set of branches with more than one type in it.
 make.branches.split <- function(cache, branches, branches.aux) {
   group <- cache$group.branches
   split.with.edge <- cache$split.with.edge
   aux.use <- cache$aux.use
   aux.i <- cache$aux.i
-  
+
+  branches.c     <- make.caching.branches(cache, branches)
+  branches.aux.c <- make.caching.branches.aux(cache, branches.aux)
+
   function(y, len, pars, t0, idx) {
     g <- group[idx]
-    
+
     if ( length(len) == 1 ) {
       ## 1: This might be an internal edge, so it is possible that
       ## there are auxilliary variables that need computing.
@@ -105,28 +105,30 @@ make.branches.split <- function(cache, branches, branches.aux) {
 
       if ( !aux.use[idx] ) {
         ## Normal case: just run the branch
-        branches(y, len, p, t0, idx)
+        branches.c(y, len, p, t0, idx)
       } else if ( split.with.edge[g] ) {
         ## This is a join.  In this one here, the edge also has the
         ## derived character state:
-        ans <- branches(y, len, p, t0, idx)
+        ans <- branches.c(y, len, p, t0, idx)
+
         g.parent <- group[cache$parent[idx]]
-        aux <- branches.aux(g.parent, t0+len, pars[[g.parent]])
+        aux <- branches.aux.c(g.parent, t0+len, pars[[g.parent]], idx)
         if ( is.list(ans) )
           ans[[2]][aux.i] <- aux
         else
           ans[-1][aux.i] <- aux
+
         ans # return
       } else {
         ## Also a join, but now the edge is in the ancestral character
         ## state:
-        y[aux.i] <- branches.aux(g, t0, p)
-        branches(y, len, p, t0, idx)
+        y[aux.i] <- branches.aux.c(g, t0, p, idx)
+        branches.c(y, len, p, t0, idx)
       }
     } else if ( length(unique(g)) == 1 ) {
       ## 2: This must be a set of tips, but it is only of one type, so
       ## let's do it simply.
-      branches(y, len, pars[[g[1]]], t0, idx)
+      branches.c(y, len, pars[[g[1]]], t0, idx)
     } else {
       ## 3: This is a set of tips that have more than one group type
       ## in it, so loop over the different group types.
@@ -139,7 +141,7 @@ make.branches.split <- function(cache, branches, branches.aux) {
 
         for ( g.i in seq_along(grp) ) {
           j <- i[[g.i]]
-          tmp <- branches(y, len[i[[g.i]]], pars[[grp[g.i]]], t0, idx[j])
+          tmp <- branches.c(y, len[i[[g.i]]], pars[[grp[g.i]]], t0, idx[j])
           lq[j] <- tmp[[1]]
           ans[,j] <- tmp[[2]]
         }
@@ -148,7 +150,7 @@ make.branches.split <- function(cache, branches, branches.aux) {
         ans <- vector("list", length(len))
         for ( g.i in seq_along(grp) ) {
           j <- i[[g]]
-          ans[j] <- branches(y, len[i[[g]]], pars[[grp[g]]], t0, idx[j])
+          ans[j] <- branches.c(y, len[i[[g]]], pars[[grp[g]]], t0, idx[j])
         }
         ans
       }
@@ -166,7 +168,10 @@ ll.xxsse.split <- function(pars, cache, initial.conditions,
                            branches, condition.surv, root, root.p,
                            intermediates) {
   ## always pars[[1]], but being safe...
-  pars.root <- pars[[cache$group.nodes[cache$root]]] 
+  pars.root <- pars[[cache$group.nodes[cache$root]]]
+
+  if ( cache$control$caching.branches )
+    caching.branches.set.pars(pars, branches)
 
   ans <- all.branches.matrix(pars, cache, initial.conditions, branches)
   vals <- ans$init[,cache$root]
@@ -206,4 +211,122 @@ make.initial.tip.xxsse.split <- function(cache) {
     }
   }
   unlist(out, FALSE)
+}
+
+## The first of these that I'll do is fully passive.  It checks to
+## see if the parameters and input are identical.  This should be
+## the most basic, and most foolproof.  It may not be the fastest
+## though, as some of these checks add overhead.  The use of
+## identical should keep things fairly fast though.
+
+## TODO: We only really need to bother checking the variables for
+## cases where the group has a descendent.
+
+## A caching all.branches:
+all.branches.caching <- function(pars, cache, initial.conditions,
+                                 branches, branches.aux,
+                                 type="matrix") {
+  if ( type == "matrix" )
+    res <- all.branches.matrix(pars, cache, initial.conditions, branches)
+  else
+    res <- all.branches.list(pars, cache, initial.conditions, branches)
+
+  ## Now, update the environment of the branches and branches.aux
+  ## functions with the parameters used and the results:
+  e <- 
+  e.aux <- environment(branches.aux)
+
+  environment(branches)$prev.pars <-
+    environment(branches.aux)$prev.pars <- pars
+
+  res
+}
+
+
+## I want to make caching versions of the branches function.
+caching.branches.set.pars <- function(p, branches, branches.aux) {
+  e <- environment(branches)
+  e.b <- environment(e$branches.c)
+  e.a <- environment(e$branches.aux.c)
+
+  e.a$pars.same <- e.b$pars.same <- i <-
+    mapply(identical, p, e.b$prev.pars)
+  e.a$prev.pars <- e.b$prev.pars <- p
+
+  i
+}
+
+make.caching.branches <- function(cache, branches) {
+  if ( !cache$control$caching.branches )
+    return(branches)
+
+  cat("Using experimental caching branches!\n")
+  
+  n <- length(cache$len)
+  n.part <- cache$n.part
+  group <- cache$group.branches
+
+  pars.same <- logical(n.part)
+  prev.pars <- vector("list", n.part)
+  prev.lq <- numeric(n)
+  
+  if ( is.null(cache$vars.in.list) ) {
+    prev.vars <- prev.base <- matrix(NA, cache$ny, n)
+    branches.caching <- function(y, len, p, t0, idx) {
+      g <- group[idx[1]]
+      if ( pars.same[g] && identical(prev.vars[,idx[1]], y) ) {
+        list(prev.lq[idx],
+             prev.base[,idx,drop=FALSE])
+      } else {
+        prev.vars[,idx] <<- y
+        ret <- branches(y, len, p, t0, idx)
+        prev.lq[idx]    <<- ret[[1]]
+        prev.base[,idx] <<- ret[[2]]
+        ret
+      }
+    }
+  } else { # Just QuaSSE, really.
+    prev.vars <- prev.base <- vector("list", n)
+    branches.caching <- function(y, len, p, t0, idx) {
+      g <- group[idx[1]]
+      if ( length(idx) > 1 ) # Will take some work, but not used atm.
+        stop("vector idx not yet allowed")
+      if ( pars.same[g] && identical(prev.vars[[idx]], y) ) {
+        c(prev.lq[idx],
+          prev.base[[idx]])
+      } else {
+        prev.vars[[idx]] <<- y
+        ret <- branches(y, len, p, t0, idx)
+        prev.lq[idx]   <<- ret[1]
+        prev.base[[idx]] <<- ret[-1]
+        ret
+      }
+    }
+  }
+
+  branches.caching
+}
+
+## Note that for now, the returned function here includes an
+## additional argument to the input function:
+##   normal aux: (g, t, p)
+##   returned:   (g, t, p, idx)
+make.caching.branches.aux <- function(cache, branches.aux) {
+  if ( !cache$control$caching.branches )
+    return(function(g, t, p, idx) branches.aux(g, t, p))
+  
+  n <- length(cache$len)
+  prev.aux <- vector("list", n)
+  pars.same <- logical(cache$n.part)
+
+  branches.aux.caching <- function(g, t, p, idx) {
+    if ( pars.same[g] ) {
+      prev.aux[[idx]]
+    } else {
+      prev.aux[[idx]] <<- ret <- branches.aux(g, t, p)
+      ret
+    }
+  }
+
+  branches.aux.caching
 }

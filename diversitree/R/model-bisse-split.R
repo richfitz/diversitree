@@ -23,6 +23,8 @@ make.bisse.split <- function(tree, states, nodes, split.t,
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
                                   unresolved, sampling.f, nt.extra,
                                   strict)
+  cache$control <- check.control.split(control)
+  
   if ( backend == "CVODES" )
     stop("This will take some work...")
   else {
@@ -146,7 +148,6 @@ make.branches.bisse.aux <- function(cache, control) {
 }
 
 branches.unresolved.bisse.split <- function(pars, unresolved) {
-  browser()
   ans <- list(target=integer(0), lq=numeric(0),
                  base=matrix(NA, 4, 0))
   for ( i in seq_along(pars) ) {

@@ -89,6 +89,8 @@ make.tree.musse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
                      split=split)
 
   hist <- as.data.frame(do.call(rbind, hist))
+  if ( nrow(hist) == 0 )
+    hist <- as.data.frame(matrix(NA, 0, 4))
   names(hist) <- c("idx", "t", "from", "to")
   hist$x0 <- info$start[match(hist$idx, info$idx)]
   hist$tc <- hist$t - hist$x0

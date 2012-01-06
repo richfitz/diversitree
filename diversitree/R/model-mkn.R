@@ -1,8 +1,3 @@
-## The Mk2 model of character evolution.  This is likely to end up
-## being the Mkn model, really.  However, a simple 'mk2' interface
-## will remain that does not require specifying the entire transition
-## matrix.
-
 ## Models should provide:
 ##   1. make
 ##   2. print
@@ -15,51 +10,21 @@
 ##   8. branches
 ##   9. branches.unresolved
 
-## This version does not use all.branches, but is substantially faster
-## (c.f. model-mkn-legacy, left for didactic purposes).
-make.mk2 <- function(tree, states, strict=TRUE, control=list()) {
-  ll <- make.mkn(tree, states + 1, 2, TRUE, strict, control)
-  class(ll) <- c("mk2", "mkn", "function")
+make.mkn <- function(tree, states, k, strict=TRUE, control=list()) {
+  control <- check.control.mkn(control, k)
+  if ( control$method == "ode" )
+    ll <- make.mkn.ode(tree, states, k, strict, control)
+  else # exp or mk2
+    ll <- make.mkn.exp(tree, states, k, strict, control)
   ll
 }
-make.mkn <- function(tree, states, k, use.mk2=FALSE, strict=TRUE,
-                     control=list()) {
-  ## (eps is ignored for this model)
-  control <- modifyList(list(safe=FALSE, tol=1e-8, eps=0), control)  
-  cache <- make.cache.mkn(tree, states, k, use.mk2, strict)
 
-  cache$f.pij <- if ( k == 2 && use.mk2 )
-    pij.mk2 else make.pij.mkn(k, control$safe, control$tol)
-
-  f.pars <- make.mkn.pars(k)
-
-  ll.mkn <- function(cache, pars, prior=NULL, root=ROOT.OBS,
-                     root.p=NULL, intermediates=FALSE) {
-    if ( !is.null(prior) )
-      stop("'prior' argument to likelihood function no longer accepted")
-    if ( length(pars) != k*(k-1) )
-      stop(sprintf("Invalid length parameters (expected %d)", k*(k-1)))
-    if ( any(!is.finite(pars)) || any(pars < 0) )
-      return(-Inf)
-    
-    ans <- all.branches.mkn(f.pars(pars), cache)
-
-    d.root <- ans$init[,cache$root]
-    root.p <- root.p.mkn(d.root, pars, root, root.p)
-    loglik <- root.mkn(d.root, ans$lq, root.p)
-
-    if ( intermediates ) {
-      ans$init[,cache$tips] <- cache$y$y[cache$y$i,]
-      ans$root.p <- root.p
-      attr(loglik, "intermediates") <- ans
-      attr(loglik, "vals") <- d.root
-    }
-    loglik
-  }
-
-  ll <- function(pars, ...) ll.mkn(cache, pars, ...)
-  class(ll) <- c("mkn", "function")
-  attr(ll, "k") <- k  
+make.mk2 <- function(tree, states, strict=TRUE, control=list()) {
+  if ( !(is.null(control$method) || control$method == "mk2") )
+    stop("Invalid control$method value (just omit it)")
+  control$method <- "mk2"
+  ll <- make.mkn(tree, states + 1, 2, strict, control)
+  class(ll) <- c("mk2", "mkn", "function") # c("mk2", class(ll))
   ll
 }
 
@@ -105,6 +70,9 @@ argnames.mk2 <- function(x, ...) {
 }
 
 ## 4: find.mle
+## The use of nlminb is here for consistency with ape.  However, this
+## is not a great optimisation method, and may cause problems for some
+## cases.
 find.mle.mkn <- function(func, x.init, method,
                          fail.value=NA, ...) {
   ## These parameters are just pulled out of thin air
@@ -117,44 +85,73 @@ find.mle.mkn <- function(func, x.init, method,
 
 mcmc.mkn <- mcmc.lowerzero
 
-## Make requires the usual functions:
-## 5: make.cache (initial.tip, root)
-make.cache.mkn <- function(tree, states, k, use.mk2, strict) {
-  tree <- check.tree(tree)
-  states <- check.states(tree, states, strict=strict, strict.vals=1:k)
+## The other functions are all done by sub-models:
+##   5. make.cache (also initial.tip, root)
+##   6. ll
+##   7. initial.conditions
+##   8. branches
 
-  cache <- make.cache(tree)
-  cache$k <- k
-  cache$tip.state  <- states
-  ## TODO: deal with unknown states; tip calculations for unknown tip
-  ## states just return the sum of nonzero ys from the matrix
-  ## multiplication, so they can just be done separately.
-  cache$map <- t(sapply(1:k, function(i) (1:k) + (i - 1) * k))
-  cache$idx.tip <- cbind(c(cache$map[cache$tip.state,]),
-                         rep(seq_len(cache$n.tip), k))
-  cache$len.uniq <- sort(unique(cache$len))
-  cache$len.idx <- match(cache$len, cache$len.uniq)
-  cache$y <- initial.tip.mkn(cache)
-
-  ## Alter things to make it more speedy.  The '0' denotes base zero
-  ## indices.
-  cache$children0 <- as.integer(t(cache$children-1))
-  cache$order0 <- as.integer(cache$order-1)
-  cache$use.mk2 <- use.mk2
-  
-  cache
+## Common utility functions for all Mkn-based models.
+check.control.mkn <- function(control, k) {
+  if ( is.null(control$method) ) {
+    control$method <- "exp"
+    if ( is.null(control$use.mk2) )
+      control$use.mk2 <- FALSE
+    else if ( k != 2 && control$use.mk2 )
+      stop("control$use.mk2=TRUE only valid when k=2")
+  } else if ( control$method == "mk2" ) {
+    control$method <- "exp"
+    control$use.mk2 <- TRUE
+  } else if ( control$method == "exp" ) {
+    if ( is.null(control$use.mk2) )
+      control$use.mk2 <- FALSE
+    else if ( k != 2 && control$use.mk2 )
+      stop("control$use.mk2=TRUE only valid when k=2")
+  } else if ( control$method != "ode" ) {
+    stop("Unknown method")
+  }
+  control
 }
-initial.tip.mkn <- function(cache) {
-  k <- cache$k
-  tip.state <- cache$tip.state
-  if ( any(tip.state < 1 | tip.state > k, na.rm=TRUE) )
-    stop(sprintf("tip states must be in the range [1, %d]", k))
-  
-  y <- matrix(rep(rep(0, k), k + 1), k+1, k, TRUE)
-  y[k+1,] <- diag(y[1:k,1:k]) <- 1
-  i <- cache$tip.state
-  i[is.na(i)] <- k + 1
-  list(y=y, i=i, types=sort(unique(i)))
+
+check.pars.mkn <- function(pars, k) {
+  if ( length(pars) != k*(k-1) )
+    stop(sprintf("Invalid length parameters (expected %d)", k*(k-1)))
+  if ( any(!is.finite(pars)) || any(pars < 0) )
+    stop("Parameters must be non-negative and finite")
+  TRUE
+}
+
+## Makes a function that converts k(k-1) parameters into a k^2 Q
+## matrix.
+make.mkn.pars <- function(k) {
+  qmat <- matrix(0, k, k)
+  idx <- cbind(rep(1:k, each=k-1),
+               unlist(lapply(1:k, function(i) (1:k)[-i])))
+
+  function(pars) {
+    qmat[idx] <- pars
+    diag(qmat) <- -rowSums(qmat)
+    qmat
+  }
+}
+
+## This is not the most efficient possible, but should not really be
+## used in code for which this is a problem.  This just wraps around
+## the above function so that this can be done as a once-off.
+mkn.Q <- function(pars, k) {
+  if ( missing(k) )
+    k <- (1 + sqrt(1 + 4*(length(pars))))/2
+  if ( abs(k - round(k)) > 1e-6 || length(pars) != k*(k-1) )
+    stop("Invalid parameter length")
+  make.mkn.pars(k)(pars)
+}
+
+## Additional functions:
+stationary.freq.mkn <- function(pars) {
+  if ( length(pars) == 2 )
+    pars[2:1] / sum(pars)
+  else
+    .NotYetImplemented()
 }
 
 root.p.mkn <- function(vals, pars, root, root.p=NULL) {
@@ -189,113 +186,4 @@ root.mkn <- function(vals, lq, root.p) {
   else
     loglik <- log(sum(root.p * vals)) + logcomp
   loglik
-}
-
-## 6: ll (done within make.mkn)
-
-## 7: initial.conditions:
-## initial.conditions.mkn <- function(init, pars, t, is.root=FALSE)
-##   init[[1]] * init[[2]]
-
-## 8: branches (separate for mk2 and mkn)
-pij.mk2 <- function(len, pars) {
-  ## The 3,2 indices here are because pars is a Q matrix by the time
-  ## this gets called.
-  q01 <- pars[3]
-  q10 <- pars[2]
-  x <- exp(-(q01+q10)*len)
-  rbind((x*q01 + q10),
-        (1 - x)*q10,
-        (1 - x)*q01,
-        (x*q10 + q01)) / (q01 + q10)
-}
-
-make.pij.mkn <- function(k, safe=FALSE, tol=1e-8) {
-  pij.ode <- make.ode("derivs_mkn_pij", "diversitree",
-                      "initmod_mkn", k*k, safe)
-  ATOL <- RTOL <- tol
-  yi <- diag(k)
-  
-  function(len, pars)
-    pij.ode(yi, c(0, len), pars,
-            rtol=RTOL, atol=ATOL)[-1,-1,drop=FALSE]
-}
-
-## 9: branches.unresolved: n/a, as no option for it
-
-## Additional functions:
-stationary.freq.mkn <- function(pars) {
-  if ( length(pars) == 2 )
-    pars[2:1] / sum(pars)
-  else
-    .NotYetImplemented()
-}
-
-make.mkn.pars <- function(k) {
-  qmat <- matrix(0, k, k)
-  idx <- cbind(rep(1:k, each=k-1),
-               unlist(lapply(1:k, function(i) (1:k)[-i])))
-
-  function(pars) {
-    qmat[idx] <- pars
-    diag(qmat) <- -rowSums(qmat)
-    qmat
-  }
-}
-
-## This is not the most efficient possible, but should not really be
-## used in code for which this is a problem.
-mkn.Q <- function(pars, k) {
-  if ( missing(k) )
-    k <- (1 + sqrt(1 + 4*(length(pars))))/2
-  if ( abs(k - round(k)) > 1e-6 || length(pars) != k*(k-1) )
-    stop("Invalid parameter length")
-  make.mkn.pars(k)(pars)
-}
-
-
-## The new integrator.
-## Returns slightly different output than all.branches at this point
-## (the init and base values are transposed relative to all.branches,
-## but this will change there eventually).
-all.branches.mkn <- function(pars, cache) {
-  ## At this point, the parameters are assumed to be a Q matrix
-  k <- cache$k
-
-  idx.tip <- cache$idx.tip
-  n.tip <- cache$n.tip
-  n <- length(cache$len)
-  order0 <- cache$order0
-
-  len.uniq <- cache$len.uniq
-  len.idx <- cache$len.idx
-  f.pij <- cache$f.pij
-  pij <- f.pij(len.uniq, pars)[,len.idx]
-  
-  lq <- numeric(n)
-  branch.init <- branch.base <- matrix(NA, k, n)
-  storage.mode(branch.init) <- "numeric"
-
-  ## tips
-  ans <- matrix(pij[idx.tip], n.tip, k)
-  q <- rowSums(ans)
-  branch.base[,seq_len(n.tip)] <- t.default(ans/q)
-  lq[seq_len(n.tip)] <- log(q)
-
-  ## branches
-  ans <- .C("r_mkn_core",
-            k        = as.integer(k),
-            n        = length(order0) - 1L,
-            order    = order0,
-            children = cache$children0,
-            pij      = pij,
-            init     = branch.init,
-            base     = branch.base,
-            lq       = lq,
-            NAOK=TRUE, DUP=FALSE)
-
-  list(init=ans$init,
-       base=ans$base,
-       lq=ans$lq,
-       pij=pij)
 }

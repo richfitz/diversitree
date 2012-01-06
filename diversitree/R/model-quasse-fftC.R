@@ -28,7 +28,7 @@ make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
   ptr <- .Call("r_make_quasse_fft", as.integer(nx), as.numeric(dx),
                as.integer(nd), as.integer(flags),
                PACKAGE="diversitree")
-  function(y, len, pars, t0) {
+  function(y, len, pars, t0, dt=dt.max) {
     nt <- as.integer(ceiling(len / dt.max))
     dt <- len / nt
     if ( !(length(y) %in% (nd * nx)) )
@@ -40,10 +40,21 @@ make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
       stop("Incorrect length pars")
     if ( pars$diffusion <= 0 )
       stop("Invalid diffusion parameter")
-      
-    .Call("r_do_integrate",
-          ptr, y, pars$lambda, pars$mu, pars$drift, pars$diffusion,
-          nt, dt, pars$padding, PACKAGE="diversitree")
+    
+    ans <- .Call("r_do_integrate",
+                 ptr, y, pars$lambda, pars$mu,
+                 pars$drift, pars$diffusion,
+                 nt, dt, pars$padding, PACKAGE="diversitree")
+
+    ## Do the log compensation here, to make the careful calcuations
+    ## easier later.
+    if ( ncol(ans) > 1 ) {
+      q <- sum(ans[,2]) * dx
+      ans[,2] <- ans[,2] / q
+      list(log(q), ans)
+    } else {
+      list(0, ans)
+    }
   }
 }
 
@@ -158,13 +169,13 @@ make.branches.aux.quasse.fftC <- function(control, sampling.f) {
     npad.hi <- nx.hi - ndat.hi
     npad.lo <- nx.lo - length(pars$lo$lambda)
 
-    y <- rep(c(e0[i], 0), c(ndat.hi, npad.hi))
+    y <- matrix(rep(c(e0[i], 0), c(ndat.hi, npad.hi)), nx.hi, 1)
     if ( len < tc ) {
-      ans <- pde.hi(y, len,    pars$hi, 0 )[,1]
+      ans <- pde.hi(y, len,    pars$hi, 0 )[[2]][,1]
     } else {
-      y   <- pde.hi(y, tc,     pars$hi, 0 )[,1]
+      y   <- pde.hi(y, tc,     pars$hi, 0 )[[2]][,1]
       y   <- c(y[pars$tr], rep(0, npad.lo))
-      ans <- pde.lo(y, len-tc, pars$lo, tc)[,1]
+      ans <- pde.lo(y, len-tc, pars$lo, tc)[[2]][,1]
     }
     ans
   }

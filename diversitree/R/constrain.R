@@ -197,12 +197,12 @@ update.constrained <- function(object, free, ...) {
 ## (not exported)
 constrain.i <- function(f, p, i) {
   n <- length(i)
-  g <- function(x) {
+  g <- function(x, ...) {
     if ( length(x) != n )
       stop(sprintf("Incorrect parameter length: expected %d, got %d",
                    n, length(x)))
     p[i] <- x
-    f(p)
+    f(p, ...)
   }
 
   class(g) <- c("constrained.i", class(f)) # HACK!

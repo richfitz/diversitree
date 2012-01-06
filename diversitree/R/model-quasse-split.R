@@ -1,7 +1,7 @@
 ## 1: make
 make.quasse.split <- function(tree, states, states.sd, lambda, mu,
                               nodes, split.t, control=NULL,
-                              sampling.f=NULL) {
+                              sampling.f=NULL, defaults=NULL) {
   cache <- make.cache.quasse.split(tree, states, states.sd,
                                    lambda, mu, nodes, split.t,
                                    control, sampling.f)
@@ -37,10 +37,11 @@ make.quasse.split <- function(tree, states, states.sd, lambda, mu,
   }
 
   n.part <- cache$n.part
-  args <- cache$args  
+  args <- cache$args
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                 root.p=NULL, intermediates=FALSE) {
+                 root.f=NULL, intermediates=FALSE) {
+
     ## 1: Check parameters (move this to simplify...)
     names(pars) <- NULL # Because of use of do.call, strip names
     if ( length(pars) != cache$n.args )
@@ -58,6 +59,9 @@ make.quasse.split <- function(tree, states, states.sd, lambda, mu,
                                         cache$mu[[i]],
                                         args[i,], ext, pars))
 
+    if ( control$caching.branches )
+      caching.branches.set.pars(pars.l, branches)
+
     ## *More* parameter checking:
     lambda.x <- unlist(lapply(pars.l, function(x)
                               c(x[[1]]$lambda, x[[2]]$lambda)))
@@ -70,16 +74,23 @@ make.quasse.split <- function(tree, states, states.sd, lambda, mu,
     cache$y <- initial.tip.quasse.split(cache, cache$control, ext$x[[1]])
 
     ans <- all.branches.list(pars.l, cache, initial.conditions, branches)
-    vals <- matrix(ans$init[[cache$root]], cache$control$nx, 2)
     pars.root <- pars.l[[cache$group.nodes[cache$root]]] # always 1
-    loglik <- root.quasse(vals[seq_len(ext$ndat[2]),], ans$lq,
-                          cache$control$dx, pars.root$lo$lambda,
-                          condition.surv)
+    vals <- matrix(ans$init[[cache$root]],
+                   cache$control$nx, 2)[seq_len(ext$ndat[2]),] 
+    root.p <- root.p.quasse(vals, ext, root, root.f)
+    
+    loglik <- root.quasse(vals, pars.root$lo$lambda, ans$lq, condition.surv,
+                          root.p, cache$control$dx)
+
     if ( intermediates )
       attr(loglik, "intermediates") <- ans
+
     loglik  
   }
-    
+
+  if ( !is.null(defaults) )
+    ll <- set.defaults(ll, defaults)
+
   attr(ll, "n.part") <- cache$n.part
   attr(ll, "f.lambda") <- lambda
   attr(ll, "f.mu") <- mu
@@ -124,7 +135,7 @@ make.cache.quasse.split <- function(tree, states, states.sd,
   cache <- make.cache.split(tree, cache, nodes, split.t)
 
   n.part <- cache$n.part
-  control <- cache$control
+  control <- cache$control <- check.control.split(cache$control)
 
   cache$sampling.f <- check.sampling.f.split(sampling.f, 1, n.part)
   cache$aux.i <- seq_len(control$nx)
@@ -179,6 +190,9 @@ check.f.quasse.split <- function(f, rep) {
   list(n=n, f=f, names=names)
 }
 
+## This is actually a bad time sink; can take 0.01s from a 0.024s
+## minimal evaluation.  Really, we don't need to compute this each
+## time, but just subset by excluding nkl and nkr points.
 initial.tip.quasse.split <- function(cache, control, x) {
   nx <- control$nx * control$r
   npad <- nx - length(x)
@@ -188,5 +202,6 @@ initial.tip.quasse.split <- function(cache, control, x) {
   y <- mapply(function(e0, mean, sd)
               c(e0, dnorm(x, mean, sd), rep(0, npad)),
               e0, cache$states, cache$states.sd, SIMPLIFY=FALSE)
+  
   dt.tips.ordered(y, tips, cache$len[tips])
 }

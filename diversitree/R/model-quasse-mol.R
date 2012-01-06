@@ -38,6 +38,11 @@ make.pde.quasse.mol <- function(nx, dx, nd, atol, rtol) {
     if ( abs(ans[length(len)+1,1] - (t0 + len)) > 1e-8 )
       stop("Integration error: integration stopped prematurely")
     
-    matrix(ans[-1,-1], nx, nd)
+    ans <- matrix(ans[-1,-1], nx, nd)
+    ## Do the log compensation here, to make the careful calcuations
+    ## easier later.
+    q <- sum(ans[,2]) * dx
+    ans[,2] <- ans[,2] / q
+    list(log(q), ans)
   }
 }

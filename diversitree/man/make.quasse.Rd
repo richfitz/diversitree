@@ -11,7 +11,8 @@
   inference.}
 
 \usage{
-make.quasse(tree, states, states.sd, lambda, mu, control, sampling.f=NULL)
+make.quasse(tree, states, states.sd, lambda, mu, control,
+            sampling.f=NULL, defaults=NULL)
 starting.point.quasse(tree, states, states.sd=NULL)
 }
 
@@ -41,6 +42,11 @@ starting.point.quasse(tree, states, states.sd=NULL)
     species that are included in the phylogeny.  A value of \code{0.75}
     means that three quarters of extant species are included in the
     phylogeny.  By default all species are assumed to be known.}
+
+  \item{defaults}{A named list of values to alter the default arguments
+    of the returned likelihood function.  For example, passing
+    \code{defaults=list(root=ROOT.FLAT)} will change the treatment of
+    the root.}
 }
 
 \details{
@@ -128,14 +134,14 @@ pars4 <- unlist(rep(list(pars), 4))
 
 sd <- 1/200
 control.C.1 <- list(dt.max=1/200)
-control.C.2 <- c(control.C.1, tips.combined=TRUE)
+% control.C.2 <- c(control.C.1, tips.combined=TRUE)
 
 control.R.1 <- list(dt.max=1/200, method="fftR")
 lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.1)
 (ll.C.1 <- lik.C.1(pars)) # -62.06409
 
-lik.C.2 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.2)
-(ll.C.2 <- lik.C.2(pars)) # -62.06409
+% lik.C.2 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.2)
+% (ll.C.2 <- lik.C.2(pars)) # -62.06409
 
 \dontrun{
 ## slow...

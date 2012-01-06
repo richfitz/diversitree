@@ -1,30 +1,39 @@
 \name{make.musse.multitrait}
 \alias{make.musse.multitrait}
-\alias{starting.point.musse.multitrait}
+\alias{make.mkn.multitrait}
 \alias{musse.multitrait.translate}
+\alias{mkn.multitrait.translate}
+\alias{starting.point.musse.multitrait}
 
 \title{MuSSE: Multi-State Speciation and Extinction (Multiple Binary Traits
   Version)}
 
-\description{Prepare to run MuSSE (Multi-State Speciation and
+\description{Prepare to run MuSSE or Mkn (Multi-State Speciation and
   Extinction) on a phylogenetic tree and character distribution.  This
   function creates a likelihood function that can be used in
   \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
   inference.
   
-  This is a helper function that wraps the basic MuSSE model for the
-  case of a combination of several binary traits; its parametrisation
-  and argument handling are a little different to the other models in
-  diversitree.
+  This is a helper function that wraps the basic MuSSE/Mkn models for
+  the case of a combination of several binary traits; its
+  parametrisation and argument handling are a little different to the
+  other models in diversitree.
 }
   
 \usage{
 make.musse.multitrait(tree, states, sampling.f=NULL,
                       depth=NULL, allow.multistep=FALSE,
                       strict=TRUE, control=list())
-starting.point.musse.multitrait(tree, lik, q.div=5, yule=FALSE)
+make.mkn.multitrait(tree, states,
+                    depth=NULL, allow.multistep=FALSE,
+                    strict=TRUE, control=list())
+
 musse.multitrait.translate(n.trait, depth=NULL, names=NULL,
                            allow.multistep=FALSE)
+mkn.multitrait.translate(n.trait, depth=NULL, names=NULL,
+                         allow.multistep=FALSE)
+
+starting.point.musse.multitrait(tree, lik, q.div=5, yule=FALSE)
 }
 
 \arguments{
@@ -110,7 +119,7 @@ musse.multitrait.translate(n.trait, depth=NULL, names=NULL,
   character change allowed (A 0->1, A 1->0, B 0->1, and B 1->0), but the
   rates of change for trait A might depend on the current state of trait
   B (and vice versa).  So we have, for the A0->1 trait change
-  \eqn{q_{A01,0} + q_{A01,0} \times X_B}{qA01.0 + qA01.B * X_B}.  Note that one fewer levels of
+  \eqn{q_{A01,0} + q_{A01,B} \times X_B}{qA01.0 + qA01.B * X_B}.  Note that one fewer levels of
   interaction are possible for these character changes than for the
   speciation/extinction parameters.
 

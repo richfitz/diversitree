@@ -227,6 +227,14 @@ check.pars.musse <- function(pars, k) {
   TRUE
 }
 
+check.pars.bm <- function(pars) {
+  if ( length(pars) != 1 )
+    stop("Incorrect parameter length")
+  if ( pars[1] <= 0 )
+    stop("Diffusion must be positive")
+  TRUE
+}
+
 check.unresolved.bd <- function(tree, unresolved) {
   ## This covers against
   ##   tree=NULL, times=c(...)
@@ -262,4 +270,15 @@ check.unresolved.bd <- function(tree, unresolved) {
     unresolved <- NULL
   }
   unresolved
+}
+
+check.control.split <- function(control) {
+  if ( is.null(control$caching.branches) )
+    control$caching.branches <- FALSE
+  else {
+    val <- control$caching.branches
+    if ( !(length(val) == 1 && val %in% c(TRUE, FALSE)) )
+      stop("Invalid value for control$caching.branches")
+  }
+  control
 }

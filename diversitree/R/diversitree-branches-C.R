@@ -11,12 +11,11 @@ toC.cache <- function(cache, comp.idx) {
   ## Translate tips...
   if ( is.null(cache$y) || length(cache$y) == 0 )
     stop("Can't do tipless yet...")
-  f <- function(x) {
-    len <- x$t.uniq[x$unpack]
-    list(tip.y = as.numeric(x$y),
-         tip.len   = sort(len),
-         tip.target= toC.int(x$target[order(len)]))
-  }
+  f <- function(x)
+    list(tip.y     = as.numeric(x$y),
+         tip.len   = x$t,
+         tip.target= toC.int(x$target))
+
   cache$y <- lapply(cache$y, f)
 
   cache$children <- toC.int(t(cache$children))

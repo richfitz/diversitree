@@ -359,8 +359,8 @@ make.branches <- function(branches, comp.idx, eps=0) {
   if ( length(comp.idx) > 0 )
     function(y, len, pars, t0, idx) {
       ret <- branches(y, len, pars, t0, idx)
-      if ( all(ret[comp.idx,] >= eps) ) {
-        q <- colSums(ret[comp.idx,,drop=FALSE])
+      q <- colSums(ret[comp.idx,,drop=FALSE])
+      if ( all(q >= eps) ) {
         i <- q > 0
         ret[comp.idx,i] <- ret[comp.idx,i] /
           rep(q[i], each=length(comp.idx))

@@ -333,3 +333,5 @@ block.diagonal <- function(...) {
 
   out
 }
+
+mcmc.musse.multitrait <- mcmc.default
