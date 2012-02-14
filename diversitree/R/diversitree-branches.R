@@ -317,6 +317,7 @@ root.p.xxsse <- function(vals, pars, root, root.p=NULL) {
 
 root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
   logcomp <- sum(lq)
+  is.root.both <- is.null(root.p)
 
   k <- length(vals) / 2
   i <- seq_len(k)
@@ -324,11 +325,14 @@ root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
   e.root <- vals[i]
   d.root <- vals[-i]
   
-  if ( condition.surv )
-    ##  d.root <- d.root / (lambda * (1-e.root)^2) # old
-    d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
+  if ( condition.surv ) {
+    if ( is.root.both )
+      d.root <- d.root / (lambda * (1-e.root)^2)
+    else
+      d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
+  }
   
-  if ( is.null(root.p) ) # ROOT.BOTH
+  if ( is.root.both ) # ROOT.BOTH
     loglik <- log(d.root) + logcomp
   else
     loglik <- log(sum(root.p * d.root)) + logcomp

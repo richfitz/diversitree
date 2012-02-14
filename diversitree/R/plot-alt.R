@@ -258,12 +258,12 @@ pp.segments.phylogram <- function(phy, xy.seg, col, lwd, lty) {
 ## TODO: There is no way of modifying the np here.
 pp.segments.fan <- function(phy, xy.seg, col, lwd, lty, np=1000) {
   xy.seg2 <- split(xy.seg, xy.seg$horiz)
-  i <- match(seq_len(phy$Nnode) + length(phy$tip.label), phy$edge[,2])
-  
   with(xy.seg2[[2]],
        segments(r0*cos(theta0), r0*sin(theta0),
                 r1*cos(theta1), r1*sin(theta1),
                 lwd=lwd, col=col))
+
+  i <- match(seq_len(phy$Nnode) + length(phy$tip.label), phy$edge[,2])
   if ( any(!is.na(i)) ) # For a two branch tree.
     with(xy.seg2[[1]],
          arcs(theta0, theta1, r1, col[i], lty[i], lwd[i], np))

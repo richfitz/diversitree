@@ -15,7 +15,7 @@ group.label.tip.rad <- function(obj, lab, col.bar, col.lab, lwd=1,
   else
     dt <- (n.taxa/2 - .5 + 1/6) / n * 2 * pi
 
-  theta <- obj$yy[seq_len(obj$Ntip)] / (n + 1) * 2 * pi
+  theta <- obj$xy$theta[seq_len(obj$Ntip)]
 
   t0 <- tapply(theta - dt, lab, min)
   t1 <- tapply(theta + dt, lab, max)

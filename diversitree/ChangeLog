@@ -1,3 +1,22 @@
+2012-02-13  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bump R dependency up, and add support for current
+	deSolve.
+
+	* R/combine.R: First import of experimental likelihood combining
+	functions.
+
+	* R/diversitree-branches.R: Simplify treatment of root node.
+
+	* R/mcmc.R: Simplify mcmc function exit, and add support for
+	saving progress to a csv file during a run.
+
+	* R/model-bm-vcv.R: Fix treatment of NULL/0 meserr.
+
+	* R/plot-alt-extra.R: Fix treatment of stored angles.
+
+	* R/plot-alt.R: Cosmetics
+
 2012-01-05  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bump to 0.8-3

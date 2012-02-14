@@ -160,7 +160,7 @@ quasse.extent <- function(control, drift, diffusion) {
     mean <- drift * dt
     sd   <- sqrt(diffusion * dt)
 
-  ## Another option here is to compute all the possible x values and
+    ## Another option here is to compute all the possible x values and
     ## then just drop the ones that are uninteresting?
     nkl <- max(ceiling(-(mean - w * sd)/dx)) * c(r, 1)
     nkr <- max(ceiling( (mean + w * sd)/dx)) * c(r, 1)

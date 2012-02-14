@@ -68,7 +68,7 @@ make.cache.bm.vcv <- function(tree, states, meserr) {
   
   n.tip <- length(tree$tip.label)
 
-  if ( isTRUE(all.equal(meserr, 0)) )
+  if ( is.null(meserr) || isTRUE(all.equal(meserr, 0)) )
     meserr <- NULL
   else if ( length(meserr) == 1 )
     meserr <- rep(meserr, n.tip)

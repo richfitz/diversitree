@@ -97,6 +97,7 @@ make.branches.split <- function(cache, branches, branches.aux) {
     g <- group[idx]
 
     if ( length(len) == 1 ) {
+      ## cat(sprintf("%d: %d, len=%2.5f, t0=%2.5f\n", idx, g, len, t0))
       ## 1: This might be an internal edge, so it is possible that
       ## there are auxilliary variables that need computing.
       ## (this could also be a terminal edge where there is only a
