@@ -111,11 +111,11 @@ make.tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
 
 tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf,
                        include.extinct=FALSE, x0=NA) {
+  check.pars.bisse(pars)
   if ( is.na(x0) )
     x0 <- as.integer(runif(1) > stationary.freq.bisse(pars))
   else if ( length(x0) != 1 || !(x0 == 0 || x0 == 1) )
     stop("Invalid root state")
-  stopifnot(length(pars) == 6 && all(pars >= 0))
   
   info <- make.tree.bisse(pars, max.taxa, max.t, x0)
   phy <- me.to.ape.bisse(info[-1,], info$state[1])

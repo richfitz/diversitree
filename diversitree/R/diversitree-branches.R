@@ -296,6 +296,8 @@ root.p.xxsse <- function(vals, pars, root, root.p=NULL) {
     p <- 1/k
   } else if ( root == ROOT.EQUI ) {
     if ( k == 2 ) {
+      ## TODO: This is a bit of an ugliness now that other models have
+      ## stationary frequencies (bisseness, geosse?).
       p <- stationary.freq.bisse(pars)
       p <- c(p, 1-p)
     } else {

@@ -265,7 +265,12 @@ anova.fit.mle <- function(object, ..., sequential=FALSE) {
 
   ll <- lapply(mlist, logLik)
   ll.val <- sapply(ll, as.numeric)
-  df <- sapply(ll, attr, "df")
+  df <- sapply(ll, attr, "df") 
+  vars <- lapply(mlist, function(x) names(coef(x))) 
+
+  cl <- lapply(mlist, class)
+  if ( length(unique(cl)) > 1 )
+    stop("More than one class of model present -- tests invalid with mixed types")
 
   if ( sequential ) {
     ddf <- c(NA, diff(df))
@@ -277,6 +282,12 @@ anova.fit.mle <- function(object, ..., sequential=FALSE) {
   } else {
     chisq <- c(NA, abs(2*(ll.val[1] - ll.val[-1])))
     ddf <- c(NA, abs(df[1] - df[-1]))
+    ## This might break some existing code where the check is in the
+    ## reverse direction?
+    ok <- sapply(vars[-1], function(x) all(x %in% vars[[1]]))
+    if ( !all(ok) )
+      stop(sprintf("Model(s) %s not nested within the first model?",
+                   paste(which(!ok)+1, collapse=", ")))
   }
   
   out <- data.frame(Df=df,
