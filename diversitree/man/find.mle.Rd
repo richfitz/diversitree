@@ -130,9 +130,44 @@ find.mle(func, x.init, method, ...)
   performed with \code{\link{anova}}.  See Examples for usage.
 }
 
+\section{Model comparison}{
+  The \code{\link{anova}} function carries out likelihood ratio tests.
+  There are a few possible configurations.
+
+  First, the first fit provided could be the focal fit, and all other
+  fits are either special cases of it (every additional model is nested
+  within the focal model) or generalisations of it (the focal model is
+  nested within every additional model).
+
+  Second, the models could be sequential series of fits (if
+  \code{sequential=TRUE}), such that models (A, B, C, D) are to be
+  compared A vs. B, B vs. C, C vs. D.  The models can either be strictly
+  increasing in parameters (A nested in B, B nested in C, ...) or
+  strictly decreasing in parameters (D nested in C, C nested in B, ...).
+
+  In both cases, nestedness is checked.  First, the "class" of the
+  fitted object must match.  Second, the \code{\link{argnames}} of the
+  likelihood function of a sub model must all appear in the
+  \code{argnames} of the parent model.  There are some cases where this
+  second condition may not be satisfied and yet the comparison is valid
+  (e.g., comparing a time-varying model against a non time varying
+  model, and some \code{make.quasse} fits).  We attempt to detect this
+  but it may fail on some valid comparisons and silently allow some
+  invalid comparisons.
+}
+
 \value{
-  A list of class \code{fit.mle}, with components
-  \item{par}{The estimated parameters}
+  A list of class \code{fit.mle}, with at least the components
+  \itemize{
+    \item \code{par} The estimated parameters.
+    \item \code{lnLik} The log likelihood at the ML point.
+    \item \code{counts} The number of function evaluations performed
+    during the search.
+    \item \code{code} Convergence code.  See the documentation for the
+    underlying optimisation method for meaning, but "0" is usually good.
+    \item \code{func} The likelihood function used in the fit.
+    \item \code{method} The optimisation method used.
+  }
 }
 
 

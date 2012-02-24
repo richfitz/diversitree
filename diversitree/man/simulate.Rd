@@ -1,7 +1,8 @@
 \name{simulate}
 \alias{trees}
-\alias{tree.bisse}
 \alias{tree.bd}
+\alias{tree.bisse}
+\alias{tree.bisseness}
 \alias{tree.musse}
 \alias{tree.quasse}
 \alias{tree.yule}
@@ -18,8 +19,8 @@
 }
 
 \usage{
-trees(pars, type=c("bisse", "bd", "musse", "quasse", "yule"), n=1,
-      max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
+trees(pars, type=c("bisse", "bisseness", "bd", "musse", "quasse", "yule"),
+      n=1, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
 
 tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA)
@@ -28,6 +29,9 @@ tree.musse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
 
 tree.quasse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA,
             single.lineage=TRUE, verbose=FALSE)
+
+tree.bisseness(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
+               x0=NA)
 
 tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
 tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)

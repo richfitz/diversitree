@@ -181,6 +181,10 @@ make.all.branches.C.bisseness <- function(cache, control) {
                       neq, np, comp.idx, control)
 }
 
+branches.unresolved.bisseness <- function(pars, unresolved) {
+  stop("Still to write")
+}
+
 
 ## 6. ll.xxsseness
 
@@ -250,7 +254,7 @@ stationary.freq.bisseness <- function(pars) {
 }
 
 ## 9. tree.bisseness
-tree.bisseness<- function (pars, max.taxa=Inf, max.t=Inf,
+tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf,
                            include.extinct=FALSE, x0=NA) {
   check.pars.bisseness(pars)
   if ( is.na(x0) )

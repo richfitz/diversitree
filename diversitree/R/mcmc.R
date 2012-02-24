@@ -21,6 +21,9 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
                          lower=-Inf, upper=Inf, print.every=1,
                          control=list(),
                          save.every=0, save.file, ...) {
+  if ( save.every > 0 && missing(save.file) )
+    stop("save.file must be given if save.every > 0")
+    
   npar <- length(x.init)
   if ( is.null(names(x.init)) )
     try(names(x.init) <- argnames(lik), silent=TRUE)

@@ -59,8 +59,8 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
   function has argument list (and default values)
 
   \preformatted{
-    f(pars, prior=NULL, condition.surv=TRUE, root=ROOT.OBS,
-    root.p=NULL, intermediates=FALSE)
+    f(pars, condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
+      intermediates=FALSE)
   }
   
   The arguments are interpreted as
@@ -342,4 +342,3 @@ diff(range(fit.1$lnLik, fit.2$lnLik, fit.3$lnLik))
 
 \author{Richard G. FitzJohn}
 \keyword{models}
-

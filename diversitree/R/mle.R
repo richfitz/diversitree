@@ -253,43 +253,93 @@ extractAIC.fit.mle <- function(fit, scale, k=2, ...)
 
 
 ## Code based on MASS:::anova.negbin and ape:::anova.ace
+## 
+## There are two ways that I am interested in seeing models come into
+## here, and within that, a couple of different possibilities:
+##
+## 1. A series of comparisons against a single model.  This will
+##    *always* be the first model in the list.
+## 
+##    a. Focal model has most parameters (full) and subsequent models
+##       are reduced versions nested within it.
+##
+##    b. Focal model has least parameters (minimal) and subsequent
+##       models are generalisations of it.
+##
+## 2. A sequential series of comparisons (i.e., 
 anova.fit.mle <- function(object, ..., sequential=FALSE) {
   mlist <- c(list(object), list(...))
   if ( length(mlist) == 1L )
     stop("Need to specify more than one model")
-  if ( is.null(names(mlist)) )
-    names(mlist) <-
-      c("full", model=sprintf("model %d", seq_len(length(mlist)-1)))
-  else
-    names(mlist)[1] <- "full"
-
-  ll <- lapply(mlist, logLik)
-  ll.val <- sapply(ll, as.numeric)
-  df <- sapply(ll, attr, "df") 
-  vars <- lapply(mlist, function(x) names(coef(x))) 
-
   cl <- lapply(mlist, class)
   if ( length(unique(cl)) > 1 )
     stop("More than one class of model present -- tests invalid with mixed types")
-
-  if ( sequential ) {
-    ddf <- c(NA, diff(df))
-    if ( any(ddf[-1] < 1) )
-      stop("Models are not ordered correctly for sequential anova")
-    chisq <- c(NA, 2*diff(ll.val))
-    if ( any(chisq[-1] < 0 ))
-      warning("Impossible chi-square values - convergence failures?")
-  } else {
-    chisq <- c(NA, abs(2*(ll.val[1] - ll.val[-1])))
-    ddf <- c(NA, abs(df[1] - df[-1]))
-    ## This might break some existing code where the check is in the
-    ## reverse direction?
-    ok <- sapply(vars[-1], function(x) all(x %in% vars[[1]]))
-    if ( !all(ok) )
-      stop(sprintf("Model(s) %s not nested within the first model?",
-                   paste(which(!ok)+1, collapse=", ")))
-  }
+  if ( is.null(names(mlist)) )
+    names(mlist) <-
+      c("", model=sprintf("model %d", seq_len(length(mlist)-1)))
   
+  ## Next, extract the log-likelihoods and degrees of freedom from
+  ## each model.
+  ll <- lapply(mlist, logLik)
+  df <- sapply(ll, attr, "df")
+  ll.val <- sapply(ll, as.numeric)
+
+  ## Check if a model 'sub' appears to be nested within a model
+  ## 'full'.
+  check <- function(full, sub) {
+    if ( all(names(coef(sub)) %in% names(coef(full))) ) {
+      TRUE
+    } else {
+      drop <- c("constrained", "function")
+      cl.full <- setdiff(class(full$func), drop)
+      cl.sub <- setdiff(class(sub$func), drop)
+      all(cl.sub %in% cl.full)
+    }
+  }
+
+  if ( sequential ) { 
+    chisq <- c(NA, 2*diff(ll.val))
+    ddf <- c(NA, diff(df))
+    if ( all(ddf[-1] > 0) ) {
+      names(mlist)[1] <- "minimal"
+      ok <- sapply(seq_len(length(mlist)-1), function(i)
+                   check(mlist[[i+1]], mlist[[i]]))
+    } else {
+      names(mlist)[1] <- "full"
+      ok <- sapply(seq_len(length(mlist)-1), function(i)
+                   check(mlist[[i]], mlist[[i+1]]))
+      chisq <- -chisq
+      ddf <- -ddf
+    }
+  } else {
+    chisq <- c(NA, 2*(ll.val[1] - ll.val[-1]))
+    ddf <- c(NA, df[1] - df[-1])
+    if ( all(df[-1] < df[1]) ) {
+      ## Case a: Model 1 has the most parameters (full model) and other
+      ## models should be nested within it.
+      names(mlist)[1] <- "full"
+      ok <- sapply(mlist[-1], check, full=mlist[[1]])
+      if ( !all(ok) )
+        warning(sprintf("Model(s) %s not nested within the first model?",
+                        paste(which(!ok)+1, collapse=", ")))
+    } else if ( all(df[-1] > df[1]) ) {
+      ## Case b: Model 1 has the fewest parameters (minimal model) and
+      ## is nested in all subsequent models.
+      names(mlist)[1] <- "minimal"
+      ok <- sapply(mlist[-1], check, sub=mlist[[1]])
+      if ( !all(ok) )
+        warning(sprintf("First model is not nested within model(s) %s?",
+                        paste(which(!ok)+1, collapse=", ")))
+      chisq <- -chisq
+      ddf <- -ddf
+    } else {
+      stop("Incompatible models (see ?find.mle)")
+    }
+  }
+
+  if ( any(chisq[-1] < 0 ) )
+    warning("Impossible chi-square values: probable convergence failures")
+
   out <- data.frame(Df=df,
                     lnLik=sapply(ll, as.numeric),
                     AIC=sapply(mlist, AIC),

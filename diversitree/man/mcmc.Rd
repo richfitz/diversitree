@@ -13,7 +13,8 @@
 mcmc(lik, x.init, nsteps, ...)
 \method{mcmc}{default}(lik, x.init, nsteps, w, prior=NULL,
              sampler=sampler.slice, fail.value=-Inf, lower=-Inf,
-             upper=Inf, print.every=1, control=list(), ...)
+             upper=Inf, print.every=1, control=list(),
+             save.every=0, save.file, ...)
 
 sampler.slice(lik, x.init, y.init, w, lower, upper, control)
 sampler.norm(lik, x.init, y.init, w, lower, upper, control)
@@ -59,6 +60,14 @@ sampler.norm(lik, x.init, y.init, w, lower, upper, control)
 
   \item{control}{List with additional control parameters for the
     sampler.  Not currently used.}
+
+  \item{save.every}{Number of steps to save progress into
+    \code{save.file}.  By default this is 0, which prevents saving
+    occuring.  Low nonzero values of this will slow things down, but
+    may be useful during long runs.}
+
+  \item{save.file}{Name of csv file to save temporary output in.
+    Contents will be rewritten at each save.}
   
   \item{...}{Arguments passed to the function \code{lik}}
 

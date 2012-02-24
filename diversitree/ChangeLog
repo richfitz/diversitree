@@ -1,3 +1,32 @@
+2012-02-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bump to 0.8-4
+
+	* NAMESPACE: Updated to add bisseness
+
+	* R/mcmc.R: Additional argument checking.
+
+	* R/mle.R: Hardened version of anova.fit.mle that attempts to
+	check that models are truely nested.
+
+	* R/model-bd.R: find.mle.yule now returns class "fit.mle.bd" so
+	that it is clear that it can be compared against a bd fit.
+
+	* R/model-bisseness.R: Added skeleton for "unresolved" branches
+	function to clear up code.
+
+	* R/simulation.R: Added "bisseness" to list of possible tree types
+	that can be simulated.
+
+	* man/find.mle.Rd: Documented additional restrictions on model
+	comparison.
+
+	* man/make.bisse.Rd: Updated returned function definition.
+
+	* man/mcmc.Rd: Documented save.every/save.file arguments.
+
+	* man/simulate.Rd: Documented addition of bisseness simulator.
+
 2012-02-22  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/model-bisseness.R: Added the "BiSSE-ness" model from Karen and Sally.

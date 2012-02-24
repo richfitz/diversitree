@@ -113,7 +113,9 @@ find.mle.yule <- function(func, x.init, method, fail.value=NA,
               gradient=NA,
               method="analytic")
 
-  class(obj) <- c("fit.mle.yule", "fit.mle")
+  ## This class here is needed so that this can be compared against a
+  ## BD fit.
+  class(obj) <- c("fit.mle.bd", "fit.mle")
   obj
 }
 
