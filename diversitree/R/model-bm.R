@@ -20,11 +20,11 @@
 ##   9. branches.unresolved
 
 ## 1: make
-make.bm <- function(tree, states, states.sd=0, method="vcv") {
-  method <- match.arg(method, c("vcv", "direct"))
-  if ( method == "vcv" )
+make.bm <- function(tree, states, states.sd=0, control=list()) {
+  control <- check.control.continuous(control)
+  if ( control$method == "vcv" )
     make.bm.vcv(tree, states, states.sd)
-  else if ( method == "direct" )
+  else
     make.bm.direct(tree, states, states.sd)
 }
 

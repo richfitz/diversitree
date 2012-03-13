@@ -11,93 +11,55 @@
   inference.}
 
 \usage{
-make.geosse(tree, states, sampling.f=NULL, strict=TRUE, control=list())
-starting.point.geosse(tree, yule=FALSE)
+  make.geosse(tree, states, sampling.f=NULL, strict=TRUE,
+    control=list())
+  starting.point.geosse(tree, eps=0.5)
 }
 
 \arguments{
   \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be 0
-    (in both regions/widespread; AB), 1 or 2 (endemic to one region; A or
-    B), or \code{NA} if the state is unknown.  This vector must have names
-    that correspond to the tip labels in the phylogenetic tree
+    (in both regions/widespread; AB), 1 or 2 (endemic to one region; A
+    or B), or \code{NA} if the state is unknown.  This vector must have
+    names that correspond to the tip labels in the phylogenetic tree
     (\code{tree$tip.label}).}
   
-  %  \item{unresolved}{Unresolved clades are not yet implemented for geosse.}
-
-\item{sampling.f}{Vector of length 3 with the estimated proportion of
+  \item{sampling.f}{Vector of length 3 with the estimated proportion of
     extant species in states 0, 1 and 2 that are included in the
     phylogeny.  A value of \code{c(0.5, 0.75, 1)} means that half of
-    species in state 0, three quarters of species in state 1, and all the
-    species in state 2 are included in the phylogeny.  By default all
-    species are assumed to be known.}
+    species in state 0, three quarters of species in state 1, and all
+    the species in state 2 are included in the phylogeny.  By default
+    all species are assumed to be known.}
+  
+  \item{strict}{The \code{states} vector is always checked to make sure
+    that the values are 0, 1 and 2 only.  If \code{strict} is
+    \code{TRUE} (the default), then the additional check is made that
+    \emph{every} state is present.  The likelihood models tend to be
+    poorly behaved where states are missing.}
   
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
-  
-  \item{strict}{The \code{states} vector is always checked to make sure
-    that the values are 0, 1 and 2 only.  If \code{strict} is \code{TRUE}
-    (the default), then the additional check is made that \emph{every}
-    state is present.  The likelihood models tend to be poorly behaved
-    where states are missing.}
-  
-  \item{yule}{Should starting parameters have zero extinction?  If not,
-    the extinction rate is half the speciation rate.}
+
+  \item{eps}{Ratio of extinction to speciation rates to be used when
+    choosing a starting set of parameters.  The procedure used is based
+    on Magallon & Sanderson (2001).}
 }
 
 \details{
-  \code{make.geosse} returns a function of class \code{geosse}.  This
-  function has argument list (and default values)
+  \code{make.geosse} returns a function of class \code{geosse}.  The
+  arguments and default values for this function are:
 
   \preformatted{
-    f(pars, condition.surv=FALSE, root=ROOT.OBS, root.p=NULL,
+    f(pars, condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
       intermediates=FALSE)
   }
-  
-  The arguments are interpreted as
-  \itemize{
-    \item \code{pars} A vector of seven parameters, in the order
-      \code{sA}, \code{sB}, \code{sAB}, \code{xA}, \code{xB},
-      \code{dA}, \code{dB}.
-    \item \code{condition.surv} (logical): Should the likelihood
-      calculation condition on survival of two lineages and the
-      speciation event subtending them?  This is currently not done.
-      %This is done by default, following Nee et al. 1994.
-    \item \code{root}: Behaviour at the root (see FitzJohn et al. 2009).
-      The possible options are
-      \itemize{
-        \item \code{ROOT.FLAT}: A flat prior, weighting
-        \eqn{D_0}{D0}, \eqn{D_1}{D1} and \eqn{D_2}{D2} equally.
-        \item \code{ROOT.EQUI}: Use the equilibrium distribution
-        of the model.
-        \item \code{ROOT.OBS}: Weight \eqn{D_0}{D0}, \eqn{D_1}{D1} and
-        \eqn{D_2}{D2} by their relative probability of observing the
-        data, following FitzJohn et al. 2009.
-        \item \code{ROOT.GIVEN}: Root will be in state i
-        with probability \code{root.p[i+1]}.
-        \item \code{ROOT.BOTH}: Don't do anything at the root,
-        and return both values.  (Note that this will not give you a
-        likelihood!)
-    }
-    \item \code{root.p}: Root weightings for use when
-      \code{root=ROOT.GIVEN}.  Must be a vector of length 3 whose
-      elements sum to 1.
-    \item \code{intermediates}: Add intermediates to the returned value as
-      attributes:
-      \itemize{
-        \item \code{cache}: Cached tree traversal information.
-        \item \code{intermediates}: Mostly branch end information.
-        \item \code{vals}: Root \eqn{D} values.
-    }
-    At this point, you will have to poke about in the source for more
-    information on these.
-  }
-  
-  \code{starting.point.geosse} produces a first-guess set of parameters,
-    ignoring character states.
 
-  Note that unresolved clade methods are not (yet?) available for GeoSSE.
+  The arguments of this function are explained in \link{make.bisse}.
+  The parameter vector \code{pars} is ordered \code{sA}, \code{sB},
+  \code{sAB}, \code{xA}, \code{xB}, \code{dA}, \code{dB}.
+
+  Unresolved clade methods are not available for GeoSSE.  
 }
 
 
@@ -169,17 +131,16 @@ lik(pars, root=ROOT.GIVEN, root.p=c(0,1,0))
   trait-dependent speciation and extinction rates from incompletely
   resolved phylogenies. Syst. Biol. 58:595-611.
   
-  Goldberg E.E., Lancaster L.T., and Ree R.H. Phylogenetic inference of
-  reciprocal effects between geographic range evolution and
-  diversification. in review at Syst Biol.
+  Goldberg E.E., Lancaster L.T., and Ree R.H. 2011. Phylogenetic
+  inference of reciprocal effects between geographic range evolution and
+  diversification. Syst. Biol. 60:451-465.
 
-  Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating
-  a binary character's effect on speciation and
-  extinction. Syst. Biol. 56:701-710.
+  Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating a binary
+  character's effect on speciation and extinction. Syst. Biol.
+  56:701-710.
 
-  Nee S., May R.M., and Harvey P.H. 1994. The reconstructed
-  evolutionary process. Philos.  Trans. R. Soc. Lond. B
-  Biol. Sci. 344:305-311.
+  Magallon S. and Sanderson M.J. 2001. Absolute diversification rates
+  in angiospem clades. Evol. 55:1762-1780.
 }
 
 \author{Emma E. Goldberg}

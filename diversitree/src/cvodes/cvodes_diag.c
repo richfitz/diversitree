@@ -14,7 +14,11 @@
  * -----------------------------------------------------------------
  */
 
-#include <stdio.h>
+/* RGF: printf is not allowed */
+/* #include <stdio.h> */
+#include <R.h>
+#define printf Rprintf
+
 #include <stdlib.h>
 
 #include "cvodes_diag_impl.h"

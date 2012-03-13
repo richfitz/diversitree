@@ -1,0 +1,101 @@
+\name{trait.plot}
+\alias{trait.plot}
+
+\title{Plot a Phylogeny and Traits}
+
+\description{Plot a phylogeny and label the tips with binary traits.
+  This function is experimental, and may change soon.  Currently it is
+  limited to radial trees and binary traits.}
+
+\usage{
+trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
+           type="f", w=1/50, legend=length(cols) > 1, cex.lab=.5,
+           font.lab=3, cex.legend=.75, margin=1/4)
+}
+
+\arguments{
+  \item{tree}{Phylogenetic tree, in ape format.}
+
+  \item{dat}{A \code{data.frame} of trait values.  The row names must be
+    the same names as the tree (\code{tree$tip.label}), and each column
+    contains the states (0, 1, or \code{NA}).  The column names must
+    give the trait names.}
+
+  \item{cols}{A list, each element of which is a vector of length 2
+    being the colours for state 0 and state 1 for each trait.  The list
+    must be named so that all names appear in \code{names(dat)}.
+    Traits will be plotted in the order given by \code{cols}.}
+
+  \item{lab}{Alternative names for the legend (perhaps longer or more
+    informative).  Must be in the same order as \code{cols}.}.
+
+  \item{str}{Strings used for the states in the legend.}
+
+  \item{class}{A vector along \code{phy$tip.label} giving a higher level
+    classification (e.g., genus or family).  No checking is done to
+    ensure that such classifications are not polyphyletic.}
+
+  \item{type}{Plot type (same as \code{type} in \code{?plot.phylo}).
+    Currently only \code{f} (fan) is implemented.}
+
+  \item{w}{Width of the trait plot, as a fraction of the tree depth.}
+
+  \item{legend}{Logical: should a legend be plotted?}
+
+  \item{cex.lab, font.lab}{Font size and type for the tip labels.}
+
+  \item{cex.legend}{Font size for the legend.}
+
+  \item{margin}{How much space, relative to the total tree depth, should
+    be reserved when plotting a higher level classification.}
+  }
+
+
+\examples{
+## These are the parameters: they are a single speciation and extinction
+## rate, then 0->1 (trait A), 1->0 (A), 0->1 (B) and 1->0 (B).
+colnames(musse.multitrait.translate(2, depth=0))
+
+## Simulate a tree where trait A changes slowly and B changes rapidly.
+set.seed(1)
+phy <- tree.musse.multitrait(c(.1, 0, .01, .01, .05, .05),
+                             n.trait=2, depth=0, max.taxa=100,
+                             x0=c(0,0))
+## Here is the matrix of tip states (each row is a species, each column
+## is a trait).
+head(phy$tip.state)
+
+trait.plot(phy, phy$tip.state,
+           cols=list(A=c("pink", "red"), B=c("lightblue", "blue")))
+
+nodes <- c("nd5", "nd4", "nd7", "nd11", "nd10", "nd8")
+descendants <- function(node, phy) {
+  ans <- node <- match(node, phy$node.label) + length(phy$tip.label)
+  repeat {
+    node <- phy$edge[phy$edge[,1] \%in\% node,2]
+    if ( length(node) > 0 )
+      ans <- c(ans, node)
+    else
+      break
+  }
+
+  ans <- unlist(ans)
+  ans[ans <= length(phy$tip.label)]
+}
+
+grp <- lapply(nodes, descendants, phy)
+class <- rep(NA, 100)
+for ( i in seq_along(grp) )
+  class[grp[[i]]] <- paste("group", LETTERS[i])
+
+## Now, 'class' is a vector along phy$tip.label indicating which of six
+## groups each species belongs.
+
+## Plotting the phylogeny with these groups:
+trait.plot(phy, phy$tip.state,
+           cols=list(A=c("pink", "red"), B=c("lightblue", "blue")),
+           class=class, font=1, cex.lab=1, cex.legend=1)
+}
+
+\keyword{hplot}
+\author{Richard G. FitzJohn}

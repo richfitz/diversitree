@@ -17,10 +17,10 @@ arcs <- function(theta0, theta1, r, col=par("fg"), lty=1,
     stop("theta0, theta1 and r must be of same length")
   if ( any(lty[!is.na(lty)] != 1) )
     warning("lwd != 1 will probably be ugly for arcs")
-  
+
   dx <- max(r) * 2 * pi / np
   nn <- pmax(2, ceiling((theta1 - theta0) * r / 2 / dx))
-  
+
   tmp <- lapply(seq_along(nn), function(i)
                 cbind(seq(theta0[i], theta1[i], length=nn[i]),
                       rep(r[i], nn[i])))
@@ -77,8 +77,26 @@ radial.text <- function(r, theta, labels, cex=1, col="black",
   ## TODO: might be worth changing?
   if ( length(font) > 1 ) font <- font[1]
   if ( length(cex) > 1 ) cex <- cex[1]
-  
+
   for ( i in seq_len(n) )
     text(x[i], y[i], labels[i], cex=cex, col=col[i],
          font=font, srt=srt[i], adj=adj[i], ...)
+}
+
+filled.arcs <- function(theta0, theta1, r, w, col=par("fg"), np=1000) {
+  if ( length(r) == 1 )
+    r <- rep(r, length(theta0))
+  if ( length(r) != length(theta0) || length(r) != length(theta1) )
+    stop("theta0, theta1 and r must be of same length")
+
+  dx <- max(r) * 2 * pi / np
+  nn <- pmax(2, ceiling((theta1 - theta0) * r / dx))
+
+  f <- function(i) {
+    t <- seq(theta0[i], theta1[i], length=nn[i])
+    cbind(c(r[i] * cos(t), (r[i] + w) * cos(rev(t)), NA),
+          c(r[i] * sin(t), (r[i] + w) * sin(rev(t)), NA))
+  }
+  tmp <- do.call(rbind, lapply(which(!is.na(col)), f))
+  polygon(tmp, col=col[!is.na(col)], border=NA)
 }

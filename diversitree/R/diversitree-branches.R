@@ -181,7 +181,7 @@ all.branches.list <- function(pars, cache, initial.conditions,
       ans <- branches(tip.y[[i]], tip.t[i], pars, 0, idx)
       lq[idx] <- ans[1]
       branch.base[[idx]] <- ans[-1]
-    }    
+    }
   }
 
   for ( i in order ) {
@@ -213,7 +213,7 @@ make.cache <- function(tree) {
   n.tip <- length(tree$tip.label)
   tips <- seq_len(n.tip)
   root <- n.tip + 1
-  
+
   is.tip <- idx <= n.tip
 
   children <- lapply(idx[!is.tip], function(x) edge[edge[,1] == x,2])
@@ -246,7 +246,7 @@ make.cache <- function(tree) {
   anc <- vector("list", max(order))
   for ( i in c(rev(order[-length(order)]), tips) )
     anc[[i]] <- c(parent[i], anc[[parent[i]]])
-  
+
   ans <- list(tip.label=tree$tip.label,
               node.label=tree$node.label,
               len=len,
@@ -297,7 +297,7 @@ root.p.xxsse <- function(vals, pars, root, root.p=NULL) {
   } else if ( root == ROOT.EQUI ) {
     if ( k == 2 ) {
       ## TODO: This is a bit of an ugliness now that other models have
-      ## stationary frequencies (bisseness, geosse?).
+      ## stationary frequencies (bisseness, geosse, classe).
       p <- stationary.freq.bisse(pars)
       p <- c(p, 1-p)
     } else {
@@ -326,14 +326,14 @@ root.xxsse <- function(vals, pars, lq, condition.surv, root.p) {
   lambda <- pars[i]
   e.root <- vals[i]
   d.root <- vals[-i]
-  
+
   if ( condition.surv ) {
     if ( is.root.both )
       d.root <- d.root / (lambda * (1-e.root)^2)
     else
       d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
   }
-  
+
   if ( is.root.both ) # ROOT.BOTH
     loglik <- log(d.root) + logcomp
   else
@@ -356,7 +356,7 @@ ll.xxsse <- function(pars, cache, initial.conditions,
     attr(loglik, "vals") <- vals
   }
 
-  loglik  
+  loglik
 }
 
 ## Convert a branches function into one that adds log-compensation.
@@ -378,7 +378,7 @@ make.branches <- function(branches, comp.idx, eps=0) {
         len1 <- c(len[len <= ti], ti)
         len2 <- len[len > ti] - ti
         n1 <- length(len1)
-        
+
         ret1 <- Recall(y, len1, pars, t0)
         ret2 <- Recall(ret1[[2]][,n1], len2, pars, t0 + ti)
         ret2[[1]] <- ret2[[1]] + ret1[[1]][n1]
@@ -398,7 +398,7 @@ make.ode.branches <- function(model, dll, neq, np, comp.idx, control) {
   safe <- control$safe
   tol <- control$tol
   eps <- control$eps
-  
+
   if ( backend == "deSolve" ) {
     initfunc <- sprintf("initmod_%s", model)
     derivs <- sprintf("derivs_%s", model)

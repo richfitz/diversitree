@@ -204,7 +204,7 @@ make.prior.uniform <- function(lower, upper) {
   n <- length(lower)
   if ( length(upper) != n )
     stop("'lower' and 'upper' both be the same length")
-  p <- 1/(upper - lower)
+  p <- log(1/(upper - lower))
   function(x) {
     ret <- rep(p, length=length(x))
     ret[x < lower | x > upper] <- 0

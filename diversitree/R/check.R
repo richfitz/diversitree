@@ -282,3 +282,16 @@ check.control.split <- function(control) {
   }
   control
 }
+
+check.control.continuous <- function(control) {
+  defaults <- list(method="vcv")
+  control <- modifyList(control, defaults)
+  if ( length(control$method) != 1 )
+    stop("control$method must be a scalar")
+  methods <- c("vcv", "direct")
+  control$method <- pmatch(control$method, methods, nomatch=NA)
+  if ( is.na(control$method) )
+    stop(sprintf("control$method must be in %s",
+                 paste(methods, collapse=", ")))
+  control
+}

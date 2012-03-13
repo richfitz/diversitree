@@ -257,6 +257,9 @@ pp.segments.phylogram <- function(phy, xy.seg, col, lwd, lty) {
 
 ## TODO: There is no way of modifying the np here.
 pp.segments.fan <- function(phy, xy.seg, col, lwd, lty, np=1000) {
+  if ( length(col) == 1 ) col <- rep(col, nrow(phy$edge))
+  if ( length(lwd) == 1 ) lwd <- rep(lwd, nrow(phy$edge))
+  if ( length(lty) == 1 ) lty <- rep(lty, nrow(phy$edge))
   xy.seg2 <- split(xy.seg, xy.seg$horiz)
   with(xy.seg2[[2]],
        segments(r0*cos(theta0), r0*sin(theta0),

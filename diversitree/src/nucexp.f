@@ -1,4 +1,4 @@
-*     A tidied version of the bucexp code, since it is getting a bit
+*     A tidied version of the nucexp code, since it is getting a bit
 *     ridiculous at the moment.
 
 *     Generally, These are the functions to use.  Where possible, they
@@ -6,28 +6,28 @@
 *     possible to do this without getting into a tangle, in which case
 *     they drop down and use the more basic approach of computing the
 *     exponential for each clade (see below).
-*       BUCEXP - return complete state matrix
-*       BUCEXPL - return likelihoods for a series of clades
+*       NUCEXP - return complete state matrix
+*       NUCEXPL - return likelihoods for a series of clades
 *
 *     These functions are here mostly for testing; for each unique time
 *     they compute the entire exponential.  These are much more robust
-*     to errors.  The functions are analogous to BUCEXP and BUCEXPL,
+*     to errors.  The functions are analogous to NUCEXP and NUCEXPL,
 *     taking identical arguments and retuning identical results to
 *     rouding error.
-*       BUCEXPSAFE
-*       BUCEXPSAFEL
+*       NUCEXPSAFE
+*       NUCEXPSAFEL
 *
 *     These ones are really old testing functions;
-*       BUCEXP1
-*       BUCEXP1L
+*       NUCEXP1
+*       NUCEXP1L
 *     they don't include the scal argument.
 *
 *     This won't need to be used directly:
-*       BLDMAT: construct infinitesimal rate matrix
+*       NLDMAT: construct infinitesimal rate matrix
 
 *     It might be nice if I can leverage a single mapping from the
-*     output of a raw function (BUCEXP, BUCEXPG) to a likelihood one
-*     (BUCEXPL, BUCEXPGL), but I don't want to keep around a huge pile
+*     output of a raw function (NUCEXP, NUCEXPG) to a likelihood one
+*     (NUCEXPL, NUCEXPGL), but I don't want to keep around a huge pile
 *     of extra results unnecessarily.  However, the intermediate
 *     exponentiation *requires* that the entire matrix is returned, even
 *     if we are only interested in a few elements.  Not having the
@@ -43,13 +43,14 @@
 *     correspond to the initial condition (1,0), and the second lt sets
 *     of n elements correspond to the initial condition (0,1).
 *     
-*     Space is required as a function of the number of species, nt:
+*     Space is required as a function of the maximum number of species, nt:
 *       state space: nt(nt+1)/2 + 1
-*       non-zeros: (7nt^2 - 7nt + 2)/2
-*     if we absorb at 200 species, these are 20101 and 139301,
+*       non-zeros (bisse): (7nt^2 - 7nt + 2)/2
+*       non-zeros (bisseness): (9nt^2 - 9nt - 2)/2
+*     if we absorb at 200 species, these are 20101 and 139301 (bisse) or 179099 (bisseness),
 *     respectively.
 
-*     The likelihood subroutines (BUCEXP*L) compute the likelihood of
+*     The likelihood subroutines (NUCEXP*L) compute the likelihood of
 *     observing clades in certain states:
 *
 *     This takes computes the statistic for 'lc' clades that originate
@@ -61,6 +62,7 @@
 *
 *     Parameters:
 *       nt, mua, mub, laa, lab, qba, t, lt: as for BUCEXP
+*       pac, paa, pbc, pba: for BiSSEness 
 *       ti (int[lc]): vector of indices to 't'; the jth clade has time
 *         t[ti[j]].  Conversely, the ith element of t is the time that
 *         all clades, j, where ti[j] == i originate from.
@@ -75,25 +77,27 @@
 *         2: Same, but starting from state 1
 *         3: Likelihood of extinction, starting from state 0
 *         4: Same, but starting from state 1
-*     See bucexplik() for a description of how Nc, nsc and k are used.
+*     See nucexplik() for a description of how Nc, nsc and k are used.
 *     One important case is that where Nc[i] = nsc[i]; in this case,
 *     there are N species in the clade, and we have perfect information
 *     about the distribution of the species in the clade.  In this case,
 *     the likelihood is just one of the numbers in the probability
 *     matrix.
 
-***   Raw state space (BUCEXP/BUCEXPSAFE)
-      subroutine BUCEXP(nt, mua, mub, laa, lab, qba, qab, t, lt, scal,
+***   Raw state space (NUCEXP/NUCEXPSAFE)
+      subroutine NUCEXP(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt, scal,
      .     tol, m, w, iflag)
       implicit none
 
       integer nt, lt
-      double precision mua, mub, laa, lab, qba, qab, t(lt), scal, w(*)
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(lt), scal, w(*)
 
-      double precision infnorm
+      double precision ninfnorm
 
       integer nmax, nzmax, mmax
-      parameter( nmax=20101, nzmax=139301, mmax=30 )
+      parameter( nmax=20101, nzmax=179099, mmax=30 )
       integer lwsp, liwsp
       parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax )
 
@@ -105,11 +109,13 @@
       iflag = 0
 
       n  = nt*(nt + 1)/2 + 1
-      nz = (7*nt*nt - 7*nt + 2)/2
+*      nz = (7*nt*nt - 7*nt + 2)/2
+      nz = (9*nt*nt - 9*nt - 2)/2
 
-      call BLDMAT(nt, mua, mub, laa, lab, qba, qab, ia, ja, a)
+      call NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, ia, ja, a)
 
-      anorm = infnorm(ia, ja, a, n, nz, wsp, lwsp)
+      anorm = ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
 
       v(1) = 0.0d0
       v(2) = scal
@@ -122,7 +128,7 @@
      .        anorm, ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
      .        iflag, scal)
          if ( iflag .lt. 0 ) then
-*            print*,'[BUCEXP] WARNING: switching to manual calculation'
+*            print*,'[NUCEXP] WARNING: switching to manual calculation'
 *     The trick here would be to return the number of successful
 *     times done and just restart from there, but that's not a very
 *     large optimization for the number of times this is used (I counted
@@ -133,7 +139,7 @@
      .              anorm,ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
      .              iflag, scal)
                if ( iflag .lt. 0 ) then
-*                  print*,'[BUCEXP] WARNING: calculation failed'
+*                  print*,'[NUCEXP] WARNING: calculation failed'
                   return
                endif
             enddo
@@ -147,17 +153,19 @@
 
       end
 
-      subroutine BUCEXPSAFE(nt, mua, mub, laa, lab, qba, qab, t, lt,
+      subroutine NUCEXPSAFE(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt,
      .     scal, tol, m, w, iflag)
       implicit none
 
       integer nt, lt
-      double precision mua, mub, laa, lab, qba, qab, t(lt), scal, w(*)
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(lt), scal, w(*)
 
-      double precision infnorm
+      double precision ninfnorm
 
       integer nmax, nzmax, mmax
-      parameter( nmax=20101, nzmax=139301, mmax=30 )
+      parameter( nmax=20101, nzmax=179099, mmax=30 )
       integer lwsp, liwsp
       parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax )
 
@@ -169,11 +177,13 @@
       iflag = 0
 
       n  = nt*(nt + 1)/2 + 1
-      nz = (7*nt*nt - 7*nt + 2)/2
+*      nz = (7*nt*nt - 7*nt + 2)/2
+      nz = (9*nt*nt - 9*nt - 2)/2
 
-      call BLDMAT(nt, mua, mub, laa, lab, qba, qab, ia, ja, a)
+      call NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, ia, ja, a)
 
-      anorm = infnorm(ia, ja, a, n, nz, wsp, lwsp)
+      anorm = ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
 
       v(1) = 0.0d0
       v(2) = scal
@@ -187,7 +197,7 @@
      .           anorm,ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
      .           iflag, scal)
             if ( iflag .lt. 0 ) then
-*               print*,'[BUCEXPSAFE] WARNING: calculation failed'
+*               print*,'[NUCEXPSAFE] WARNING: calculation failed'
                return
             endif
          enddo
@@ -200,17 +210,19 @@
 
       end
 
-      subroutine BUCEXP1(nt, mua, mub, laa, lab, qba, qab, t, lt, tol,
+      subroutine NUCEXP1(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt, tol,
      .     m, w, iflag)
       implicit none
 
       integer nt, lt
-      double precision mua, mub, laa, lab, qba, qab, t(lt), w(*)
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(lt), w(*)
 
-      double precision infnorm
+      double precision ninfnorm
 
       integer nmax, nzmax, mmax
-      parameter( nmax=20101, nzmax=139301, mmax=30 )
+      parameter( nmax=20101, nzmax=179099, mmax=30 )
       integer lwsp, liwsp
       parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax )
 
@@ -221,10 +233,12 @@
       itrace = 0
       iflag = 0
       n  = nt*(nt + 1)/2 + 1
-      nz = (7*nt*nt - 7*nt + 2)/2
+*      nz = (7*nt*nt - 7*nt + 2)/2
+      nz = (9*nt*nt - 9*nt - 2)/2
 
-      call BLDMAT(nt, mua, mub, laa, lab, qba, qab, ia, ja, a)
-      anorm = infnorm(ia, ja, a, n, nz, wsp, lwsp)
+      call NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, ia, ja, a)
+      anorm = ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
 
       v(1) = 0.0d0
       v(2) = 1.0d0
@@ -237,7 +251,7 @@
             call DMEXPV( n, m, t(i), v, w((lt*d + i-1)*n+1), tol, anorm,
      .           ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace, iflag)
             if ( iflag .lt. 0 ) then
-*               print*,'[BUCEXP1] WARNING: calculation failed'
+*               print*,'[NUCEXP1] WARNING: calculation failed'
                return
             endif
          enddo
@@ -249,16 +263,18 @@
       end
 
 ***   Likelihood functions
-      subroutine BUCEXPL(nt, mua, mub, laa, lab, qba, qab, t, lt,
+      subroutine NUCEXPL(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt,
      .     ti, Nc, nsc, k, lc, scal, tol, m, ans, iflag)
       implicit none
 
       integer nt, lt, lc, m, iflag
       integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision mua, mub, laa, lab, qba, qab, t(lt), scal,
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(lt), scal,
      .     tol, ans(4*lc)
 
-      double precision bucexplik
+      double precision NUCexplik
 
       integer n, d, i, j
       double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
@@ -269,10 +285,11 @@
 *     TODO: This is O(lt x lc), when it should be possible to do this in
 *     O((lt+lc) * log(lt + lc)) (using an order()-style approach).
 *     However, it's probably not that much of a time sink :)
-      call BUCEXP(nt, mua, mub, laa, lab, qba, qab, t, lt, scal, tol,
+      call NUCEXP(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt, scal, tol,
      .     m, w, iflag)
       if ( iflag .lt. 0 ) then
-*         print*,'[BUCEXPL] catching failure'
+         print*,'[NUCEXPL] catching failure'
          return
       endif
 
@@ -281,7 +298,7 @@
             do j=1,lc
                if ( ti(j) .eq. i ) then
                   ans(d*lc + j) =
-     .                 bucexplik(Nc(j), nsc(j), k(j), 
+     .                 NUCexplik(Nc(j), nsc(j), k(j), 
      .                 w((lt*d + i-1)*n+1))
                   ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
                endif
@@ -291,16 +308,18 @@
 
       end
 
-      subroutine BUCEXPSAFEL(nt, mua, mub, laa, lab, qba, qab, t, lt,
+      subroutine NUCEXPSAFEL(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt,
      .     ti, Nc, nsc, k, lc, scal, tol, m, ans, iflag)
       implicit none
 
       integer nt, lt, lc, m, iflag
       integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision mua, mub, laa, lab, qba, qab, t(lt), scal,
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(lt), scal,
      .     tol, ans(4*lc)
 
-      double precision bucexplik
+      double precision NUCexplik
 
       integer n, d, i, j
       double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
@@ -308,10 +327,11 @@
       iflag = 0
       n = nt*(nt + 1)/2 + 1
 
-      call BUCEXPSAFE(nt, mua, mub, laa, lab, qba, qab, t, lt, scal,
+      call NUCEXPSAFE(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt, scal,
      .     tol, m, w, iflag)
       if ( iflag .lt. 0 ) then
-*         print*,'[BUCEXPSAFE] catching failure'
+         print*,'[NUCEXPSAFE] catching failure'
          return
       endif
       do d = 0,1
@@ -319,7 +339,7 @@
             do j=1,lc
                if ( ti(j) .eq. i ) then
                   ans(d*lc + j) =
-     .                 bucexplik(Nc(j), nsc(j), k(j), 
+     .                 NUCexplik(Nc(j), nsc(j), k(j), 
      .                 w((lt*d + i-1)*n+1))
                   ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
                endif
@@ -329,16 +349,18 @@
 
       end
 
-      subroutine BUCEXP1L(nt, mua, mub, laa, lab, qba, qab, t, lt,
+      subroutine NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt,
      .     ti, Nc, nsc, k, lc, tol, m, ans, iflag)
       implicit none
 
       integer nt, lt, lc, m, iflag
       integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision mua, mub, laa, lab, qba, qab, t(lt), tol,
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(lt), tol,
      .     ans(4*lc)
 
-      double precision bucexplik
+      double precision NUCexplik
 
       integer n, d, i, j
       double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
@@ -346,10 +368,11 @@
       iflag = 0
       n  = nt*(nt + 1)/2 + 1
 
-      call BUCEXP1(nt, mua, mub, laa, lab, qba, qab, t, lt, tol, m, w, 
+      call NUCEXP1(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, lt, tol, m, w, 
      .     iflag)
       if ( iflag .lt. 0 ) then
-*         print*,'[BUCEXP1L] catching failure'
+         print*,'[NUCEXP1L] catching failure'
          return
       endif
       do d = 0,1
@@ -357,7 +380,7 @@
             do j=1,lc
                if ( ti(j) .eq. i ) then
                   ans(d*lc + j) =
-     .                 bucexplik(Nc(j), nsc(j), k(j), 
+     .                 NUCexplik(Nc(j), nsc(j), k(j), 
      .                 w((lt*d + i-1)*n+1))
                   ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
                endif
@@ -368,30 +391,33 @@
       end
 
 *     This should replace the inner loop so that we have
-*      subroutine BUCEXP1L(nt, mua, mub, laa, lab, qba, qab, t, lt,
+*      subroutine NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+*     .     pbc, pba, t, lt,
 *     .     ti, Nc, nsc, k, lc, tol, m, ans)
 *      implicit none
 *
 *      integer nt, lt, lc, m
 *      integer ti(lc), Nc(lc), nsc(lc), k(lc)
-*      double precision mua, mub, laa, lab, qba, qab, t(lt), tol,
+*      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+*     .     pbc, pba, t(lt), tol,
 *     .     ans(4*lc)
 *
 *      integer n
 *      double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
 *
 *      n  = nt*(nt + 1)/2 + 1
-*      call BUCEXP1(nt, mua, mub, laa, lab, qba, qab, t, lt, tol, m, w)
-*      call BUXEXPLIKELIHOODS(lt, ti, Nc, nsc, k, lc, w, n, ans)
+*      call NUCEXP1(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+*     .     pbc, pba, t, lt, tol, m, w)
+*      call NUCEXPLIKELIHOODS(lt, ti, Nc, nsc, k, lc, w, n, ans)
 *      end
-      subroutine BUCEXPLIKELIHOODS(lt, ti, Nc, nsc, k, lc, w, n, ans)
+      subroutine NUCEXPLIKELIHOODS(lt, ti, Nc, nsc, k, lc, w, n, ans)
       implicit none
 
       integer lt, lc, n
       integer ti(lc), Nc(lc), nsc(lc), k(lc)
       double precision w(2*lt*n), ans(4*lc)
 
-      double precision bucexplik
+      double precision NUCexplik
       integer d, i, j
 
       do d = 0,1
@@ -399,7 +425,7 @@
             do j=1,lc
                if ( ti(j) .eq. i ) then
                   ans(d*lc + j) =
-     .                 bucexplik(Nc(j), nsc(j), k(j), 
+     .                 NUCexplik(Nc(j), nsc(j), k(j), 
      .                 w((lt*d + i-1)*n+1))
                   ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
                endif
@@ -413,26 +439,30 @@
 *     This is a historic function that is useful in debugging at the
 *     Java end (since it is easy to make this return the same number as
 *     the integrator does).
-      subroutine BUCEXPONE(nt, mua, mub, laa, lab, qba, qab, t, Nc, nsc,
+      subroutine NUCEXPONE(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, Nc, nsc,
      .     k, tol, m, ans, iflag)
 
       implicit none
       integer nt
       integer Nc(1), nsc(1), k(1), m, iflag
-      double precision mua, mub, laa, lab, qba, qab, t(1), tol, ans(4)
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t(1), tol, ans(4)
       iflag = 0
 *     the '1's are, in turn, lt, ti, [other args], lc
-      call BUCEXP1L(nt, mua, mub, laa, lab, qba, qab, t, 1, 1,
+      call NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, t, 1, 1,
      .     Nc, nsc, k, 1, tol, m, ans, iflag)
       end
 
 ***     Helper functions and subroutines:
 *     Infinite norm of a COO stored matrix:
-      double precision function infnorm(ia, ja, a, n, nz, wsp, lwsp)
+      double precision function ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
       implicit none
       integer nzmax
       integer n, nz, lwsp
-      parameter( nzmax = 3000 )
+      parameter( nzmax = 179099 )
+*     SALLY:  Changed nzmax from 3000 to 179099
       integer ia(nzmax), ja(nzmax)
       double precision a(nzmax), wsp(lwsp)
       integer i
@@ -443,9 +473,9 @@
       do i = 1,nz
          wsp(ia(i)) = wsp(ia(i)) + ABS( a(i) )
       enddo
-      infnorm = wsp(1)
+      ninfnorm = wsp(1)
       do i = 2,n
-         if ( infnorm.lt.DBLE(wsp(i)) ) infnorm =  wsp(i)
+         if ( ninfnorm.lt.DBLE(wsp(i)) ) ninfnorm =  wsp(i)
       enddo
 
       return
@@ -458,8 +488,8 @@
 *       ns: The number of species of known state (0 < ns <= N)
 *       k:  The number of species known to be in state 'b' 
 *           (0 <= k <= ns)
-*       w:  The probability/state vector produced by bucexp()
-      double precision function bucexplik(N, ns, k, w)
+*       w:  The probability/state vector produced by NUCexp()
+      double precision function NUCexplik(N, ns, k, w)
       implicit none
       integer N, ns, k
       double precision w(*)
@@ -492,7 +522,7 @@
          enddo
       endif
       
-      bucexplik = ans
+      NUCexplik = ans
       end
 
 *     Rate matrix
@@ -521,28 +551,41 @@
 *
 *     The last speciation row is dealt with separately, since this is
 *     transition into the "too many species" absorbing state
-      subroutine BLDMAT(nt, mua, mub, laa, lab, qba, qab, ia, ja, a)
+      subroutine NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba, ia, ja, a)
       implicit none
       
       integer nt
-      double precision mua, mub, laa, lab, qba, qab
+      integer prodone, prodtwo
+      double precision mua, mub, laa, lab, qba, qab, pac, paa,
+     .     pbc, pba
       
       integer n, nz, idx, i, na, nb, ns, nzmax
-      parameter( nzmax = 3000 )
+      parameter( nzmax = 179099 )
+*     SALLY:  Changed nzmax from 3000 to 179099
       integer ia(nzmax), ja(nzmax)
       double precision a(nzmax)
       double precision pa, pb
       
       n = nt*(nt + 1)/2 + 1
-      nz = (7*nt*nt - 7*nt + 2)/2
+*      nz = (7*nt*nt - 7*nt + 2)/2
+      nz = (9*nt*nt - 9*nt - 2)/2
 
       na = 1
       nb = 0
       ns = 1
 
+*     SALLY: Introduced for speed
+      prodone = (ns + 1) * (ns + 2)/2
+      prodtwo = ns * (ns - 1)/2
+
+*     The chance of no change is unaffected by BiSSEness, which only alters what
+*     happens at speciation.
       pa = -(mua + laa + qba)
       pb = -(mub + lab + qab)
 
+*     SALLY: For all possible values of the index, idx, a(idx) gives the value of the matrix entry,
+*     moving the system from ja(idx) to ia(idx). 
       a(1) = mua
       a(2) = mub
       ia(1) = 1
@@ -553,19 +596,67 @@
       idx = 3
 
       DO i = 2,(n-1)
+*     BiSSE commands follow:
+*         IF ( nb .gt. 1 ) THEN
+*            a(idx) = (nb - 1) * lab
+*            ia(idx) = i
+*            ja(idx) = prodtwo + nb
+*            idx = idx + 1
+*         ENDIF
+*         IF ( na .gt. 1 ) THEN
+*            a(idx) = (na - 1) * laa
+*            ia(idx) = i
+*            ja(idx) = prodtwo + nb + 1
+*            idx = idx + 1
+*         ENDIF
+
+*     BiSSEness commands follow:
          IF ( nb .gt. 1 ) THEN
-            a(idx) = (nb - 1) * lab
+            a(idx) = (nb - 1) * lab * (1 - pbc)
+            IF ( na .gt. 0 ) THEN
+               a(idx) = a(idx) + na * laa * pac * paa
+            ENDIF
             ia(idx) = i
-            ja(idx) = ns*(ns - 1)/2 + nb
+            ja(idx) = prodtwo + nb
             idx = idx + 1
+            a(idx) = (na + 1) * laa * pac * (1 - paa)
+            ia(idx) = i
+            ja(idx) = prodtwo + nb - 1
+            idx = idx + 1
+         ENDIF
+         IF ( nb .eq. 1 ) THEN
+            IF ( na .gt. 0 ) THEN
+               a(idx) = na * laa * pac * paa
+            ia(idx) = i
+            ja(idx) = prodtwo + nb
+            idx = idx + 1
+            ENDIF
          ENDIF
          IF ( na .gt. 1 ) THEN
-            a(idx) = (na - 1) * laa
+            a(idx) = (na - 1) * laa * (1 - pac)
+            IF ( nb .gt. 0 ) THEN
+               a(idx) = a(idx) + nb * lab * pbc * pba
+            ENDIF
             ia(idx) = i
-            ja(idx) = ns*(ns - 1)/2 + nb + 1
+            ja(idx) = prodtwo + nb + 1
+            idx = idx + 1
+            a(idx) = (nb + 1) * lab * pbc * (1 - pba)
+            ia(idx) = i
+            ja(idx) = prodtwo + nb + 2
             idx = idx + 1
          ENDIF
+         IF ( na .eq. 1 ) THEN
+            IF ( nb .gt. 0 ) THEN
+               a(idx) = nb * lab * pbc * pba
+            ia(idx) = i
+            ja(idx) = prodtwo + nb + 1
+            idx = idx + 1
+            ENDIF
+         ENDIF
 
+*     If there are some species in state b, they could have come from state a:
+*     SALLY:  Note that qab is actually q10 (it's the second of the two q elements)
+*     Apparently, the notation used in the fortran code is that the last letter specifies the starting state.
          IF ( nb .gt. 0 ) THEN
             a(idx) = (na + 1) * qba
             ia(idx) = i
@@ -573,11 +664,13 @@
             idx = idx + 1
          ENDIF
 
+*     No change
          a(idx) = na * pa + nb * pb
          ia(idx) = i
          ja(idx) = i
          idx = idx + 1
 
+*     If there are some species in state a, they could have come from state b:
          IF ( na .gt. 0 ) THEN
             a(idx) = (nb + 1) * qab
             ia(idx) = i
@@ -587,15 +680,16 @@
          
 *     TODO: It is wasteful to compute (ns+1)(ns+2)/2 every time here
 *     See above for similar cases, too [ns(ns-1)]
+*     SALLY:  I fixed this a bit, defining prodone = (ns+1)(ns+2)/2 and prodtwo = ns(ns-1)/2
          IF ( ns < (nt - 1) ) THEN
             a(idx) = (na + 1) * mua
             ia(idx) = i
-            ja(idx) = (ns + 1)*(ns + 2)/2 + nb + 1
+            ja(idx) = prodone + nb + 1
             idx = idx + 1
 
             a(idx) = (nb + 1) * mub
             ia(idx) = i
-            ja(idx) = (ns + 1)*(ns + 2)/2 + nb + 2
+            ja(idx) = prodone + nb + 2
             idx = idx + 1
          ENDIF
 
@@ -604,6 +698,8 @@
             nb = nb + 1
          ELSE
             ns = ns + 1
+            prodone = (ns + 1) * (ns + 2)/2
+            prodtwo = ns * (ns - 1)/2
             na = ns
             nb = 0
          ENDIF

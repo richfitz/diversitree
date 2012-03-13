@@ -1,3 +1,66 @@
+2012-03-13  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* DESCRIPTION: Bump to 0.9-1, add mention of Classe and BiSSE-ness
+
+	* NAMESPACE: More imports
+
+	* R/check.R: check.control.continuous, for checking vcv/direct
+	switch for BM methods.
+
+	* R/diversitree-branches.R: whitespace?
+
+	* R/model-bisseness-unresolved.R: Added unresolved clade support
+	for BiSSE-ness (from Sally Otto)
+
+	* R/model-bisseness.R: Changes to allow unresolved clades, and
+	other minor tweaks.
+
+	* R/model-bm.R: switch to 'control' based method switching.
+
+	* R/model-classe.R: Added
+
+	* R/model-geosse-split.R: Updated to work with new split
+	functions.
+
+	* R/model-geosse.R: A ton of little updates to work better with
+	new support functions.
+
+	* R/model-ou.R: Added control argument, though it does nothing.
+
+	* R/plot-alt-extra.R: New trait.plot() function.
+
+	* R/plot-alt-util.R: New unexported "filled.arcs" function.
+
+	* R/plot-alt.: Minor tweaks.
+
+	* R/simulate-musse.R: Simulation support for musse.multitrait
+	trees.
+
+	* R/util.R: uniform prior was incorrect (but not in a way that
+	would affect calculations).
+
+	* man/make.bisseness.Rd: New documentation.
+
+	* man/make.bm.Rd: Updated to reflect control change.
+
+	* man/make.classe.Rd: New documentation
+
+	* man/make.geosse.Rd: Substantial updates
+
+	* man/simulate.Rd: Updates for tree.musse.multitrait
+
+	* man/trait.plot.Rd: New documentation
+
+	* src/bucexp.c: Remove print statements
+
+	* src/classe-eqs.c: New
+
+	* src/cvodes/*: Remapped printf -> Rprintf
+
+	* src/geosse-eqs.c: Small tidy up
+
+	* src/nuexp.f: BiSSE-ness unresolved clade calculations.
+
 2012-02-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* DESCRIPTION: Bump to 0.8-4

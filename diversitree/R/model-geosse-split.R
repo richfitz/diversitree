@@ -16,51 +16,55 @@ make.geosse.split <- function(tree, states, nodes, split.t,
                              sampling.f=NULL, strict=TRUE,
                              control=list()) {
   control <- check.control.ode(control)
-  if ( control$backend == "CVODES" )
-    stop("Cannot use CVODES backend with geosse.split")
+  backend <- control$backend
 
-  cache <- make.cache.geosse.split(tree, states, nodes, split.t, 
-                                   sampling.f=sampling.f,
-                                   strict=strict)
+  cache <- make.cache.geosse.split(tree, states, nodes, split.t,
+                                   sampling.f, strict)
   cache$control <- check.control.split(control)
+  n.part <- cache$n.part  
 
-  branches.main <- make.branches.geosse(cache, control)
-  branches.aux <- make.branches.aux.geosse(cache, control)
-  branches <- make.branches.split(cache, branches.main, branches.aux)
-  initial.conditions <-
-    make.initial.conditions.split(cache, initial.conditions.geosse)
+  if ( backend == "CVODES" ) {
+    stop(paste("This will take some work...)", 
+               "(Cannot use CVODES backend with geosse.split)"))
+  } else {
+    branches.main <- make.branches.geosse(cache, control)
+    branches.aux <- make.branches.geosse.aux(cache, control)
+    branches <- make.branches.split(cache, branches.main, branches.aux)    
+    initial.conditions <-
+      make.initial.conditions.split(cache, initial.conditions.geosse)
+  }
 
-  n.part <- cache$n.part
-  
-  ## (note: condition.surv=TRUE in bisse)
-  ll <- function(pars, condition.surv=FALSE, root=ROOT.OBS,
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    pars <- check.par.multipart(pars, n.part, 7)
-    pars.n <- unlist(pars)
-    if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
-      stop("All parameters must be nonnegative")
-
+    pars <- check.par.geosse.split(pars, n.part)
     if ( !is.null(root.p) && root != ROOT.GIVEN )
       warning("Ignoring specified root state")
 
-    pars.root <- pars[[cache$group.nodes[cache$root]]]
-    if ( cache$control$caching.branches )
-      caching.branches.set.pars(pars, branches)
+    if ( root == ROOT.EQUI)
+      stop(paste("Can't use ROOT.EQUI:", 
+                 "stationary frequencies are messy for split models."))
 
-    ans <- all.branches.matrix(pars, cache, initial.conditions,
-                               branches)
+    if ( backend == "CVODES" ) {
+      stop("Not done yet...")
+    } else {
+      pars.root <- pars[[cache$group.nodes[cache$root]]]
+      if ( cache$control$caching.branches )
+        caching.branches.set.pars(pars, branches)
 
-    vals <- ans$init[,cache$root]
-    root.p <- root.p.geosse(vals, pars.root, root, root.p)
-    loglik <- root.geosse(vals, pars.root, ans$lq, condition.surv, root.p)
+      ans <- all.branches.matrix(pars, cache, initial.conditions, branches)
+      vals <- ans$init[,cache$root]
 
-    if (intermediates) {
+      ## ROOT.EQUI check above ensures not needing stationary.freq.geosse
+      root.p <- root.p.xxsse(vals, pars.root, root, root.p)
+      loglik <- root.geosse(vals, pars.root, ans$lq, condition.surv, root.p)
+
+      if (intermediates) {
         ans$root.p <- root.p
         attr(loglik, "intermediates") <- ans
         attr(loglik, "vals") <- vals
+      }
+      loglik
     }
-
-    loglik
   }
  
   class(ll) <- c("geosse.split", "geosse", "function")
@@ -96,11 +100,11 @@ find.mle.geosse.split <- function(func, x.init, method, fail.value=NA,
 ## 5: make.cache (initial.tip, root)
 make.cache.geosse.split <- function(tree, states, nodes, split.t,
                                     sampling.f, strict) {
-  cache <- make.cache.geosse(tree, states, NULL, sampling.f, NULL,
-                             strict)
+  cache <- make.cache.geosse(tree, states, NULL, strict)
   cache <- make.cache.split(tree, cache, nodes, split.t)
   cache$sampling.f <- check.sampling.f.split(sampling.f, 3, cache$n.part)
   cache$aux.i <- 1:3
+  cache$k <- 3  # needed by make.initial.tip.xxsse.split()  
   cache$y <- make.initial.tip.xxsse.split(cache)  
   cache
 }
@@ -109,15 +113,27 @@ make.cache.geosse.split <- function(tree, states, nodes, split.t,
 
 ## 8: branches: from geosse.  However the 'branches.aux' function is
 ## required to compute the E0, E1, E2 values after a partition.
-make.branches.aux.geosse <- function(cache, control) {
-  idx.e <- 1:3
-  y <- lapply(cache$sampling.f, function(x) c(1-x, rep(1, 3)))
+make.branches.geosse.aux <- function(cache, control) {
+  neq <- 3L
+  np <- 7L
+  comp.idx <- integer(0)
+  branches <- make.ode.branches("geosse_aux", "diversitree", neq, np,
+                                comp.idx, control)
+  y <- lapply(cache$sampling.f, function(x) 1-x)
   n <- length(y)
-  branches <- make.branches.geosse(cache, control)
 
   function(i, len, pars) {
     if ( i > n )
       stop("No such partition")
-    branches(y[[i]], len, pars, 0)[[2]][idx.e,,drop=FALSE]
+    branches(y[[i]], len, pars, 0)[[2]]    
   }
+}
+
+## when classe.split is working, this can be a special case
+check.par.geosse.split <- function(pars, n.part) {
+  pars <- check.par.multipart(pars, n.part, 7)
+  pars.n <- unlist(pars) # for checking only...
+  if ( any(pars.n < 0) || any(!is.finite(pars.n)) )
+    stop("All parameters must be nonnegative")
+  pars
 }

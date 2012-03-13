@@ -1,6 +1,11 @@
 ## My simple-minded OU calculator, direct from the SDE:
 ## 1: make
-make.ou <- function(tree, states, states.sd=0) {
+make.ou <- function(tree, states, states.sd=0, control=list()) {
+  if ( missing(control) )
+    control <- list(method="vcv")
+  control <- check.control.continuous(control)
+  if ( control$method == "vcv" )
+    stop("VCV-based not yet implemented for OU (consider geiger)")
   cache <- make.cache.ou(tree, states, states.sd)
 
   ll.ou <- function(pars, root=ROOT.MAX, root.x=NA,

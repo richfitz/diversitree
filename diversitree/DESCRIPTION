@@ -1,9 +1,9 @@
 Package: diversitree
 Title: diversitree: comparative phylogenetic analyses of diversification
-Version: 0.8-4
-Date: 2012-02-23
-Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE by
-  Emma E. Goldberg <eeg@uic.edu>, and BiSSE-ness by Karen
+Version: 0.9-1
+Date: 2012-03-13
+Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE and
+  ClaSSE by Emma E. Goldberg <eeg@uic.edu>, and BiSSE-ness by Karen
   Magnuson-Ford.
 Maintainer: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>
 Depends: R (>= 2.10), deSolve (>= 1.7), ape, subplex

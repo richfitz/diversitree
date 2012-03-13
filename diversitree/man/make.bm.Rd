@@ -11,8 +11,8 @@
   inference.}
 
 \usage{
-make.bm(tree, states, states.sd=0, method="vcv")
-make.ou(tree, states, states.sd=0)
+make.bm(tree, states, states.sd=0, control=list())
+make.ou(tree, states, states.sd=0, control=list())
 }
 
 \arguments{
@@ -26,17 +26,23 @@ make.ou(tree, states, states.sd=0)
     for all tips, otherwise the vector must be named as for
     \code{states}.}
 
-  \item{method}{A character string indicating if the likelihood should
-    be computed using the VCV matrix (\code{method="vcv"}, the default,
-    and the approach used by Geiger), or directly using along-branch
-    calculations (\code{method="direct"}, more similar to how most
-    other models are computed with diversitree).}
+  \item{control}{A list of control parameters.  See details below.}
 }
 
-\details{
-  This function is heavily based on \code{fitContinuous} in the
-  \code{geiger} package.  However, this version only fits Brownian
-  motion models.
+\details{The \code{control} argument is a named list of options.
+
+  Currently the only option is \code{method}.  Specifying
+  \code{control=list(method="vcv")} uses a variance-covariance matrix
+  based approach to compute the likelihood.  This is similar to the
+  approach used by geiger, and is the default for \code{make.bm} (but is
+  not available for \code{make.ou}).  The alternative is to specify
+  \code{control=list(method="direct")} which uses the transition density
+  function for brownian motion along each branch, similar to how most
+  methods in diversitree are computed.  This second approach is much
+  faster for very large trees.
+
+  The VCV-based \code{make.bm} function is heavily based on
+  \code{fitContinuous} in the \code{geiger} package.
 }
 
 % TODO: Add example section and show equivalence to geiger?
@@ -51,7 +57,8 @@ x <- structure(rnorm(length(bird.orders$tip.label)),
 fit1 <- find.mle(make.bm(bird.orders, x), .1)
 
 ## With the direct calculations
-fit2 <- find.mle(make.bm(bird.orders, x, method="direct"), .1)
+lik.direct <- make.bm(bird.orders, x, control=list(method="direct"))
+fit2 <- find.mle(lik.direct, .1)
 
 ## All the same (need to drop the function from this though)
 all.equal(fit1[-7], fit2[-7])

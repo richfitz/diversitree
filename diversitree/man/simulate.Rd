@@ -4,6 +4,7 @@
 \alias{tree.bisse}
 \alias{tree.bisseness}
 \alias{tree.musse}
+\alias{tree.musse.multitrait}
 \alias{tree.quasse}
 \alias{tree.yule}
 \alias{prune}
@@ -26,6 +27,8 @@ tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA)
 tree.musse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA)
+tree.musse.multitrait(pars, n.trait, depth, max.taxa=Inf, max.t=Inf,
+                      include.extinct=FALSE, x0=NA)
 
 tree.quasse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA,
             single.lineage=TRUE, verbose=FALSE)
@@ -65,6 +68,14 @@ prune(phy, to.drop=NULL)
     of \code{NA} will randomly choose a state from the model's
     equilibrium distribution for a BiSSE model, but a non-NA value must
     be specified for MuSSE and QuaSSE.}
+
+  \item{n.trait, depth}{For \code{tree.musse.multitrait} only, these
+    specify the number of binary traits and the style of parameters
+    (with the same meaning as in \code{\link{make.musse.multitrait}}).
+    The \code{pars} argument then needs to be in the same order as a
+    likelihood function created by \code{make.musse.multitrait} with
+    these arguments (this interface may be improved in future -- email
+    me if you find this annoying).}
 
   \item{single.lineage}{(\code{tree.quasse} only): Start simulation with
     a single lineage?  If \code{FALSE}, then the simulation starts with

@@ -9,41 +9,50 @@
 ## functions have the same function name as those found here, omitting
 ## 'ness'.
 
-## Using BiSSE-ness to estimate parameters:
+## Using BiSSE-ness to estimate parameters (numbers follow other
+## diversitree files)
 ##   1. make.bisseness is the overarching function that makes the
-##      model 
+##      model
 ##
-##   2. argnames.bisseness sets argument names
+##   2. print.bisseness is the print 
 ##
-##   3. ll.bisseness sets up the likelihood function
+##   3. argnames.bisseness gets and sets argument names
 ##
-##   4. initial.conditions.bisseness combines the values from two
+##   4. find.mle.bisseness alters the MLE search
+##
+##  (5. would be make.cache, but make.cache.bisse used)
+##
+##  (6. would be ll.bisseness, but done internally)
+##
+##   7. initial.conditions.bisseness combines the values from two
 ##      descending branches at a node, simultaneously accounting for
 ##      the possibility of cladogenetic change (eqn. 2 in the paper).
 ##
-##   5. make.branches.bisseness computes calculation along a branch
+##   8. make.branches.bisseness computes calculation along a branch
 ##      using the differential equations specified in C file
 ##      'bisseness-eqs.c' (eqn. 3-6 in the paper).
 ##
-##   6. ll.xxsseness specifies the use of root.xxsseness
+##   9. branches.unresolved.bisseness calls the fortran code for
+##      calculating the rate matrix and its exponent, to obtain the
+##      probability of seeing the data listed in unresolved.
 ##
-##   7. root.xxsseness specifies the calculations at the root, by
-##       default conditioning the likelihood of the data on survival
-##       of the two lineages descending from the root in a manner that
-##       accounts for cladogenesis (eqn. 7; see also Nee et. al.,
-##       1994).
+##  10. root.xxsseness specifies the calculations at the root, by
+##      default conditioning the likelihood of the data on survival of
+##      the two lineages descending from the root in a manner that
+##      accounts for cladogenesis (eqn. 7; see also Nee et. al.,
+##      1994).
 
 ## Using BiSSE-ness to simulate phylogenies:
 ##
-##   8. stationary.freq.bisseness used for tree simulator to determine
+##  11. stationary.freq.bisseness used for tree simulator to determine
 ##      the equilibrium root state; it can also be used to combine
 ##      probabilities at the root for parameter estimation using ML or
 ##      MCMC (but not the default, specify this explicitly).
 ##
-##   9. tree.bisseness is the overall function used to simulate
+##  12. tree.bisseness is the overall function used to simulate
 ##      phylogenies under BiSSE-ness.
 ##
-##   10. make.tree.bisseness simulates phylogenies under BiSSE-ness.
+##  13. make.tree.bisseness simulates phylogenies under BiSSE-ness.
 
 ## 1: make
 make.bisseness <- function(tree, states, unresolved=NULL, sampling.f=NULL,
@@ -65,7 +74,8 @@ make.bisseness <- function(tree, states, unresolved=NULL, sampling.f=NULL,
     stop("Cannot yet use CVODES backend with unresolved clades")
 
   if ( !is.null(cache$unresolved) )
-    stop("Cannot yet use unresolved clades with BiSSE-ness")
+    warning("BiSSEness with unresolved clades has not yet been extensively teste
+d")
 
   ll.bisseness <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                            root.p=NULL, intermediates=FALSE) {
@@ -181,14 +191,38 @@ make.all.branches.C.bisseness <- function(cache, control) {
                       neq, np, comp.idx, control)
 }
 
+## 9: branches.unresolved
 branches.unresolved.bisseness <- function(pars, unresolved) {
-  stop("Still to write")
+ Nc <- unresolved$Nc
+ k <- unresolved$k
+ nsc <- unresolved$nsc
+ t <- unresolved$len
+ nt <- max(Nc) + unresolved$nt.extra
+
+ lambda0 <- pars[1]
+ lambda1 <- pars[2]
+ mu0 <- pars[3]
+ mu1 <- pars[4]
+ q01 <- pars[5]
+ q10 <- pars[6]
+ p0c <- pars[7]
+ p0a <- pars[8]
+ p1c <- pars[9]
+ p1a <- pars[10]
+ base <- nucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, p0c, p0a, p1c, p1a, t,
+                 Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
+
+ q <- rowSums(base[,3:4,drop=FALSE])
+ base[,3:4] <- base[,3:4] / q
+
+ ## Note the transpose here.
+ list(target=unresolved$target,
+      lq=log(q),
+      base=t(base))
 }
 
-
-## 6. ll.xxsseness
-
-## 7. root.xxsseness
+## Additional functions:
+## 10. root.xxsseness
 root.bisseness <- function(vals, pars, lq, condition.surv, root.p) {
   logcomp <- sum(lq)
   is.root.both <- is.null(root.p)
@@ -219,7 +253,7 @@ root.bisseness <- function(vals, pars, lq, condition.surv, root.p) {
 }
 
 ## Additional functions for simulating trees under the BiSSE-ness model.
-## 8. stationary.freq.bisseness
+## 11. stationary.freq.bisseness
 stationary.freq.bisseness <- function(pars) {
   lambda0 <- pars[1]
   lambda1 <- pars[2]
@@ -253,7 +287,7 @@ stationary.freq.bisseness <- function(pars) {
   }
 }
 
-## 9. tree.bisseness
+## 12. tree.bisseness
 tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf,
                            include.extinct=FALSE, x0=NA) {
   check.pars.bisseness(pars)
@@ -270,7 +304,7 @@ tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf,
     prune(phy)
 }
 
-## 10. make.tree.bisseness
+## 13. make.tree.bisseness
 make.tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf, x0,
                                 single.lineage=TRUE)  {
   p.pars<- matrix(c(1-pars[c(7,9)],
@@ -392,10 +426,11 @@ make.tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf, x0,
 check.pars.bisseness <- function(pars) {
   if ( length(pars) != 10 )
     stop("Invalid parameter length (expected 10)")
-  if ( any(pars < 0) || any(!is.finite(pars)) )
+  if ( any(!is.finite(pars)) || any(pars < 0) )
     stop("Parameters must be non-negative and finite")
   ## Already checked "< 0" above.
   if ( any(pars[7:10] > 1) )
     stop("Probability parameters must lie between 0 and 1.")
   TRUE
 }
+
