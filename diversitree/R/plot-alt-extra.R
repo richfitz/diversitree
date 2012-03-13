@@ -55,7 +55,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
   }
   if ( !all(tree$tip.label %in% rownames(dat)) )
     stop("All taxa must have entries in 'dat' (rownames)")
-  dat <- dat[phy$tip.label,]
+  dat <- dat[tree$tip.label,]
 
   par(mar=rep(0, 4))
   t <- max(branching.times(tree))

@@ -55,7 +55,7 @@ phy <- trees(pars, "bd", max.taxa=25)[[1]]
 ## therefore not exact), and one that is time-varying, but that the
 ## time-dependent functions are constant.t().
 lik.direct <- make.bd(phy)
-lik.ode <- make.bd.ode(phy)
+lik.ode <- make.bd(phy, control=list(method="ode"))
 lik.t <- make.bd.t(phy, list(constant.t, constant.t))
 
 lik.direct(pars) # -22.50267

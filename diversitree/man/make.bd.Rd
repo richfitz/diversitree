@@ -1,6 +1,5 @@
 \name{make.bd}
 \alias{make.bd}
-\alias{make.bd.ode}
 \alias{make.yule}
 \alias{starting.point.bd}
 
@@ -16,9 +15,8 @@
   trees.}
 
 \usage{
-make.bd(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
-make.bd.ode(tree, sampling.f=NULL, unresolved=NULL, control=list())
-make.yule(tree, times=NULL, sampling.f=NULL, unresolved=NULL)
+make.bd(tree, sampling.f=NULL, unresolved=NULL, times=NULL, control=list())
+make.yule(tree, sampling.f=NULL, unresolved=NULL, times=NULL, control=list())
 starting.point.bd(tree, yule=FALSE)
 }
 
@@ -46,8 +44,14 @@ starting.point.bd(tree, yule=FALSE)
   \item{yule}{Should the starting point function return a Yule model
     (zero extinction rate)?}
 
-  \item{control}{List of control parameters for the ODE solver.  See
-    details in \code{\link{make.bisse}}.}
+  \item{control}{List of control parameters.  The element \code{method}
+    can be either \code{nee} or \code{ode} to compute the likelihood
+    using the equation from Nee et al. (1994) or in a BiSSE-style ODE
+    approach respectively.  \code{nee} should be faster, and \code{ode}
+    is provided for completeness (and forms the basis of other methods).
+    When \code{ode} is selected, other elements of \code{control} affect
+    the behaviour of the ODE solver: see details in
+    \code{\link{make.bisse}}.}
 }
 
 \details{
@@ -146,6 +150,15 @@ set.seed(1)
 phy2 <- drop.tip(phy, sample(25, 5))
 lik2 <- make.bd(phy2, sampling.f=20/25)
 fit2 <- find.mle(lik2, c(.1, .03))
+
+## The ODE based version gives comparable results.  However, it is
+## about 12x slower.
+lik.ode <- make.bd(phy, control=list(method="ode"))
+all.equal(lik.ode(coef(fit)), lik(coef(fit)), tolerance=2e-7)
+
+## The CVODES-based ODE version is about 4.5 slower
+lik.ode <- make.bd(phy, control=list(method="ode", backend="CVODES"))
+all.equal(lik.ode(coef(fit)), lik(coef(fit)), tolerance=3e-7)
 
 %% TODO: Example of unresolved clades
 }

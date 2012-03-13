@@ -8,6 +8,8 @@
 ## optimisations in the same way as MEDUSA.  But it should provide a
 ## decent reference implementation of the calculations.
 
+## TODO: Split into a Nee and ODE version.
+
 ## 1: make
 make.bd.split <- function(tree, nodes, split.t=Inf, sampling.f=NULL,
                           unresolved=NULL) {

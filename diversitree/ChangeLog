@@ -1,5 +1,7 @@
 2012-03-13  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
+	* R/model-bd*.R: Combined ode and Nee BD calculations.
+
 	* DESCRIPTION: Bump to 0.9-1, add mention of Classe and BiSSE-ness
 
 	* NAMESPACE: More imports

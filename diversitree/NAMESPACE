@@ -3,7 +3,6 @@ useDynLib(diversitree)
 
 ## 1. make
 export(make.bd)
-export(make.bd.ode)
 export(make.bd.split)
 export(make.bd.t)
 export(make.bisse)
