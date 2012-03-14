@@ -196,10 +196,7 @@
  * =================================================================
  */
 
-/* RGF: printf is not allowed */
-/* #include <stdio.h> */
-#include <R.h>
-#define printf Rprintf
+#include <stdio.h>
 
 #define NO_FPRINTF_OUTPUT
 

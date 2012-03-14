@@ -54,7 +54,7 @@
       iflag = 0
       if ( ldh.lt.m ) iflag = -1
       if ( lwsp.lt.4*mm+ideg+1 ) iflag = -2
-      if ( iflag.ne.0 ) stop 'bad sizes (in input of DGPADM)'
+*      if ( iflag.ne.0 ) stop 'bad sizes (in input of DGPADM)'
 *
 *---  initialise pointers ...
 *
@@ -156,7 +156,7 @@
       endif
       call DAXPY( mm, -1.0d0,wsp(ip),1, wsp(iq),1 )
       call DGESV( m,m, wsp(iq),m, ipiv, wsp(ip),m, iflag )
-      if ( iflag.ne.0 ) stop 'Problem in DGESV (within DGPADM)'
+*      if ( iflag.ne.0 ) stop 'Problem in DGESV (within DGPADM)'
       call DSCAL( mm, 2.0d0, wsp(ip), 1 )
       do j = 1,m
          wsp(ip+(j-1)*(m+1)) = wsp(ip+(j-1)*(m+1)) + 1.0d0

@@ -109,7 +109,7 @@ make.br.mk <- function(pars) {
     if ( length(t) != 1 )
       stop("t must be a scalar.")
     while ( r[x0] > 0 && (t <- t - rexp(1, r[x0])) > 0 )
-      x0 <- sample((1:k)[-x0], 1, pr=Q[x0,-x0])
+      x0 <- sample((1:k)[-x0], 1, prob=Q[x0,-x0])
     x0
   }
 }

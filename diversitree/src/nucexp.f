@@ -289,7 +289,7 @@
      .     pbc, pba, t, lt, scal, tol,
      .     m, w, iflag)
       if ( iflag .lt. 0 ) then
-         print*,'[NUCEXPL] catching failure'
+*         print*,'[NUCEXPL] catching failure'
          return
       endif
 
@@ -331,7 +331,7 @@
      .     pbc, pba, t, lt, scal,
      .     tol, m, w, iflag)
       if ( iflag .lt. 0 ) then
-         print*,'[NUCEXPSAFE] catching failure'
+*         print*,'[NUCEXPSAFE] catching failure'
          return
       endif
       do d = 0,1
@@ -372,7 +372,7 @@
      .     pbc, pba, t, lt, tol, m, w, 
      .     iflag)
       if ( iflag .lt. 0 ) then
-         print*,'[NUCEXP1L] catching failure'
+*         print*,'[NUCEXP1L] catching failure'
          return
       endif
       do d = 0,1
@@ -448,11 +448,15 @@
       integer Nc(1), nsc(1), k(1), m, iflag
       double precision mua, mub, laa, lab, qba, qab, pac, paa,
      .     pbc, pba, t(1), tol, ans(4)
+*     TODO: CHECK! Something like:
+      integer lc, lt(1), ti(1)
+      lc    = 1
+      lt(1) = 1
+      ti(1) = 1
       iflag = 0
-*     the '1's are, in turn, lt, ti, [other args], lc
       call NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, 1, 1,
-     .     Nc, nsc, k, 1, tol, m, ans, iflag)
+     .     pbc, pba, t, lt, ti,
+     .     Nc, nsc, k, lc, tol, m, ans, iflag)
       end
 
 ***     Helper functions and subroutines:
@@ -466,6 +470,9 @@
       integer ia(nzmax), ja(nzmax)
       double precision a(nzmax), wsp(lwsp)
       integer i
+
+*     Purely to avoid compiler warning:
+      i = ja(1)
 
       do i = 1,n
          wsp(i) = 0.0d0

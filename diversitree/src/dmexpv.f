@@ -163,12 +163,13 @@
       if ( liwsp.lt.m+2 ) iflag = -2
       if ( m.ge.n .or. m.le.0 ) iflag = -3
       if ( iflag.ne.0 ) then
-         print *,'lwsp = ', lwsp
-         print *,'liwsp = ', liwsp
-         print *,'n = ', n
-         print *,'m = ', m
-         print *,'iflag = ', iflag
-         stop 'bad sizes (in input of DMEXPV)'
+*         print *,'lwsp = ', lwsp
+*         print *,'liwsp = ', liwsp
+*         print *,'n = ', n
+*         print *,'m = ', m
+*         print *,'iflag = ', iflag
+*         stop 'bad sizes (in input of DMEXPV)'
+         return
       endif
 *
 *---  initialisations ...
@@ -199,6 +200,10 @@
       x_round  = 0.0d0
       t_now    = 0.0d0
       t_new    = 0.0d0
+
+*     This is not initialised, causing compiler warnings.  For the time
+C     where this is skipped, this should not matter (happy breakdown).
+      avnorm   = 0
 
       p1 = 4.0d0/3.0d0
  1    p2 = p1 - 1.0d0
@@ -337,17 +342,21 @@
          p1 = 10.0d0**(NINT( LOG10( t_step )-SQR1 )-1)
          t_step = AINT( t_step/p1 + 0.55d0 ) * p1
          if ( itrace.ne.0 ) then
-            print*,'t_step =',t_old
-            print*,'err_loc =',err_loc
-            print*,'err_required =',delta*t_old*tol
-            print*,'stepsize rejected, stepping down to:',t_step
+*     Avoid compiler warning by referencing itrace (this is never
+*     nonzero, but removing the argument would deviate from expokit
+*     sources.
+            itrace = 0
+*            print*,'t_step =',t_old
+*            print*,'err_loc =',err_loc
+*            print*,'err_required =',delta*t_old*tol
+*            print*,'stepsize rejected, stepping down to:',t_step
          endif
          ireject = ireject + 1
          nreject = nreject + 1
          if ( mxreject.ne.0 .and. ireject.gt.mxreject ) then
-            print*,"Failure in DMEXPV: ---"
-            print*,"The requested tolerance is too high."
-            Print*,"Rerun with a smaller value."
+c$$$            print*,"Failure in DMEXPV: ---"
+c$$$            print*,"The requested tolerance is too high."
+c$$$            Print*,"Rerun with a smaller value."
             iflag = 2
             return
          endif
@@ -389,15 +398,15 @@
 *
 *---  display and keep some information ...
 *
-      if ( itrace.ne.0 ) then
-         print*,'integration',nstep,'---------------------------------'
-         print*,'scale-square =',ns
-         print*,'wnorm     =',beta
-         print*,'step_size =',t_step
-         print*,'err_loc   =',err_loc
-         print*,'roundoff  =',roundoff
-         print*,'next_step =',t_new
-      endif
+*      if ( itrace.ne.0 ) then
+*         print*,'integration',nstep,'---------------------------------'
+*         print*,'scale-square =',ns
+*         print*,'wnorm     =',beta
+*         print*,'step_size =',t_step
+*         print*,'err_loc   =',err_loc
+*         print*,'roundoff  =',roundoff
+*         print*,'next_step =',t_new
+*      endif
 
       step_min = MIN( step_min, t_step )
       step_max = MAX( step_max, t_step )

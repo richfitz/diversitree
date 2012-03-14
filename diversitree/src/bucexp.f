@@ -420,10 +420,15 @@
       integer nt
       integer Nc(1), nsc(1), k(1), m, iflag
       double precision mua, mub, laa, lab, qba, qab, t(1), tol, ans(4)
+      integer lc, lt(1), ti(1)
+*     TODO: CHECK! Something like:
+      lc    = 1
+      lt(1) = 1
+      ti(1) = 1
       iflag = 0
 *     the '1's are, in turn, lt, ti, [other args], lc
-      call BUCEXP1L(nt, mua, mub, laa, lab, qba, qab, t, 1, 1,
-     .     Nc, nsc, k, 1, tol, m, ans, iflag)
+      call BUCEXP1L(nt, mua, mub, laa, lab, qba, qab, t, lt, ti,
+     .     Nc, nsc, k, lc, tol, m, ans, iflag)
       end
 
 ***     Helper functions and subroutines:
@@ -436,6 +441,9 @@
       integer ia(nzmax), ja(nzmax)
       double precision a(nzmax), wsp(lwsp)
       integer i
+
+*     Purely to avoid compiler warning:
+      i = ja(1)
 
       do i = 1,n
          wsp(i) = 0.0d0
