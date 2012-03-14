@@ -269,3 +269,5 @@ export(ROOT.ALL)
 ## export(load.wisdom)
 ## export(save.wisdom)
 
+export(check.fftC)
+export(check.cvodes)

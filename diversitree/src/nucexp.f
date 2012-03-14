@@ -1,37 +1,13 @@
-*     A tidied version of the nucexp code, since it is getting a bit
-*     ridiculous at the moment.
-
-*     Generally, These are the functions to use.  Where possible, they
-*     step incrementally through a series of times.  Sometimes it is not
+*     These are the functions to use.  Where possible, they step
+*     incrementally through a series of times.  Sometimes it is not
 *     possible to do this without getting into a tangle, in which case
 *     they drop down and use the more basic approach of computing the
 *     exponential for each clade (see below).
 *       NUCEXP - return complete state matrix
 *       NUCEXPL - return likelihoods for a series of clades
 *
-*     These functions are here mostly for testing; for each unique time
-*     they compute the entire exponential.  These are much more robust
-*     to errors.  The functions are analogous to NUCEXP and NUCEXPL,
-*     taking identical arguments and retuning identical results to
-*     rouding error.
-*       NUCEXPSAFE
-*       NUCEXPSAFEL
-*
-*     These ones are really old testing functions;
-*       NUCEXP1
-*       NUCEXP1L
-*     they don't include the scal argument.
-*
 *     This won't need to be used directly:
 *       NLDMAT: construct infinitesimal rate matrix
-
-*     It might be nice if I can leverage a single mapping from the
-*     output of a raw function (NUCEXP, NUCEXPG) to a likelihood one
-*     (NUCEXPL, NUCEXPGL), but I don't want to keep around a huge pile
-*     of extra results unnecessarily.  However, the intermediate
-*     exponentiation *requires* that the entire matrix is returned, even
-*     if we are only interested in a few elements.  Not having the
-*     ability to call back makes it difficult to see a way around this.
 
 *     The complete state space subroutines compute the likelihood vector
 *     for all of state space over a series of times.  Results stored in
@@ -128,7 +104,6 @@
      .        anorm, ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
      .        iflag, scal)
          if ( iflag .lt. 0 ) then
-*            print*,'[NUCEXP] WARNING: switching to manual calculation'
 *     The trick here would be to return the number of successful
 *     times done and just restart from there, but that's not a very
 *     large optimization for the number of times this is used (I counted
@@ -153,115 +128,6 @@
 
       end
 
-      subroutine NUCEXPSAFE(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt,
-     .     scal, tol, m, w, iflag)
-      implicit none
-
-      integer nt, lt
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(lt), scal, w(*)
-
-      double precision ninfnorm
-
-      integer nmax, nzmax, mmax
-      parameter( nmax=20101, nzmax=179099, mmax=30 )
-      integer lwsp, liwsp
-      parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax )
-
-      integer d, i, n, nz, m, itrace, iflag
-      integer ia(nzmax), ja(nzmax), iwsp(liwsp)
-      double precision tol, anorm, v(nmax), wsp(lwsp), a(nzmax)
-
-      itrace = 0
-      iflag = 0
-
-      n  = nt*(nt + 1)/2 + 1
-*      nz = (7*nt*nt - 7*nt + 2)/2
-      nz = (9*nt*nt - 9*nt - 2)/2
-
-      call NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, ia, ja, a)
-
-      anorm = ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
-
-      v(1) = 0.0d0
-      v(2) = scal
-      do i = 3,n
-         v(i) = 0.0d0
-      enddo
-
-      do d=0,1
-         do i=1,lt
-            call DSEXPV( n, m, t(i), v, w((lt*d + i-1)*n+1), tol,
-     .           anorm,ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
-     .           iflag, scal)
-            if ( iflag .lt. 0 ) then
-*               print*,'[NUCEXPSAFE] WARNING: calculation failed'
-               return
-            endif
-         enddo
-
-         if ( d .eq. 0 ) then
-            v(2) = 0.0d0
-            v(3) = scal
-         endif
-      enddo
-
-      end
-
-      subroutine NUCEXP1(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt, tol,
-     .     m, w, iflag)
-      implicit none
-
-      integer nt, lt
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(lt), w(*)
-
-      double precision ninfnorm
-
-      integer nmax, nzmax, mmax
-      parameter( nmax=20101, nzmax=179099, mmax=30 )
-      integer lwsp, liwsp
-      parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax )
-
-      integer d, i, n, nz, m, itrace, iflag
-      integer ia(nzmax), ja(nzmax), iwsp(liwsp)
-      double precision tol, anorm, v(nmax), wsp(lwsp), a(nzmax)
-
-      itrace = 0
-      iflag = 0
-      n  = nt*(nt + 1)/2 + 1
-*      nz = (7*nt*nt - 7*nt + 2)/2
-      nz = (9*nt*nt - 9*nt - 2)/2
-
-      call NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, ia, ja, a)
-      anorm = ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
-
-      v(1) = 0.0d0
-      v(2) = 1.0d0
-      do i = 3,n
-         v(i) = 0.0d0
-      enddo
-
-      do d=0,1
-         do i=1,lt
-            call DMEXPV( n, m, t(i), v, w((lt*d + i-1)*n+1), tol, anorm,
-     .           ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace, iflag)
-            if ( iflag .lt. 0 ) then
-*               print*,'[NUCEXP1] WARNING: calculation failed'
-               return
-            endif
-         enddo
-         if ( d .eq. 0 ) then
-            v(2) = 0.0d0
-            v(3) = 1.0d0
-         endif
-      enddo
-      end
-
 ***   Likelihood functions
       subroutine NUCEXPL(nt, mua, mub, laa, lab, qba, qab, pac, paa,
      .     pbc, pba, t, lt,
@@ -282,14 +148,10 @@
       iflag = 0
       n = nt*(nt + 1)/2 + 1
 
-*     TODO: This is O(lt x lc), when it should be possible to do this in
-*     O((lt+lc) * log(lt + lc)) (using an order()-style approach).
-*     However, it's probably not that much of a time sink :)
       call NUCEXP(nt, mua, mub, laa, lab, qba, qab, pac, paa,
      .     pbc, pba, t, lt, scal, tol,
      .     m, w, iflag)
       if ( iflag .lt. 0 ) then
-*         print*,'[NUCEXPL] catching failure'
          return
       endif
 
@@ -306,157 +168,6 @@
          enddo
       enddo
 
-      end
-
-      subroutine NUCEXPSAFEL(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt,
-     .     ti, Nc, nsc, k, lc, scal, tol, m, ans, iflag)
-      implicit none
-
-      integer nt, lt, lc, m, iflag
-      integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(lt), scal,
-     .     tol, ans(4*lc)
-
-      double precision NUCexplik
-
-      integer n, d, i, j
-      double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
-
-      iflag = 0
-      n = nt*(nt + 1)/2 + 1
-
-      call NUCEXPSAFE(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt, scal,
-     .     tol, m, w, iflag)
-      if ( iflag .lt. 0 ) then
-*         print*,'[NUCEXPSAFE] catching failure'
-         return
-      endif
-      do d = 0,1
-         do i=1,lt
-            do j=1,lc
-               if ( ti(j) .eq. i ) then
-                  ans(d*lc + j) =
-     .                 NUCexplik(Nc(j), nsc(j), k(j), 
-     .                 w((lt*d + i-1)*n+1))
-                  ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
-               endif
-            enddo
-         enddo
-      enddo
-
-      end
-
-      subroutine NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt,
-     .     ti, Nc, nsc, k, lc, tol, m, ans, iflag)
-      implicit none
-
-      integer nt, lt, lc, m, iflag
-      integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(lt), tol,
-     .     ans(4*lc)
-
-      double precision NUCexplik
-
-      integer n, d, i, j
-      double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
-
-      iflag = 0
-      n  = nt*(nt + 1)/2 + 1
-
-      call NUCEXP1(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt, tol, m, w, 
-     .     iflag)
-      if ( iflag .lt. 0 ) then
-*         print*,'[NUCEXP1L] catching failure'
-         return
-      endif
-      do d = 0,1
-         do i=1,lt
-            do j=1,lc
-               if ( ti(j) .eq. i ) then
-                  ans(d*lc + j) =
-     .                 NUCexplik(Nc(j), nsc(j), k(j), 
-     .                 w((lt*d + i-1)*n+1))
-                  ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
-               endif
-            enddo
-         enddo
-      enddo
-
-      end
-
-*     This should replace the inner loop so that we have
-*      subroutine NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-*     .     pbc, pba, t, lt,
-*     .     ti, Nc, nsc, k, lc, tol, m, ans)
-*      implicit none
-*
-*      integer nt, lt, lc, m
-*      integer ti(lc), Nc(lc), nsc(lc), k(lc)
-*      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-*     .     pbc, pba, t(lt), tol,
-*     .     ans(4*lc)
-*
-*      integer n
-*      double precision w( 2 * lt * (nt*(nt + 1)/2 + 1) )
-*
-*      n  = nt*(nt + 1)/2 + 1
-*      call NUCEXP1(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-*     .     pbc, pba, t, lt, tol, m, w)
-*      call NUCEXPLIKELIHOODS(lt, ti, Nc, nsc, k, lc, w, n, ans)
-*      end
-      subroutine NUCEXPLIKELIHOODS(lt, ti, Nc, nsc, k, lc, w, n, ans)
-      implicit none
-
-      integer lt, lc, n
-      integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision w(2*lt*n), ans(4*lc)
-
-      double precision NUCexplik
-      integer d, i, j
-
-      do d = 0,1
-         do i=1,lt
-            do j=1,lc
-               if ( ti(j) .eq. i ) then
-                  ans(d*lc + j) =
-     .                 NUCexplik(Nc(j), nsc(j), k(j), 
-     .                 w((lt*d + i-1)*n+1))
-                  ans((2+d)*lc + j) = w((lt*d + i-1)*n+1)
-               endif
-            enddo
-         enddo
-      enddo
-      
-      end
-
-***   Other
-*     This is a historic function that is useful in debugging at the
-*     Java end (since it is easy to make this return the same number as
-*     the integrator does).
-      subroutine NUCEXPONE(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, Nc, nsc,
-     .     k, tol, m, ans, iflag)
-
-      implicit none
-      integer nt
-      integer Nc(1), nsc(1), k(1), m, iflag
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(1), tol, ans(4)
-*     TODO: CHECK! Something like:
-      integer lc, lt(1), ti(1)
-      lc    = 1
-      lt(1) = 1
-      ti(1) = 1
-      iflag = 0
-      call NUCEXP1L(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt, ti,
-     .     Nc, nsc, k, lc, tol, m, ans, iflag)
       end
 
 ***     Helper functions and subroutines:
@@ -466,7 +177,6 @@
       integer nzmax
       integer n, nz, lwsp
       parameter( nzmax = 179099 )
-*     SALLY:  Changed nzmax from 3000 to 179099
       integer ia(nzmax), ja(nzmax)
       double precision a(nzmax), wsp(lwsp)
       integer i

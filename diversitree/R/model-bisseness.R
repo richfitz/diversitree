@@ -74,8 +74,7 @@ make.bisseness <- function(tree, states, unresolved=NULL, sampling.f=NULL,
     stop("Cannot yet use CVODES backend with unresolved clades")
 
   if ( !is.null(cache$unresolved) )
-    warning("BiSSEness with unresolved clades has not yet been extensively teste
-d")
+    warning("BiSSEness with unresolved clades has not yet been extensively tested")
 
   ll.bisseness <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                            root.p=NULL, intermediates=FALSE) {

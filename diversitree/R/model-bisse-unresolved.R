@@ -1,5 +1,3 @@
-## dyn.load("bucexp.so")
-
 ## Compute the probabilities of generating every state, given that we
 ## started with one species in state 0 or state 1.  For lt = length(t)
 ## times, returns a n(space) x lt x 2 array.
@@ -34,72 +32,6 @@ bucexp <- function(nt, mua, mub, laa, lab, qba, qab, t, scal=1,
                   t    = as.numeric(t),
                   lt   = as.integer(lt),
                   scal = as.numeric(scal),
-                  tol  = as.numeric(tol),
-                  m    = as.integer(m),
-                  w    = numeric(2*n*lt),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-  array(res$w, c(n, lt, 2))
-}
-
-## Same as bucexp, but uses a slower, safer algorithm.  The slower
-## algorithm will be automatically used when needed, so this function
-## will not need to be used often.
-bucexpsafe <- function(nt, mua, mub, laa, lab, qba, qab, t, scal=1,
-                       tol=1e-10, m=15) {
-  stopifnot(all(c(mua, mub, laa, lab, qba, qab) >= 0))
-  lt <- length(t)
-  stopifnot(lt > 0)
-  stopifnot(scal >= 1)
-  stopifnot(m > 1)
-  n <- (nt*(nt+1)/2+1)
-  res <- .Fortran("bucexpsafe",
-                  nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  t    = as.numeric(t),
-                  lt   = as.integer(lt),
-                  scal = as.numeric(scal),
-                  tol  = as.numeric(tol),
-                  m    = as.integer(m),
-                  w    = numeric(2*n*lt),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-
-  array(res$w, c(n, lt, 2))
-}
-
-## Same as bucexpsafe, but removes the 'scal' argument so that the
-## expokit Markov exponentiation is used.  This should not be needed,
-## but might be useful for testing.
-bucexp1 <- function(nt, mua, mub, laa, lab, qba, qab, t, scal=1,
-                    tol=1e-10, m=15) {
-  stopifnot(all(c(mua, mub, laa, lab, qba, qab) >= 0))
-  lt <- length(t)
-  stopifnot(lt > 0)
-  stopifnot(scal >= 1)
-  stopifnot(m > 1)
-  n <- (nt*(nt+1)/2+1)
-  res <- .Fortran("bucexp1",
-                  nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  t    = as.numeric(t),
-                  lt   = as.integer(lt),
                   tol  = as.numeric(tol),
                   m    = as.integer(m),
                   w    = numeric(2*n*lt),
@@ -157,144 +89,6 @@ bucexpl <- function(nt, mua, mub, laa, lab, qba, qab, t, Nc, nsc, k,
   matrix(res$ans, ncol=4)
 }
 
-bucexpsafel <- function(nt, mua, mub, laa, lab, qba, qab, t, Nc, nsc,
-                    k, scal=1, tol=1e-10, m=15) {
-  tt <- sort(unique(t))
-  ti <- as.integer(factor(t))
-
-  lt <- length(tt)
-  lc <- length(Nc)
-  stopifnot(lc > 0, lt > 0, max(Nc) < nt,
-            length(Nc) == lc, length(nsc) == lc, length(k) == lc,
-            all(nsc <= Nc), all(nsc >= 0), all(k <= nsc),
-            scal >= 1, m > 1)
-
-  res <- .Fortran("bucexpsafel",
-                  nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  t    = as.numeric(tt),
-                  lt   = as.integer(lt),
-                  ti   = as.integer(ti),
-                  Nc   = as.integer(Nc),
-                  nsc  = as.integer(nsc),
-                  k    = as.integer(k),
-                  lc   = as.integer(lc),
-                  scal = as.numeric(scal),
-                  tol  = as.numeric(tol),
-                  m    = as.integer(m),
-                  ans  = numeric(4*lc),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-  matrix(res$ans, ncol=4)
-}
-
-bucexp1l <- function(nt, mua, mub, laa, lab, qba, qab, t, Nc, nsc,
-                    k, tol=1e-10, m=15) {
-  tt <- sort(unique(t))
-  ti <- as.integer(factor(t))
-
-  lt <- length(tt)
-  lc <- length(Nc)
-  stopifnot(lc > 0, lt > 0, max(Nc) < nt,
-            length(Nc) == lc, length(nsc) == lc, length(k) == lc,
-            all(nsc <= Nc), all(nsc >= 0), all(k <= nsc),
-            m > 1)
-
-  res <- .Fortran("bucexp1l",
-                  nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  t    = as.numeric(tt),
-                  lt   = as.integer(lt),
-                  ti   = as.integer(ti),
-                  Nc   = as.integer(Nc),
-                  nsc  = as.integer(nsc),
-                  k    = as.integer(k),
-                  lc   = as.integer(lc),
-                  tol  = as.numeric(tol),
-                  m    = as.integer(m),
-                  ans  = numeric(4*lc),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-  matrix(res$ans, ncol=4)
-}
-
-## Just like bucexp1l, but does a single species for simplicity and
-## testing.
-bucexpone <- function(nt, mua, mub, laa, lab, qba, qab, t, Nc, nsc, k,
-                      tol=1e-10, m=15) {
-  stopifnot(all(c(mua, mub, laa, lab, qba, qab) >= 0))
-  stopifnot(all(length(Nc) == 1, length(nsc) == 1, length(k) == 1,
-                length(t)  == 1))
-  
-  res <- .Fortran("bucexpone",
-                  nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  t    = as.numeric(t),
-                  Nc   = as.integer(Nc),
-                  nsc  = as.integer(nsc),
-                  k    = as.integer(k),
-                  tol  = as.numeric(tol),
-                  m    = as.integer(m),
-                  ans  = numeric(4),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-  res$ans
-}
-
-## Compute the log probabilities by hand
-## TODO: what this is doing needs documenting, but notice that it is
-## almost identical to the loop in bucexp_ll(), which is why it is
-## completely non-R stylee.
-ll <- function(x, Nc, nsc, k) {
-  ans <- numeric(10)
-  for ( i in 1:10 ) {
-    Nci <- Nc[i]
-    off <- Nci*(Nci + 1)/2 + 1
-    tmp = 0
-    if ( nsc[i] == Nci ) {
-      ans[i] <- x[off + k[i],i]
-    } else if ( nsc[i] == 1 ) {
-      if ( k[i] == 0 ) {
-        for ( j in 0:(Nci - 1) )
-          tmp <- tmp + (Nci - j)/Nci * x[off + j,i]
-      } else {
-        for ( j in 1:Nci )
-          tmp <- tmp + j/Nci * x[off + j,i]
-      }
-      ans[i] <- tmp
-    } else {
-      for ( j in k[i]:(Nci - nsc[i] + k[i]) )
-        tmp <- tmp + hyperg(Nci, j, nsc[i], k[i]) * x[off + j,i]
-      ans[i] <- tmp
-    }
-  }
-  ans
-}
-
 ## Compute the PDF of the hypergeometric distribution, using the same
 ## parameters that Wikipedia uses, and I used in the Fortran
 ## function.
@@ -332,7 +126,7 @@ index <- function(na, nb, n=na + nb) {
   n*(n + 1)/2 + 1 + nb
 }
 
-## Construct the transition matrix.  Again, non-R stylee, as this was
+## Construct the transition matrix.  Again, non-R style, as this was
 ## used as a template for constructing the same in Fortran.
 make.matrix <- function(nt, mu.a, mu.b, lambda.a, lambda.b, q.ba,
                         q.ab) {

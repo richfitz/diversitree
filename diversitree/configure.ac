@@ -70,14 +70,11 @@ AC_ARG_ENABLE([gcc-strict],
 if [ test x"$gcc_strict" = xyes ]; then
    echo "Using strict C checking"
    PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
+elif test "${GCC}" = yes; then
+   echo "Using strict C checking (GCC detected)"
+   PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
 else
    echo "Using normal C checking"
-fi
-
-dnl If we are using GCC, enable strict checking of the code. 
-if test "${GCC}" = yes; then
-   echo "Using strict C checking"
-   PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
 fi
 
 AC_SUBST(PKG_CPPFLAGS)
