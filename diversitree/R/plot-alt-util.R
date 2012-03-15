@@ -22,7 +22,7 @@ arcs <- function(theta0, theta1, r, col=par("fg"), lty=1,
   nn <- pmax(2, ceiling((theta1 - theta0) * r / 2 / dx))
 
   tmp <- lapply(seq_along(nn), function(i)
-                cbind(seq(theta0[i], theta1[i], length=nn[i]),
+                cbind(seq(theta0[i], theta1[i], length.out=nn[i]),
                       rep(r[i], nn[i])))
   tmp0 <- do.call(rbind, lapply(seq_along(nn), function(i)
                                 rbind(tmp[[i]][-nn[i],])))
@@ -30,9 +30,9 @@ arcs <- function(theta0, theta1, r, col=par("fg"), lty=1,
                                 rbind(tmp[[i]][-1,])))
 
   if ( length(lwd) > 1 )
-    lwd <- rep(rep(lwd, length=length(theta0)), nn - 1)
+    lwd <- rep(rep(lwd, length.out=length(theta0)), nn - 1)
   if ( length(col) > 1 )
-    col <- rep(rep(col, length=length(theta0)), nn - 1)
+    col <- rep(rep(col, length.out=length(theta0)), nn - 1)
 
   segments(tmp0[,2] * cos(tmp0[,1]), tmp0[,2] * sin(tmp0[,1]),
            tmp1[,2] * cos(tmp1[,1]), tmp1[,2] * sin(tmp1[,1]),
@@ -52,7 +52,7 @@ sectors <- function(theta0, theta1, r0, r1, ..., np=1000) {
 
   tt <- lapply(seq_along(nn), function(i)
                c(tm[i],
-                 seq(theta0[i], theta1[i], length=nn[i]),
+                 seq(theta0[i], theta1[i], length.out=nn[i]),
                  tm[i], NA))
   rr <- lapply(seq_along(nn), function(i)
                c(r0[i], rep(r1[i], nn[i]), r0[i], NA))
@@ -66,7 +66,7 @@ sectors <- function(theta0, theta1, r0, r1, ..., np=1000) {
 radial.text <- function(r, theta, labels, cex=1, col="black",
                         font=1, ...) {
   n <- length(labels)
-  col <- rep(col, length=n)
+  col <- rep(col, length.out=n)
   x <- r * cos(theta)
   y <- r * sin(theta)
   srt <- theta / (2 * pi) * 360
@@ -93,7 +93,7 @@ filled.arcs <- function(theta0, theta1, r, w, col=par("fg"), np=1000) {
   nn <- pmax(2, ceiling((theta1 - theta0) * r / dx))
 
   f <- function(i) {
-    t <- seq(theta0[i], theta1[i], length=nn[i])
+    t <- seq(theta0[i], theta1[i], length.out=nn[i])
     cbind(c(r[i] * cos(t), (r[i] + w) * cos(rev(t)), NA),
           c(r[i] * sin(t), (r[i] + w) * sin(rev(t)), NA))
   }

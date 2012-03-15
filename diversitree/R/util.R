@@ -169,7 +169,7 @@ quadratic.roots <- function(a, b, c)
 
 
 discretize <- function(x, n, r=range(x)) {
-  at <- seq(r[1], r[2], length=n+1)
+  at <- seq(r[1], r[2], length.out=n+1)
   as.integer(cut(x, at, include.lowest=TRUE, labels=FALSE))
 }
 
@@ -206,7 +206,7 @@ make.prior.uniform <- function(lower, upper) {
     stop("'lower' and 'upper' both be the same length")
   p <- log(1/(upper - lower))
   function(x) {
-    ret <- rep(p, length=length(x))
+    ret <- rep(p, length.out=length(x))
     ret[x < lower | x > upper] <- 0
     ret
   }

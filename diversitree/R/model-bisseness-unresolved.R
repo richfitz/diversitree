@@ -13,9 +13,9 @@
 ##          in.
 ##   'm': parameter affecting internal arguments.  Small numbers often
 ##        faster, sometimes slower.  Play around.
-nucexp <- function(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-                   pbc, pba, t, scal=1, tol=1e-10, m=15) {
-  stopifnot(all(c(mua, mub, laa, lab, qba, qab, pac, paa, pbc, pba) >= 0))
+nucexp <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+                   p1c, p1a, t, scal=1, tol=1e-10, m=15) {
+  stopifnot(all(c(la0, la1, mu0, mu1, q01, q10, p0c, p0a, p1c, p1a) >= 0))
   lt <- length(t)
   stopifnot(lt > 0)
   stopifnot(scal >= 1)
@@ -23,16 +23,16 @@ nucexp <- function(nt, mua, mub, laa, lab, qba, qab, pac, paa,
   n <- (nt*(nt+1)/2+1)
   res <- .Fortran("nucexp",
                   nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  pac  = as.numeric(pac),
-                  paa  = as.numeric(paa),
-                  pbc  = as.numeric(pbc),
-                  pba  = as.numeric(pba),
+                  la0  = as.numeric(la0),
+                  la1  = as.numeric(la1),
+                  mu0  = as.numeric(mu0),
+                  mu1  = as.numeric(mu1),
+                  q01  = as.numeric(q01),
+                  q10  = as.numeric(q10),
+                  p0c  = as.numeric(p0c),
+                  p0a  = as.numeric(p0a),
+                  p1c  = as.numeric(p1c),
+                  p1a  = as.numeric(p1a),
                   t    = as.numeric(t),
                   lt   = as.integer(lt),
                   scal = as.numeric(scal),
@@ -54,8 +54,8 @@ nucexp <- function(nt, mua, mub, laa, lab, qba, qab, pac, paa,
 ## Returns a length(t) x 4 matrix, where the first two columns are the
 ## probabilities of generating the clade, and the second two are the
 ## probabilities of extinction.
-nucexpl <- function(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-                    pbc, pba, t, Nc, nsc, k, scal=1, tol=1e-10, m=15) {
+nucexpl <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+                    p1c, p1a, t, Nc, nsc, k, scal=1, tol=1e-10, m=15) {
   tt <- sort(unique(t))
   ti <- as.integer(factor(t))
 
@@ -68,16 +68,16 @@ nucexpl <- function(nt, mua, mub, laa, lab, qba, qab, pac, paa,
 
   res <- .Fortran("nucexpl",
                   nt   = as.integer(nt),
-                  mua  = as.numeric(mua),
-                  mub  = as.numeric(mub),
-                  laa  = as.numeric(laa),
-                  lab  = as.numeric(lab),
-                  qba  = as.numeric(qba),
-                  qab  = as.numeric(qab),
-                  pac  = as.numeric(pac),
-                  paa  = as.numeric(paa),
-                  pbc  = as.numeric(pbc),
-                  pba  = as.numeric(pba),
+                  la0  = as.numeric(la0),
+                  la1  = as.numeric(la1),
+                  mu0  = as.numeric(mu0),
+                  mu1  = as.numeric(mu1),
+                  q01  = as.numeric(q01),
+                  q10  = as.numeric(q10),
+                  p0c  = as.numeric(p0c),
+                  p0a  = as.numeric(p0a),
+                  p1c  = as.numeric(p1c),
+                  p1a  = as.numeric(p1a),
                   t    = as.numeric(tt),
                   lt   = as.integer(lt),
                   ti   = as.integer(ti),

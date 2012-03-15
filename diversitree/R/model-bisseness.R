@@ -208,7 +208,7 @@ branches.unresolved.bisseness <- function(pars, unresolved) {
  p0a <- pars[8]
  p1c <- pars[9]
  p1a <- pars[10]
- base <- nucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, p0c, p0a, p1c, p1a, t,
+ base <- nucexpl(nt, lambda0, lambda1, mu0, mu1, q01, q10, p0c, p0a, p1c, p1a, t,
                  Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
 
  q <- rowSums(base[,3:4,drop=FALSE])

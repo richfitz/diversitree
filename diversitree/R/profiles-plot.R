@@ -9,7 +9,7 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
     r <- range(unlist(y))
   else
     r <- xlim
-  br <- seq(r[1], r[2], length=n.br)
+  br <- seq(r[1], r[2], length.out=n.br)
   hh <- lapply(y, hist, br, plot=FALSE)
   ci <- lapply(y, hdr)
 
@@ -24,7 +24,7 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
   for ( i in seq_along(y) )
     add.profile.outline(hh[[i]], col.line[i])
 
-  z <- seq(0, 1, length=length(y) + 2)[-1] * par("usr")[3]
+  z <- seq(0, 1, length.out=length(y) + 2)[-1] * par("usr")[3]
   for ( i in seq_along(y) )
     arrows(ci[[i]][1], z[i], ci[[i]][2], z[i], code=3, angle=90,
            length=0.02, col=col.line[i])
@@ -51,7 +51,7 @@ add.profile.outline <- function(h, col, vertical=FALSE) {
 }
 
 hdr.uniroot <- function(z, p=0.95, lim=NULL) {
-  xx <- sort(c(lim, seq(min(z), max(z), length=1024)))
+  xx <- sort(c(lim, seq(min(z), max(z), length.out=1024)))
   ez <- ecdf(z)
   f <- suppressWarnings(approxfun(ez(xx), xx))
   fit <- suppressWarnings(optimize(function(x)
@@ -72,7 +72,7 @@ hdr <- function(z, p=0.95, lim=NULL) {
 }
 
 ## hdr.uniroot <- function(z, p=0.95, lim=NULL) {
-##   xx <- sort(c(lim, seq(min(z), max(z), length=1024)))
+##   xx <- sort(c(lim, seq(min(z), max(z), length.out=1024)))
 ##   ez <- ecdf(z)
 ##   f <- suppressWarnings(approxfun(ez(xx), xx))
 ##   fit <- try(suppressWarnings(optimize(function(x) f(x + p) - f(x), c(0, 1-p))))

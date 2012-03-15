@@ -37,10 +37,10 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
   ## Difference: I think this is handled differently by ape
   ## Repeat arguments appropriately - all called functions may rely on
   ## these being appropriately vectorised.
-  tip.color <- rep(tip.color, length=n.tip)
-  edge.color <- rep(edge.color, length=nrow(x$edge))
-  edge.width <- rep(edge.width, length=nrow(x$edge))
-  edge.lty <- rep(edge.lty, length=nrow(x$edge))
+  tip.color <- rep(tip.color, length.out=n.tip)
+  edge.color <- rep(edge.color, length.out=nrow(x$edge))
+  edge.width <- rep(edge.width, length.out=nrow(x$edge))
+  edge.lty <- rep(edge.lty, length.out=nrow(x$edge))
 
   ## TODO: the clade borders need repeating here?
 

@@ -37,8 +37,8 @@
 *     clades that originate from that node.
 *
 *     Parameters:
-*       nt, mua, mub, laa, lab, qba, t, lt: as for BUCEXP
-*       pac, paa, pbc, pba: for BiSSEness 
+*       nt, la0, la1, mu0, mu1, q01, t, lt: as for BUCEXP
+*       p0c, p0a, p1c, p1a: for BiSSEness 
 *       ti (int[lc]): vector of indices to 't'; the jth clade has time
 *         t[ti[j]].  Conversely, the ith element of t is the time that
 *         all clades, j, where ti[j] == i originate from.
@@ -46,7 +46,7 @@
 *         Nc[i] species)
 *       nsc (int[lc]): The number of species where the state is known
 *         (0 < nsc[i] <= Nc[i])
-*       k (int[lc]): The number of species known to be in state b
+*       k (int[lc]): The number of species known to be in state 1
 *         (0 <= k[i] <= nsc[i])
 *       ans (double[4*lc]): Likelihoods, in four groups of lc elements:
 *         1: Likelihood of generating clade, starting from state 0
@@ -61,14 +61,14 @@
 *     matrix.
 
 ***   Raw state space (NUCEXP/NUCEXPSAFE)
-      subroutine NUCEXP(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt, scal,
+      subroutine NUCEXP(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, t, lt, scal,
      .     tol, m, w, iflag)
       implicit none
 
       integer nt, lt
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(lt), scal, w(*)
+      double precision la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, t(lt), scal, w(*)
 
       double precision ninfnorm
 
@@ -88,8 +88,8 @@
 *      nz = (7*nt*nt - 7*nt + 2)/2
       nz = (9*nt*nt - 9*nt - 2)/2
 
-      call NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, ia, ja, a)
+      call NLDMAT(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, ia, ja, a)
 
       anorm = ninfnorm(ia, ja, a, n, nz, wsp, lwsp)
 
@@ -129,15 +129,15 @@
       end
 
 ***   Likelihood functions
-      subroutine NUCEXPL(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt,
+      subroutine NUCEXPL(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, t, lt,
      .     ti, Nc, nsc, k, lc, scal, tol, m, ans, iflag)
       implicit none
 
       integer nt, lt, lc, m, iflag
       integer ti(lc), Nc(lc), nsc(lc), k(lc)
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t(lt), scal,
+      double precision la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, t(lt), scal,
      .     tol, ans(4*lc)
 
       double precision NUCexplik
@@ -148,8 +148,8 @@
       iflag = 0
       n = nt*(nt + 1)/2 + 1
 
-      call NUCEXP(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, t, lt, scal, tol,
+      call NUCEXP(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, t, lt, scal, tol,
      .     m, w, iflag)
       if ( iflag .lt. 0 ) then
          return
@@ -203,7 +203,7 @@
 *     We need to know:
 *       N:  The number of species in the clade
 *       ns: The number of species of known state (0 < ns <= N)
-*       k:  The number of species known to be in state 'b' 
+*       k:  The number of species known to be in state '1' 
 *           (0 <= k <= ns)
 *       w:  The probability/state vector produced by NUCexp()
       double precision function NUCexplik(N, ns, k, w)
@@ -244,23 +244,23 @@
 
 *     Rate matrix
 *       nt: the number of species at which we absorb.
-*       mua/b: extinction rates in state a and b
-*       laa/b: speciation rates in state a and b
-*       qba/qab: Character transition rates from a->b and b->a
+*       la0/1: speciation rates in state 0 and 1
+*       mu0/1: extinction rates in state 0 and 1
+*       q01/q10: Character transition rates from 0->1 and 1->0
 *       t: time at which solution is needed
 
 *     Speciation: Speciation to the current position is possible for
-*     species in state a if there are more than one species (at least
-*     two) currently in state a (if there is one species in state a,
+*     species in state 0 if there are more than one species (at least
+*     two) currently in state 0 (if there is one species in state 0,
 *     then speciation cannot account for this one species - instead, it
 *     must have arisen from extinction or character state change).
-*     Species in state 'b' are considered before state 'a', since that
+*     Species in state '1' are considered before state '0', since that
 *     keeps the column indices in order.
 *
-*     Character state transition.  Transition from a->b is possible
-*     wherever 'b' in this generation has at least one species,
+*     Character state transition.  Transition from 0->1 is possible
+*     wherever '0' in this generation has at least one species,
 *     irrespective of the number in state 'a'.  "Nothing" always happens
-*     at rate na*pa + nb*pb
+*     at rate n0*r0 + n1*r1
 *
 *     Extinction
 *
@@ -268,28 +268,27 @@
 *
 *     The last speciation row is dealt with separately, since this is
 *     transition into the "too many species" absorbing state
-      subroutine NLDMAT(nt, mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba, ia, ja, a)
+      subroutine NLDMAT(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a, ia, ja, a)
       implicit none
       
       integer nt
       integer prodone, prodtwo
-      double precision mua, mub, laa, lab, qba, qab, pac, paa,
-     .     pbc, pba
+      double precision la0, la1, mu0, mu1, q01, q10, p0c, p0a,
+     .     p1c, p1a
       
-      integer n, nz, idx, i, na, nb, ns, nzmax
+      integer n, nz, idx, i, n0, n1, ns, nzmax
       parameter( nzmax = 179099 )
 *     SALLY:  Changed nzmax from 3000 to 179099
       integer ia(nzmax), ja(nzmax)
       double precision a(nzmax)
-      double precision pa, pb
+      double precision r0, r1
       
       n = nt*(nt + 1)/2 + 1
-*      nz = (7*nt*nt - 7*nt + 2)/2
       nz = (9*nt*nt - 9*nt - 2)/2
 
-      na = 1
-      nb = 0
+      n0 = 1
+      n1 = 0
       ns = 1
 
 *     SALLY: Introduced for speed
@@ -298,13 +297,13 @@
 
 *     The chance of no change is unaffected by BiSSEness, which only alters what
 *     happens at speciation.
-      pa = -(mua + laa + qba)
-      pb = -(mub + lab + qab)
+      r0 = -(mu0 + la0 + q01)
+      r1 = -(mu1 + la1 + q10)
 
 *     SALLY: For all possible values of the index, idx, a(idx) gives the value of the matrix entry,
 *     moving the system from ja(idx) to ia(idx). 
-      a(1) = mua
-      a(2) = mub
+      a(1) = mu0
+      a(2) = mu1
       ia(1) = 1
       ia(2) = 1
       ja(1) = 2
@@ -314,82 +313,80 @@
 
       DO i = 2,(n-1)
 *     BiSSE commands follow:
-*         IF ( nb .gt. 1 ) THEN
-*            a(idx) = (nb - 1) * lab
+*         IF ( n1 .gt. 1 ) THEN
+*            a(idx) = (n1 - 1) * la1
 *            ia(idx) = i
-*            ja(idx) = prodtwo + nb
+*            ja(idx) = prodtwo + n1
 *            idx = idx + 1
 *         ENDIF
-*         IF ( na .gt. 1 ) THEN
-*            a(idx) = (na - 1) * laa
+*         IF ( n0 .gt. 1 ) THEN
+*            a(idx) = (n0 - 1) * la0
 *            ia(idx) = i
-*            ja(idx) = prodtwo + nb + 1
+*            ja(idx) = prodtwo + n1 + 1
 *            idx = idx + 1
 *         ENDIF
 
 *     BiSSEness commands follow:
-         IF ( nb .gt. 1 ) THEN
-            a(idx) = (nb - 1) * lab * (1 - pbc)
-            IF ( na .gt. 0 ) THEN
-               a(idx) = a(idx) + na * laa * pac * paa
+         IF ( n1 .gt. 1 ) THEN
+            a(idx) = (n1 - 1) * la1 * (1 - p1c)
+            IF ( n0 .gt. 0 ) THEN
+               a(idx) = a(idx) + n0 * la0 * p0c * p0a
             ENDIF
             ia(idx) = i
-            ja(idx) = prodtwo + nb
+            ja(idx) = prodtwo + n1
             idx = idx + 1
-            a(idx) = (na + 1) * laa * pac * (1 - paa)
+            a(idx) = (n0 + 1) * la0 * p0c * (1 - p0a)
             ia(idx) = i
-            ja(idx) = prodtwo + nb - 1
+            ja(idx) = prodtwo + n1 - 1
             idx = idx + 1
          ENDIF
-         IF ( nb .eq. 1 ) THEN
-            IF ( na .gt. 0 ) THEN
-               a(idx) = na * laa * pac * paa
+         IF ( n1 .eq. 1 ) THEN
+            IF ( n0 .gt. 0 ) THEN
+               a(idx) = n0 * la0 * p0c * p0a
             ia(idx) = i
-            ja(idx) = prodtwo + nb
+            ja(idx) = prodtwo + n1
             idx = idx + 1
             ENDIF
          ENDIF
-         IF ( na .gt. 1 ) THEN
-            a(idx) = (na - 1) * laa * (1 - pac)
-            IF ( nb .gt. 0 ) THEN
-               a(idx) = a(idx) + nb * lab * pbc * pba
+         IF ( n0 .gt. 1 ) THEN
+            a(idx) = (n0 - 1) * la0 * (1 - p0c)
+            IF ( n1 .gt. 0 ) THEN
+               a(idx) = a(idx) + n1 * la1 * p1c * p1a
             ENDIF
             ia(idx) = i
-            ja(idx) = prodtwo + nb + 1
+            ja(idx) = prodtwo + n1 + 1
             idx = idx + 1
-            a(idx) = (nb + 1) * lab * pbc * (1 - pba)
+            a(idx) = (n1 + 1) * la1 * p1c * (1 - p1a)
             ia(idx) = i
-            ja(idx) = prodtwo + nb + 2
+            ja(idx) = prodtwo + n1 + 2
             idx = idx + 1
          ENDIF
-         IF ( na .eq. 1 ) THEN
-            IF ( nb .gt. 0 ) THEN
-               a(idx) = nb * lab * pbc * pba
+         IF ( n0 .eq. 1 ) THEN
+            IF ( n1 .gt. 0 ) THEN
+               a(idx) = n1 * la1 * p1c * p1a
             ia(idx) = i
-            ja(idx) = prodtwo + nb + 1
+            ja(idx) = prodtwo + n1 + 1
             idx = idx + 1
             ENDIF
          ENDIF
 
 *     If there are some species in state b, they could have come from state a:
-*     SALLY:  Note that qab is actually q10 (it's the second of the two q elements)
-*     Apparently, the notation used in the fortran code is that the last letter specifies the starting state.
-         IF ( nb .gt. 0 ) THEN
-            a(idx) = (na + 1) * qba
+         IF ( n1 .gt. 0 ) THEN
+            a(idx) = (n0 + 1) * q01
             ia(idx) = i
             ja(idx) = i - 1
             idx = idx + 1
          ENDIF
 
 *     No change
-         a(idx) = na * pa + nb * pb
+         a(idx) = n0 * r0 + n1 * r1
          ia(idx) = i
          ja(idx) = i
          idx = idx + 1
 
 *     If there are some species in state a, they could have come from state b:
-         IF ( na .gt. 0 ) THEN
-            a(idx) = (nb + 1) * qab
+         IF ( n0 .gt. 0 ) THEN
+            a(idx) = (n1 + 1) * q10
             ia(idx) = i
             ja(idx) = i + 1
             idx = idx + 1
@@ -399,37 +396,37 @@
 *     See above for similar cases, too [ns(ns-1)]
 *     SALLY:  I fixed this a bit, defining prodone = (ns+1)(ns+2)/2 and prodtwo = ns(ns-1)/2
          IF ( ns < (nt - 1) ) THEN
-            a(idx) = (na + 1) * mua
+            a(idx) = (n0 + 1) * mu0
             ia(idx) = i
-            ja(idx) = prodone + nb + 1
+            ja(idx) = prodone + n1 + 1
             idx = idx + 1
 
-            a(idx) = (nb + 1) * mub
+            a(idx) = (n1 + 1) * mu1
             ia(idx) = i
-            ja(idx) = prodone + nb + 2
+            ja(idx) = prodone + n1 + 2
             idx = idx + 1
          ENDIF
 
-         IF ( na .gt. 0 ) THEN
-            na = na - 1
-            nb = nb + 1
+         IF ( n0 .gt. 0 ) THEN
+            n0 = n0 - 1
+            n1 = n1 + 1
          ELSE
             ns = ns + 1
             prodone = (ns + 1) * (ns + 2)/2
             prodtwo = ns * (ns - 1)/2
-            na = ns
-            nb = 0
+            n0 = ns
+            n1 = 0
          ENDIF
       ENDDO
 
-      na = nt - 1
-      nb = 0
+      n0 = nt - 1
+      n1 = 0
       DO i = (n - nt),(n - 1)
-         a(idx) = na * laa + nb * lab
+         a(idx) = n0 * la0 + n1 * la1
          ia(idx) = n
          ja(idx) = i
          idx = idx + 1
-         na = na - 1
-         nb = nb + 1
+         n0 = n0 - 1
+         n1 = n1 + 1
       ENDDO
       end

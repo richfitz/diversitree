@@ -175,10 +175,10 @@ quasse.extent <- function(control, drift, diffusion) {
 
   ## Concatenate the x values, so that the lambda(x), mu(x)
   ## calculations work for both spaces simultaneously.
-  x <- list(seq(x0.1, length=ndat[1], by=dx/r),
-            seq(x0.2, length=ndat[2], by=dx))
+  x <- list(seq(x0.1, length.out=ndat[1], by=dx/r),
+            seq(x0.2, length.out=ndat[2], by=dx))
 
-  tr <- seq(r, length=ndat[2], by=r)
+  tr <- seq(r, length.out=ndat[2], by=r)
 
   list(x=x, padding=padding, ndat=ndat, tr=tr, nx=c(nx*r, nx))
 }

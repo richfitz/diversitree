@@ -175,7 +175,7 @@ musse.multitrait.translate <- function(n.trait, depth=NULL,
 }
 
 reparam.1 <- function(n.trait, depth, names, prefix=NULL) {
-  X <- data.frame("0"=rep(1, length=2^n.trait), check.names=FALSE)
+  X <- data.frame("0"=rep(1, length.out=2^n.trait), check.names=FALSE)
   if ( depth >= 1 ) {
     X <- cbind(X, do.call(expand.grid, rep(list(0:1), n.trait)))
     names(X)[-1] <- names
@@ -221,7 +221,7 @@ reparam.q <- function(n.trait, depth, names, allow.multistep=FALSE) {
     idx10 <- which(key[from,i] == 1 & key[to,i] == 0 & nc == 1)
 
     ## This is entirely incorrect, because n is incorrect...
-    target <- seq((i - 1) * (2 * n) + 1, length=2 * n)
+    target <- seq((i - 1) * (2 * n) + 1, length.out=2 * n)
     tmp <- reparam.1(n.trait-1, depth, names[-i])
     X[idx01,target[1:n]] <- X[idx10,target[-(1:n)]] <- tmp
     names(X)[target] <- sprintf("q%s%s.%s", names[i],
@@ -326,8 +326,8 @@ block.diagonal <- function(...) {
   colnames(out) <- unlist(lapply(matrices, colnames))
   offset <- c(0, 0)
   for ( i in seq_along(matrices) ) {
-    out[seq(offset[1]+1, length=n[1,i]),
-        seq(offset[2]+1, length=n[2,i])] <- matrices[[i]]
+    out[seq(offset[1]+1, length.out=n[1,i]),
+        seq(offset[2]+1, length.out=n[2,i])] <- matrices[[i]]
     offset <- offset + n[,i]
   }
 

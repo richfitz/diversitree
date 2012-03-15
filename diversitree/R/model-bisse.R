@@ -197,7 +197,7 @@ branches.unresolved.bisse <- function(pars, unresolved) {
   mu1 <- pars[4]
   q01 <- pars[5]
   q10 <- pars[6]
-  base <- bucexpl(nt, mu0, mu1, lambda0, lambda1, q01, q10, t,
+  base <- bucexpl(nt, lambda0, lambda1, mu0, mu1, q01, q10, t,
                   Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
 
   q <- rowSums(base[,3:4,drop=FALSE])
