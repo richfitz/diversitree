@@ -88,3 +88,4 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
          cex=cex.legend)
   }
 }
+

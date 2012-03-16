@@ -1,3 +1,23 @@
+2012-03-15  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/asr-musse.R: Updates so that time-varying musse models are
+	possible.
+
+	* R/check.R: Fix handling of clade.trees in bd models.
+
+	* R/model-bd-ode.R: Reorder error checking
+
+	* R/model-bd.R: Give up on special yule model ML treatment
+
+	* R/model-musse-t.R: Improve logic around parameter checking --
+	avoid checking constant parameters twice, check time varying
+	ones.
+
+	* R/sim-character.R: Unfortunately, this was broken on release.
+	Fixed now.
+
+	* Updates so that diversitree compiles and passes check on CRAN.
+
 2012-03-13  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/model-bd*.R: Combined ode and Nee BD calculations.

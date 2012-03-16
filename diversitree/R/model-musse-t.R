@@ -31,8 +31,6 @@ make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
     names(functions) <- argnames.musse(NULL, k)
 
   pars.t <- make.pars.t.musse(functions, k)
-  n.args <- attr(pars.t, "n.args")
-  is.constant.arg <- attr(pars.t, "is.constant.arg")
 
   branches <- make.branches.musse.t(cache, control)
   initial.conditions <-
@@ -40,21 +38,16 @@ make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
 
   ll.musse.t <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                          root.p=NULL, intermediates=FALSE) {
-    if ( length(pars) != n.args )
-      stop(sprintf("Invalid length parameters (expected %d)", n.args))
-    pars.const <- pars[is.constant.arg]
-    if ( any(pars.const < 0) || any(!is.finite(pars.const)) )
-      return(-Inf)
     if ( !is.null(root.p) &&  root != ROOT.GIVEN )
       warning("Ignoring specified root state")
     f.pars <- pars.t(pars)
-
     ll.xxsse.t(f.pars, cache, initial.conditions, branches,
                condition.surv, root, root.p, intermediates)
   }
 
   class(ll.musse.t) <- c("musse.t", "musse", "function")
   attr(ll.musse.t, "argnames") <- attr(pars.t, "argnames")
+  attr(ll.musse.t, "k") <- k
   ll.musse.t
 }
 
@@ -67,32 +60,38 @@ make.pars.t.musse <- function(functions, k) {
   n.args <- obj$n.args
   idx <- obj$idx
   is.constant <- obj$is.constant
+  is.constant.arg <- obj$is.constant.arg
   idx.constant <- obj$idx.constant
   i.var <- which(!is.constant)
-
-  ## This includes the diagonal elements of the Q matrix.
-  out <- numeric(k * (k + 2))
-
-  is.constant.f <- obj$is.constant
 
   qmat <- matrix(0, k, k)
   idx.qmat <- cbind(rep(1:k, each=k-1),
                unlist(lapply(1:k, function(i) (1:k)[-i])))
   idx.q <- (2*k+1):(k*(1+k))
-
-  if ( !all(is.constant.f[idx.q]) ) {
+  
+  if ( !all(is.constant[idx.q]) )
     stop("Time varying Q matrix not yet dealt with")
-  }
+  
+  ## This includes the diagonal elements of the Q matrix.
+  out <- numeric(k * (k + 2))
 
-  idx.constant.lm <- unlist(idx[intersect(1:(2*k), which(is.constant.f))])
-  idx.constant.q <- unlist(idx[intersect(idx.q, which(is.constant.f))])
-  idx.constant.target <- c(which(is.constant[1:(2*k)]), (2*k+1):(k*(k+2)))
+  ## Index in the *input* vector of constant lambda/mu parameters
+  idx.constant.lm <- unlist(idx[intersect(1:(2*k), which(is.constant))])
+  ## Input indices of the q parameters.
+  idx.constant.q <- unlist(idx[intersect(idx.q, which(is.constant))])
+  ## And corresponding indices of where both go in the *output*
+  idx.constant.target <-
+    c(which(is.constant[1:(2*k)]), (2*k+1):(k*(k+2)))
   
   ret <- function(pars) {
     if ( length(pars) != n.args )
       stop(sprintf("Invalid argument length: expected %d", n.args))
+    p.const <- pars[is.constant.arg]
+    if ( any(p.const < 0) || any(!is.finite(p.const)) )
+      stop("Negative/nonfinite parameter specified (time constant)")
     names(pars) <- NULL # because of do.call
 
+    ## Fill in constant times.
     qmat[idx.qmat] <- pars[idx.constant.q]
     diag(qmat) <- -rowSums(qmat)
     out[idx.constant.target] <- c(pars[idx.constant.lm], qmat)
@@ -102,6 +101,9 @@ make.pars.t.musse <- function(functions, k) {
       for ( i in i.var )
         out[[i]] <- do.call(functions[[i]],
                             c(list(t), pars[idx[[i]]]))
+      p.var <- out[i.var]
+      if ( any(p.var < 0) || any(!is.finite(p.var)) )      
+        stop("Negative/nonfinite parameter specified (time variable)")
       out
     }
   }

@@ -1,9 +1,13 @@
+## TODO: Still have to record the character history...
 sim.character <- function(tree, pars, x0=0, model="bm", br=NULL) {
   if ( is.null(br) ) {
-    model <- match.arg(model, c("bm", "ou", "bbm", "mk", "meristic"))
-    br <- match.fun(sprintf("make.br.%s", model))(pars)
+    model <- match.arg(model, c("bm", "ou", "bbm", "mkn", "mk2", "meristic"))
+    ## Can't get match.fun to work here, and cannot see why.
+    br <- get(sprintf("make.br.%s", model), mode="function")(pars)
+  } else {
+    if ( !missing(model) && !is.null(model) && !is.na(model) )
+      warning("Ignoring 'model' argument, as 'br' was specified")
   }
-  ## TODO: Add checking for br().
 
   edge <- tree$edge
   idx <- seq_len(max(edge))
@@ -22,12 +26,18 @@ sim.character <- function(tree, pars, x0=0, model="bm", br=NULL) {
 
   for ( i in order ) {
     j <- children[i,]
-    y[j] <- br(y[i], len[j])
+    y[j[1]] <- br(y[i], len[j[1]])
+    y[j[2]] <- br(y[i], len[j[2]])
   }
 
-  ret <- y[is.tip]
-  names(ret) <- tree$tip.label
-  ret
+
+  y.tip <- y[is.tip]
+  names(y.tip) <- tree$tip.label
+  y.node <- y[!is.tip]
+  names(y.node) <- tree$node.label
+  attr(y.tip, "node.state") <- y.node
+
+  y.tip
 }
 
 ## BM: one parameter -- s2
@@ -83,6 +93,8 @@ make.br.meristic <- function(pars) {
   k <- pars[1]
   up <- pars[2]
   down <- pars[3]
+  if ( k == 2 )
+    return(make.br.meristic(c(up, down)))
   
   Q <- matrix(0, k, k)
   idx <- cbind(1:(k-1), 2:k)
@@ -90,10 +102,10 @@ make.br.meristic <- function(pars) {
   Q[idx[,2:1]] <- down
   diag(Q) <- -rowSums(Q)
 
-  make.br.mk(Q)
+  make.br.mkn(Q)
 }
 
-make.br.mk <- function(pars) {
+make.br.mkn <- function(pars) {
   if ( is.matrix(pars) ) {
     Q <- pars
     k <- nrow(Q)
@@ -104,12 +116,31 @@ make.br.mk <- function(pars) {
     k <- sqrt(length(pars))
     Q <- matrix(pars, k, k)
   }
+  if ( max(abs(rowSums(Q))) > 1e-8 )
+    stop("rowSums on this parameter matrix must equal zero")
   r <- -diag(Q)
   function(x0, t) {
     if ( length(t) != 1 )
       stop("t must be a scalar.")
     while ( r[x0] > 0 && (t <- t - rexp(1, r[x0])) > 0 )
-      x0 <- sample((1:k)[-x0], 1, prob=Q[x0,-x0])
+      x0 <- seq_len(k)[-x0][sample(k-1, 1, prob=Q[x0,-x0])]
     x0
+  }
+}
+
+make.br.mk2 <- function(pars) {
+  if ( length(pars) != 2 )
+    stop("pars must be of length 2")
+  r <- pars
+  to <- 2:1
+
+  function(x0, t) {
+    if ( length(t) != 1 )
+      stop("t must be a scalar.")
+    x0 <- x0 + 1
+    while ( r[x0] > 0 && (t <- t - rexp(1, r[x0])) > 0 ) {
+      x0 <- to[x0]
+    }
+    x0 - 1
   }
 }

@@ -50,8 +50,10 @@ make.bd.ode <- function(tree, sampling.f=NULL, unresolved=NULL,
 ## 5: make.cache (initial.tip, root)
 make.cache.bd.ode <- function(tree, unresolved, sampling.f) {
   tree <- check.tree(tree)
+  unresolved <- check.unresolved.bd(tree, unresolved)  
 
-  if ( inherits(tree, "clade.tree") || !is.null(unresolved) )
+  ## TODO: This is not hard...
+  if ( !is.null(unresolved) )
     stop("Cannot deal with unresolved clades yet with this method.")
 
   if ( !is.null(sampling.f) && !is.null(unresolved) )

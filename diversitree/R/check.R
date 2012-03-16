@@ -258,18 +258,15 @@ check.unresolved.bd <- function(tree, unresolved) {
       warning("Removing unresolved entries that are one")
       unresolved <- unresolved[unresolved != 1]
     }
-
-    if ( length(unresolved) == 0 )
-      unresolved <- NULL
-    else {
-      i <- match(names(unresolved), tree$tip.label)
-      unresolved <- list(n=unresolved,
-                         t=tree$edge.length[match(i, tree$edge[,2])])
-    }
-  } else {
-    unresolved <- NULL
   }
-  unresolved
+
+  if ( length(unresolved) == 0 )
+    unresolved <- NULL
+  else {
+    i <- match(names(unresolved), tree$tip.label)
+    list(n=unresolved,
+         t=tree$edge.length[match(i, tree$edge[,2])])
+  }
 }
 
 check.control.split <- function(control) {

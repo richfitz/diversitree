@@ -18,6 +18,7 @@
 make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
                     times=NULL, control=list()) {
   control <- check.control.bd(control, times)
+  
   if ( control$method == "nee" )
     make.bd.nee(tree, sampling.f, unresolved, times)
   else
@@ -29,8 +30,6 @@ make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
 make.yule <- function(tree, sampling.f=NULL, unresolved=NULL,
                       times=NULL, control=list()) {
   control <- check.control.bd(control)
-  if ( !is.null(sampling.f) || !is.null(unresolved) )
-    stop("Cannot yet do Yule model with unresolved clades or sampling.f")
   ll.bd <- make.bd(tree, sampling.f, unresolved, times, control)
   ll <- function(pars, condition.surv=TRUE)
     ll.bd(c(pars, 0), condition.surv)
@@ -80,8 +79,7 @@ argnames.yule <- function(x, ...) {
 }
 
 ## 4: find.mle
-find.mle.bd <- function(func, x.init, method,
-                        fail.value=NA, ...) {
+find.mle.bd <- function(func, x.init, method, fail.value=NA, ...) {
   ## I really should use parameters estimated from the Yule model
   ## here.  Currently using parameters from nowhere, as doing this is
   ## slightly less trivial than one would hope (need to get access to
@@ -96,30 +94,39 @@ find.mle.bd <- function(func, x.init, method,
                    class.append="fit.mle.bd", ...)
 }
 
-find.mle.yule <- function(func, x.init, method, fail.value=NA,
-                          ...) {
-  cache <- environment(environment(func)$ll.bd)$cache
-
-  ## This analytic solution is only correct when the tree is fully
-  ## resolved.  This is enforced by the make.yule function.
-  condition.surv <- list(...)$condition.surv
-  if ( is.null(condition.surv) )
-    condition.surv <- TRUE
-
-  n.node <- if ( condition.surv ) cache$n.node - 1 else cache$n.node
-  lambda <- n.node / cache$tot.len
-  obj <- list(par=c(lambda=lambda),
-              lnLik=func(lambda, condition.surv),
-              counts=NA,
-              code=0,
-              gradient=NA,
-              method="analytic")
-
-  ## This class here is needed so that this can be compared against a
-  ## BD fit.
-  class(obj) <- c("fit.mle.bd", "fit.mle")
-  obj
+find.mle.yule <- function(func, x.init, method, fail.value=NA, ...) {
+  if ( missing(x.init) )
+    x.init <- structure(.2, names=argnames(func))
+  if ( missing(method) )
+    method <- "nlm"
+  find.mle.default(func, x.init, method, fail.value,
+                   class.append="fit.mle.bd", ...)
 }
+
+## This is a total disaster now.  The ML estimate should be something
+## like log(N) / t, but that is not what was being computed below.
+## find.mle.yule <- function(func, x.init, method, fail.value=NA,
+##                           ...) {
+##   cache <- environment(environment(func)$ll.bd)$cache
+
+##   ## This analytic solution is only correct when the tree is fully
+##   ## resolved.  This is enforced by the make.yule function.
+##   condition.surv <- list(...)$condition.surv
+##   if ( is.null(condition.surv) )
+##     condition.surv <- TRUE
+##   lambda <- n.node / cache$tot.len
+##   obj <- list(par=c(lambda=lambda),
+##               lnLik=func(lambda, condition.surv),
+##               counts=NA,
+##               code=0,
+##               gradient=NA,
+##               method="analytic")
+
+##   ## This class here is needed so that this can be compared against a
+##   ## BD fit.
+##   class(obj) <- c("fit.mle.bd", "fit.mle")
+##   obj
+## }
 
 mcmc.bd <- mcmc.lowerzero
 
