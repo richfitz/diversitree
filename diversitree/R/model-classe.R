@@ -195,6 +195,7 @@ stationary.freq.classe <- function(pars, k) {
         eqfreq <- 0.5
       else
         eqfreq <- ss2/(ss1 + ss2)
+      eqfreq <- c(eqfreq, 1 - eqfreq)
     } else {
       roots <- quadratic.roots(g, ss2 + ss1 - g, -ss2)
       eqfreq <- roots[roots >= 0 & roots <= 1]
