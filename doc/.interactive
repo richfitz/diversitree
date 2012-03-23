@@ -1,0 +1,3 @@
+library(cacheSweave)
+setCacheDir('cache')
+Sweave(file='diversitree-tutorial.Rnw', driver=cacheSweaveDriver)

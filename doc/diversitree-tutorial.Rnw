@@ -1,9 +1,15 @@
-\documentclass[12pt]{article}
+\documentclass[11pt]{article}
 \usepackage{fullpage}
 \usepackage{Sweave}
 \usepackage{natbib}
-\usepackage[garamond]{mathdesign}
 \usepackage{amsmath}
+
+% I like Garamond (who doesn't?).  However, it's not included in most
+% TeX distributions due to licence restrictions.  Either use
+% getfontsnonfree to install it, remove this line to get computer
+% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
+% Palatino, which is also quite nice.
+\usepackage[garamond]{mathdesign}
 
 \usepackage{color}
 \definecolor{navy}{rgb}{0,0,0.4}
@@ -14,22 +20,21 @@
 \newcommand{\BiSSE}{\textsc{BiSSE}}
 \newcommand{\MuSSE}{\textsc{MuSSE}}
 \newcommand{\QuaSSE}{\textsc{QuaSSE}}
+\newcommand{\GeoSSE}{\textsc{GeoSSE}}
+\newcommand{\BiSSEness}{\textsc{BiSSE-ness}}
+\newcommand{\ClaSSE}{\textsc{ClaSSE}}
 \newcommand{\diversitree}{\textsf{diversitree}}
 \newcommand{\ape}{\textsf{ape}}
 
 \SweaveOpts{prefix.string=cache/diversitree-tutorial,eps=FALSE}
-<<results=hide,echo=FALSE>>=
-dir.create("cache", FALSE)
-@ 
 
 <<results=hide,echo=FALSE>>=
-if ( require(cacheSweave) )
-  setCacheDir("cache")
-@ 
-
-% Because they look like rubbish in the final version:
-<<echo=FALSE,results=hide>>=
+library(cacheSweave)
+## Remove stars, as they don't look nice when typeset
 options(show.signif.stars=FALSE)
+## This helps add real chi^2 numbers to the text
+chi <- function(m1, m2, digits=1)
+  round(2*(m1$lnLik - m2$lnLik), digits)
 @ 
 
 %\VignetteIndexEntry{Introduction to diversitree}
@@ -43,36 +48,49 @@ options(show.signif.stars=FALSE)
 \maketitle
 
 \tableofcontents
+\clearpage
 
 \section{Introduction}
 The \diversitree\ package includes a number of comparative
-phylogenetic methods, mostly focusing on analysing diversification
-and character evolution.  These methods all share a common set of
-utility tools for maximum likelihood (ML) parameter estimation,
+phylogenetic methods, mostly focusing on analysing diversification and
+character evolution.  These methods all share a common set of tools
+for performing maximum likelihood (ML) parameter estimation,
 hypothesis testing and model comparison, and Bayesian parameter
-estimation through Markov chain Monte Carlo (MCMC).  Included methods include:
+estimation through Markov chain Monte Carlo (MCMC).  Included methods
+include:
 
 \begin{itemize}
-\item \textbf{Diversification}
+\item Diversification
   \begin{itemize}
   \item Constant rate birth-death models \citep{Nee-1994-305}
   \end{itemize}
 
-\item \textbf{Character evolution}
+\item Character evolution
   \begin{itemize}
   \item Discrete trait evolution \citep{Pagel-1994-37}    
-  \item Univariate Brownian motion parameter estimation for continuous
-    characters
+  \item Univariate Brownian motion and Ornstein-Uhlenbeck models of
+    continuous trait evolution
   \end{itemize}
 
-\item \textbf{Joint character evolution and diversification}
+\item Joint character evolution and diversification:
   \begin{itemize}
   \item \BiSSE: Binary trait speciation and extinction
     \citep{Maddison-2007-701}, and extensions for incompletely
     resolved phylogenies \citep{FitzJohn-2009-595}.
   \item \MuSSE: Multiple State Speciation and Extinction.
-  \item \QuaSSE: Quantitative State Speciation and Extinction:
-    \citep{FitzJohn-2010-ip}
+  \item \QuaSSE: Quantitative State Speciation and Extinction
+    \citep{FitzJohn-2010-619}.
+  \end{itemize}
+
+\item Joint character evolution and diversification, with
+  speciation-triggered changes in character states:
+  \begin{itemize}
+  \item \GeoSSE: Geographic State Speciation and Extinction
+    \citep{Goldberg-2011-451}.
+  \item \BiSSEness: \BiSSE-Node Enhanced State Shift
+    \citep{Magnuson-Ford-2012}.
+  \item \ClaSSE: Cladogenetic State Speciation and Extinction
+    \citep{Goldberg-classe}.
   \end{itemize}
 \end{itemize}
 
@@ -84,9 +102,9 @@ In addition, variants of these models are available:
   and \MuSSE).
 \item MEDUSA-style partitioned analyses, where different regions of
   the tree have different parameters (implemented for birth-death,
-  \BiSSE, \MuSSE, and \QuaSSE).
+  \BiSSE, \MuSSE, \QuaSSE, and \GeoSSE).
 \item Marginal ancestral state reconstruction for discrete characters
-  (``Pagel94'') and \BiSSE.
+  (``Pagel94''), \BiSSE, and \MuSSE.
 \item Stochastic character mapping for discrete traits
   \citep{Bollback-2006-88}
 \end{itemize}
@@ -96,13 +114,10 @@ In the future, new methods will include
 \item Reflected Brownian motion for bounded traits
 \item Stochastic character mapping for discrete traits that affect
   speciation or extinction rates
-\item Geographic modes of speciation (GeoSSE: Geographic State
-  Speciation and Extinction: Goldberg et al. \textit{submitted})
 \end{itemize}
 For all methods, inference can be carried out under maximum
 likelihood, or in Bayesian analyses via MCMC (Markov Chain Monte
-Carlo).  Phylogenies can also be simulated under several of the
-methods.
+Carlo).  Phylogenies can also be simulated under most of the models.
 
 This tutorial is designed to give an overview of the features in
 \diversitree.  It does not aim to be a compete reference to the
@@ -113,17 +128,22 @@ fairly contrived -- if you have examples you would rather see here, I
 would welcome data sets.
 
 \subsection{Regenerating this file}
-This file is written in ``Swears'', which allows mixing \R\ code and
-\LaTeX\ markup.  If you want to regenerate the file, you will need some
-data files (\url{http://www.zoology.ubc.ca/prog/diversitree/files/})
-in the directory \code{data}.  Some of the code chunks take a very
-long time to run (total processing time is currently about XXX hours
-on a 2.8~GHz MacPro), and use the \code{cacheSweave} package to speed
-subsequent runs up.  With Gregor Gorjanc's
-\href{http://gregor.gorjanc.googlepages.com/Sweave.sh}{Sweave.sh}, the
-file can be easily regenerated with 
-\code{Sweave.sh -c -ld diversitree-tutorial.Rnw}.
+This file is written in ``Sweave'', which allows mixing \R\ code and
+\LaTeX\ markup.  If you want to regenerate the file, or run the
+empirical examples, you will need some data files, vailable at
+\url{http://www.zoology.ubc.ca/prog/diversitree/files/}, which must be
+present in the directory \code{data}.  Some of the code chunks take a
+very long time to run (total processing time is currently about 40
+hours on a 2.8~GHz MacPro), and use the \code{cacheSweave} package to
+speed subsequent runs up.  
 
+% This is no longer true -- see the makefile...
+% With Gregor Gorjanc's
+% \href{http://gregor.gorjanc.googlepages.com/Sweave.sh}{Sweave.sh}, the
+% file can be easily regenerated with \code{Sweave.sh -c -ld
+%   diversitree-tutorial.Rnw}.
+
+All code requires that the \diversitree\ package be loaded.
 <<>>=
 library(diversitree)
 @ 
@@ -148,7 +168,7 @@ set.seed(2)
 phy <- tree.bd(c(.1, .03), max.taxa=100)
 @ 
 %
-(plotted in figure \ref{ref:bd-tree}).  The first step in any analysis
+(plotted in figure \ref{fig:bd-tree}).  The first step in any analysis
 in \diversitree\ is to construct a likelihood function.  For constant
 rate birth death models, this is done with \code{make.bd}:
 <<>>=
@@ -177,12 +197,14 @@ lik(c(.1, .03), condition.surv=FALSE) # -10.74823
 
 \begin{figure}
   \centering
-<<fig=TRUE,echo=FALSE,results=hide>>=
+<<bd-tree,fig=TRUE,results=hide>>=
 plot(phy, no.margin=TRUE, show.tip.label=FALSE)
 @ 
 \caption{A birth-death tree, with speciation rate $\lambda=0.1$
-  and extinction rate $\mu=0.03$.}
-\label{ref:bd-tree}
+  and extinction rate $\mu=0.03$, simulated until it has 100 species
+  (the actual simulation runs until the speciation event that would
+  create the 101st species, but does not add this species).}
+\label{fig:bd-tree}
 \end{figure}
 
 To do a ML model fit, pass the likelihood function and a starting
@@ -202,7 +224,7 @@ To extract the coefficients from the fitted object, use the
 coef(fit)
 @ 
 and to extract the log-likelihood value at the ML point, use the
-$logLik$ function
+\code{logLik} function
 <<>>=
 logLik(fit)
 @ 
@@ -233,36 +255,36 @@ function\footnote{This is an unfortunate convention in \R: many
   \code{lrt} function, which should be clearer.  No analysis of
   variance is performed.}
 The model with the nonzero extinction estimate is preferred, with
-$\chi^2_1=5.7$.
+$\chi^2_1=\Sexpr{chi(fit, fit.yule)}$
 <<>>=
 anova(fit, yule=fit.yule)
 @ 
 
 Alternatively, we can use Markov chain Monte Carlo (MCMC) to perform a
 Bayesian analysis.  Here, I will use a uniform prior on the interval
-$[0,\infty)$ for both parameters, by not specifying any prior.  The
+$[0,\infty)$ for both parameters by not specifying any prior.  The
 \code{w} parameter is the tuning parameter.  Here, it affects how many
 function evaluations will be needed per sample, but will not generally
-affect the rate of mixing (see the online help for more information).
-<<>>=
+affect the rate of mixing (see the online help for \code{mcmc} for
+more information).
+<<bd-run-mcmc,cache=TRUE>>=
 samples <- mcmc(lik, fit$par, nsteps=2000, w=c(.1, .1),
                 lower=0, upper=Inf, print.every=1000)
 @ 
 The posterior distribution of these parameters, and the code to
-generate it, is in figure \ref{fig:bd-mcmc}.
+generate it, is in figure \ref{fig:bd-mcmc-distr}.
 
 \begin{figure}
   \centering
-<<fig=TRUE>>=
+<<bd-mcmc-distr,fig=TRUE>>=
 samples$r <- samples$lambda - samples$mu
 col <- c("red", "blue", "green3")
 profiles.plot(samples[c("lambda", "mu", "r")], col.line=col, las=1,
              ylab="Probability density", xlab="Parameter estimate")
-legend("topright", c("lambda", "mu", "r"), fill=col)
+legend("topright", c("lambda", "mu", "r"), fill=col, bty="n")
 abline(v=0, lty=2)
 abline(v=c(.1, .03, .07), col=col)
 @ 
-
   \caption{Posterior probability distributions for the parameters of the
     constant rate birth death model.  True values are indicated by the
     solid vertical lines.  The bars at the bottom of the distributions
@@ -270,7 +292,7 @@ abline(v=c(.1, .03, .07), col=col)
     intervals.  These include the two parameter $\lambda$ and $\mu$,
     though the true diversification rate $r$ lies above the 95\%
     credibility interval for that parameter.}
-\label{fig:bd-mcmc}
+\label{fig:bd-mcmc-distr}
 \end{figure}
 
 Analyses can also use trees where only a fraction of species are
@@ -299,38 +321,51 @@ fit.sub.yule <- find.mle(lik.sub.yule, coef(fit.sub)[1],
                          method="subplex")
 anova(fit.sub, yule=fit.sub.yule)
 @ 
-Dropping these species has reduced the support from $\chi^2_1=5.7$ to
-$\chi^2_1=2.6$, and the difference is no longer significant at the 5\%
-level.
+In this small tree, the support for the model with extinction is
+only 
+$\chi^2_1=\Sexpr{chi(fit.sub, fit.sub.yule)}$
+(compared with 
+$\chi^2_1=\Sexpr{chi(fit, fit.yule)}$ when we had all
+species), which is no longer significant at the 5\% level.
 
-\clearpage
+\clearpage % Force figure to appear.
 
 \section{Markov models of discrete character evolution}
 
-%% TODO: write a simulate character function, and simulate a character
-%% on the BD tree above.
-Again, start with a simulated tree and character distribution.  This
-uses the \BiSSE simulation code, explained later, as we need both a
-tree and character distribution.  This is just a 25 species
-birth-death tree, with fairly high rates of character evolution of a
-binary character with an asymmetry in the character transition rates,
-so that $0\to 1$ transitions occur less rapidly than $1\to 0$
-transitions.  The root of the tree starts in state $0$.
-<<>>=
-pars <- c(.1, .1, .03, .03, .1, .2)
-set.seed(3)
-phy <- trees(pars, "bisse", max.taxa=25, max.t=Inf, x0=0)[[1]]
-states <- phy$tip.state
-states
-@ 
-The simulation remembers the true character history, which is
-displayed in figure \ref{fig:mk2-tree}.
+As with the birth death models above, \diversitree\ supports both
+simulating discrete characters and estimating rates of character
+evolution.  The implemented methods are a little idosyncratic, as they
+are primarily here for completeness (representing special cases of the
+joint diversification-character evolution models), but are also useful
+in their own right.
 
+First, we will simulate a binary trait on a birth death tree.  The
+tree above with $100$ tips is a bit unwieldy to visualise, so we'll
+make a smaller $50$ tip tree:
+<<>>=
+set.seed(2)
+phy <- tree.bd(c(.1, .03), max.taxa=50)
+@ 
+
+% Dammit - this is broken apparently...
+Then, on this tree, simulate a binary character where the rate of
+transition from state $0$ to state $1$ is $0.1$, and the reverse rate
+is $0.2$.  We'll start the tree in state $0$ (specified by \code{x0}).
+The argument \code{model="mk2"} specifies that we will use a Mk2
+model:
+<<>>=
+set.seed(1)
+states <- sim.character(phy, c(.1, .2), x0=0, model="mk2")
+@ 
+The simulation remembers the history at nodes too, which is displayed
+in figure \ref{fig:mk2-tree} (eventually full history will be
+recorded).
 \begin{figure}
   \centering
-<<fig=TRUE>>=
-par(mar=rep(0, 4))
-plot(history.from.sim.discrete(phy, 0:1), phy)
+<<mk2-tree,fig=TRUE>>=
+plot(phy, show.tip.label=FALSE, no.margin=TRUE)
+tiplabels(col=states+1, pch=19, adj=1)
+nodelabels(col=attr(states, "node.state")+1, pch=19)
 @   
 \caption{Character history for simulated trait and tree.  Black is
   state $0$, red is state $1$.}
@@ -345,8 +380,8 @@ lik.mk2 <- make.mk2(phy, states)
 fit.mk2 <- find.mle(lik.mk2, c(.1, .1), method="subplex")
 coef(fit.mk2)
 @ 
-In the fit, the $q_{10}$ parameter is much higher than $q_{01}$; the
-difference being larger than in the true model.  
+In the fit, the $q_{10}$ parameter is higher than $q_{01}$, the
+difference being a little larger than in the true model.
 
 See if this difference is statistically justified by running a model
 where the two $q$ values are constrained to be equal:
@@ -355,8 +390,8 @@ lik.mk1 <- constrain(lik.mk2, q10 ~ q01)
 fit.mk1 <- find.mle(lik.mk1, .1, method="subplex")
 anova(fit.mk2, mk1=fit.mk1)
 @ 
-This is marginally significant $\chi^2_1=4.2$, so the asymmetric model
-fits better.
+This is significant ($\chi^2_1=\Sexpr{chi(fit.mk2, fit.mk1)}$) so we
+can conclude that asymmetric model fits better.
 
 \subsection{Drawing samples with MCMC}
 It is possible to run an MCMC analysis.  However, care should be taken
@@ -380,16 +415,15 @@ To run the MCMC, we need to specify a starting point (again, I have
 used $(.1, .1)$, but the ML point might be preferable).  I have
 discarded the first 500 samples (10\%), which is probably overkill for
 this model, as the autocorrelation between samples is extremely small.
-<<cache=TRUE>>=
+<<mk2-mcmc,cache=TRUE>>=
 samples <- mcmc(lik.mk2, c(.1, .1), nsteps=5000, prior=prior.exp,
                 w=.1, lower=0, print.every=1000)
 samples <- subset(samples, i > 500)
 @ 
 
-The marginal distributions of these parameters are shown in figure 
 \begin{figure}
   \centering
-<<fig=TRUE>>=
+<<mk2-mcmc-distr,fig=TRUE>>=
 col <- c("red", "blue")
 profiles.plot(samples[c("q01", "q10")], col.line=col, las=1,
               xlab="Parameter estimate",
@@ -400,41 +434,22 @@ abline(v=c(.1, .2), col=col)
     Mk2 model.  True values are indicated by the solid vertical lines.}
 \label{fig:mk2-mcmc}
 \end{figure}
-The two marginal distributions overlap substantially, and there is
-little support here for the hypothesis that $q_{10}$ is greater than
-$q_{01}$.
 
-The other prior included in \diversitree\ assumes that the mean of the
-rates is exponentially distributed, and the scaled difference between
-the two parameters is Beta distributed.  If we assume that the Beta
-distribution is symmetrical, then its two parameters are equal, and we
-have
-\begin{equation*}
-  \begin{split}
-    \bar q = \frac{q_{01} + q_{10}}{2} \sim& \mathrm{Exp}[r]\\
-    \Delta q = 1 - \frac{q_{01}}{2\bar q} \sim& \mathrm{Beta}[\beta, \beta]
-  \end{split}
-\end{equation*}
-Specifying a exponential distribution for $\bar q$ with rate $10$ (as
-before), and a uniform distribution for $\Delta q$:
+The marginal distributions of these parameters are shown in figure
+\ref{fig:mk2-mcmc}, and overlap substantially.  However, that is
+because the distributions are correlated (increasing $q_{01}$ fits
+best if $q_{10}$ is also increased).  The $q_{01}$ parameter is
+estimated to be greater than the $q_{10}$ parameter only a small
+fraction of the time:
 <<>>=
-prior.eb <- diversitree:::make.prior.ExpBeta(10, 1)
-@ 
-and running the MCMC sampler:
-<<cache=TRUE>>=
-samples.eb <- mcmc(lik.mk2, c(.1, .1), nsteps=5000, prior=prior.eb,
-                w=.1, lower=0, print.every=1000)
-samples.eb <- subset(samples.eb, i > 500)
-@ 
-The results from this are not plotted here, but give similar marginal
-distributions.  However, the proportion of samples for which $q_{10} >
-q_{01}$ differs between the two sets of samples.
-<<>>=
-mean(samples$q10 > samples$q01)
-mean(samples.eb$q10 > samples.eb$q01)
+mean(samples$q01 > samples$q10)
 @ 
 
-\section{Binary traits and diversification: BiSSE}
+% TODO: Meristic and multitrait.
+
+\clearpage
+\section{Binary traits and diversification: \BiSSE}
+
 The \BiSSE\ (Binary State Speciation and Extinction) model combines
 the features of the constant-rates birth-death model with the
 two-state Markov model.  Again, start with a simulated tree.  The
@@ -450,20 +465,20 @@ states <- phy$tip.state
 head(states)
 @ 
 This gives a 52 species tree, shown with its true history in figure
-\ref{ref:bisse-tree}.  The character states are now stored in the
+\ref{fig:bisse-tree}.  The character states are now stored in the
 \code{states} vector.  This vector is named, so that each element can
 be easily associated with a tip in the tree.
 
 \begin{figure}
   \centering
-<<fig=TRUE,echo=FALSE,results=hide>>=
+<<bisse-tree,fig=TRUE,echo=FALSE,results=hide>>=
 par(mar=rep(0, 4))
 plot(history.from.sim.discrete(phy, 0:1), phy)
 @ 
 \caption{A \BiSSE\ tree, with parameters $\lambda_0=0.1$,
   $\lambda_1=0.2$, $\mu_0=\mu_1=0.03$, and $q_{01}=q_{10}=0.01$.
   Black is state $0$, red is state $1$.}
-\label{ref:bisse-tree}
+\label{fig:bisse-tree}
 \end{figure}
 
 The \code{make.bisse} takes as its first two arguments a tree and set
@@ -473,7 +488,7 @@ lik <- make.bisse(phy, states)
 lik(pars) # -159.71
 @ 
 
-To perform an ML, we need a starting point.  The
+To perform an ML search, we need a starting point.  The
 \code{starting.point.bisse} function produces a basic heuristic guess
 of a sensible starting point, based on the character-independent
 birth-death fit.  There are no guarantees that this is at all close to
@@ -485,12 +500,12 @@ p
 @
 
 Start an ML search from this point (this may take some time)
-<<cache=TRUE>>=
+<<bisse-ml,cache=TRUE>>=
 fit <- find.mle(lik, p)
 @ 
 
-The \code{fit.mle} object has an element \code{lnLik} with the
-log-likelihood value
+As above, the \code{fit.mle} object has an element \code{lnLik} with
+the log-likelihood value
 <<>>=
 fit$lnLik
 @ 
@@ -499,14 +514,14 @@ and coefficients may be extracted with \code{coef} (rounded for clarity):
 round(coef(fit), 3)
 @ 
 
-Let's test the hypothesis that the speciation rates are different.  We
-can use \code{constrain} to enforce equal speciation rates to be equal
-across character states:
+Let's test the hypothesis that the speciation rates are different for
+the different states.  We can use \code{constrain} to enforce equal
+speciation rates to be equal across character states:
 <<>>=
 lik.l <- constrain(lik, lambda1 ~ lambda0)
 @ 
 and then start the ML search again:
-<<>>=
+<<bisse-ml-constrained,cache=TRUE>>=
 fit.l <- find.mle(lik.l, p[argnames(lik.l)])
 fit.l$lnLik # -158.74
 @ 
@@ -519,7 +534,8 @@ round(rbind(full=coef(fit), equal.l=coef(fit.l, TRUE)), 3)
 @ 
 (the \code{TRUE} argument forces \code{coef} to return values for
 constrained parameters).  However, the difference in fits is not
-statistically supported, with $chi^2_1 = 0.1$:
+statistically supported, with 
+$\chi^2_1=\Sexpr{chi(fit, fit.l)}$
 <<>>=
 anova(fit, equal.l=fit.l)
 @ 
@@ -549,9 +565,9 @@ w <- diff(sapply(tmp[2:7], range))
 w
 @ 
 Run the chain for 10,000 steps (this will take a while)
-<<cache=TRUE>>=
+<<bisse-mcmc,cache=TRUE>>=
 samples <- mcmc(lik, fit$par, nsteps=10000, w=w, lower=0, prior=prior,
-                print.every=1000)
+                print.every=0)
 @ 
 The marginal distributions for the two speciation rates are shown in
 figure \ref{fig:bisse-mcmc}, which shows the 95\% credibility
@@ -560,7 +576,7 @@ $\lambda_1$.
 
 \begin{figure}
   \centering
-<<fig=TRUE>>=
+<<bisse-mcmc-fig,fig=TRUE>>=
 ## See \link{profiles.plot} for more information on plotting these
 ## profiles.
 col <- c("blue", "red")
@@ -599,7 +615,7 @@ sampling.f <- 50 / 150
 @ 
 or you can assume that it varies with character state
 <<>>=
-sampling.f <- table(states.s) / table(states)
+sampling.f <- as.numeric(table(states.s) / table(states))
 sampling.f
 @ 
 Pass this in to \code{make.bisse} and construct a new likelihood
@@ -608,7 +624,7 @@ function that accounts for the sampling:
 lik.s <- make.bisse(phy.s, phy.s$tip.state, sampling.f=sampling.f)
 @ 
 This can then be optimised, as before:
-<<>>=
+<<bisse-s-ml,cache=TRUE>>=
 p <- starting.point.bisse(phy)
 fit.s <- find.mle(lik.s, p)
 fit.s[1:2]
@@ -639,8 +655,9 @@ The character states are stored as the size of the difference of mass
 between sexes, divided by the mean across sexes
 \citep[see][]{FitzJohn-2009-595}.
 <<>>=
-states <- read.csv("data/Lislevand-states.csv", as.is=TRUE)
-states <- structure(states$dimorph, names=states$species)
+d <- read.csv("data/Lislevand-states.csv", as.is=TRUE)
+states <- d$dimorph
+names(states) <- d$species
 states <- states[tree$tip.label]
 names(states) <- tree$tip.label
 head(states)
@@ -655,90 +672,14 @@ head((abs(states) > .1) + 0)
 \setkeys{Gin}{width=1.0\textwidth}
 \begin{figure}
   \centering
-<<fig=TRUE,width=8,height=5,echo=FALSE,results=hide>>=
-## There is a lot to do here, so this is a bit of a tangle of code.
-## Some of this could certainly be cleaned up and may be more
-## generally useful, but that is not going to happen any time soon.
-## In particular, the method of drawing grouped tip labels on plots
-## *has* been generalised for radial plots, but I have not done this
-## yet for normal rectangular plots.
-tipmap <- function(tree, states, plt, cols, offset=0, width=1,
-                   offset.y=0) {
-  ## To do this, what is the order in which the labels were plotted?
-  i <- tree$tip.label[order(plt$yy[1:length(tree$tip.label)])]
-  is.clade <- i %in% names(tree$clades)
-
-  ## Categorise the binary data into three classes
-  states.3 <- states + 1
-  states.3[is.na(states)] <- 3
-
-  yy <- sort(plt$yy[seq_along(tree$tip.label)])
-
-  y0.tip <- yy[!is.clade] - .5
-  y1.tip <- y0.tip + 1
-  col.tip <- cols[states.3[i][!is.clade]]
-
-  if ( !is.null(tree$clades) ) {
-    clades <- tree$clades[match(names(tree$clades), i[is.clade])]
-    tab <- t(sapply(clades, function(x)
-                    tabulate(states.3[x],3)))
-    n.taxa.clade <- plt$n.taxa[names(clades)]
-    loc <- t(apply(cbind(0, tab / rowSums(tab) * n.taxa.clade),
-                   1, cumsum)) + yy[is.clade] - n.taxa.clade/2
-    keep <- as.logical(tab > 0)
-    y0.clade <- loc[,-4][keep]
-    y1.clade <- loc[,-1][keep]
-    col.clade <- cols[rep(1:3, each=length(clades))[keep]]
-  } else {
-    y0.clade <- y1.clade <- col.clade <- NULL
-  }
-
-  x0 <- max(plt$xx) + offset
-  x1 <- x0 + width
-  y0 <- c(y0.tip, y0.clade) + offset.y
-  y1 <- c(y1.tip, y1.clade) - offset.y
-  col <- c(col.tip, col.clade)
-  rect(x0, y0, x1, y1, col=col, border=NA)
-}
-
-tip.label <- tree$tip.label
-tree.clade <- clades.from.polytomies(tree)
-n.tip <- length(tree.clade$tip.label)
-cols <- c("red", "blue", "white") # 1, 0, NA
-cols <- c("#E41A1C", "#377EB8", "white")
-
-families <- read.csv("data/families.csv", as.is=TRUE)
-tip.label <- tree.clade$tip.label
-tip.family <- families$family[match(tip.label, families$tip)]
-
+<<shorebirds-tree,fig=TRUE,width=8,height=5,echo=FALSE,results=hide>>=
+## TODO: Fixing this needs doing: traits need adding, and a higher
+## level classification, too.
 par(mar=rep(.5, 4), mfrow=c(1, 2))
 plot(tree, show.tip.label=FALSE)
+tree.clade <- clades.from.polytomies(tree)
 plt <- plot(tree.clade, cex=.5, label.offset=3, transform=sqrt,
             tip.color="white", clade.fill="gray")
-tipmap(tree.clade, abs(states) < .15, plt, cols, 0.75, offset.y=0)
-
-i <- order(plt$yy[1:n.tip])
-
-xlab <- max(plt$xx[1:n.tip]) + 3
-ylab <- plt$yy[i]
-lab <- tip.family[i]
-
-len <- rle(lab)$lengths
-to <- cumsum(len)
-from <- c(1, to[-length(to)]+1)
-y0 <- ylab[from] - plt$n.taxa[i][from]/2 + 1/4
-y1 <- ylab[to]   + plt$n.taxa[i][to]/2   - 1/4
-ym <- (y0 + y1)/2
-names(ym) <- lab[to]
-
-fix <- match(c("Chionidae", "Thinocoridae"), lab[to])
-ym[fix] <- ym[fix] + c(1.25, .25)
-
-j <- (y1 - y0) > 1
-segments(xlab-1/2, y0[j] + 0.25, xlab-1/2, y1[j] - 0.25)
-
-text(xlab, ym, lab[to], cex=.5, adj=c(0, .5),
-     font=ifelse(lab[to] == "Dromas", 3, 1))
 @ 
 \caption{The shorebird supertree \citep{Thomas-2004-28}.  On the left,
   the original tree with all polytomies and 350 species.  On the
@@ -767,6 +708,7 @@ states.15 <- (abs(states) > 0.15) + 0
 tree.clade <- clades.from.polytomies(tree)
 lik <- make.bisse(tree.clade, states.15)
 @ 
+
 A sensible starting point can still be computed with
 \code{starting.point.bisse}; this takes into account the clade
 information automatically.
@@ -776,7 +718,7 @@ p <- starting.point.bisse(tree.clade)
 You can then perform a ML search or MCMC analysis as usual.  However,
 unresolved clades slow down the analysis considerably, and this will
 take several minutes.
-<<cache=TRUE>>=
+<<shorebirds-ml,cache=TRUE>>=
 fit.full <- find.mle(lik, p)
 @ 
 In the full model, speciation rates for dimorphic species (state $1$)
@@ -795,7 +737,7 @@ lik.l <- constrain(lik, lambda1 ~ lambda0)
 lik.q <- constrain(lik, q10 ~ q01)
 @ 
 Then, rerun the 
-<<cache=TRUE>>=
+<<shorebirds-ml-constrain,cache=TRUE>>=
 fit.l <- find.mle(lik.l, p[argnames(lik.l)])
 fit.q <- find.mle(lik.q, p[argnames(lik.q)])
 @ 
@@ -807,12 +749,25 @@ anova(fit.full, equal.l=fit.l, equal.q=fit.q)
 @ 
 
 The analysis can also be run with MCMC.  Here, I am using an
-exponential prior with rate $1 / (2r)$, as earlier.  This takes a very
-long time to run (approximately 4--5~s/sample)
-<<cache=TRUE>>=
+exponential prior with rate $1 / (2r)$, as earlier.  
+<<>>=
 prior <- make.prior.exponential(1 / (2*p[1]))
+@ 
+The MCMC itself takes a very long time to run (approximately
+4--5~s/sample)
+<<shorebirds-mcmc,eval=FALSE>>=
+set.seed(1)
 samples <- mcmc(lik, coef(fit.full), 10000, w=.3, prior=prior,
                 print.every=0)
+@ 
+<<shorebirds-mcmc-run,results=hide,echo=FALSE>>=
+.save <- "cache/shorebirds-mcmc-samples.Rdata"
+if ( file.exists(.save) ) {
+  load(.save)
+} else {
+<<shorebirds-mcmc>>
+  save(samples, file=.save)
+}
 @ 
 
 Setting up the likelihood function above assumed that the tree being
@@ -858,12 +813,11 @@ lik.ex(coef(fit.full))
 lik(coef(fit.full))
 @ 
 
-\section{Multiple state characters and diversification: MuSSE}
+\section{Multiple state characters and diversification: \MuSSE}
 \MuSSE\ (Multiple State Speciation and Extinction) generalises the
 \BiSSE\ model to allow characters with more than two states.
 Following \citet{Pagel-1994-37}, this can also allow for multiple
 characters, each of which might be binary, by recoding the states.
-
 
 To illustrate, we'll start with a simple simulated example with a
 three-level state.  The tree is simulated where character evolution is
@@ -875,7 +829,7 @@ $(\lambda_1, \lambda_2, \lambda_3, \mu_1, \mu_2, \mu_3, q_{12}, q_{13},
 q_{21}, q_{23}, q_{31}, q_{32})$.  This order can be seen here (sorry
 -- clunky at the moment)
 <<>>=
-diversitree:::argnames.musse(NULL, 3)
+diversitree:::default.argnames.musse(3)
 @ 
 (the order of the $q$ parameters is row-wise through the transition
 rate matrix, skipping diagonal elements).
@@ -937,13 +891,13 @@ argnames(lik.base)
 @ 
 
 Find the ML point for this model
-<<>>=
+<<musse-ml-base,cache=TRUE>>=
 p <- starting.point.musse(phy, 3)
 fit.base <- find.mle(lik.base, p[argnames(lik.base)])
 @ 
 
 Now, allow the speciation rates to vary
-<<>>=
+<<musse-ml-lambda,cache=TRUE>>=
 lik.lambda <- constrain(lik, mu2 ~ mu1, mu3 ~ mu1,
                         q13 ~ 0, q21 ~ q12, q23 ~ q12, q31 ~ 0, q32 ~ q12)
 fit.lambda <- find.mle(lik.lambda, p[argnames(lik.lambda)])
@@ -954,7 +908,10 @@ There is very little improvement here (this is a small tree)
 anova(fit.base, free.lambda=fit.lambda)
 @ 
 
-\section{\QuaSSE}
+% TODO: Include a multitrait case here -- possibly just the case from
+% the diversitree paper.
+
+\section{Quantitative traits and diversification: \QuaSSE}
 
 The \QuaSSE\ method is by far the slowest method in \diversitree.
 This is because to compute the likelihood, we have to solve a system
@@ -963,10 +920,6 @@ complicated than the system of ordinary differential equations or
 simple algebraic expressions in the other methods.  The basic
 interface is very similar to the other methods, but there are more
 options to control the behaviour of the integrator.
-
-<<>>=
-library(diversitree)
-@ 
 
 We'll start with a simulated tree.  The tree simulation differs
 slightly from the other methods, because there is no longer a
@@ -984,7 +937,7 @@ char <- make.brownian.with.drift(0, 0.025)
 @ 
 Simulate the tree:
 
-<<>>=
+<<cache=TRUE>>=
 set.seed(1)
 phy <- tree.quasse(c(lambda, mu, char), max.taxa=15, x0=0,
                    single.lineage=FALSE)
@@ -1035,13 +988,13 @@ Then run \code{find.mle}, as usual.  The \code{control} argument here
 just tells the subplex algorithm to use an initial step size of 0.1
 (rather than 1), which reduces the number of function evaluations
 somewhat.
-<<cache=TRUE>>=
+<<quasse-ml-full,cache=TRUE>>=
 fit <- find.mle(lik.nodrift, p.start, control=list(parscale=.1),
                 lower=lower, verbose=0)
 @ 
 
 Compare this against the constant rate speciation fit:
-<<cache=TRUE>>=
+<<quasse-ml-constant,cache=TRUE>>=
 lik.constant <- constrain(lik.nodrift, l.y1 ~ l.y0, l.xmid ~ 0, l.r ~ 1)
 fit.constant <- find.mle(lik.constant,
                          p.start[argnames(lik.constant)],
@@ -1056,7 +1009,7 @@ anova(fit, constant=fit.constant)
 
 \subsection{Primate analysis}
 Here, I will recreate the analysis of primate diversification from
-\citep{FitzJohn-2010-ip}, but fitting only speciation functions to
+\citep{FitzJohn-2010-619}, but fitting only speciation functions to
 keep things relatively simple.
 <<>>=
 phy <- read.nexus("data/Vos-2006.nex")
@@ -1112,7 +1065,7 @@ f.h <- make.primates(noroptimal.x, constant.x)
 
 Start by fitting the constant model first (this will take quite a
 while; each function evaluation takes about $5$~s).
-<<cache=TRUE>>=
+<<primates-c,cache=TRUE>>=
 control <- list(parscale=.1, reltol=0.001)
 mle.c <- find.mle(nodrift(f.c), p, lower=0, control=control,
                    verbose=0)
@@ -1128,23 +1081,15 @@ names(p.s) <- argnames(nodrift(f.s))
 names(p.h) <- argnames(nodrift(f.h))
 @ 
 
-<<cache=TRUE>>=
+<<primates-lsh,cache=TRUE>>=
 mle.l <- find.mle(nodrift(f.l), p.l, control=control, verbose=0)
 mle.s <- find.mle(nodrift(f.s), p.s, control=control, verbose=0)
 mle.h <- find.mle(nodrift(f.h), p.h, control=control, verbose=0)
 @ 
 
-And run the fits with the drift parameter added, starting from the
-constrained model's ML parameters:
-<<cache=TRUE>>=
-mle.d.l <- find.mle(f.l, coef(mle.l, TRUE), control=control, verbose=0)
-mle.d.s <- find.mle(f.s, coef(mle.s, TRUE), control=control, verbose=0)
-mle.d.h <- find.mle(f.h, coef(mle.h, TRUE), control=control, verbose=0)
-@ 
-
 \begin{figure}
   \centering
-<<fig=TRUE,echo=FALSE,results=hide>>=
+<<primates-tree,fig=TRUE,echo=FALSE,results=hide>>=
 xmin <- 2
 xmax <- max(mass)
 
@@ -1210,6 +1155,29 @@ strongest for the ``hump'' shaped fit.
 anova(mle.c, linear=mle.l, sigmoidal=mle.s, hump=mle.h)
 @ 
 
+Run the fits with the drift parameter added, starting from the
+constrained model's ML parameters:
+<<primates-drift,cache=TRUE>>=
+mle.d.l <- find.mle(f.l, coef(mle.l, TRUE), control=control, verbose=0)
+mle.d.s <- find.mle(f.s, coef(mle.s, TRUE), control=control, verbose=0)
+mle.d.h <- find.mle(f.h, coef(mle.h, TRUE), control=control, verbose=0)
+@ 
+and add these to the comparison:
+<<>>=
+anova(mle.c, linear=mle.l, sigmoidal=mle.s, hump=mle.h,
+      drift.linear=mle.d.l, drift.sigmoidal=mle.d.s,
+      drift.hump=mle.d.h)
+@ 
+There is an improvement in the model fit when drift is added.  In all
+cases, the drift parameter is positive, indicating an increase in mass.
+<<>>=
+c(linear=coef(mle.d.l)[["drift"]], 
+  sigmoidal=coef(mle.d.s)[["drift"]],
+  hump=coef(mle.d.h)[["drift"]])
+@ 
+However, the precice estimate depends strongly on the speciation model
+assumed.
+
 Next, consider splitting the tree.  MEDUSA \citep{Alfaro-2009-13410}
 identified a shift in diversification rates at the base of the
 superfamily Cercopithecoidea (old world monkeys).  In this tree, this
@@ -1255,12 +1223,12 @@ names(p.cc) <- argnames(g.cc)
 
 At this point, the split function should have basically the same
 likelihood as the single partition function:
-<<cache=TRUE>>=
+<<primates-cc-cmp,cache=TRUE>>=
 mle.c$lnLik - g.cc(p.cc)
 @ 
 
 And run the ML search
-<<cache=TRUE>>=
+<<primates-cc,cache=TRUE>>=
 mle.cc <- find.mle(g.cc, p.cc, control=control, lower=0, verbose=0)
 @ 
 
@@ -1282,22 +1250,20 @@ p.ll <- c(p.cc[1], 0, p.cc[2:4], 0, p.cc[5])
 names(p.ll) <- argnames(g.ll)
 @ 
 
-The functions with just one speciation rate as a linear function can
-then be generated from this, by subsetting against the argument names
-<<>>=
-p.lc <- p.ll[argnames(g.lc)]
-p.cl <- p.ll[argnames(g.cl)]
-@ 
-
-Run the ML searches for these models:
-<<cache=TRUE>>=
-mle.lc <- find.mle(g.lc, p.lc, control=control, verbose=0)
-mle.cl <- find.mle(g.cl, p.cl, control=control, verbose=0)
+Run the ML searches for this model:
+<<primates-ll,cache=TRUE>>=
 mle.ll <- find.mle(g.ll, p.ll, control=control, verbose=0)
 @ 
-
+Then generate starting points for models with just one of the sections
+of the tree having a linear speciation function:
 <<>>=
-g.cl(coef(mle.ll)[argnames(g.cl)])
+p.lc <- c(coef(mle.ll)[1:3], p.ll[c(4, 5, 7)])
+p.cl <- c(p.ll[c(1, 3, 4)], coef(mle.ll)[5:7])
+@ 
+and run the ML search:
+<<primates-lccl,cache=TRUE>>=
+mle.lc <- find.mle(g.lc, p.lc, control=control, verbose=0)
+mle.cl <- find.mle(g.cl, p.cl, control=control, verbose=0)
 @ 
 
 We can then compare the models again:
@@ -1313,8 +1279,8 @@ speciation (lowest AIC value).  Looking at the coefficients for this model:
 <<>>=
 coef(mle.cl)
 @ 
-The speciation rate is a negative function of body size -- increasing
-body size decreases the speciation rate.
+The speciation rate in the foreground clade is a negative function of
+body size (\code{l.m.2} is negative) -- increasing body size decreases the speciation rate.
 
 \subsection{Controlling the calculations}
 
@@ -1366,6 +1332,250 @@ acceptable performance and accuracy, but this is not always possible.
   convolutions (default=5).  Probably best to leave this one alone.
 \end{itemize}
 
+\section{Geographic distributions and diversification: GeoSSE (by Emma
+  Goldberg)}
+\label{sec:geosse}
+
+The GeoSSE model (Geographic State Speciation and Extinction) combines
+features of the constant-rates birth-death model with a three-state
+Markov model.  It differs from BiSSE in parameterizing the model to
+represent diversification and range shifts among two regions, which
+includes allowing widely-distributed species whose ranges may change
+in conjunction with a speciation event.  See \citet{Goldberg-2011-451}
+for a full explanation of the model assumptions.
+
+\subsection{Parameters and a tree}
+
+Simulating trees under GeoSSE is not yet part of {\tt diversitree},
+but it can be done with a separate program, \citeauthor{simtreesdd}.
+A simulated tree is included and shown in \prettyref{fig:phy}.
+<<loadlib>>=
+data("geosse")
+phy <- geosse.phy
+@
+<<plottree1, eval=false>>=
+statecols <- c("AB"="purple", "A"="blue", "B"="red")
+plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5)
+@
+\begin{figure}
+\centering
+<<plottree2, echo=false, fig=true>>=
+statecols <- c("AB"="purple", "A"="blue", "B"="red")
+plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5, no.margin=TRUE)
+@
+\caption{A GeoSSE tree simulated with {\tt params = c(1.5, 0.5, 1.0,
+    0.7, 0.7, 2.5, 0.5)}.  The tip state colors are purple for species
+  present in both regions (AB), blue for species only in region A, and
+  red for species only in region B.}
+\label{fig:phy}
+\end{figure}
+
+An extremely crude starting point for parameter estimation can be
+obtained with:
+<<parstart>>=
+p <- starting.point.geosse(phy)
+p
+@ 
+The parameters are: speciation within region A ({\tt sA}), speciation
+within region B ({\tt sB}), between-region speciation ({\tt sAB}),
+extinction from region A ({\tt xA}), extinction from region B ({\tt
+  xB}), dispersal from A to B (range expansion, {\tt dA}), and
+dispersal from B to A ({\tt dB}).
+
+\subsection{Model construction and constraining}
+Constructing and constraining likelihood functions works as for the
+other models.  Here we will consider the full model, a model without
+between-region speciation, and a model without regional dependence of
+speciation or extinction rates.
+
+<<geosse-lik>>=
+lik1 <- make.geosse(phy, phy$tip.state)
+lik2 <- constrain(lik1, sAB ~ 0)
+lik3 <- constrain(lik1, sA ~ sB, xA ~ xB)
+@
+
+\subsection{Maximum likelihood}
+
+ML parameter estimation and model comparisons:
+
+<<geosse-ml, cache=true>>=
+ml1 <- find.mle(lik1, p)
+p <- coef(ml1)
+ml2 <- find.mle(lik2, p[argnames(lik2)])
+ml3 <- find.mle(lik3, p[argnames(lik3)])
+
+<<mlans>>=
+round(rbind(full = coef(ml1), 
+            no.sAB = coef(ml2, TRUE), 
+            eq.div = coef(ml3, TRUE)), 3)
+anova(ml1, no.sAB = ml2, eq.div = ml3)
+@
+On this tree, we reject the model of equal speciation and extinction
+in the two regions, concluding that there are regional differences in
+diversification.  Including the between-region mode of speciation does
+not, however, significantly improve the fit.
+
+\subsection{Markov chain Monte Carlo}
+
+We will only consider the 6-parameter model here.
+Use the ML rate estimates as a starting point.
+Place a broad exponential prior on each parameter.
+<<par2>>=
+p <- coef(ml2)
+prior <- make.prior.exponential(1/2)
+@
+
+Use a pilot run to obtain reasonable step sizes:
+<<geosse-mcmc-pilot, cache=true>>=
+set.seed(1)
+tmp <- mcmc(lik2, p, nsteps=100, prior=prior, w=1, print.every=0)
+w <- diff(sapply(tmp[2:7], quantile, c(0.025, 0.975)))
+@
+
+Now the real analysis, which will take awhile to run:
+<<geosse-mcmc, eval=FALSE>>=
+mcmc2 <- mcmc(lik2, p, nsteps=10000, prior=prior, w=w)
+@
+<<geosse-mcmc-run,results=hide,echo=FALSE>>=
+.save <- "cache/geosse-mcmc-samples.Rdata"
+if ( file.exists(.save) ) {
+  load(.save)
+} else {
+<<geosse-mcmc>>
+  save(mcmc2, file=.save)
+}
+@ 
+
+Marginal posterior distributions are shown in \prettyref{fig:mcmc}.
+We can also compare rate estimates by looking at posterior
+probabilities of their differences.
+<<mcmcprob>>=
+mcmc2diff <- with(mcmc2, data.frame(s.diff=sA-sB, 
+                                    x.diff=xA-xB, 
+                                    d.diff=dA-dB, 
+                                    div.A=sA-xA, 
+                                    div.B=sB-xB))
+colMeans(mcmc2diff > 0)
+@
+We correctly and confidently recover regional biases in speciation and
+dispersal, and positive net diversification in region A.  With less
+confidence, we recover regional bias in extinction and negative net
+diversification for region B (i.e., extinction exceeds speciation in
+region B).
+
+\begin{figure}
+\centering
+<<mcmcplot, fig=true>>=
+col1 <- c("red", "orange", "blue", "purple", "black", "gray")
+col2 <- col1[c(1,3,5)]
+## mcmc2diff <- with(mcmc2, data.frame(s.diff=sA-sB, x.diff=xA-xB, d.diff=dA-dB))
+par(mfrow=c(2,1), mar=c(3, 4, 0, 1))
+profiles.plot(mcmc2[2:7], col.line=col1, xlab="", ylab="")
+legend("topright", argnames(lik2), col=col1, lty=1)
+profiles.plot(mcmc2diff, col.line=col2, xlab="", ylab="")
+legend("topright", colnames(mcmc2diff), col=col2, lty=1)
+title(xlab="rate", ylab="posterior probability density", outer=T, line=-1)
+@
+\caption{Posterior probability distributions for the six-rate GeoSSE
+  model, for the tree shown in \prettyref{fig:phy}.  Uncertainty is
+  largest for dispersal and smallest for speciation.  Regional
+  differences in speciation and, to some extent, in dispersal are
+  recovered.}
+\label{fig:mcmc}
+\end{figure}
+
+\subsection{Additional options}
+
+GeoSSE likelihood functions can be built with randomly-incomplete
+sampling \citep{fitzjohn2009}.  There is not currently support for
+unresolved clades.
+<<samp>>=
+p <- coef(ml1)
+lik1(p)
+lik4 <- make.geosse(phy, phy$tip.state, sampling.f=c(0.9, 0.6, 0.4))
+lik4(p)
+@
+
+When using the likelihood function, one can condition on survival of
+the clade (not done by default):
+<<surv>>=
+lik4(p, condition.surv=TRUE)
+@
+
+External information about the geographic distribution of the common
+ancestor of the clade can be enforced by fixing the root state.  For
+example, if you are absolutely positive that the MRCA was found only
+in region B:
+<<root>>=
+lik4(p, root.p=c(0,0,1), root=ROOT.GIVEN)
+@
+Use this procedure with caution, and only in the face of truly
+external data, e.g., fossil or geologic information.
+
+\subsection{Multi-clade analysis}
+
+Some applications of GeoSSE have combined multiple clades into a
+single analysis \citep{Anacker-2010-365,Goldberg-2011-451}.  This has
+the advantage of providing a larger dataset and hence presumably more
+power, but it is important to keep in mind the assumptions that go
+into such an analysis.  First, it treats all clades as evolving
+according to the same model, with the same values for the rate
+parameters.  This can be tested by first fitting the clades
+individually, or it may be inherent to the hypothesis at hand.
+Second, it assumes that the clades are independent of each other,
+since their likelihoods are simply multiplied together to form a joint
+likelihood function.  In some cases, this may be a defensible
+approximation, for example, when the clades being considered are only
+very distantly related.  If you have decided that you can convince
+yourself and your reviewers that a multi-clade analysis is
+appropriate, here is one way to do it.
+
+% This could all be put into a multi.clade() function, but I am wary
+% of making it too easy to use.
+
+Assemble the data as lists of trees and character state vectors.  Each
+list element is one clade.  Here we will use two trees from the
+chaparral study, one each from the posterior sets for {\em Ceanothus}
+and {\em Arctostaphylos}.  The trees {\tt phy.cea} and {\tt phy.arc}
+and the tip states {\tt chars.cea} and {\tt chars.arc} (A = chaparral,
+B = forest) were read in with the call to {\tt data("geosse")} above.
+
+<<>>=
+phy.cea <- read.tree(file="data/cea.tre")
+phy.arc <- read.tree(file="data/arc.tre")
+temp <- read.csv("data/cea.dat", header=FALSE, as.is=TRUE)
+chars.cea <- structure(temp[[2]], names=temp[[1]])
+temp <- read.csv("data/arc.dat", header=FALSE, as.is=TRUE)
+chars.arc <- structure(temp[[2]], names=temp[[1]])
+rm(temp)
+@ 
+
+Create an individual likelihood function for each clade:
+<<chaplik>>=
+trees <- list(phy.cea, phy.arc)
+states <- list(chars.cea, chars.arc)
+sampl <- list(c(0.913, 0.941, 0.875), 
+             c(0.674, 0.533, 0.750))
+liks <- mapply(make.geosse, trees, states, sampl)
+@
+
+Now define the joint, multi-clade likelihood function:
+<<>>=
+lnL.multi <- combine(liks)
+@ 
+
+Now {\tt lnL.multi()} can be used like any other likelihood function,
+for example, it can be constrained:
+<<>>=
+lnL.multi.constrained <- constrain(lnL.multi, sAB ~ 0)
+@ 
+evaluated at arbitrary points:
+<<chaplik3>>=
+p <- c(0.19, 0.08, 0.00, 0.29, 0.48, 1.29, 0.87)
+lnL.multi(p)
+@
+or used in {\tt find.mle()} or {\tt mcmc()}.
+
 \section{Topics not covered}
 
 I have not covered several included models here, but information can
@@ -1393,9 +1603,10 @@ be found in the online documentation.
   Markov models of discrete character evolution (?asr.stoch.mkn).
 \end{itemize}
 
+\clearpage
 \bibliographystyle{refstyle}
 \bibliography{refs}
-
+ 
 \end{document}
 
 % LocalWords:  Bollback ip Gorjanc's Sweave ld Rnw bd phy lik argnames surv mle
