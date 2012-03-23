@@ -1,5 +1,9 @@
 ## Tests of the QuaSSE internal functions.
 test.quasse.internal <- function() {
+  library(diversitree)
+  library(RUnit)
+  
+  
   ## Imports that are generally hidden.
   quasse.extent <- diversitree:::quasse.extent
   expand.pars.quasse <- diversitree:::expand.pars.quasse
@@ -23,6 +27,7 @@ test.quasse.internal <- function() {
                       verbose=0L,
                       atol=1e-6,
                       rtol=1e-6,
+                      eps=1e-3,
                       method="fftC")
 
   lambda <- sigmoid.x
@@ -58,9 +63,9 @@ test.quasse.internal <- function() {
     expand.pars.quasse(lambda, mu, args, ext.mol, pars)
 
   ## TEST
-  ## [6] is padding, which can be dropped (not relevant for MOL)
-  checkEquals(pars.fft$lo[-6], pars.mol$lo[-6])
-  checkIdentical(pars.fft$lo[-6], pars.mol$lo[-6])
+  ## after 5 is padding, which can be dropped (not relevant for MOL)
+  checkEquals(pars.fft$lo[1:5], pars.mol$lo[1:5])
+  checkIdentical(pars.fft$lo[1:5], pars.mol$lo[1:5])
 
   pde.fftC <- with(control.fft, make.pde.quasse.fftC(nx, dx, dt.max, 2L, flags))
   pde.fftR <- with(control.fft, make.pde.quasse.fftR(nx, dx, dt.max, 2L))
@@ -72,7 +77,8 @@ test.quasse.internal <- function() {
 
   ## TEST
   checkEquals(ans.fftC, ans.fftR)
-  checkEquals(ans.mol, ans.fftC[seq_len(ndat),], tolerance=0.0003)
+  checkEquals(ans.mol[[1]], ans.fftC[[1]], tolerance=1e-5)
+  checkEquals(ans.mol[[2]], ans.fftC[[2]][seq_len(ndat),], tolerance=0.0004)
 
   branches.fftC <- make.branches.quasse.fftC(control.fft)
   branches.fftR <- make.branches.quasse.fftR(control.fft)
@@ -96,3 +102,4 @@ test.quasse.internal <- function() {
                 matrix(ans.b.fftC[-1], ncol=2)[seq_len(ndat),]),
               ans.b.mol, tolerance=0.00015)
 }
+
