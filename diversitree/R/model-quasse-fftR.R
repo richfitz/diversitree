@@ -7,7 +7,7 @@ make.branches.quasse.fftR <- function(control) {
 
   f.hi <- make.pde.quasse.fftR(nx*r, dx/r, dt.max, 2L)
   f.lo <- make.pde.quasse.fftR(nx,   dx,   dt.max, 2L)
-  make.branches.quasse(f.hi, f.lo, control)
+  combine.branches.quasse(f.hi, f.lo, control)
 }
 
 make.pde.quasse.fftR <- function(nx, dx, dt.max, nd) {

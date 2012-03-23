@@ -1,50 +1,49 @@
+## This uses a matrix exponentiation approach, rather than the usual
+## ODE approach.  As such, the entire Pij matrix needs to be
+## computed.  An ODE version might be faster, but this is just for
+## playing really.
 make.mkn.deriv <- function(tree, states, k, strict=FALSE) {
   cache <- make.cache.mkn.deriv(tree, states, k, strict)
 
   nd <- as.integer(k)
   np <- as.integer(k*(k-1))
-  fail <- structure(-Inf, gr=rep(NA, np))
 
   t         <- cache$len
-  state0    <- cache$state0
-  order0    <- cache$order0
-  children0 <- cache$children0
+  state.C    <- cache$state.C
+  order.C    <- cache$order.C
+  children.C <- cache$children.C
   Q.d       <- unlist(cache$Q.d)
 
-  f.pars <- make.mkn.pars(k)
+  f.pars <- make.pars.mkn(k)
 
-  ll.mkn.deriv <- function(pars, with.gr=TRUE) {
-    if ( length(pars) != np )
-      stop(sprintf("Invalid length parameters (expected %d)", np))
-    if ( any(!is.finite(pars)) || any(pars < 0) )
-      return(fail)
-
-    es <- eigen(f.pars(pars), FALSE)
+  ll <- function(pars, with.gr=TRUE) {
+    qmat <- f.pars(pars)
+    es <- eigen(qmat, FALSE)
     d <- es$values
     Amat <- es$vectors
     Ainv <- solve(Amat)
 
+    browser()
+
     .Call("linear_deriv", nd, np,
           d, Amat, Ainv, Q.d, t,
-          state0, order0, children0, as.logical(with.gr),
+          state.C, order.C, children.C, as.logical(with.gr),
           PACKAGE="diversitree")
   }
 
-  class(ll.mkn.deriv) <- c("mkn.deriv", "mkn", "function")
-  attr(ll.mkn.deriv, "k") <- k
-  ll.mkn.deriv
+  class(ll) <- c("mkn.deriv", "mkn", "dtlik", "function")
+  ll
 }
 
-## 2: print
-print.mkn.deriv <- function(x, ...) {
-  cat("Mk-n likelihood function [with gradients]:\n")
-  print(unclass(x))
+make.info.mkn.deriv <- function(k, phy) {
+  info <- make.info.mkn(k, phy)
+  info$name <- "mkn.deriv"
+  info$name.pretty <- "Mk(n) (with derivatives)"
+  info$ny <- NA # special
+  info$reference <- NULL # not sure
+  info
 }
 
-## 3. argnames / argnames<- (inherited from mkn)
-## 4. find.mle (inherited from mkn, for now)
-
-## 5: make.cache
 make.cache.mkn.deriv <- function(tree, states, k, strict) {
   tree <- check.tree(tree)
   states <- check.states(tree, states, strict=strict,
@@ -53,22 +52,18 @@ make.cache.mkn.deriv <- function(tree, states, k, strict) {
     stop("Unknown states not yet allowed")
 
   cache <- make.cache(tree) 
-  cache$k <- k
   cache$np <- np <- k * (k - 1)
-  cache$tip.state  <- states
+  cache$states  <- states
 
   cache$Q.d <- make.deriv.Q.mkn(k)
 
-  cache$state0 <- as.integer(cache$tip.state - 1)
-  cache$children0 <- as.integer(t(cache$children-1))
-  cache$order0 <- as.integer(cache$order-1)
+  cache$state.C    <- toC.int(  cache$states)
+  cache$children.C <- toC.int(t(cache$children))
+  cache$order.C    <- toC.int(  cache$order)
 
   cache
 }
 
-## 6: ll
-
-## Additional functions:
 make.deriv.Q.mkn <- function(k) {
   out <- rep(list(matrix(0.0, k, k)), k * (k-1))
   idx <- 1

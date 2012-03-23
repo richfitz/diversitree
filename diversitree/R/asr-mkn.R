@@ -1,40 +1,36 @@
 make.asr.marginal.mkn <- function(lik, ...) {
   if ( inherits(lik, "mkn.ode") )
     stop("ASR not yet possible with ode-based Mkn")
-  k <- as.integer(attr(lik, "k"))
-  states.idx <- seq_len(k)
-  cache <- environment(lik)$cache
-  len <- cache$len
-
+  e <- environment(lik)
+  f.pars <- e$f.pars
+  all.branches <- e$all.branches
+  cache <- e$cache
+  
+  info <- get.info(lik)
+  k <- info$k
+  states.idx <- info$idx.d
+  
   cache.C <- list(parent=toC.int(cache$parent),
                   children=toC.int(t(cache$children)),
                   root=toC.int(cache$root))
-  env <- new.env()
   nodes.all.C <- toC.int(cache$root:max(cache$order))
-
-  f.pars <- make.mkn.pars(k)
+  env <- new.env()
 
   function(pars, nodes=NULL, root=ROOT.FLAT, root.p=NULL, ...) {
+    pars2 <- f.pars(pars)
+    nodes.C <- if (is.null(nodes))
+      nodes.all.C else toC.int(nodes + cache$n.tip)
     root.f <- function(pars, vals, lq)
-      root.mkn(vals, lq,
-               root.p.mkn(vals, pars, root, root.p))
-
-    ## Note that this basically duplicates the do.asr.marginal() and
-    ## do.asr.marginal.C() code.
-    if ( is.null(nodes) )
-      nodes.C <- nodes.all.C
-    else
-      nodes.C <- toC.int(nodes + cache$n.tip)
-
-    res <- all.branches.mkn.exp(f.pars(pars), cache)
-
-    .Call("r_asr_marginal_mkn", k, pars, nodes.C, cache.C, res,
+      rootfunc.mkn(list(vals=vals, lq=lq), pars, root, root.p, FALSE)
+    
+    res <- all.branches(pars2, TRUE, NULL)
+    .Call("r_asr_marginal_mkn", k, pars2, nodes.C, cache.C, res,
           root.f, env, PACKAGE="diversitree")
   }
 }
 
 make.asr.joint.mkn <- function(lik, ...) {
-  k <- as.integer(attr(lik, "k"))
+  k <- get.info(lik)$k
   cache <- environment(lik)$cache
   is.mk2 <- inherits(lik, "mk2")
 
@@ -42,6 +38,7 @@ make.asr.joint.mkn <- function(lik, ...) {
   parent.C <- toC.int(cache$parent)
 
   function(pars, n=1, ...) {
+    ## TODO: this probably becomes something else...
     obj <- attr(lik(pars, intermediates=TRUE, ...), "intermediates")
     do.asr.joint(n, k, order.C, parent.C, obj$init, obj$pij,
                  obj$root.p, is.mk2)
@@ -51,14 +48,14 @@ make.asr.joint.mkn <- function(lik, ...) {
 make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
   is.mk2 <- inherits(lik, "mk2")
   cache <- environment(lik)$cache
-  k <- as.integer(attr(lik, "k"))
+  k <- as.integer(get.info(lik)$k)
 
   if ( is.mk2 ) {
-    tip.state <- as.integer(cache$tip.state - 1L)
-    pos.states <- c(0L, 1L)
+    states     <- as.integer(cache$states - 1L)
+    states.pos <- c(0L, 1L)
   } else {
-    tip.state <- as.integer(cache$tip.state)
-    pos.states <- seq_len(k)
+    states     <- as.integer(cache$states)
+    states.pos <- seq_len(k)
   }
 
   edge.1 <- cache$edge[,1]
@@ -81,9 +78,9 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
     ## If we are using mkn, we need to deflate the node states onto
     ## base-0 indices for the simulation code.
     if ( is.mk2 )
-      anc.state <- as.integer(c(tip.state, node.state))
+      anc.state <- as.integer(c(states, node.state))
     else
-      anc.state <- as.integer(c(tip.state - 1L, node.state - 1L))
+      anc.state <- as.integer(c(states - 1L, node.state - 1L))
 
     ## 2: Simulate branches.
     state.beg <- anc.state[edge.1]
@@ -97,8 +94,8 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
     } else {
       if ( !is.null(cache$node.label) )
         names(node.state) <- cache$node.label
-      ret <- make.history(NULL, tip.state, node.state, history,
-                          TRUE, pos.states, check=FALSE)
+      ret <- make.history(NULL, states, node.state, history,
+                          TRUE, states.pos, check=FALSE)
     }
     ret
   }
@@ -124,6 +121,6 @@ summarise.histories.mk2 <- function(x, phy) {
   node.state <- rowMeans(matrix(unlist(lapply(x, "[[", "node.state")),
                                 nn/2, nx))
   names(node.state) <- names(x[[1]]$node.state)
-  tip.state <- x[[1]]$tip.state
-  make.history(phy, tip.state, node.state, h, FALSE, 0:1)
+  states <- x[[1]]$states
+  make.history(phy, states, node.state, h, FALSE, 0:1)
 }

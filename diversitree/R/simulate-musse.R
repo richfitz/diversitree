@@ -8,10 +8,9 @@ make.tree.musse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
   k <- (sqrt(1 + 4*length(pars))-1)/2
   if ( !isTRUE(all.equal(k, as.integer(k))) )
     stop("Invalid parameter length: must be k(k+1) long")
+  check.pars.musse(pars, k)
   if ( x0 < 1 || x0 > k )
     stop("x0 must be an integer in [1,k]")
-  if ( any(pars < 0) || any(!is.finite(pars)) )
-    stop("Invalid negative parameters")
 
   pars <- cbind(matrix(pars[seq_len(2*k)], k, 2), 
                 matrix(pars[(2*k+1):(k*(k+1))], k, k-1, TRUE))

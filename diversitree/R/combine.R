@@ -1,29 +1,29 @@
-## This comes from an email I wrote to Emma on 29 October 2010.
-combine <- function(..., funs=list(...)) {
- if ( length(unique(lapply(funs, class))) != 1 )
-   stop("All functions must have the same class")
- if ( length(unique(lapply(funs, argnames))) != 1 )
-   stop("All functions must have the same argnames")
+## ## This comes from an email I wrote to Emma on 29 October 2010.
+## combine <- function(..., funs=list(...)) {
+##  if ( length(unique(lapply(funs, class))) != 1 )
+##    stop("All functions must have the same class")
+##  if ( length(unique(lapply(funs, argnames))) != 1 )
+##    stop("All functions must have the same argnames")
  
- ret <- function(pars, ...) {
-   ans <- lapply(funs, function(f) f(pars, ...))
-   sum(unlist(ans))
- }
+##  ret <- function(pars, ...) {
+##    ans <- lapply(funs, function(f) f(pars, ...))
+##    sum(unlist(ans))
+##  }
 
- class(ret) <- c("combined", class(funs[[1]]))
- ret
-}
+##  class(ret) <- c("combined", class(funs[[1]]))
+##  ret
+## }
 
-argnames.combined <- function(x, ...)
-  argnames(environment(x)$funs[[1]])
+## argnames.combined <- function(x, ...)
+##   argnames(environment(x)$funs[[1]])
 
-"argnames<-.combined" <- function(x, value) {
-  argnames(environment(x)$funs[[1]]) <- value
-  x
-}
+## "argnames<-.combined" <- function(x, value) {
+##   argnames(environment(x)$funs[[1]]) <- value
+##   x
+## }
 
-## This is even sweeter:
-'+.bisse' <- function(x, y) combine(x, y)
+## ## This is even sweeter:
+## '+.bisse' <- function(x, y) combine(x, y)
 
 ## g <- liks[[1]]
 ## argnames(g) <- c("l0", "l1", "m0", "m1", "q0", "q1")

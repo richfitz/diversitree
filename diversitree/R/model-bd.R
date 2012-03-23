@@ -4,142 +4,127 @@
 
 ## Models should provide:
 ##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
-##   9. branches.unresolved
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
 
-## At some point there will be 
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
 make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
                     times=NULL, control=list()) {
   control <- check.control.bd(control, times)
-  
-  if ( control$method == "nee" )
-    make.bd.nee(tree, sampling.f, unresolved, times)
-  else
-    make.bd.ode(tree, sampling.f, unresolved, control)
+  cache <- make.cache.bd(tree, sampling.f, unresolved, times, control)
+
+  if ( control$method == "nee" ) {
+    all.branches <- make.all.branches.bd.nee(cache, control)
+    rootfunc <- rootfunc.bd.nee
+  } else {
+    all.branches <- make.all.branches.dtlik(cache, control,
+                                            initial.conditions.bd.ode)
+    rootfunc <- rootfunc.bd.ode
+  }
+
+  ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
+    check.pars.nonnegative(pars, 2)
+    ans <- all.branches(pars, intermediates)
+    rootfunc(ans, pars, condition.surv, intermediates)
+  }
+  class(ll) <- c("bd", "dtlik", "function")
+  ll
 }
 
 ## Yule is somewhat weird, as we allow likelihood calculations, but
-## cheat on the ML search and go straight for the ML point.
+## cheat on the ML search and go straight for the ML point.  Well, we
+## used to, but that is currently broken.
 make.yule <- function(tree, sampling.f=NULL, unresolved=NULL,
                       times=NULL, control=list()) {
   control <- check.control.bd(control)
   ll.bd <- make.bd(tree, sampling.f, unresolved, times, control)
   ll <- function(pars, condition.surv=TRUE)
     ll.bd(c(pars, 0), condition.surv)
-  
-  class(ll) <- c("yule", "bd", "function")
+  set.info(ll, make.info.yule(tree))
+  class(ll) <- c("yule", "bd", "dtlik", "function")
   ll
 }
 
-## 2: print
-print.bd <- function(x, ...) {
-  cat("Constant rate birth-death likelihood function:\n")
-  print(unclass(x))
+## 2: info
+## TODO: This should deal with the case where 'times' but not 'phy' is
+## given?
+make.info.bd <- function(phy) {
+  list(name="bd",
+       name.pretty="Constant rate birth-death",
+       ## Parameters:
+       np=2L,
+       argnames=default.argnames.bd(),
+       ## Variables:
+       ny=2L,
+       k=1L,
+       idx.e=1L,
+       idx.d=2L,
+       ## Phylogeny:
+       phy=phy,
+       ## Inference:
+       ml.default="nlm",
+       mcmc.lowerzero=TRUE,
+       ## These are optional
+       doc=NULL,
+       reference=c(
+         "Nee et al. (1994) doi:10.1098/rstb.1994.0068"))
 }
+default.argnames.bd <- function()
+  c("lambda", "mu")
 
-print.yule <- function(x, ...) {
-  cat("Constant rate Yule model likelihood function:\n")
-  print(unclass(x))
+make.info.yule <- function(phy) {
+  info <- make.info.bd(phy)
+  info$name.yule <- "yule"
+  info$name.pretty <- "Yule (pure birth)"
+  info$argnames <- default.argnames.yule()
+  info
 }
+default.argnames.yule <- function()
+  "lambda"
 
-## 3: argnames / argnames<-
-argnames.bd <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    c("lambda", "mu")
+make.cache.bd <- function(tree, sampling.f, unresolved, times,
+                          control) {
+  if ( control$method == "nee" )
+    cache <- make.cache.bd.nee(tree, sampling.f, unresolved, times)
   else
-    ret
-}
-`argnames<-.bd` <- function(x, value) {
-  if ( length(value) != 2 )
-    stop("Invalid names length")
-  attr(x, "argnames") <- value
-  x  
-}
-
-argnames.yule <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    "lambda"
-  else
-    ret
-}
-`argnames<-.yule` <- function(x, value) {
-  if ( length(value) != 1 )
-    stop("Invalid names length")
-  attr(x, "argnames") <- value
-  x  
+    cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
+  cache$info <- make.info.bd(tree)
+  cache
 }
 
 ## 4: find.mle
-find.mle.bd <- function(func, x.init, method, fail.value=NA, ...) {
-  ## I really should use parameters estimated from the Yule model
-  ## here.  Currently using parameters from nowhere, as doing this is
-  ## slightly less trivial than one would hope (need to get access to
-  ## the cache, which might be hidden by a constraint...
-  if ( missing(x.init) ) {
-    warning("Guessing initial parameters - may do badly")
-    x.init <- structure(c(.2, .1), names=argnames(func))
-  }
-  if ( missing(method) )
-    method <- if (inherits(func, "bd.split")) "subplex" else "nlm"
-  find.mle.default(func, x.init, method, fail.value,
-                   class.append="fit.mle.bd", ...)
-}
-
-find.mle.yule <- function(func, x.init, method, fail.value=NA, ...) {
-  if ( missing(x.init) )
-    x.init <- structure(.2, names=argnames(func))
-  if ( missing(method) )
-    method <- "nlm"
-  find.mle.default(func, x.init, method, fail.value,
-                   class.append="fit.mle.bd", ...)
-}
-
-## This is a total disaster now.  The ML estimate should be something
-## like log(N) / t, but that is not what was being computed below.
-## find.mle.yule <- function(func, x.init, method, fail.value=NA,
-##                           ...) {
-##   cache <- environment(environment(func)$ll.bd)$cache
-
-##   ## This analytic solution is only correct when the tree is fully
-##   ## resolved.  This is enforced by the make.yule function.
-##   condition.surv <- list(...)$condition.surv
-##   if ( is.null(condition.surv) )
-##     condition.surv <- TRUE
-##   lambda <- n.node / cache$tot.len
-##   obj <- list(par=c(lambda=lambda),
-##               lnLik=func(lambda, condition.surv),
-##               counts=NA,
-##               code=0,
-##               gradient=NA,
-##               method="analytic")
-
-##   ## This class here is needed so that this can be compared against a
-##   ## BD fit.
-##   class(obj) <- c("fit.mle.bd", "fit.mle")
-##   obj
+## find.mle.bd <- function(func, x.init, method, fail.value=NA, ...) {
+##   if ( missing(x.init) ) {
+##     warning("Guessing initial parameters - may do badly")
+##     x.init <- structure(c(.2, .1), names=argnames(func))
+##   }
+##   NextMethod("find.mle", x.init=x.init)
 ## }
 
-mcmc.bd <- mcmc.lowerzero
+## TODO: it would be nice to get the analytic version here?
+## find.mle.yule <- function(func, x.init, method, fail.value=NA, ...) {
+##   if ( missing(x.init) )
+##     x.init <- structure(.2, names=argnames(func))
+##   NextMethod("find.mle", x.init=x.init)
+## }
 
+######################################################################
+## Extra functions
 starting.point.bd <- function(tree, yule=FALSE) {
-  pars.yule <- c(coef(find.mle(make.yule(tree))), 0)
-  if ( yule )
-    p <- pars.yule
+  p.yule <- c(coef(find.mle(make.yule(tree), .1)), 0)
+  names(p.yule) <- default.argnames.bd()
+  if (yule)
+    p.yule
   else
-    p <- coef(find.mle(make.bd(tree), pars.yule, method="subplex"))
-  names(p) <- c("lambda", "mu")
-  p
+    suppressWarnings(coef(find.mle(make.bd(tree), p.yule)))
 }
 
+## Checking
 check.control.bd <- function(control, times) {
   control <- modifyList(list(method="nee"), control)
   if ( !(control$method %in% c("nee", "ode")) )
@@ -147,9 +132,32 @@ check.control.bd <- function(control, times) {
   control
 }
 
-check.pars.bd <- function(pars) {
-  if ( length(pars) != 2 )
-    stop("Invalid parameter length (expected 2)")
-  if ( any(!is.finite(pars)) || any(pars < 0) )
-    stop("Parameters must be non-negative and finite")
+check.unresolved.bd <- function(tree, unresolved) {
+  if ( is.null(tree) )
+    stop("Cannot just specify times when using unresolved clades")
+  if ( inherits(tree, "clade.tree") ) {
+    if ( !is.null(unresolved) )
+      stop("'unresolved' cannot be specified where 'tree' is a clade.tree")
+    unresolved <- make.unresolved.bd(tree$clades)
+  } else if ( !is.null(unresolved) && length(unresolved) > 0 ) {
+    if ( is.null(names(unresolved)) || !is.numeric(unresolved) )
+      stop("'unresolved' must be a named numeric vector")
+    if ( !(all(names(unresolved) %in% tree$tip.label)) )
+      stop("Unknown species in 'unresolved'")
+    if ( any(unresolved < 1) )
+      stop("All unresolved entries must be > 0")
+
+    if ( any(unresolved == 1) ) {
+      warning("Removing unresolved entries that are one")
+      unresolved <- unresolved[unresolved != 1]
+    }
+  }
+
+  if ( length(unresolved) == 0 )
+    unresolved <- NULL
+  else {
+    i <- match(names(unresolved), tree$tip.label)
+    list(n=unresolved,
+         t=tree$edge.length[match(i, tree$edge[,2])])
+  }
 }

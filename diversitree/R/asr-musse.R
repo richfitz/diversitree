@@ -1,72 +1,20 @@
 ## (1) Marginal ASR:
+## This should work without modification for:
+##   musse
+##   musse.split
+##   musse.t
+##   musse.td
 make.asr.marginal.musse <- function(lik, ...) {
-  e <- environment(lik)  
-  k <- attr(lik, "k")
-  states.idx <- (k+1):(2*k)
-  cache <- environment(lik)$cache
-  branches <- environment(lik)$branches
-  use.CVODES <- is.null(branches)
+  e <- environment(lik)
+  f.pars <- e$f.pars
+  states.idx <- get.info(lik)$idx.d
 
-  if ( use.CVODES ) {
-    control <- e$control
-    if ( control$backend != "CVODES" )
-      stop("'branches' missing from likelihood function")      
-    all.branches.C <- e$all.branches
-    ptr <- environment(all.branches.C)$ptr
-    env <- new.env()
-    states.idx.C <- toC.int(states.idx)
-    parent.C <- toC.int(cache$parent)
+  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc, states.idx)
+  asr <- function(pars, nodes=NULL, condition.surv=TRUE,
+                  root=ROOT.FLAT, root.p=NULL, ...) {
+    pars2 <- f.pars(pars)
+    do.asr(pars2, nodes, NULL, # below here extra args to rootfunc:
+           condition.surv, root, root.p, intermediates=FALSE)
   }
-
-  f.pars <- make.musse.pars(k)
-
-  if ( inherits(lik, "musse.t") ) {
-    function(pars, nodes=NULL, condition.surv=TRUE,
-             root=ROOT.FLAT, root.p=NULL, ...) {
-      if ( !is.null(root.p) &&  root != ROOT.GIVEN )
-        warning("Ignoring specified root state")
-      if ( use.CVODES )
-        stop("Cannot do ASR with musse.t/CVODES")
-
-      pars.t <- environment(lik)$pars.t
-      initial.conditions <- environment(lik)$initial.conditions
-      
-      f.pars <- pars.t(pars)
-      pars.root <- f.pars(cache$depth[cache$root])
-      
-      ## Identical to the non-time-varying version, but we use the
-      ## root parameters.
-      root.f <- function(pars, vals, lq)
-        root.xxsse(vals, pars.root, lq, condition.surv,
-                   root.p.xxsse(vals, pars.root, root, root.p))
-      
-      res <- all.branches.matrix(f.pars, cache,
-                                 initial.conditions,
-                                 branches)
-      do.asr.marginal(f.pars, cache, res, nodes, states.idx,
-                      initial.conditions,
-                      branches, root.f)
-    }
-  } else {
-    function(pars, nodes=NULL, condition.surv=TRUE,
-             root=ROOT.FLAT, root.p=NULL, ...) {
-      root.f <- function(pars, vals, lq)
-        root.xxsse(vals, pars, lq, condition.surv,
-                   root.p.xxsse(vals, pars, root, root.p))
-      check.pars.musse(pars, k)
-      pars2 <- f.pars(pars)
-
-      if ( use.CVODES ) {
-        do.asr.marginal.C(pars2, cache, ptr, nodes, states.idx.C,
-                          parent.C, all.branches.C, root.f, env)
-      } else {
-        res <- all.branches.matrix(pars2, cache,
-                                   initial.conditions.musse,
-                                   branches)
-        do.asr.marginal(pars2, cache, res, nodes, states.idx,
-                        initial.conditions.musse,
-                        branches, root.f)
-      }
-    }
-  }
+  asr
 }

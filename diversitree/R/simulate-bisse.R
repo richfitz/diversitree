@@ -50,14 +50,9 @@ make.tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
 
     ## Pick a lineage for that state:
     j <- sample(n.i[state.i], 1)
-    ##cat(sprintf("n_i[0] = %d, n_i[1] = %d, k = %d\n", n.i[1], n.i[2], j))
     lineage <- lineages[states[lineages] == state][j]
 
     type <- sample(3, 1, FALSE, pars[state.i,])
-    ##type <- .C("r_ProbSampleOne", as.integer(3), pars[state.i,], integer(1))[[3]] +1
-
-    ##cat(sprintf("[%2.5f], type = %d, lineage = %d, state = %d\n",
-    ##            t, type, lineage, state));
 
     if ( type == 1 ) {
       ## Speciating:
@@ -111,9 +106,11 @@ make.tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf, x0,
 
 tree.bisse <- function(pars, max.taxa=Inf, max.t=Inf,
                        include.extinct=FALSE, x0=NA) {
+  ## This checking is duplicated in make.tree.bisse.C.core, for some
+  ## reason.
   check.pars.bisse(pars)
   if ( is.na(x0) )
-    x0 <- as.integer(runif(1) > stationary.freq.bisse(pars))
+    x0 <- as.integer(runif(1) > stationary.freq.bisse(pars)[1])
   else if ( length(x0) != 1 || !(x0 == 0 || x0 == 1) )
     stop("Invalid root state")
   
@@ -140,14 +137,6 @@ make.tree.bisse.C <- function(pars, max.taxa, max.t, x0, n=100) {
   attr(info, "rownames") <- i
   class(info) <- "data.frame"
 
-  ##   info <- data.frame(idx=i,
-  ##                      len=ans$len[i],
-  ##                      parent=ans$parent[i] + 1,
-  ##                      start=ans$start[i],
-  ##                      state=ans$states[i],
-  ##                      extinct=as.logical(ans$extinct[i]),
-  ##                      split=as.logical(ans$split[i]))
-  
   hist.t <- ans$hist.t[ans$hist.t > 0]
   if ( length(hist.t) > 0 ) {
     hist <- cbind(t(matrix(ans$hist[seq_len(length(hist.t) * 3)], 3)),
@@ -173,9 +162,9 @@ make.tree.bisse.C <- function(pars, max.taxa, max.t, x0, n=100) {
 ## this for the main simulation code.
 make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100,
                                    verbose=FALSE) {
-  if ( any(is.na(pars) | pars < 0 ) )
-    stop("pars must be non-negative and non-NA")
-  if ( any(is.na(x0) | x0 < 0 | x0 > 1) )
+  check.pars.bisse(pars)
+  check.scalar(x0)
+  if ( !is.finite(x0) || x0 < 0 || x0 > 1 )
     stop("x0 must be in [0,1] and non-NA")
   if ( is.infinite(max.taxa) && is.infinite(max.t) )
     stop("at most one of max.taxa and max.t may be infinite")
@@ -284,14 +273,9 @@ make.tree.bisse.R.core <- function(pars, max.taxa=Inf, max.t=Inf,
 
     ## Pick a lineage for that state:
     j <- sample(n.i[state.i], 1)
-    ##cat(sprintf("n_i[0] = %d, n_i[1] = %d, k = %d\n", n.i[1], n.i[2], j))
     lineage <- lineages[states[lineages] == state][j]
 
     type <- sample(3, 1, FALSE, pars[state.i,])
-    ##type <- .C("r_ProbSampleOne", as.integer(3), pars[state.i,], integer(1))[[3]] +1
-
-    ##cat(sprintf("[%2.5f], type = %d, lineage = %d, state = %d\n",
-    ##            t, type, lineage, state));
 
     if ( type == 1 ) {
       ## Speciating:

@@ -1,74 +1,27 @@
 ## ODE interface to BD models.
+make.cache.bd.ode <- function(tree, sampling.f, unresolved) {
+  if ( is.null(tree) )
+    stop('Can only supply times if method="nee"')
 
-## Models should provide:
-##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
-
-## 1: make
-make.bd.ode <- function(tree, sampling.f=NULL, unresolved=NULL,
-                        control=list()) {
-  control <- check.control.ode(control)
-  backend <- control$backend
-
-  cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
-
-  if ( backend == "CVODES" )
-    all.branches <- make.all.branches.C.bd.ode(cache, control)
-  else
-    branches <- make.branches.bd.ode(cache, control)
-    
-  const <- lfactorial(length(tree$tip.label) - 1)
-
-  ll <- function(pars, condition.surv=TRUE,
-                    intermediates=FALSE) {
-    check.pars.bd(pars)
-    if ( backend == "CVODES" )
-      ll.xxsse.C(pars, all.branches,
-                 condition.surv, ROOT.FLAT, NULL,
-                 intermediates) + const
-    else
-      ll.xxsse(pars, cache, initial.conditions.bd.ode,
-               branches, condition.surv, ROOT.FLAT, NULL,
-               intermediates) + const
-  }
-  
-  class(ll) <- c("bd", "function")
-  ll
-}
-
-## 2: print: from bd
-## 3: argnames / argnames<-: from bd
-## 4: find.mle: from bd
-
-## 5: make.cache (initial.tip, root)
-make.cache.bd.ode <- function(tree, unresolved, sampling.f) {
   tree <- check.tree(tree)
   unresolved <- check.unresolved.bd(tree, unresolved)  
 
-  ## TODO: This is not hard...
+  ## This is because it's not obvious what an ODE solution to the
+  ## unresolved clades would be...
   if ( !is.null(unresolved) )
     stop("Cannot deal with unresolved clades yet with this method.")
-
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
   else
     sampling.f <- check.sampling.f(sampling.f, 1)
 
   cache <- make.cache(tree)
-  cache$ny <- 2L
   cache$unresolved <- unresolved
   cache$sampling.f <- sampling.f
   cache$y <- initial.tip.bd.ode(cache)
+  cache$info <- make.info.bd(tree)
   cache
 }
-
 initial.tip.bd.ode <- function(cache) {
   f <- cache$sampling.f
   tips <- cache$tips
@@ -78,24 +31,36 @@ initial.tip.bd.ode <- function(cache) {
   dt.tips.grouped(y, y.i, tips, cache$len[tips])
 }
 
-## 6: ll: internal
-
-## 7: initial.conditions:
+## 4: initial.conditions
+## Note that we ignore both 't' and 'idx'.
 initial.conditions.bd.ode <- function(init, pars, t, idx)
   c(init[1,1], init[2,1] * init[2,2] * pars[1])
 
-## 8: branches
-make.branches.bd.ode <- function(cache, control) {
-  neq <- 2L
-  np <- 2L
-  comp.idx <- 2L
-  make.ode.branches("bd", "diversitree", neq, np, comp.idx, control)
+rootfunc.bd.ode <- function(res, pars, condition.surv,
+                            intermediates) {
+  vals <- res$vals
+  lq <- res$lq
+  d.root <- vals[2]
+
+  ## Compute N! for comparability with the non-ode method
+  const <- lfactorial((length(lq) + 1)/2 - 1)
+  
+  if ( condition.surv ) {
+    e.root <- vals[1]
+    lambda <- pars[1]
+    d.root <- d.root/(lambda * (1 - e.root)^2)
+  }
+  loglik <- log(d.root) + sum(lq) + const
+
+  if ( intermediates ) {
+    attr(loglik, "intermediates") <- res
+    attr(loglik, "vals") <- vals
+  }
+
+  loglik
 }
 
-make.all.branches.C.bd.ode <- function(cache, control) {
-  neq <- 2L
-  np <- 2L
-  comp.idx <- 2L
-  make.all.branches.C(cache, "bd", "diversitree",
-                      neq, np, comp.idx, control)
-}
+######################################################################
+## Additional functions:
+make.branches.bd.ode <- function(cache, control)
+  make.branches.dtlik(cache$info, control)  

@@ -1,3 +1,9 @@
+2012-03-22  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* Too many files to list: huge rewrite of most behind the scenes
+	stuff.  New VCV based OU calculations.
+
+
 2012-03-15  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/asr-musse.R: Updates so that time-varying musse models are

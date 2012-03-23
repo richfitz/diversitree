@@ -1,79 +1,64 @@
-## 1: make
+## Models should provide:
+##   1. make
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
+
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
+
+## TODO: I'm not sure if n.trait belongs in cache or in info?
 
 ## This differs from normal MuSSE in the interpretation of the
-## arguments only; the actual calculation of 
+## arguments only; the actual calculation of the likelihood is done in
+## the normal MuSSE functions.  However, there is also some changes to
+## the initial conditions, etc, through the cache.
 make.musse.multitrait <- function(tree, states, sampling.f=NULL,
                                   depth=NULL, allow.multistep=FALSE,
                                   strict=TRUE, control=list()) {
-  control <- check.control.ode(control)
-  backend <- control$backend
-
   cache <- make.cache.musse.multitrait(tree, states, depth,
                                        allow.multistep, sampling.f,
                                        strict)
+  all.branches <- make.all.branches.dtlik(cache, control,
+                                          initial.conditions.musse)
+  rootfunc <- rootfunc.musse
+  f.pars <- make.pars.musse.multitrait(cache)
 
-  if ( backend == "CVODES" )
-    all.branches <- make.all.branches.C.musse(cache, control)
-  else
-    branches <- make.branches.musse(cache, control)
-
-  n.trait <- cache$n.trait
-  k <- cache$k
-  tr <- cache$tr
-  npar <- ncol(tr)
-  f.pars <- make.musse.pars(k)
-  
-  ll.musse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                       root.p=NULL, intermediates=FALSE,
-                       pars.only=FALSE) {
-    if ( length(pars) != npar )
-      stop(sprintf("Invalid length parameters (expected %d)", 
-                   npar))
-    pars2 <- drop(tr %*% pars)
-    if ( pars.only )
-      return(pars2)
-
-    check.pars.musse(pars2, k)
-
-    if ( !is.null(root.p) &&  root != ROOT.GIVEN )
-      warning("Ignoring specified root state")
-
-    if ( backend == "CVODES" )
-      ll.xxsse.C(f.pars(pars2), all.branches,
-                 condition.surv, root, root.p, intermediates)
-    else
-      ll.xxsse(f.pars(pars2), cache, initial.conditions.musse, branches,
-               condition.surv, root, root.p, intermediates)
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
+    pars2 <- f.pars(pars)
+    ans <- all.branches(pars2, intermediates)
+    rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
-
-  class(ll.musse) <- c("musse.multitrait", "musse", "function")
-  attr(ll.musse, "k") <- k
-  attr(ll.musse, "n.trait") <- n.trait
-  ll.musse
+  class(ll) <- c("musse.multitrait", "musse", "dtlik", "function")
+  ll
 }
 
-## 2: print
-print.musse.multitrait <- function(x, ...) {
-  cat("MuSSE (Multitrait) likelihood function:\n")
-  print(unclass(x))
+## 2:
+make.info.musse.multitrait <- function(n.trait, depth, tr, phy) {
+  k <- 2^n.trait
+  ret <- make.info.musse(k, phy)
+  ret$name <- "musse.multitrait"
+  ret$name.pretty <- "MuSSE (multitrait)"
+  ret$name.ode <- "musse"
+  ret$mcmc.lowerzero <- FALSE
+  ret$n.trait <- n.trait
+  ret$argnames <- colnames(tr)
+  ret
 }
 
-## 3: argnames / argnames <-
-argnames.musse.multitrait <- function(x, k=attr(x, "k"), ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) ) {
-    colnames(environment(x)$tr)
-  } else {
-    ret
-  }
-}
-`argnames<-.musse.multitrait` <- function(x, value) {
-  stop("Not yet implemented")
-}
-
-## 4: find.mle (inherited from musse)
-
-## 5: make.cache
+## 3: make.cache
+##
+## TODO: Handling sampling.f is not trivial; we'll assert that it is
+## scalar for now.  It would be simple enough to allow the full 'k'
+## long vector here, but people should not have to care about that.
+##
+## In theory if it was of length n.trait we could probably combine
+## things appropriately, assuming multiplicative interactions.
+## However, this is a weird assumption to have to make.
 make.cache.musse.multitrait <- function(tree, states, depth=NULL,
                                         allow.multistep=FALSE,
                                         sampling.f=NULL,
@@ -83,37 +68,28 @@ make.cache.musse.multitrait <- function(tree, states, depth=NULL,
                                           strict.vals=0:1)
   n.trait <- ncol(states)
   k <- 2^n.trait
-
-  ## TODO:
-  ## Handling sampling.f is not trivial; we'll assert that it is
-  ## scalar for now.  It would be simple enough to allow the full 'k'
-  ## long vector here, but people should not have to care about that.
-  ##
-  ## In theory if it was of length n.trait we could probably combine
-  ## things appropriately, assuming multiplicative interactions.
-  ## However, this is a weird assumption to have to make.
-  sampling.f <- rep(check.sampling.f(sampling.f, 1), k)
+  depth <- check.depth(depth, n.trait)  
 
   cache <- make.cache(tree)
-  cache$ny <- 2*k
-  cache$k <- k
-  cache$n.trait <- n.trait
-  cache$tip.state <- states
-  cache$sampling.f <- sampling.f
-  cache$y <- initial.tip.musse.multitrait(cache)
   cache$tr <- musse.multitrait.translate(n.trait, depth,
                                          colnames(states),
                                          allow.multistep)
+  cache$info <- make.info.musse.multitrait(n.trait, depth, cache$tr,
+                                           tree)
+  cache$n.trait    <- n.trait
+  cache$states     <- states
+  cache$sampling.f <- rep(check.sampling.f(sampling.f, 1), k)
+  cache$y <- initial.tip.musse.multitrait(cache)
   cache
 }
 initial.tip.musse.multitrait <- function(cache) {
-  n.trait <- cache$n.trait
-  k <- cache$k
+  k <- cache$info$k
+  n.trait <- cache$n.trait # == log2(k)
   f <- cache$sampling.f
 
   ## First, recode the states as a character code, replacing all NA
   ## values with '.' (which will match any state) and concatenating.
-  code <- as.matrix(cache$tip.state)
+  code <- as.matrix(cache$states)
   storage.mode(code) <- "character"
   code[is.na(code)] <- "."
   code <- apply(code, 1, paste, collapse="")
@@ -132,14 +108,11 @@ initial.tip.musse.multitrait <- function(cache) {
   dt.tips.grouped(y, y.i, tips, cache$len[tips])
 }
 
-## 6: ll is done within make.musse.multitrait
-
-## 7: initial.conditions (unchanged from musse)
-
-## 8: branches (unchanged from musse)
+######################################################################
+## Additional functions
 starting.point.musse.multitrait <- function(tree, lik, q.div=5,
                                             yule=FALSE) {
-  if ( inherits(lik, "constrained") ) {
+  if ( is.constrained(lik) ) {
     p <- starting.point.musse.multitrait(tree, attr(lik, "func"),
                                          q.div, yule)
     return(p[argnames(lik)])
@@ -148,7 +121,7 @@ starting.point.musse.multitrait <- function(tree, lik, q.div=5,
   if ( !inherits(lik, "musse.multitrait") )
     stop("'lik' must be a musse.multitrait model")
   
-  tr <- environment(lik)$tr
+  tr <- environment(lik)$cache$tr
 
   pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
   r <- if  ( pars.bd[1] > pars.bd[2] )
@@ -161,7 +134,7 @@ starting.point.musse.multitrait <- function(tree, lik, q.div=5,
   p
 }
 
-## ** Parameter translation.
+## Parameter translation:
 musse.multitrait.translate <- function(n.trait, depth=NULL,
                                        names=NULL,
                                        allow.multistep=FALSE) {
@@ -242,8 +215,24 @@ reparam.q <- function(n.trait, depth, names, allow.multistep=FALSE) {
   X
 }
 
-## ** Checking functions
+make.pars.musse.multitrait <- function(cache) {
+  k <- cache$info$k
+  n.trait <- cache$n.trait
+  tr <- cache$tr
+  npar <- ncol(tr)
+  f.pars <- make.pars.musse(k)
 
+  function(pars) {
+    if ( length(pars) != npar )
+      stop(sprintf("Invalid length parameters (expected %d)", 
+                   npar))
+    pars.musse <- drop(tr %*% pars)
+    f.pars(pars.musse)
+  }
+}
+
+############################################################
+## Checking functions:
 ## Version of check.states that works with multitrait data properly.
 check.states.musse.multitrait <- function(tree, states,
                                           allow.unnamed=FALSE,
@@ -312,26 +301,3 @@ check.depth <- function(depth, n.trait) {
     stop("requested depth too large")
   depth
 }
-
-## ** General utility
-
-## Construct a block diagonal matrix from a set of matrices in '...'.
-## dimension names are assumed to be present or absent for all
-## matrices without checking!
-block.diagonal <- function(...) {
-  matrices <- list(...)
-  n <- sapply(matrices, dim)
-  out <- matrix(0, sum(n[1,]), sum(n[2,]))
-  rownames(out) <- unlist(lapply(matrices, rownames))
-  colnames(out) <- unlist(lapply(matrices, colnames))
-  offset <- c(0, 0)
-  for ( i in seq_along(matrices) ) {
-    out[seq(offset[1]+1, length.out=n[1,i]),
-        seq(offset[2]+1, length.out=n[2,i])] <- matrices[[i]]
-    offset <- offset + n[,i]
-  }
-
-  out
-}
-
-mcmc.musse.multitrait <- mcmc.default

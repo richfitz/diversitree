@@ -9,6 +9,19 @@
 ## functions have the same function name as those found here, omitting
 ## 'ness'.
 
+## Models should provide:
+##   1. make
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
+
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
+
+## TODO: Push this documentation around a bit.
 ## Using BiSSE-ness to estimate parameters (numbers follow other
 ## diversitree files)
 ##   1. make.bisseness is the overarching function that makes the
@@ -57,108 +70,65 @@
 ## 1: make
 make.bisseness <- function(tree, states, unresolved=NULL, sampling.f=NULL,
                            nt.extra=10, strict=TRUE, control=list()) {
-  control <- check.control.ode(control)
-  backend <- control$backend
-
-  ## Note that bisseness uses *bisse*'s cache.
-  cache <- make.cache.bisse(tree, states, unresolved=unresolved,
-                            sampling.f=sampling.f, nt.extra=nt.extra,
-                            strict=strict)
-
-  if ( backend == "CVODES" )
-    all.branches <- make.all.branches.C.bisseness(cache, control)
-  else
-    branches <- make.branches.bisseness(cache, control)
-
-  if ( backend == "CVODES" && !is.null(cache$unresolved) )
-    stop("Cannot yet use CVODES backend with unresolved clades")
-
+  cache <- make.cache.bisseness(tree, states, unresolved, sampling.f,
+                                nt.extra, strict)
+  unresolved <- cache$unresolved
   if ( !is.null(cache$unresolved) )
-    warning("BiSSEness with unresolved clades has not yet been extensively tested")
+    warning(paste("BiSSE-ness with unresolved clades has",
+                  "not yet been extensively tested"))
 
-  ll.bisseness <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                           root.p=NULL, intermediates=FALSE) {
+  all.branches <- make.all.branches.dtlik(cache, control,
+                                          initial.conditions.bisseness)
+  rootfunc <- rootfunc.bisseness
+
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
     check.pars.bisseness(pars)
-    if ( !is.null(root.p) &&  root != ROOT.GIVEN )
-      warning("Ignoring specified root state")
-
-    if ( !is.null(cache$unresolved) )
-      cache$preset <- 
-        branches.unresolved.bisseness(pars, cache$unresolved)
-
-    if ( backend == "CVODES" ) {
-      ## It *should* be as simple as this, but the root treatment
-      ## needs to be done differently.
-      ## ll.xxsse.C(pars, all.branches,
-      ##           condition.surv, root, root.p, intermediates)
-      stop("Not yet written")
-    } else {
-      ans <- all.branches.matrix(pars, cache,
-                                 initial.conditions.bisseness,
-                                 branches)
-      vals <- ans$init[,cache$root]
-      ## This is a bit of a back, but allows us to use the
-      ## root.p.xxsse function and not write our own.
-      if ( root == ROOT.EQUI ) {
-        root <- ROOT.GIVEN
-        root.p <- stationary.freq.bisseness(pars)
-        root.p <- c(root.p, 1-root.p)
-      }
-      root.p <- root.p.xxsse(vals, pars, root, root.p)
-      loglik <- root.bisseness(vals, pars, ans$lq, condition.surv,
-                               root.p)
-      if ( intermediates ) {
-        ans$root.p <- root.p
-        attr(loglik, "intermediates") <- ans
-        attr(loglik, "vals") <- vals
-      }
-      
-      loglik
-    }
+    preset <- branches.unresolved.bisseness(pars, unresolved)
+    ans <- all.branches(pars, intermediates, preset)
+    rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
-
-  class(ll.bisseness) <- c("bisseness", "function")
-  ll.bisseness
+  class(ll) <- c("bisseness", "dtlik", "function")
+  ll
 }
 
-## 2: print
-print.bisseness <- function(x, ...) {
-  cat("BiSSE-ness likelihood function:\n")
-  print(unclass(x))
+## 2: info
+make.info.bisseness <- function(phy) {
+  list(name="bisseness",
+       name.pretty="BiSSE-ness",
+       ## Parameters:
+       np=10L,
+       argnames=default.argnames.bisseness(),
+       ## Variables:
+       ny=4L,
+       k=2L,
+       idx.e=1:2,
+       idx.d=3:4,
+       ## Phylogeny:
+       phy=phy,
+       ## Inference:
+       ml.default="subplex",
+       mcmc.lowerzero=TRUE,
+       ## These are optional
+       doc=NULL,
+       reference=c(
+         "Magnuson-Ford and Otto (submitted)"))
+}
+default.argnames.bisseness <- function() 
+  c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10",
+    "p0c", "p0a", "p1c", "p1a")
+
+## 3: make.cache (mostly BiSSE's)
+make.cache.bisseness <- function(tree, states, unresolved=NULL,
+                                 sampling.f=NULL, nt.extra=10,
+                                 strict=TRUE) {
+  cache <- make.cache.bisse(tree, states, unresolved, sampling.f,
+                            nt.extra, strict)
+  cache$info <- make.info.bisseness(tree)
+  cache
 }
 
-## 3: argnames 
-argnames.bisseness <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10",
-      "p0c", "p0a","p1c","p1a")
-  else
-    ret
-}
-`argnames<-.bisseness` <- function(x, value) {
-  if ( length(value) != 10 )
-    stop("Invalid names length")
-  attr(x, "argnames") <- value
-  x  
-}
-
-## 4: find.mle
-find.mle.bisseness <- function(func, x.init, method,
-                           fail.value=NA, ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method,
-             class.append="fit.mle.bisseness")
-}
-
-mcmc.bisseness <- mcmc.lowerzero
-
-## 5: make.cache (make.cache.bisse used directly)
-
-## 6: ll
-
-## 7: initial.conditions:
+## 4: initial.conditions:
 ## Note that we ignore both 't' and 'idx'.
 initial.conditions.bisseness <- function(init, pars, t, idx) {
   lambda <- pars[1:2]
@@ -173,66 +143,19 @@ initial.conditions.bisseness <- function(init, pars, t, idx) {
     c(pars[7]*(1-pars[8]), pars[9]*(1-pars[10])))
 }
 
-## 8: branches
-make.branches.bisseness <- function(cache, control) {
-  neq <- 4L
-  np <- 10L
-  comp.idx <- as.integer(3:4)
-  make.ode.branches("bisseness", "diversitree", neq, np, comp.idx,
-                    control)
-}
+rootfunc.bisseness <- function(res, pars, condition.surv, root, root.p,
+                               intermediates) {
+  vals <- res$vals
+  lq <- res$lq
 
-make.all.branches.C.bisseness <- function(cache, control) {
-  neq <- 4L
-  np <- 10L
-  comp.idx <- as.integer(3:4)
-  make.all.branches.C(cache, "bisseness", "diversitree",
-                      neq, np, comp.idx, control)
-}
-
-## 9: branches.unresolved
-branches.unresolved.bisseness <- function(pars, unresolved) {
- Nc <- unresolved$Nc
- k <- unresolved$k
- nsc <- unresolved$nsc
- t <- unresolved$len
- nt <- max(Nc) + unresolved$nt.extra
-
- lambda0 <- pars[1]
- lambda1 <- pars[2]
- mu0 <- pars[3]
- mu1 <- pars[4]
- q01 <- pars[5]
- q10 <- pars[6]
- p0c <- pars[7]
- p0a <- pars[8]
- p1c <- pars[9]
- p1a <- pars[10]
- base <- nucexpl(nt, lambda0, lambda1, mu0, mu1, q01, q10, p0c, p0a, p1c, p1a, t,
-                 Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
-
- q <- rowSums(base[,3:4,drop=FALSE])
- base[,3:4] <- base[,3:4] / q
-
- ## Note the transpose here.
- list(target=unresolved$target,
-      lq=log(q),
-      base=t(base))
-}
-
-## Additional functions:
-## 10. root.xxsseness
-root.bisseness <- function(vals, pars, lq, condition.surv, root.p) {
-  logcomp <- sum(lq)
-  is.root.both <- is.null(root.p)
-
-  lambda <- pars[1:2]
-  e.root <- vals[1:2]
   d.root <- vals[3:4]
-  
+
+  root.p <- root.p.calc(d.root, pars, root, root.p,
+                        stationary.freq.bisseness)
   if ( condition.surv ) {
-    ##  d.root <- d.root / (lambda * (1-e.root)^2) # old and incorrect
-    ##  d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2) #for BiSSE
+    lambda <- pars[1:2]
+    e.root <- vals[1:2]
+
     nonextinct <-
       c(((1-pars[7])          * (1-e.root[1])^2+
          pars[7]*pars[8]      * (1-e.root[1])*(1-e.root[2]) +
@@ -244,15 +167,51 @@ root.bisseness <- function(vals, pars, lq, condition.surv, root.p) {
     d.root <- d.root / sum(root.p * lambda * nonextinct)
   }
 
-  if ( is.root.both ) # ROOT.BOTH
-    loglik <- log(d.root) + logcomp
-  else
-    loglik <- log(sum(root.p * d.root)) + logcomp
+  loglik <- log(sum(root.p * d.root)) + sum(lq)
+
+  if ( intermediates ) {
+    res$root.p <- root.p
+    attr(loglik, "intermediates") <- res
+    attr(loglik, "vals") <- vals
+  }
+
   loglik
 }
 
-## Additional functions for simulating trees under the BiSSE-ness model.
-## 11. stationary.freq.bisseness
+branches.unresolved.bisseness <- function(pars, unresolved) {
+  if ( is.null(unresolved) )
+    return(NULL)
+  Nc <- unresolved$Nc
+  k <- unresolved$k
+  nsc <- unresolved$nsc
+  t <- unresolved$len
+  nt <- max(Nc) + unresolved$nt.extra
+
+  lambda0 <- pars[1]
+  lambda1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+  p0c <- pars[7]
+  p0a <- pars[8]
+  p1c <- pars[9]
+  p1a <- pars[10]
+  base <- nucexpl(nt, lambda0, lambda1, mu0, mu1, q01, q10,
+                  p0c, p0a, p1c, p1a,
+                  t, Nc, nsc, k)[,c(3,4,1,2),drop=FALSE]
+
+  q <- rowSums(base[,3:4,drop=FALSE])
+  base[,3:4] <- base[,3:4] / q
+
+  ## Note the transpose here.
+  list(target=unresolved$target,
+       lq=log(q),
+       base=t(base))
+}
+
+###########################################################################
+## Additional functions
 stationary.freq.bisseness <- function(pars) {
   lambda0 <- pars[1]
   lambda1 <- pars[2]
@@ -273,163 +232,29 @@ stationary.freq.bisseness <- function(pars) {
   
   if ( abs(g) < eps ) {
     if ( ss0 + ss1 == 0 ) 
-      0.5
+      p <- 0.5
     else
-      ss1/(ss0 + ss1)
+      p <- ss1/(ss0 + ss1)
   } else {
     roots <- quadratic.roots(g, ss1 + ss0 - g, -ss1)
     roots <- roots[roots >= 0 & roots <= 1]
     if ( length(roots) > 1 )
-      NA
+      p <- NA
     else
-      roots
+      p <- roots
   }
+  c(p, 1-p)
 }
 
-## 12. tree.bisseness
-tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf,
-                           include.extinct=FALSE, x0=NA) {
-  check.pars.bisseness(pars)
-  if ( is.na(x0) )
-    x0 <- as.integer(runif(1) > stationary.freq.bisseness(pars))
-  else if (length(x0) != 1 || !(x0 == 0 || x0 == 1)) 
-    stop("Invalid root state")
-
-  info <- make.tree.bisseness(pars, max.taxa, max.t, x0)
-  phy <- me.to.ape.bisse(info[-1, ], info$state[1])
-  if ( include.extinct || is.null(phy) )
-    phy
-  else
-    prune(phy)
-}
-
-## 13. make.tree.bisseness
-make.tree.bisseness <- function(pars, max.taxa=Inf, max.t=Inf, x0,
-                                single.lineage=TRUE)  {
-  p.pars<- matrix(c(1-pars[c(7,9)],
-                    pars[c(7,9)]*pars[c(8,10)],
-                    pars[c(7,9)]*(1-pars[c(8,10)])), 2, 3,
-                  byrow=FALSE)
-  pars <- matrix(pars[1:6], 2, 3)
-  
-  extinct <- FALSE
-  split <- FALSE
-  parent <- 0
-  n.i <- c(0, 0)
-  r.i <- rowSums(pars)
-  len <- 0
-  t <- 0
-  hist <- list()
-  
-  if ( single.lineage ) {
-    states <- x0
-    n.taxa <- lineages <- n.i[x0 + 1] <- 1
-    start <- 0
-  } else {
-    stop("Nope.")
-  }
-  
-  while ( n.taxa <= max.taxa && n.taxa > 0 ) {
-    ## When does an event happen?
-    r.n <- r.i * n.i
-    r.tot <- sum(r.n)
-    dt <- rexp(1, r.tot)
-    t <- t + dt
-    if ( t > max.t ) {
-      dt <- dt - (t - max.t)
-      len[lineages] <- len[lineages] + dt
-      t <- max.t
-      break
-    }
-
-    len[lineages] <- len[lineages] + dt
-
-    ## Proceed.  What state does an event happen to?
-    state <- as.integer(runif(1) > r.n[1]/r.tot)
-    state.i <- state + 1
-
-    ## Pick a lineage for that state:
-    j <- sample(n.i[state.i], 1)
-    lineage <- lineages[states[lineages] == state][j]
-
-    ## Pick an event: 1= speciation, 2= extinction, 3= state change
-    type <- sample(3, 1, FALSE, pars[state.i, ])
-
-    if ( type == 1 ) {
-      ## Speciating:      
-      if (n.taxa == max.taxa) 
-        break
-      new.i <- length(extinct) + 1:2
-      split[lineage] <- TRUE
-      extinct[new.i] <- split[new.i] <- FALSE
-      
-      if ( p.pars[state.i,1]==1 ) {
-        states[new.i] <- state
-        n.i[state.i] <- n.i[state.i] + 1
-      } else {
-        ## The daughter states be inherited from the parent state? 
-        ## 1= complete inheritance (i.e. traditional bisse), 
-        ## 2= partial inheritance, 
-        ## 3= no inheritance.
-        inherit.type<- sample(3, 1, FALSE, p.pars[state.i,])
-
-        ## RGF: I suspect that moving the statements from this switch
-        ## into the three-way if below will be more efficient.
-        states[new.i] <- switch(inherit.type,
-                                state * c(1,1),
-                                {new1<-sample(0:1, 1); c(new1, 1-new1)},
-                                rep(1-state, 2))
-        
-        if ( inherit.type == 1 )
-          n.i[state.i] <- n.i[state.i] + 1
-        else if ( inherit.type == 2 )
-          n.i[(1-state)+1] <- n.i[(1-state)+1] + 1
-        else if ( inherit.type == 3 ) {
-          n.i[(1-state)+1] <- n.i[(1-state)+1] + 2
-          n.i[state.i] <- n.i[state.i] - 1
-        }
-      }
-      
-      parent[new.i] <- lineage
-      start[new.i] <- t
-      len[new.i] <- 0
-      n.taxa <- n.taxa + 1
-      lineages <- which(!split & !extinct)
-    } else if ( type == 2 ) {
-      extinct[lineage] <- TRUE
-      lineages <- which(!split & !extinct)
-      n.i[state.i] <- n.i[state.i] - 1
-      n.taxa <- n.taxa - 1
-    } else {
-      n.i <- n.i + if (state == 0) c(-1, 1) else c(1, -1)
-      states[lineage] <- 1 - state
-      hist[[length(hist) + 1]] <- c(lineage, t, state, 1 - state)
-    }
-  }
-
-  info <- data.frame(idx=seq_along(extinct), len=len, parent=parent, 
-                     start=start, state=states, extinct=extinct,
-                     split=split)
-  hist <- as.data.frame(do.call(rbind, hist))
-  if (nrow(hist) == 0)
-    hist <- as.data.frame(matrix(NA, 0, 4))
-  names(hist) <- c("idx", "t", "from", "to")
-  hist$x0 <- info$start[match(hist$idx, info$idx)]
-  hist$tc <- hist$t - hist$x0
-
-  attr(info, "t") <- t
-  attr(info, "hist") <- hist
-  info
-}
+## For historical and debugging purposes, not used directly in the
+## calculations, but branches function is generated this way
+## internally.
+make.branches.bisseness <- function(cache, control)
+  make.branches.dtlik(cache$info, control)
 
 check.pars.bisseness <- function(pars) {
-  if ( length(pars) != 10 )
-    stop("Invalid parameter length (expected 10)")
-  if ( any(!is.finite(pars)) || any(pars < 0) )
-    stop("Parameters must be non-negative and finite")
-  ## Already checked "< 0" above.
-  if ( any(pars[7:10] > 1) )
+  check.pars.nonnegative(pars, 10)
+  if ( any(pars[7:10] > 1) ) # Already checked "< 0" above.
     stop("Probability parameters must lie between 0 and 1.")
   TRUE
 }
-

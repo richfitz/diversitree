@@ -53,7 +53,7 @@ the new option for MEDUSA).  If \code{0 < split.t < Inf} then we split
 at that time on the tree (zero is the present, with time growing
 backwards).
 
-TODO: Describe \code{nodes} and \code{split.t} here.
+% TODO: Describe \code{nodes} and \code{split.t} here.
 }
 
 \examples{

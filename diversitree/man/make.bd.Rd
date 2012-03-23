@@ -72,11 +72,12 @@ starting.point.bd(tree, yule=FALSE)
     al. 1994.
   }
 
-  The function \code{make.bd.ode} is included for completeness, but
-  should not be taken too seriously.  It uses an alternative ODE-based
-  approach, more similar to most diversitree models, to compute the
-  likelihood.  It exists so that other models that extend the
-  birth-death models may be tested.
+  The function "ode" method is included for completeness, but should not
+  be taken too seriously.  It uses an alternative ODE-based approach,
+  more similar to most diversitree models, to compute the likelihood.
+  It exists so that other models that extend the birth-death models may
+  be tested.
+
 }
 
 \seealso{
@@ -113,7 +114,7 @@ lik.yule <- make.yule(phy)
 lik.mu0 <- constrain(lik, mu ~ 0)
 
 ## The same to a reasonable tolerance:
-fit.yule <- find.mle(lik.yule)
+fit.yule <- find.mle(lik.yule, .1)
 fit.mu0 <- find.mle(lik.mu0, .1)
 all.equal(fit.yule[1:2], fit.mu0[1:2], tolerance=1e-6)
 

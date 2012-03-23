@@ -95,6 +95,12 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
   clean.hist(hist)
 }
 
+mcmc.dtlik <- function(lik, x.init, nsteps, lower=-Inf, ...) {
+  if ( missing(lower) && get.info(lik)$mcmc.lowerzero )
+    lower <- 0
+  NextMethod("mcmc", lower=lower)
+}
+
 ## This is common, so this helps reduce code duplication.
 mcmc.lowerzero <- function(lik, x.init, nsteps, ..., lower=0)
   NextMethod("mcmc", lower=lower)
@@ -103,5 +109,44 @@ make.unipar <- function(f, x, i) {
   function(z) {
     x[i] <- z
     f(x)
+  }
+}
+
+make.prior.exponential <- function(r) {
+  function(pars)
+    sum(log(r) - pars * r)
+}
+
+## This is still experimental, and will not work nicely unless
+## everything is nicely paired (it will not work well with constrained
+## models, for example).
+make.prior.ExpBeta <- function(r, beta) {
+  to.pars2 <- function(pars) {
+    m <- matrix(pars, 2)
+    pars.mean <- colMeans(m)
+    d <- 1 - (m[1,] / (2*pars.mean))
+    rbind(pars.mean, d)
+  }
+  function(pars) {
+    pars2 <- to.pars2(pars)
+    sum(dexp(pars2[1,], r, log=TRUE)) +
+      sum(dbeta(pars2[2,], beta, beta, log=TRUE))
+  }
+}
+
+## TODO: Allow vector lower and upper here...
+make.prior.uniform <- function(lower, upper) {
+  if ( length(lower) == 2 && missing(upper) ) {
+    upper <- lower[2]
+    lower <- lower[1]
+  }
+  n <- length(lower)
+  if ( length(upper) != n )
+    stop("'lower' and 'upper' both be the same length")
+  p <- log(1/(upper - lower))
+  function(x) {
+    ret <- rep(p, length.out=length(x))
+    ret[x < lower | x > upper] <- 0
+    ret
   }
 }

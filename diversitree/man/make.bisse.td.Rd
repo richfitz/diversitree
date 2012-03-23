@@ -12,7 +12,7 @@
 \usage{
 make.bisse.td(tree, states, n.epoch, unresolved=NULL, sampling.f=NULL,
               nt.extra=10, strict=TRUE, control=list())
-make.bisse.t(tree, states, functions, sampling.f=NULL, unresolved=NULL,
+make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
              nt.extra=10, strict=TRUE, control=list())
 }
 

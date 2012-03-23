@@ -35,8 +35,7 @@ the new option for MEDUSA).  If \code{0 < split.t < Inf} then we split
 at that time on the tree (zero is the present, with time growing
 backwards).
 
-TODO: Describe \code{nodes} and \code{split.t} here.
-
+%TODO: Describe \code{nodes} and \code{split.t} here.
 This function is related to MEDUSA (Alfaro et al. 2009), but does not
 include any of the code for efficiently moving between different splits
 (split creation here is fairly slow).  The primary use for this model is
@@ -50,8 +49,8 @@ pars <- c(.1, .03)
 phy <- trees(pars, "bd", max.taxa=30)[[1]]
 
 ## Here is the phylogeny:
-#plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
-#     no.margin=TRUE)
+plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
+     no.margin=TRUE)
 
 ## Construct the plain likelihood function as a benchmark:
 lik <- make.bd(phy)

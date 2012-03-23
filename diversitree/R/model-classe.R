@@ -1,13 +1,14 @@
 ## Models should provide:
 ##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
+
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
 
 # The full ClaSSE parameter structure is a vector with, for n states:
 #     n * n * (n+1) / 2  speciation rates (lambda_ijk, j <= k)
@@ -17,160 +18,80 @@
 
 ## 1: make
 make.classe <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
-                       control=list()) {
-  control <- check.control.ode(control)
-  backend <- control$backend
-
-  unresolved <- NULL
-  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
-  
-  if ( backend == "CVODES" ) {
-    all.branches <- make.all.branches.C.classe(cache, control)
-  } else {
-    branches <- make.branches.classe(cache, control)
-  }
-
+                        control=list()) {
+  ## Note that this uses MuSSE's cache...
+  cache <- make.cache.classe(tree, states, k, sampling.f, strict)
   initial.conditions <- make.initial.conditions.classe(k)
+  all.branches <- make.all.branches.dtlik(cache, control,
+                                          initial.conditions)
+  rootfunc <- rootfunc.classe
+  f.pars <- make.pars.classe(k)
 
-  f.pars <- make.classe.pars(k)
-
-  ll.classe <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                       root.p=NULL, intermediates=FALSE) {
-    check.pars.classe(pars, k)
-    if ( !is.null(root.p) &&  root != ROOT.GIVEN )
-      warning("Ignoring specified root state")
-
-    ## hack (from bisseness) to avoid needing root.p.classe()
-    if ( root == ROOT.EQUI ) {
-      root <- ROOT.GIVEN
-      root.p <- stationary.freq.classe(pars, k)
-    }
-
-    if ( backend == "CVODES" ) {
-      ans <- all.branches(f.pars(pars), intermediates)
-      lq <- ans[[1]]
-      vals <- ans[[2]]
-      ans <- ans$intermediates
-    } else {
-      ans <- all.branches.matrix(f.pars(pars), cache,
-                                 initial.conditions, branches)
-      lq <- ans$lq
-      vals <- ans$init[,cache$root]
-    }
-    root.p <- root.p.xxsse(vals, pars, root, root.p)
-    loglik <- root.classe(vals, pars, lq, condition.surv, root.p)
-  
-    if ( intermediates ) {
-      ans$root.p <- root.p
-      attr(loglik, "intermediates") <- ans
-      attr(loglik, "vals") <- vals
-    }
-    loglik
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
+    pars2 <- f.pars(pars)
+    ans <- all.branches(pars2, intermediates)
+    ## TODO: This is different to other functions, as the
+    ## stationary.freq function assumes the non-expanded case.
+    ## However, it would be straightforward to modify stationary.freq
+    ## classe to use the expanded case.  At worst, it could just strip
+    ## off the extra parameters, but I think that it builds these
+    ## anyway.
+    ##
+    ## This will be an issue for creating a split or time version.
+    rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
-
-  class(ll.classe) <- c("classe", "function")
-  attr(ll.classe, "k") <- k
-  ll.classe
+  class(ll) <- c("classe", "dtlik", "function")
+  ll
 }
 
-## 2: print
-print.classe <- function(x, ...) {
-  cat("ClaSSE likelihood function:\n")
-  print(unclass(x))
+## 2: info
+make.info.classe <- function(k, phy) {
+  list(name="classe",
+       name.pretty="ClaSSE",
+       ## Parameters:
+       np=as.integer((k+3)*k*k/2 + k),
+       argnames=default.argnames.classe(k),
+       ## Variables:
+       ny=as.integer(2*k),
+       k=as.integer(k),
+       idx.e=as.integer(1:k),
+       idx.d=as.integer((k+1):(2*k)),
+       ## Phylogeny:
+       phy=phy,
+       ## Inference:
+       ml.default="subplex",
+       mcmc.lowerzero=TRUE,
+       ## These are optional
+       doc=NULL,
+       reference=c(
+         "Goldberg (submitted)"))
+}
+default.argnames.classe <- function(k) {
+  fmt <- sprintf("%%0%dd", ceiling(log10(k + .5)))
+  sstr <- sprintf(fmt, 1:k)
+  lambda.names <- sprintf("lambda%s%s%s", rep(sstr, each=k*(k+1)/2),
+                          rep(rep(sstr, times=seq(k,1,-1)), k), 
+                          unlist(lapply(1:k, function(i) sstr[i:k])))
+  mu.names <- sprintf("mu%s", sstr)
+  q.names <- sprintf("q%s%s", rep(sstr, each=k-1), 
+                     unlist(lapply(1:k, function(i) sstr[-i])))
+  c(lambda.names, mu.names, q.names)
 }
 
-## 3: argnames / argnames <-
-argnames.classe <- function(x, k=attr(x, "k"), ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) ) {
-    fmt <- sprintf("%%0%dd", ceiling(log10(k + .5)))
-    sstr <- sprintf(fmt, 1:k)
-    lambda.names <- sprintf("lambda%s%s%s", rep(sstr, each=k*(k+1)/2),
-                            rep(rep(sstr, times=seq(k,1,-1)), k), 
-                            unlist(lapply(1:k, function(i) sstr[i:k])))
-    mu.names <- sprintf("mu%s", sstr)
-    q.names <- sprintf("q%s%s", rep(sstr, each=k-1), 
-                       unlist(lapply(1:k, function(i) sstr[-i])))
-    c(lambda.names, mu.names, q.names)
-  } else {
-    ret
-  }
-}
-`argnames<-.classe` <- function(x, value) {
-  k <- attr(x, "k")
-  if ( length(value) != (k+3)*k*k/2 )
-    stop("Invalid names length")
-  if ( any(duplicated(value)) )
-    stop("Duplicate argument names")
-  attr(x, "argnames") <- value
-  x
+## 3: make.cache (& initial.tip)
+## Note: classe uses the same functions as musse here to generate the
+## cache and initial tip states.
+make.cache.classe <- function(tree, states, k, sampling.f=NULL,
+                             strict=TRUE) {
+  if (k > 31)
+    stop("No more than 31 states allowed.  Increase in classe-eqs.c.")
+  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
+  cache$info <- make.info.classe(k, tree)
+  cache
 }
 
-## These two functions are intended to make the classe parameters easier to
-## visualize and populate, since they get unwieldy with more than two states.
-## The speciation rate array is indexed lambda[parent state, daughter1 state,
-## daughter2 state].  The transition matrix is indexed q[from state, to state].
-## Elements that are not parameters get NA: daughter2 > daughter 1, from = to.
-## The parameter list might be a good way to work with constrain(), eventually.
-
-## Input: list containing lambda_ijk array, mu vector, q_ij array, num states
-## Output: parameter vector, ordered as argnames.classe describes
-flatten.pars.classe <- function(parlist) {
-  k <- parlist$nstates
-  kseq <- seq_len(k)
-
-  idx.lam <- cbind( rep(kseq, each=k*(k+1)/2), 
-                    rep(rep(kseq, times=seq(k,1,-1)), k), 
-                    unlist(lapply(kseq, function(i) i:k)) )
-
-  idx.q <- cbind( rep(kseq, each=k-1), 
-                  unlist(lapply(kseq, function(i) (kseq)[-i])) )
-
-  pars <- c(parlist$lambda[idx.lam], parlist$mu, parlist$q[idx.q])
-  names(pars) <- argnames.classe(NULL, k)
-  pars
-}
-
-## Output: list containing lambda_ijk array, mu vector, q_ij array, num states
-## Input: parameter vector, ordered as argnames.classe describes
-inflate.pars.classe <- function(pars, k) {
-  check.pars.classe(pars, k)
-  kseq <- seq_len(k)
-
-  Lam <- array(NA, dim=rep(k, 3))  # 3 = parent + 2 daughters
-  idx <- cbind(rep(kseq, each=k*(k+1)/2), rep(rep(kseq, times=seq(k,1,-1)), k),
-               unlist(lapply(kseq, function(i) i:k)))
-  j <- length(idx[,1])
-  Lam[idx] <- pars[seq(j)]
-
-  Mu <- pars[seq(j+1, j+k)]
-  names(Mu) <- NULL
-
-  Q <- array(NA, dim=rep(k, 2))
-  idx <- cbind(rep(kseq, each=k-1), unlist(lapply(kseq, function(i) kseq[-i])))
-  Q[idx] <- pars[seq(j+k+1, length(pars))]
-
-  list(lambda=Lam, mu=Mu, q=Q, nstates=k)
-}
-
-## 4: find.mle
-find.mle.classe <- function(func, x.init, method, fail.value=NA, ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method, class.append="fit.mle.classe")
-}
-
-mcmc.classe <- mcmc.lowerzero
-
-## Make requires the usual functions:
-## 5: make.cache (initial.tip)
-# Note: classe uses the same functions as musse here:
-#       initial.tip.classe() = initial.tip.musse()
-#       make.cache.classe() = make.cache.musse()
-
-## 6: ll.classe is done within make.classe
-
-## 7: initial.conditions:
+## 4: initial.conditions:
 ## save on index computations by wrappping initial.conditions.classe
 make.initial.conditions.classe <- function(n) {
   ## n = number of states; called k elsewhere but k is used as an index below
@@ -206,31 +127,62 @@ make.initial.conditions.classe <- function(n) {
   }
 }
 
-## 8: branches
-make.branches.classe <- function(cache, control) {
-  k <- cache$k
-  neq <- as.integer(2*k)
-  np0 <- as.integer((k+3)*k*k/2)  # number of actual params
-  np <- np0 + k                   # number, including Q's diagonal elements
-  comp.idx <- as.integer((k+1):(2*k))
-  make.ode.branches("classe", "diversitree", neq, np, comp.idx,
-                    control)
-}
+rootfunc.classe <- function(res, pars, condition.surv, root, root.p,
+                            intermediates) {
+  vals <- res$vals
+  lq <- res$lq
+  k <- length(vals)/2
 
-make.all.branches.C.classe <- function(cache, control) {
-  k <- cache$k
-  neq <- as.integer(2*k)
-  np0 <- as.integer((k+3)*k*k/2)  # number of actual params
-  np <- np0 + k                   # number, including Q's diagonal elements
-  comp.idx <- as.integer((k+1):(2*k))
+  i <- seq_len(k)
+  d.root <- vals[-i]
+
+  ## TODO: This could be tidied up:
+  root.equi <- function(pars) stationary.freq.classe(pars, k)
+  root.p <- root.p.calc(d.root, pars, root, root.p, root.equi)
  
-  make.all.branches.C(cache, "classe", "diversitree",
-                      neq, np, comp.idx, control)
+  if ( condition.surv ) {
+    e.root <- vals[i]
+    ## species in state i are subject to all lambda_ijk speciation rates
+    nsum <- k*(k+1)/2
+    lambda <- colSums(matrix(pars[1:(nsum*k)], nrow=nsum))
+    ## d.root <- d.root / (lambda * (1-e.root)^2) # old
+    d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
+  }
+
+  loglik <- log(sum(root.p * d.root)) + sum(lq)
+
+  if ( intermediates ) {
+    res$root.p <- root.p
+    attr(loglik, "intermediates") <- res
+    attr(loglik, "vals") <- vals
+  }
+
+  loglik
 }
 
-## don't see a need for classe.Q()
+###########################################################################
+## Additional functions
+## Heuristic starting point
+## based on starting.point.geosse()
+starting.point.classe <- function(tree, k, eps=0.5) {
+  if (eps == 0) {
+    s <- (log(Ntip(tree)) - log(2)) / max(branching.times(tree))
+    x <- 0
+    d <- s/10
+  } else {
+    n <- Ntip(tree)
+    r <- ( log( (n/2) * (1 - eps*eps) + 2*eps + (1 - eps)/2 *
+           sqrt( n * (n*eps*eps - 8*eps + 2*n*eps + n))) - log(2)
+         ) / max(branching.times(tree))
+    s <- r / (1 - eps)
+    x <- s * eps
+    q <- s - x
+  }
+  p <- c( rep(s / (k*(k+1)/2), k*k*(k+1)/2 ), rep(x, k), rep(q, k*(k-1)) )
+  names(p) <- default.argnames.classe(k)
+  p
+}
 
-## like stationary.freq.bisse[ness], but always returns a vector
 stationary.freq.classe <- function(pars, k) {
   if (k == 2) {
     g <- (sum(pars[1:3]) - pars[7]) - (sum(pars[4:6]) - pars[8])
@@ -252,7 +204,7 @@ stationary.freq.classe <- function(pars, k) {
         eqfreq <- c(eqfreq, 1 - eqfreq)
     }
   } else { ## also works for k=2, but much slower
-      eqfreq <- stationary.freq.classe.ev(pars, k)
+    eqfreq <- stationary.freq.classe.ev(pars, k)
   }
   eqfreq
 }
@@ -297,65 +249,14 @@ stationary.freq.classe.ev <- function(pars, k) {
   evA$vectors[,i] / sum(evA$vectors[,i])
 }
 
-## based on starting.point.geosse()
-starting.point.classe <- function(tree, k, eps=0.5) {
-  if (eps == 0) {
-    s <- (log(Ntip(tree)) - log(2)) / max(branching.times(tree))
-    x <- 0
-    d <- s/10
-  } else {
-    n <- Ntip(tree)
-    r <- ( log( (n/2) * (1 - eps*eps) + 2*eps + (1 - eps)/2 *
-           sqrt( n * (n*eps*eps - 8*eps + 2*n*eps + n))) - log(2)
-         ) / max(branching.times(tree))
-    s <- r / (1 - eps)
-    x <- s * eps
-    q <- s - x
-  }
-  p <- c( rep(s / (k*(k+1)/2), k*k*(k+1)/2 ), rep(x, k), rep(q, k*(k-1)) )
-  names(p) <- argnames.classe(NULL, k=k)
-  p
-}
+## For historical and debugging purposes, not used directly in the
+## calculations, but branches function is generated this way
+## internally.
+make.branches.classe <- function(cache, control)
+  make.branches.dtlik(cache$info, control)
 
-## modified from diversitree-branches.R: root.xxsse()
-##   the only difference is lambda
-root.classe <- function(vals, pars, lq, condition.surv, root.p) {
-  logcomp <- sum(lq)
-
-  k <- length(vals) / 2
-  i <- seq_len(k)
-
-  e.root <- vals[i]
-  d.root <- vals[-i]
-
-  if ( condition.surv ) {
-    ## species in state i are subject to all lambda_ijk speciation rates
-    nsum <- k*(k+1)/2
-    lambda <- colSums(matrix(pars[1:(nsum*k)], nrow=nsum))
-    ## d.root <- d.root / (lambda * (1-e.root)^2) # old
-    d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
-  }
-
-  if ( is.null(root.p) ) # ROOT.BOTH
-    loglik <- log(d.root) + logcomp
-  else
-    loglik <- log(sum(root.p * d.root)) + logcomp
-  loglik
-}
-
-check.pars.classe <- function(pars, k) {
-  npars <- (k + 3) * k * k / 2
-  if ( length(pars) != npars )
-    stop(sprintf("Invalid length parameters (expected %d)",
-                 npars))
-  if ( any(!is.finite(pars)) || any(pars < 0) )
-    stop("Parameters must be non-negative and finite")
-  if (k > 31)
-    stop("No more than 31 states allowed.  Increase in classe-eqs.c.")
-  TRUE
-}
-
-make.classe.pars <- function(k) {
+## Parameter manipulation
+make.pars.classe <- function(k) {
   np0 <- as.integer((k+3)*k*k/2)  # number of actual params
   np <- np0 + k                   # number, including Q's diagonal elements
   
@@ -367,8 +268,59 @@ make.classe.pars <- function(k) {
   idx.q <- seq(x+1, np0)
   
   function(pars) {
+    check.pars.classe(pars, k)
     qmat[idx.qmat] <- pars[idx.q]
     diag(qmat) <- -rowSums(qmat)
     c(pars[idx.lm], qmat)
   }
 }
+
+## These two functions are intended to make the classe parameters easier to
+## visualize and populate, since they get unwieldy with more than two states.
+## The speciation rate array is indexed lambda[parent state, daughter1 state,
+## daughter2 state].  The transition matrix is indexed q[from state, to state].
+## Elements that are not parameters get NA: daughter2 > daughter 1, from = to.
+## The parameter list might be a good way to work with constrain(), eventually.
+
+## Input: list containing lambda_ijk array, mu vector, q_ij array, num states
+## Output: parameter vector, ordered as default.argnames.classe describes
+flatten.pars.classe <- function(parlist) {
+  k <- parlist$nstates
+  kseq <- seq_len(k)
+
+  idx.lam <- cbind( rep(kseq, each=k*(k+1)/2), 
+                    rep(rep(kseq, times=seq(k,1,-1)), k), 
+                    unlist(lapply(kseq, function(i) i:k)) )
+
+  idx.q <- cbind( rep(kseq, each=k-1), 
+                  unlist(lapply(kseq, function(i) (kseq)[-i])) )
+
+  pars <- c(parlist$lambda[idx.lam], parlist$mu, parlist$q[idx.q])
+  names(pars) <- default.argnames.classe(k)
+  pars
+}
+
+## Output: list containing lambda_ijk array, mu vector, q_ij array, num states
+## Input: parameter vector, ordered as default.argnames.classe describes
+inflate.pars.classe <- function(pars, k) {
+  check.pars.classe(pars, k)
+  kseq <- seq_len(k)
+
+  Lam <- array(NA, dim=rep(k, 3))  # 3 = parent + 2 daughters
+  idx <- cbind(rep(kseq, each=k*(k+1)/2), rep(rep(kseq, times=seq(k,1,-1)), k),
+               unlist(lapply(kseq, function(i) i:k)))
+  j <- length(idx[,1])
+  Lam[idx] <- pars[seq(j)]
+
+  Mu <- pars[seq(j+1, j+k)]
+  names(Mu) <- NULL
+
+  Q <- array(NA, dim=rep(k, 2))
+  idx <- cbind(rep(kseq, each=k-1), unlist(lapply(kseq, function(i) kseq[-i])))
+  Q[idx] <- pars[seq(j+k+1, length(pars))]
+
+  list(lambda=Lam, mu=Mu, q=Q, nstates=k)
+}
+
+check.pars.classe <- function(pars, k)
+  check.pars.nonnegative(pars, (k+3)*k*k/2)

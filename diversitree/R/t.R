@@ -1,9 +1,79 @@
-## There is a chance here that it will end up being just as efficient
-## (and a bit clearer) to have the calculations done purely in R.  I
-## should check this at some point.
+make.all.branches.t.dtlik <- function(cache, control,
+                                      initial.conditions) {
+  control <- check.control.ode(control)
 
-## Time dependent code.  It will be useful to have a couple of
-## primatives here.
+  if ( control$backend == "CVODES" ) {
+    stop("CVODES not yet available for time-varying models")
+  } else {
+    branches.t <- make.branches.dtlik.t(cache$info, control)    
+    initial.conditions.t <-
+      make.initial.conditions.t(initial.conditions)
+    function(pars, intermediates, preset=NULL)
+      all.branches.matrix(pars, cache, initial.conditions.t,
+                          branches.t, preset)
+  }
+}
+
+make.branches.dtlik.t <- function(info, control) {
+  info <- check.info.ode(info, control)
+  br <- make.branches.dtlik(info, control)
+  dll <- info$dll
+  e <- new.env()
+
+  if ( control$backend == "deSolve" ) {
+    function(y, len, pars, t0, idx)
+      br(y, len, list(pars, e), t0, idx)
+  } else {
+    ## I can't quite remember why this works...
+    setfunc <- sprintf("r_set_tfunc_%s", name)
+    dummy <- rep(0.0, info$np)
+    function(y, len, pars, t0, idx) {
+      .Call(setfunc, pars, e, PACKAGE=dll)
+      br(y, len, dummy, t0, idx)
+    }
+  }
+}
+
+make.initial.conditions.t <- function(initial.conditions) {
+  function(init, pars, t, idx)
+    initial.conditions(init, pars(t), t, idx)
+}
+
+## TODO/NEW This is somewhat tedious, as we really should check for
+## 'root' not being ROOT.EQUI, as that can't be done in time-dependent
+## models.  However, because this is used by different functions with
+## different argument lists, that is hard to do.  But then, that check
+## is duplicated in too many functions.  For now, I'm skipping this.
+make.rootfunc.t <- function(cache, rootfunc) {
+  t.root <- cache$depth[cache$root]
+  function(ans, pars, ...)
+    rootfunc(ans, pars(t.root), ...)
+}
+
+## Compared with update.*.td, this is cache, not info...
+update.cache.t <- function(cache, functions) {
+  info <- cache$info
+  n.args <- length(info$argnames)
+
+  if ( is.function(functions) )
+    functions <- rep(list(functions), n.args)
+  if ( is.null(names(functions)) && length(functions) == n.args )
+    names(functions) <- info$argnames
+  cache$functions.info <- check.functions.t(functions) 
+  cache$functions <- functions
+
+  info$time.varying <- TRUE
+  info$argnames <- cache$functions.info$argnames
+  info$name.ode <- sprintf("%s_t", cache$info$name)
+  info$name.pretty <- sprintf("%s (time-varying)", info$name.pretty)
+  info$name <- sprintf("%s.t", cache$info$name)
+
+  cache$info <- info
+  cache
+}
+
+######################################################################
+## Sample time-dependent functions:
 constant.t <- function(t, c) rep.int(c, length(t))
 linear.t <- function(t, c, m) {
   out <- c + m * t
@@ -17,40 +87,48 @@ exponential.t <- function(t, y0, y1, r)
 stepf.t <- function(t, y0, y1, tc)
   if ( t <= tc ) y0 else y1
 
-check.f.t <- function(f) {
-  args <- names(formals(f))
-  if ( args[1] != "t" )
-    stop("First argument of time-dependent function must be t")
-  length(args) - 1
-}
+######################################################################
+## Parameter generator function:
+make.pars.t <- function(functions, cache=NULL,
+                        check.negative.const=TRUE,
+                        check.negative.var=TRUE) {
+  if ( is.null(cache) )
+    obj <- check.functions.t(functions)
+  else
+    obj <- cache$functions.info
 
-make.initial.conditions.t <- function(initial.conditions) {
-  function(init, pars, t, idx)
-    initial.conditions(init, pars(t), t, idx)
-}
+  ## Unpack the function information:
+  n.args <- obj$n.args
+  idx <- obj$idx
+  is.constant <- obj$is.constant
+  idx.constant <- obj$idx.constant
+  i.var <- which(!is.constant)
 
-## This is identical to the version in diversitree-branches.R, except
-## for the root parameter treatment.
-ll.xxsse.t <- function(pars, cache, initial.conditions,
-                       branches, condition.surv, root, root.p,
-                       intermediates) {
-  pars.root <- pars(cache$depth[cache$root])
+  ## TODO: Possibly I can get musse working if I change this to
+  ## info$np? (requires cache)
+  out <- numeric(length(functions))
 
-  ans <- all.branches.matrix(pars, cache, initial.conditions, branches)
-  vals <- ans$init[,cache$root]
-  root.p <- root.p.xxsse(vals, pars.root, root, root.p)
-  loglik <- root.xxsse(vals, pars.root, ans$lq, condition.surv,
-                       root.p)
+  function(pars) {
+    if ( length(pars) != n.args )
+      stop(sprintf("Invalid argument length: expected %d", n.args))
+    names(pars) <- NULL # because of do.call
+    out[is.constant] <- pars[idx.constant]
 
-  if ( intermediates ) {
-    ans$root.p <- root.p
-    attr(loglik, "intermediates") <- ans
-    attr(loglik, "vals") <- vals
+    if ( check.negative.const )
+      check.nonnegative(out[is.constant])
+    
+    function(t) {
+      for ( i in i.var ) # Loop faster than lapply.
+        out[[i]] <- do.call(functions[[i]],
+                            c(list(t), pars[idx[[i]]]))
+      check.nonnegative(out[i.var])
+      out
+    }
   }
-
-  loglik  
 }
 
+######################################################################
+## Checking
 check.functions.t <- function(functions) {
   if ( is.null(names(functions)) )
     stop("functions list must be named")
@@ -80,52 +158,9 @@ check.functions.t <- function(functions) {
        is.constant.arg=rep(is.constant, n))
 }
 
-make.pars.t <- function(functions) {
-  obj <- check.functions.t(functions)
-
-  out <- numeric(length(functions))
-
-  n.args <- obj$n.args
-  idx <- obj$idx
-  is.constant <- obj$is.constant
-  idx.constant <- obj$idx.constant
-  i.var <- which(!is.constant)
-
-  ret <- function(pars) {
-    if ( length(pars) != n.args )
-      stop(sprintf("Invalid argument length: expected %d", n.args))
-    names(pars) <- NULL # because of do.call
-    out[is.constant] <- pars[idx.constant]
-    
-    function(t) {
-      ## Surprisingly, this for loop was faster than lapply.
-      for ( i in i.var )
-        out[[i]] <- do.call(functions[[i]],
-                            c(list(t), pars[idx[[i]]]))
-      out
-    }
-  }
-
-  attr(ret, "n.args") <- n.args
-  attr(ret, "argnames") <- obj$argnames
-  attr(ret, "is.constant.f") <- is.constant
-  attr(ret, "is.constant.arg") <- obj$is.constant.arg
-
-  ret
-}
-
-make.ode.branches.t <- function(model, dll, neq, np, comp.idx, control) {
-  br <- make.ode.branches(model, dll, neq, np, comp.idx, control)
-  e <- new.env()
-  if ( control$backend == "deSolve" ) {
-    function(y, len, pars, t0, idx)
-      br(y, len, list(pars, e), t0, idx)
-  } else {
-    setfunc <- sprintf("r_set_tfunc_%s", model)
-    dummy <- rep(0.0, np)
-    function(y, len, pars, t0, idx) {
-      .Call(setfunc, pars, e, PACKAGE=dll)
-      br(y, len, dummy, t0, idx)
-    }
-  }
+check.f.t <- function(f) {
+  args <- names(formals(f))
+  if ( args[1] != "t" )
+    stop("First argument of time-dependent function must be t")
+  length(args) - 1
 }

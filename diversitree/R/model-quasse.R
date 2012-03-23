@@ -1,124 +1,72 @@
+## Models should provide:
+##   1. make
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
+
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
 
 ## 1: make
 make.quasse <- function(tree, states, states.sd, lambda, mu,
-                        control=NULL, sampling.f=NULL,
-                        defaults=NULL) {
+                            control=NULL, sampling.f=NULL) {
   cache <- make.cache.quasse(tree, states, states.sd, lambda, mu,
                              control, sampling.f)
-
-  control <- cache$control
-  tips <- NULL
-  
-  if ( control$method == "fftC" ) {
-    branches <- make.branches.quasse.fftC(control)
-    if ( control$tips.combined ) {
-      stop("Not currently supported.")
-      tips <- make.tips.quasse.fftC(control, cache$len[cache$tips],
-                                   cache$tips)
-    }
-  } else if ( control$method == "fftR" ) {
-    branches <- make.branches.quasse.fftR(control)
-  } else if ( control$method == "mol" ) {
-    branches <- make.branches.quasse.mol(control)
-  }
-
-  initial.conditions <- make.initial.conditions.quasse(control)
+  all.branches <- make.all.branches.quasse(cache, cache$control)
+  rootfunc <- make.rootfunc.quasse(cache)
+  f.pars <- make.pars.quasse(cache)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.f=NULL, intermediates=FALSE) {
-    names(pars) <- NULL # Because of use of do.call, strip names
-    args <- cache$args
-
-    drift <- pars[args$drift]
-    diffusion <- pars[args$diffusion]
-
-    ext <- quasse.extent(cache$control, drift, diffusion)
-    ## This would confirm the translation:
-    ##   all.equal(ext$x[[1]][ext$tr], ext$x[[2]])
-
-    ## Parameters, expanded onto the extent:
-    pars <- expand.pars.quasse(cache$lambda, cache$mu, args, ext, pars)
-
-    lambda.x <- c(pars$hi$lambda, pars$lo$lambda)
-    mu.x <- c(pars$hi$mu, pars$lo$mu)
-
-    if ( any(lambda.x < 0) || any(mu.x < 0) || diffusion <= 0 )
-      stop("Illegal negative parameters")
-    if ( !any(lambda.x > 0) )
-      stop("No positive lambda; cannot compute likelihood")
-
-    init <- initial.tip.quasse(cache, cache$control, ext$x[[1]])
-
-    if ( cache$control$tips.combined ) {
-      cache$preset <- tips(init$y, pars)
-
-      ## supress tip calculation now:
-      cache$tips <- integer(0) 
-      cache$y <- NULL
-    } else {
-      cache$y <- init
-    }
-
-    ans <- all.branches.list(pars, cache, initial.conditions, branches)
-    
-    vals <- matrix(ans$init[[cache$root]],
-                   cache$control$nx, 2)[seq_len(ext$ndat[2]),]
-
-    ## This assumes that the root node is in the low-condition, which is
-    ## enforced by the checking.
-    root.p <- root.p.quasse(vals, ext, root, root.f)
-    loglik <- root.quasse(vals, pars$lo$lambda, ans$lq, condition.surv,
-                          root.p, cache$control$dx)
-
-    if ( intermediates )
-      attr(loglik, "intermediates") <- ans
-
-    loglik
+    pars2 <- f.pars(pars)
+    ans <- all.branches(pars2, intermediates)
+    rootfunc(ans, pars2, condition.surv, root, root.f, intermediates)
   }
 
-  if ( !is.null(defaults) )
-    ll <- set.defaults(ll, defaults)
-
-  attr(ll, "f.lambda") <- lambda
-  attr(ll, "f.mu") <- mu
-  class(ll) <- c("quasse", "function")
+  class(ll) <- c("quasse", "dtlik", "function")
   ll
 }
 
-## 2: print
-print.quasse <- function(x, ...) {
-  cat("QuaSSE likelihood function:\n")
-  print(unclass(x))
+## 2: info
+make.info.quasse <- function(lambda, mu, phy) {
+  ## Work around for .split:
+  if ( !is.null(lambda) )
+    argnames <- default.argnames.quasse(lambda, mu)
+  else
+    argnames <- NULL
+  list(name="quasse",
+       name.pretty="QuaSSE",
+       ## Parameters:
+       np=NA,
+       argnames=argnames,
+       ## Variables:
+       ny=NA,
+       k=NA,
+       idx.e=NA,
+       idx.d=NA,
+       ## Phylogeny:
+       phy=phy,
+       ## Inference:
+       ml.default="subplex",
+       mcmc.lowerzero=TRUE,
+       ## These are optional
+       doc=NULL,
+       reference=c(
+         "FitzJohn (2010) doi:10.1093/sysbio/syq053"),
+       ## These are special to QuaSSE:
+       lambda=lambda,
+       mu=mu)
 }
-
-## 3: argnames / argnames<-
-argnames.quasse <- function(x, ...) {
-  f.lambda <- attr(x, "f.lambda")
-  f.mu <- attr(x, "f.mu")
-  if ( is.null(f.lambda) || is.null(f.mu) )
-    stop("Corrupt QuaSSE function")
-  c(sprintf("l.%s", names(formals(f.lambda))[-1]),
-    sprintf("m.%s", names(formals(f.mu))[-1]),
+default.argnames.quasse <- function(lambda, mu) {
+  c(sprintf("l.%s", names(formals(lambda))[-1]),
+    sprintf("m.%s", names(formals(mu))[-1]),
     "drift", "diffusion")
 }
-`argnames<-.quasse` <- function(x, value) {
-  if ( length(value) != environment(x)$cache$n.args )
-    stop("Invalid names length")
-  else
-    attr(x, "argnames") <- value
-  x
-}
 
-## 4: find.mle
-find.mle.quasse <- function(func, x.init, method, fail.value=NA,
-                            verbose=TRUE, ...) {
-  if (missing(method)) 
-    method <- "subplex"
-  find.mle.default(func, x.init, method,
-                   fail.value, "fit.mle.quasse", verbose=verbose, ...)
-}
-
-## 5: make.cache:
+## 3: make.cache (& initial conditions)
 make.cache.quasse <- function(tree, states, states.sd, lambda, mu,
                               control, sampling.f, for.split=FALSE) {
   ## 1: tree
@@ -136,10 +84,10 @@ make.cache.quasse <- function(tree, states, states.sd, lambda, mu,
   cache$states  <- states
   cache$states.sd <- states.sd
   cache$control <- control
-  ## Declare that the variables will be returned in a list, not in
-  ## matrix form...
-  cache$vars.in.list <- TRUE
 
+  ## This is a bit ugly, but only do these checks if we are *not*
+  ## doing a split QuaSSE model.  Function checking is done separately
+  ## there, but everything above is the same.
   if ( !for.split ) {
     ## 4: Speciation/extinction functions
     n.lambda <- check.f.quasse(lambda)
@@ -153,15 +101,14 @@ make.cache.quasse <- function(tree, states, states.sd, lambda, mu,
     cache$lambda <- lambda
     cache$mu <- mu
     cache$args <- args
-    cache$n.args <- n.args
 
     sampling.f <- check.sampling.f(sampling.f, 1)
     cache$sampling.f <- sampling.f
   }
+  cache$info <- make.info.quasse(lambda, mu, tree)
 
   cache
 }
-
 initial.tip.quasse <- function(cache, control, x) {
   nx <- control$nx * control$r
   npad <- nx - length(x)
@@ -191,9 +138,7 @@ initial.tip.quasse <- function(cache, control, x) {
   }
 }
 
-## 6: ll
-
-## 7: initial.conditions
+## 4: initial.conditions
 make.initial.conditions.quasse <- function(control) {
   tc <- control$tc
   r <- control$r
@@ -235,120 +180,88 @@ make.initial.conditions.quasse <- function(control) {
   }
 }
 
-## 8: Branches - see backend files for the bits that make up f.hi and
-## f.lo
-make.branches.quasse <- function(f.hi, f.lo, control) {
-  nx <- control$nx
-  dx <- control$dx
-  tc <- control$tc
-  r <- control$r
-  eps <- log(control$eps)
-  dt.max <- control$dt.max
-
-  ## This is hacky version of the log compensation.  It also reduces
-  ## the stepsize when bisecting a branch.  It doesn't seem to change
-  ## much on 
-  careful <- function(f, y, len, pars, t0, dt.max) {
-    ans <- f(y, len, pars, t0)
-    if ( ans[[1]] > eps ) { # OK
-      ans
-    } else {
-      if ( control$method == "fftC" ||
-           control$method == "fftR" )
-        dt.max <- dt.max / 2 # Possibly needed
-      len2 <- len/2
-      ans1 <- Recall(f, y,         len2, pars, t0,        dt.max)
-      ans2 <- Recall(f, ans1[[2]], len2, pars, t0 + len2, dt.max)
-      ans2[[1]][[1]] <- ans1[[1]][[1]] + ans2[[1]][[1]]
-      ans2
-    }
-  }
-
-  ## Start by normalising the input so that eps up there make
-  ## sense...
-  function(y, len, pars, t0, idx) {
-    if ( t0 < tc ) {
-      dx0 <- dx / r
-      nx0 <- nx * r
-    } else {
-      dx0 <- dx
-      nx0 <- nx
-    }
-
-    ## Here, we also squash all negative numbers.
-    if ( any(y < -1e-8) )
-      stop("Actual negative D value detected -- calculation failure")
-    y[y < 0] <- 0
-    y <- matrix(y, nx0, 2)
-    q0 <- sum(y[,2]) * dx0
-    if ( q0 <= 0 )
-      stop("No positive D values")
-    y[,2] <- y[,2] / q0
-    lq0 <- log(q0)
-    
-    if ( t0 >= tc ) {
-      ans <- careful(f.lo, y, len, pars$lo, t0, dt.max)
-    } else if ( t0 + len < tc ) {
-      ans <- careful(f.hi, y, len, pars$hi, t0, dt.max)
-    } else {
-      len.hi <- tc - t0
-      ans.hi <- careful(f.hi, y, len.hi, pars$hi, t0, dt.max)
-
-      y.lo <- ans.hi[[2]][pars$tr,]
-      lq0 <- lq0 + ans.hi[[1]]
-      if ( nrow(y.lo) < nx )
-        y.lo <- rbind(y.lo, matrix(0, nx - length(pars$tr), 2))
-
-      ## Fininshing up with the low resolution branch...
-      ans <- careful(f.lo, y.lo, len - len.hi, pars$lo, tc, dt.max)
-    }
-
-    c(ans[[1]] + lq0, ans[[2]])
-  }
-}
-
-
-## TODO: A bunch more options to come in here for different root
-## styles, etc.  See root.bbm in the BBM code for how to do this.
-##
-## Still to do: ROOT.FLAT, ROOT.GIVEN (ROOT.GIVEN requires computing
-## things against the x extent...)
-root.quasse <- function(vars, lambda, lq, condition.surv, root.p,
-                        dx) {
-  logcomp <- sum(lq)
-
-  e.root <- vars[,1]
-  d.root <- vars[,2]
-
-  if ( condition.surv )
-    d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2) * dx
-
-  log(sum(root.p * d.root) * dx) + logcomp
-}
-
-## ROOT.FLAT
-## ROOT.EQUI: not possible
-## ROOT.OBS
-## ROOT.GIVEN
-## ROOT.BOTH: not too useful (also ROOT.ALL)
-## ROOT.MAX:  not done
-
-root.p.quasse <- function(vals, ext, root, root.f) {
-  x <- ext$x[[2]]
-  dx <- x[2] - x[1]
-  nx <- ext$nx[2]
-
-  d.root <- vals[,2]
+## 5 rootfunc
+## This function assumes that the root node is in the low-condition,
+## which is enforced by the checking.
+make.rootfunc.quasse <- function(cache) {
+  root.idx <- cache$root
+  nx <- cache$control$nx
+  dx <- cache$control$dx
   
+  function(res, pars, condition.surv, root, root.f, intermediates) {
+    vals <- matrix(res$vals, nx, 2)[seq_len(pars$lo$ndat),]
+    lq <- res$lq
+
+    d.root <- vals[,2]
+
+    root.p <- root.p.quasse(d.root, pars$lo, root, root.f)
+    if ( condition.surv ) {
+      lambda <- pars$lo$lambda
+      e.root <- vals[,1]
+      d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2) * dx
+    }
+
+    loglik <- log(sum(root.p * d.root) * dx) + sum(lq)
+
+    if ( intermediates ) {
+      attr(loglik, "intermediates") <- res
+      attr(loglik, "vals") <- vals
+    }
+    loglik
+  }
+}
+
+root.p.quasse <- function(d.root, pars, root, root.f) {
+  if ( !is.null(root.f) && root != ROOT.GIVEN )
+    warning("Ignoring specified root state")
+  
+  x <- pars$x
+  dx <- x[2] - x[1]
+
   if ( root == ROOT.FLAT ) {
-    p <- 1 / ((nx-1) * dx)
+    p <- 1 / ((pars$nx-1) * dx)
   } else if ( root == ROOT.OBS )  {
     p <- d.root / (sum(d.root) * dx)
   } else if ( root == ROOT.GIVEN ) {
     p <- root.f(x)
   } else {
-    stop("Unsupported root option")
+    stop("Unsupported root mode")
   }
 
   p
+}
+
+######################################################################
+## Extra core stuff:
+make.all.branches.quasse <- function(cache, control) {
+  branches <- make.branches.quasse(cache, control)
+  initial.conditions <- make.initial.conditions.quasse(control)
+  ## TODO: This is where tips.combined goes, *not* in the likelihood
+  ## function...
+  function(pars, intermediates, preset=NULL) {
+    cache$y <- initial.tip.quasse(cache, cache$control, pars[[1]]$x)
+    all.branches.list(pars, cache, initial.conditions,
+                      branches, preset)
+  }
+}
+
+make.branches.quasse <- function(cache, control) {
+  ## TODO: strictly, these should be backends...
+  if ( control$method == "fftC" )
+    branches <- make.branches.quasse.fftC(control)
+  else if ( control$method == "fftR" )
+    branches <- make.branches.quasse.fftR(control)
+  else if ( control$method == "mol" )
+    branches <- make.branches.quasse.mol(control)
+  else # already checked.
+    stop("Unknown method", control$method)
+}
+
+check.pars.quasse <- function(lambda.x, mu.x, drift, diffusion) {
+  if ( any(!is.finite(c(lambda.x, mu.x, drift, diffusion))) )
+    stop("Non-finite/NA parameters")
+  if ( any(lambda.x < 0) || any(mu.x < 0) || diffusion <= 0 )
+    stop("Illegal negative parameters")
+  if ( !any(lambda.x > 0) )
+    stop("No positive lambda; cannot compute likelihood")
 }

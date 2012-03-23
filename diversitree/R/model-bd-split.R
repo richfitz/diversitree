@@ -8,68 +8,29 @@
 ## optimisations in the same way as MEDUSA.  But it should provide a
 ## decent reference implementation of the calculations.
 
-## TODO: Split into a Nee and ODE version.
-
-## 1: make
+## TODO: This function here only works with the "nee" method, and does
+## not take a control argument.  It's also a complete mess.
 make.bd.split <- function(tree, nodes, split.t=Inf, sampling.f=NULL,
                           unresolved=NULL) {
   cache <- make.cache.bd.split(tree, nodes, split.t, sampling.f,
                                unresolved)
   n.part <- cache$n.part
-  ll.part <- lapply(seq_len(n.part), make.bd.split.part, cache=cache)
 
-  ll <- function(pars, condition.surv=TRUE, ...) {
-    if ( length(pars) != 2 * n.part )
-      stop(sprintf("Expected %d parameters, but got %d",
-                   2 * n.part, length(pars)))
-    if ( any(pars < 0) || any(!is.finite(pars)) )
-      return(-Inf)
-    
-    pars <- matrix(pars, 2, n.part)
+  all.branches <- make.all.branches.bd.split(cache)
+  rootfunc <- make.rootfunc.bd.split(cache)
 
-    res <- numeric(n.part)
-    for ( i in seq_len(n.part) )
-      res[i] <- ll.part[[i]](pars[,i], condition.surv)
-    sum(res)
+  ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
+    pars <- check.pars.bd.split(pars, n.part)
+    ans <- all.branches(pars, intermediates)
+    rootfunc(ans, pars, condition.surv, intermediates)
   }
-
-  class(ll) <- c("bd.split", "bd", "function")
-  attr(ll, "n.part") <- cache$n.part
-  
+  class(ll) <- c("bd.split", "bd", "dtlik", "function")
   ll
 }
 
-## 2: print
-print.bd.split <- function(x, ...) {
-  cat("BD(split) likelihood function:\n")
-  print(unclass(x))
-}
+make.info.bd.split <- function(phy, nodes)
+  update.info.split(make.info.bd(phy), nodes)
 
-## 3: argnames / argnames <-
-argnames.bd.split <- function(x, ...) {
-  obj <- attr(x, "argnames")
-  n <- attr(x, "n.part")
-  if ( is.null(obj) )
-    obj <- list(base=c("lambda", "mu"),
-                levels=seq_len(n))
-
-  paste(obj$base, rep(obj$levels, each=2), sep=".")
-}
-`argnames<-.bd.split` <- function(x, value) {
-  n <- attr(x, "n")
-  if ( !is.list(value) || length(value) != 2 )
-    stop("'value' must be a list of length 2")
-  if ( length(value[[1]]) != 2 || length(value[[2]]) != n )
-    stop(sprintf("value's elements must be of length 2, %d", n))
-
-  names(value) <- c("base", "levels")
-  attr(x, "argnames") <- value
-  x  
-}
-
-## 4: find.mle: from bd.
-
-## 5: make.cache
 make.cache.bd.split <- function(tree, nodes, split.t=Inf,
                                 sampling.f=NULL, unresolved=NULL) {
   tree <- check.tree(tree, node.labels=TRUE)
@@ -112,75 +73,91 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
     z[match(seq_len(n.tip), z[,2]),"nt"] <- n.taxa
   }
 
-  z[,"group"] <-
-    make.cache.split(tree, list(), nodes[-1], split.t)$group.branches
+  split.info <- make.cache.split(tree, list(), nodes[-1], split.t)
+  z[,"group"] <- split.info$group.branches
 
   obj <- list(z=z, n.taxa=n.tip, n.node=tree$Nnode,
               sampling.f=sampling.f, t.root=max(bt),
-              n.part=n)
+              g.root=z[n.tip + 1,"group"], n.part=n)
+  obj$info <- make.info.bd.split(tree, nodes)
+  obj
+}
+
+make.all.branches.bd.split <- function(cache) {
+  n.part <- cache$n.part
+  ll.part <- lapply(seq_len(n.part), make.bd.split.part, cache=cache)
+
+  function(pars, intermediates, preset=NULL) {
+    res <- numeric(n.part)
+    for ( i in seq_len(n.part) )
+      res[i] <- ll.part[[i]](pars[[i]])
+    list(vals=sum(res))
+  }
+}
+
+make.rootfunc.bd.split <- function(cache) {
+  ## I think that I can get this a lot easier somehow.
+  z <- cache$z
+  f <- cache$sampling.f[cache$g.root]
+  t.root <- cache$t.root
+  n <- tabulate(z[!is.na(z[,"nt"]),"group"], cache$n.part)
+  root.constant <- 
+    lfactorial(cache$n.taxa - 1) + sum(n*log(cache$sampling.f))
+
+  function(vals, pars, condition.surv, intermediates) {
+    if ( intermediates )
+      stop("Sorry -- can't produce intermediates")
+    loglik <- vals[[1]]
+
+    if ( condition.surv ) {
+      pars.r <- pars[[cache$g.root]]
+      lambda <- pars.r[[1]]
+      mu <- pars.r[[2]]
+      r <- lambda - mu
+      a <-  mu/lambda
+      loglik <- loglik - log(f * f * r * (1 - a)) +
+          2*log(abs(exp(-r * t.root)*(a - 1 + f) - f))
+    }
+    loglik + root.constant
+  }
 }
 
 make.bd.split.part <- function(cache, i) {
   z <- cache$z[cache$z[,"group"] == i,]
-  f <- cache$sampling.f[i]
   n.node <- sum(is.na(z[,"nt"]))
 
-  ## Determine if this is the root group, and if so remove the root
-  ## (needs to be done after the node counting, as the root node still
-  ## contributes a lambda term).
-  is.root <- is.na(z[,"t.1"])
-  if ( any(is.root) ) {
-    z <- z[!is.root,]
-    is.root <- TRUE
-    t.root <- cache$t.root
+  z <- z[!is.na(z[,"t.1"]),] # drop root node
 
-    ng <- length(cache$sampling.f)
-    n <- tabulate(cache$z[!is.na(cache$z[,"nt"]),"group"], ng)
-
-    ## Where all the sampling.f are the same, this will be
-    ## lfactorial(n.taxa) + n.taxa * log(f)
-    root.constant <- 
-      lfactorial(cache$n.taxa - 1) + sum(n*log(cache$sampling.f))
-  } else {
-    is.root <- FALSE
-  }
+  f <- cache$sampling.f[i]
 
   t0 <- z[,"t.0"]
   t1 <- z[,"t.1"]
   dt <- z[,"t.len"]
 
-  unresolved <- z[which(z[,"nt"] > 1),]
+  unresolved <- z[which(z[,"nt"] > 1),,drop=FALSE]
   
-  function(pars, condition.surv=TRUE) {
+  function(pars) {
     lambda <- pars[1]
     mu <- pars[2]
     r <- lambda - mu
 
-    ## The abs() here is justified by this being
-    ##   log(x^2) -> 2 log(abs(x))
+    ## The abs() here is because log(x^2) -> 2 log(abs(x))
     d <- r * dt +
       2*(log(abs((f * exp(r * t0) + 1-f) * lambda - mu)) -
          log(abs((f * exp(r * t1) + 1-f) * lambda - mu)))
 
-    log.lik <- sum(d) + n.node * log(lambda)
+    loglik <- sum(d) + n.node * log(lambda)
 
     if ( nrow(unresolved) > 0 ) {
       a <- mu / lambda
       ert <- exp(r * unresolved[,"t.1"])
-      log.lik <- log.lik +
+      loglik <- loglik +
         sum((unresolved[,"nt"]-1) * (log(abs(ert - 1)) - log(abs(ert - a))))
     }
 
-    if ( is.root ) {
-      log.lik <- log.lik + root.constant
-
-      if ( condition.surv )
-        log.lik <- log.lik -
-          log(f * f * r * (1 - mu/lambda)) +
-            2*log(abs(exp(-r * t.root)*(mu/lambda - 1 + f) - f))
-    }
-
-    log.lik
+    loglik
   }
 }
 
+check.pars.bd.split <- function(pars, n.part) 
+  check.pars.multipart(check.nonnegative(pars), n.part, 2)

@@ -122,7 +122,6 @@ make.mkn(tree, states, k, strict=TRUE, control=list())
 }
 
 \examples{
-library(diversitree)
 ## Simulate a tree and character distribution.  This is on a birth-death
 ## tree, with high rates of character evolution and an asymmetry in the
 ## character transition rates.

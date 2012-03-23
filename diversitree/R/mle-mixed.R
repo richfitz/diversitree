@@ -28,8 +28,8 @@ make.mixed <- function(f, i, xmid, dx) {
   xmid <- check.par.length(xmid, n)
   dx   <- check.par.length(dx, n)
 
-  is.constrained <- inherits(f, "constrained")
-  if ( is.constrained ) {
+  
+  if ( f.is.constrained <- is.constrained(f) ) {
     f.orig <- f
     f <- attr(f, "func")
     i <- match(argnames(f.orig)[i], argnames(f))
@@ -41,16 +41,9 @@ make.mixed <- function(f, i, xmid, dx) {
     x[i] <- xmid + dx * x[i]
     f(x, ...)
   }
-
-  ## WARNING: HACK (needed so that 'constrain' below works correctly).
-  if ( inherits(f, "quasse") ) {
-    cache <- environment(f)$cache
-    attributes(ret) <- attributes(f)[c("n.part", "f.lambda", "f.mu")]
-  }
-
   class(ret) <- c("mixed", class(f))
 
-  if ( is.constrained ) {
+  if ( f.is.constrained ) {
     constrain(ret, formulae=attr(f.orig, "formulae"))
   } else {
     ret

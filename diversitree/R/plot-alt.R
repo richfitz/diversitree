@@ -312,7 +312,7 @@ pp.tiplabel.phylogram <- function(phy, xy, label.offset, adj, cex,
                                   col, font) {
   if ( is.null(adj) ) adj <- 0
   n.tip <- length(phy$tip.label)
-  wmax <- max(strwidth(phy$tip.label, cex = cex))
+  wmax <- max(strwidth(phy$tip.label, cex=cex))
   text(xy$xx[1:n.tip] + label.offset + wmax * 1.05 * adj,
        xy$yy[1:n.tip], phy$tip.label, adj=adj, cex=cex, col=col,
        font=font)
@@ -342,7 +342,7 @@ node.depth <- function(x) {
   xx <- numeric(n.tip + n.node)
   xx[1:n.tip] <- 1
   for ( i in 1:n.edge)
-    xx[edge1[i]] = xx[edge1[i]] + xx[edge2[i]]
+    xx[edge1[i]] <- xx[edge1[i]] + xx[edge2[i]]
   xx <- xx - 1
   max(xx) - xx
 }
@@ -407,7 +407,7 @@ node.height <- function(x, n.taxa) {
 
 ## These things are not properly checked:
 pp.nodepoints.phylogram <- function (x, xy, pch=19, ...) {
-  points(as.data.frame(xy)[-(1:length(x$tip.label)), ], pch = pch, 
+  points(as.data.frame(xy)[-(1:length(x$tip.label)), ], pch=pch, 
          ...)
 }
 pp.nodelabel.phylogram <- function(x, xy, label.offset, ...) {
@@ -415,7 +415,7 @@ pp.nodelabel.phylogram <- function(x, xy, label.offset, ...) {
   text(xy$xx[root:length(xy$xx)] + label.offset, xy$yy[root:length(xy$yy)], 
        x$node.label, ...)
 }
-pp.tippoints.phylogram <- function (x, xy, pch = 19, ...) {
+pp.tippoints.phylogram <- function (x, xy, pch=19, ...) {
   with(as.data.frame(xy)[1:length(x$tip.label), ],
-       points(xx + 0.5, yy, pch = pch, ...))
+       points(xx + 0.5, yy, pch=pch, ...))
 }

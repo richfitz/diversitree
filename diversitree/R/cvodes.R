@@ -1,18 +1,16 @@
 ## This is a *very* basic interface to the the CVODES functions.
-
-## TODO: Some documentation.
-
-## Create a CVODES function.  This is similar in spirit to make.ode(),
-## though the function definition of the returned functions differs.
-cvodes <- function(n.var, n.par, derivs, rtol, atol, package=NULL) {
+make.ode.cvodes <- function(info, control) {
   check.cvodes(error=TRUE)
- 
-  n.var <- as.integer(n.var)
-  n.par <- as.integer(n.par)
-  if ( is.null(package) ) package <- ""
-  derivs <- getNativeSymbolInfo(derivs, PACKAGE=package)$address
-  rtol <- as.numeric(rtol)
-  atol <- as.numeric(atol)
+  model <- info$name.ode
+  n.var <- info$ny
+  n.par <- info$np
+  dll   <- info$dll
+  atol  <- rtol <- as.numeric(control$tol)
+  
+  derivs <- sprintf("derivs_%s_cvode", model)
+  derivs <- getNativeSymbolInfo(derivs, PACKAGE=dll)$address
+
+  ## Some checking:
   if ( length(rtol) != 1 )
     stop("rtol must (currently) be scalar")
   if ( length(atol) == 1 )
@@ -20,9 +18,9 @@ cvodes <- function(n.var, n.par, derivs, rtol, atol, package=NULL) {
   else if ( length(atol) != n.var )
     stop("atol must be scalar or of length ", n.var)
   ptr <- .Call("r_make_cvodes", n.var, n.par, derivs, rtol, atol,
-               PACKAGE="diversitree")
+               PACKAGE=dll)
 
-  function(pars, vars, times) {
+  function(vars, times, pars) {
     if ( length(pars) != n.par )
       stop("Incorrect parameter length")
     if ( length(vars) != n.var )
@@ -31,8 +29,9 @@ cvodes <- function(n.var, n.par, derivs, rtol, atol, package=NULL) {
       stop("Need >= 2 times")
     storage.mode(pars) <- storage.mode(vars) <- storage.mode(times) <-
       "numeric"
-    .Call("r_cvodes_set_pars", ptr, pars, PACKAGE="diversitree")
-    .Call("r_cvodes_run", ptr, vars, times, PACKAGE="diversitree")
+    .Call("r_cvodes_set_pars", ptr, pars, PACKAGE=dll)
+    ret <- .Call("r_cvodes_run", ptr, vars, times, PACKAGE=dll)
+    ret[,-1,drop=FALSE]
   }
 }
 

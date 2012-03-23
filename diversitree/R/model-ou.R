@@ -1,112 +1,84 @@
 ## My simple-minded OU calculator, direct from the SDE:
+
+## Models should provide:
+##   1. make
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
+
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
+
 ## 1: make
 make.ou <- function(tree, states, states.sd=0, control=list()) {
-  if ( missing(control) )
-    control <- list(method="vcv")
-  control <- check.control.continuous(control)
-  if ( control$method == "vcv" )
-    stop("VCV-based not yet implemented for OU (consider geiger)")
-  cache <- make.cache.ou(tree, states, states.sd)
+  control <- check.control.ou(control)
+  cache <- make.cache.ou(tree, states, states.sd, control)
 
-  ll.ou <- function(pars, root=ROOT.MAX, root.x=NA,
-                    intermediates=FALSE) {
-    if ( length(pars) != 3 )
-      stop("Incorrect parameter length")
-    if ( pars[1] < 0 )
-      stop("Negative diffusion coefficient")
-    if ( pars[2] < 0 )
-      stop("Negative alpha coefficient")
-    ans <- all.branches.matrix(pars, cache, initial.conditions.ou,
-                               branches.ou)
-    vals <- ans$init[,cache$root]
-
-    loglik <- root.bm.direct(vals, ans$lq, root, root.x)
-    if ( intermediates ) {
-      attr(loglik, "intermediates") <- intermediates
-      attr(loglik, "vals") <- vals
-    }
-    loglik
+  if ( control$method == "vcv" ) {
+    all.branches <- make.all.branches.ou.vcv(cache, control)
+    rootfunc <- rootfunc.bm.vcv
+  } else {
+    all.branches <- make.all.branches.ou.direct(cache, control)
+    rootfunc <- rootfunc.bm.direct
   }
 
-  class(ll.ou) <- c("ou", "function")
-  ll.ou
+  ll <- function(pars, root=ROOT.MAX, root.x=NULL,
+                 intermediates=FALSE) {
+    check.pars.ou(pars)
+    ans <- all.branches(pars, intermediates)
+    rootfunc(ans, pars, root, root.x, intermediates)
+  }
+  class(ll) <- c("ou", "dtlik", "function")
+  ll
 }
 
-## 2: print
-print.ou <- function(x, ...) {
-  cat("Ornstein Uhlenbeck (OU) likelihood function:\n")
-  print(unclass(x))
+## 2: info
+make.info.ou <- function(phy) {
+  list(name="ou",
+       name.pretty="Ornstein-Uhlenbeck",
+       ## Parameters:
+       np=3L,
+       argnames=default.argnames.ou(),
+       ## Variables:
+       ny=3L,
+       k=NA,
+       idx.e=NA,
+       idx.d=NA,
+       ## Phylogeny:
+       phy=phy,
+       ## Inference:
+       ml.default="subplex",
+       mcmc.lowerzero=TRUE,
+       ## These are optional
+       doc=NULL,
+       reference=c(
+         "I really don't know"))
+}
+default.argnames.ou <- function() c("s2", "alpha", "theta")
+
+## 3: make.cache
+make.cache.ou <- function(tree, states, states.sd, control) {
+  cache <- make.cache.bm(tree, states, states.sd, control)
+  cache$info <- make.info.ou(tree)
+  cache
 }
 
-## 3: argnames / argnames<-
-argnames.ou <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    c("diffusion", "alpha", "theta")
-  else
-    ret
-}
-`argnames<-.ou` <- function(x, value) {
-  if ( length(value) != 3 )
-    stop("Incorrect argument length: expected 3")
-  attr(x, "argnames") <- value
-  x
+###########################################################################
+## Additional functions
+
+## Checking
+check.pars.ou <- function(pars) {
+  if ( length(pars) != 3 )
+    stop("Incorrect parameter length")
+  check.nonnegative(pars[1:2])
+  TRUE
 }
 
-## 4: find.mle
-find.mle.ou <- function(func, x.init, method,
-                           fail.value=NA, ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method, class.append="fit.mle.ou")
-}
-
-## 5: make.cache
-make.cache.ou <- make.cache.bm.direct
-
-## 6: ll
-
-## 7: initial.conditions
-initial.conditions.ou <- initial.conditions.bm.direct
-
-## 8: branches
-branches.ou <- function(y, len, pars, t0, idx) {
-  m <- y[1]
-  v <- y[2]
-  z <- y[3]
-
-  sigma2 <- pars[1]
-  alpha  <- pars[2]
-  theta  <- pars[3]
-  ## In ou, for a branch that ends with mean m (y[1]), the mean moves
-  ## to
-  ##   exp(len * alpha) * (m - theta) + theta
-  ## And the variance becomes
-  ##   (exp(2 * len * alpha) - 1) / (2 * alpha) + exp(2 * len * alpha) * v
-  ## With normalising constant
-  ##   exp(t * alpha)
-
-  ## The last line of the second option comes from the limit of
-  ##   (exp(2*len*alpha) - 1) * sigma2 / (2*alpha)
-  ## as alpha -> 0 being len * sigma2
-  ##   if ( alpha > 0 )
-  ##     c(len * alpha + z,
-  ##       exp(len * alpha) * (m - theta) + theta,
-  ##       (exp(2*len*alpha) - 1) * sigma2 / (2*alpha) + exp(2*len*alpha) * v)
-  ##   else
-  ##     c(len * alpha + z,
-  ##       exp(len * alpha) * (m - theta) + theta,
-  ##       len * sigma2 + exp(2*len*alpha) * v)
-
-  if ( alpha > 0 )
-    list(len * alpha + z,
-         c(exp(len * alpha) * (m - theta) + theta,
-           (exp(2*len*alpha) - 1) * sigma2 / (2*alpha) +
-           exp(2*len*alpha) * v,
-           0))
-  else
-    list(len * alpha + z,
-         c(exp(len * alpha) * (m - theta) + theta,
-           len * sigma2 + v,
-           0))
+check.control.ou <- function(control) {
+  control <- modifyList(list(method="direct"), control)
+  check.control.continuous(control)
+  control
 }

@@ -1,0 +1,22 @@
+For the root treatments with stationary distributions for functions
+that modify parameter vectors (currently only classe) be careful that
+the stationary distribution is correct.  This is not the case right
+now for classe.
+
+ROOT.EQUI check is not being done for t/td/split models as the
+rootfunc hides it.  Need to address this.
+
+bd.split is really ugly.
+
+The ODE solvers should use info when building.
+
+The entire history bit (as with most of the plotting) is a bit of a
+gong show.
+
+Check and export HMC sampler
+
+Rename profiles-plot file to plot-profiles.
+
+There is some ugliness around name.ode being set/reset all over the
+place.  Perhaps make.*t() should alter it, but *.td() and *.split()
+leave it alone.

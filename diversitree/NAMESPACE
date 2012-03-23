@@ -16,7 +16,7 @@ export(make.geosse)
 export(make.geosse.split)
 export(make.mk2)
 export(make.mkn)
-export(make.mkn.deriv)
+## export(make.mkn.deriv) # not working right now
 export(make.mkn.multitrait)
 export(make.musse)
 export(make.musse.multitrait)
@@ -29,95 +29,24 @@ export(make.quasse.split)
 export(make.yule)
 
 ## 2. print:
-S3method(print, bd)
-S3method(print, bd.split)
-S3method(print, bisse)
-S3method(print, bisse.split)
-S3method(print, bisse.td)
-S3method(print, bisseness)
-S3method(print, bm)
-S3method(print, classe)
-S3method(print, geosse)
-S3method(print, mkn)
-S3method(print, mkn.deriv)
-S3method(print, mkn.multitrait)
-S3method(print, musse)
-S3method(print, musse.multitrait)
-S3method(print, ou)
-S3method(print, yule)
-
-S3method(print, constrained)
+S3method(print, dtlik)
 
 ## 3: argnames / argnames<-
 export(argnames)
 export("argnames<-")
 
-S3method(argnames, bd)
-S3method(argnames, bd.split)
-S3method(argnames, bisse)
-S3method(argnames, bisse.split)
-S3method(argnames, bisse.td)
-S3method(argnames, bisseness)
-S3method(argnames, bm)
-S3method(argnames, classe)
-S3method(argnames, geosse)
-S3method(argnames, geosse.split)
-S3method(argnames, mk2)
-S3method(argnames, mkn)
-S3method(argnames, mkn.multitrait)
-S3method(argnames, musse)
-S3method(argnames, musse.multitrait)
-S3method(argnames, musse.split)
-S3method(argnames, musse.td)
-S3method(argnames, ou)
-S3method(argnames, quasse)
-S3method(argnames, quasse.split)
-S3method(argnames, yule)
+S3method(argnames, dtlik)
+S3method("argnames<-", dtlik)
 
-S3method("argnames<-", bd)
-S3method("argnames<-", bd.split)
-S3method("argnames<-", bd.t)
-S3method("argnames<-", bisse)
-S3method("argnames<-", bisse.split)
-S3method("argnames<-", bisse.t)
-S3method("argnames<-", bisse.td)
-S3method("argnames<-", bisseness)
-S3method("argnames<-", bm)
-S3method("argnames<-", classe)
-S3method("argnames<-", geosse)
-S3method("argnames<-", geosse.split)
-S3method("argnames<-", mkn) # is also the mk2 method
-S3method("argnames<-", mkn.multitrait)
-S3method("argnames<-", musse)
-S3method("argnames<-", musse.multitrait)
-S3method("argnames<-", musse.t)
-S3method("argnames<-", ou)
-S3method("argnames<-", quasse)
-S3method("argnames<-", quasse.split)
-S3method("argnames<-", yule)
-
-## Extra:
 S3method(argnames, constrained)
 S3method("argnames<-", constrained)
 
 ## 4: find.mle
 export(find.mle)
 
-S3method(find.mle, mixed)
-
-S3method(find.mle, bd)
-S3method(find.mle, bisse)
-S3method(find.mle, bisseness)
-S3method(find.mle, bm)
-S3method(find.mle, classe)
 S3method(find.mle, default)
-S3method(find.mle, geosse)
-S3method(find.mle, geosse.split)
-S3method(find.mle, mkn)
-S3method(find.mle, musse)
-S3method(find.mle, ou)
-S3method(find.mle, quasse)
-S3method(find.mle, yule)
+S3method(find.mle, dtlik)
+S3method(find.mle, mixed)
 
 ## Other method support:
 S3method(anova, fit.mle)
@@ -125,25 +54,26 @@ S3method(coef, fit.mle)
 S3method(extractAIC, fit.mle)
 S3method(logLik, fit.mle)
 
+## Starting points:
+export(starting.point.bisse)
+export(starting.point.bd)
+export(starting.point.classe)
+export(starting.point.geosse)
+export(starting.point.musse)
+export(starting.point.musse.multitrait)
+export(starting.point.quasse)
+
 ## 5. MCMC:
 export(mcmc)
 
 S3method(mcmc, default)
-
-S3method(mcmc, bd)
-S3method(mcmc, bisse)
-S3method(mcmc, bisseness)
-S3method(mcmc, bm)
-S3method(mcmc, classe)
-S3method(mcmc, geosse)
-S3method(mcmc, mkn)
-S3method(mcmc, musse)
+S3method(mcmc, dtlik)
 
 export(sampler.slice)
 export(sampler.norm)
 
 export(constrain)
-S3method(update, constrained)
+export(constrain.i)
 
 ## Tree evolution code
 export(trees)
@@ -162,13 +92,8 @@ export(sim.character)
 export(protect)
 export(invert)
 export(big.brother)
-export(starting.point.bisse)
-export(starting.point.bd)
-export(starting.point.classe)
-export(starting.point.geosse)
-export(starting.point.musse)
-export(starting.point.musse.multitrait)
-export(starting.point.quasse)
+export(set.defaults)
+export(combine)
 export(profiles.plot)
 export(trait.plot)
 export(make.prior.exponential)
@@ -201,10 +126,6 @@ export(musse.multitrait.translate)
 ## export(flatten.pars.classe)
 ## export(inflate.pars.classe)
 
-## Deprecated:
-export(bisse.starting.point)
-export(starting.point)
-
 ## ASR:
 export(make.asr.marginal)
 export(make.asr.joint)
@@ -226,13 +147,11 @@ S3method(make.asr.stoch, mkn)
 
 ## ASR/xxSSE
 S3method(make.asr.marginal, bisse)
-S3method(make.asr.marginal, bisse.t)
-S3method(make.asr.marginal, bisse.split)
 S3method(make.asr.marginal, musse)
-S3method(make.asr.marginal, musse.split)
+
+## TODO: This means that the time-dependent ones won't dispatch?
 
 ## Support for "clade.tree"s
-## TODO: polytomies.to.clades -> clades.from.polytomies
 export(make.clade.tree)
 export(clades.from.polytomies)
 export(clades.from.classification)
@@ -269,5 +188,6 @@ export(ROOT.ALL)
 ## export(load.wisdom)
 ## export(save.wisdom)
 
+## Check capabilities of package
 export(check.fftC)
 export(check.cvodes)

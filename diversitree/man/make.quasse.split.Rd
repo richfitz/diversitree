@@ -8,7 +8,7 @@
 
 \usage{
 make.quasse.split(tree, states, states.sd, lambda, mu, nodes, split.t,
-                  control=NULL, sampling.f=NULL, defaults=NULL)
+                  control=NULL, sampling.f=NULL)
 }
 
 \arguments{
@@ -42,11 +42,6 @@ make.quasse.split(tree, states, states.sd, lambda, mu, nodes, split.t,
     species that are included in the phylogeny.  A value of \code{0.75}
     means that three quarters of extant species are included in the
     phylogeny.  By default all species are assumed to be known.}
-
-  \item{defaults}{A named list of values to alter the default arguments
-    of the returned likelihood function.  For example, passing
-    \code{defaults=list(root=ROOT.FLAT)} will change the treatment of
-    the root.}
 }
 
 \details{Branching times can be controlled with the \code{split.t}

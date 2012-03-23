@@ -8,11 +8,12 @@
 
 static double *parms_mkn;
 void initmod_mkn(void (* odeparms)(int *, double *)) {
-  /* TODO: I should check here about the lengths of parameters, but I
-     won't bother; it is not clear how best to do this, anyway.  Most
-     of the checking should be done in the R end of things.  Because
-     this is going to get an R object, it should be much easier to the
-     checking there. */
+  DL_FUNC get_deSolve_gparms = 
+    R_GetCCallable("deSolve", "get_deSolve_gparms");
+  parms_mkn = REAL(get_deSolve_gparms());
+} 
+
+void initmod_mkn_pij(void (* odeparms)(int *, double *)) {
   DL_FUNC get_deSolve_gparms = 
     R_GetCCallable("deSolve", "get_deSolve_gparms");
   parms_mkn = REAL(get_deSolve_gparms());
@@ -118,7 +119,8 @@ SEXP r_asr_marginal_mkn(SEXP r_k, SEXP r_pars, SEXP r_nodes,
   double *r_init = REAL(VECTOR_ELT(res, 0));
   double *r_base = REAL(VECTOR_ELT(res, 1));
   double *r_lq   = REAL(VECTOR_ELT(res, 2));
-  double *pij    = REAL(VECTOR_ELT(res, 3));
+  /* Spot 3 has 'vals' as of 0.9-2 */
+  double *pij    = REAL(VECTOR_ELT(res, 4));
   int n_out = LENGTH(VECTOR_ELT(res, 2));
 
   /* These will be modified each time */

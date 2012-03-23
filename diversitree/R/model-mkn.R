@@ -1,134 +1,153 @@
 ## Models should provide:
 ##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
-##   9. branches.unresolved
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
 
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
 make.mkn <- function(tree, states, k, strict=TRUE, control=list()) {
   control <- check.control.mkn(control, k)
-  if ( control$method == "ode" )
-    ll <- make.mkn.ode(tree, states, k, strict, control)
-  else # exp or mk2
-    ll <- make.mkn.exp(tree, states, k, strict, control)
-  ll
-}
+  cache <- make.cache.mkn(tree, states, k, strict, control)
+  all.branches <- make.all.branches.mkn(cache, control)
+  rootfunc <- rootfunc.mkn
+  f.pars <- make.pars.mkn(k)
 
-make.mk2 <- function(tree, states, strict=TRUE, control=list()) {
-  if ( !(is.null(control$method) || control$method == "mk2") )
-    stop("Invalid control$method value (just omit it)")
-  control$method <- "mk2"
-  ll <- make.mkn(tree, states + 1, 2, strict, control)
-  class(ll) <- c("mk2", "mkn", "function") # c("mk2", class(ll))
-  ll
-}
-
-## 2: print
-print.mkn <- function(x, ...) {
-  cat("Mk-n likelihood function:\n")
-  print(unclass(x))
-}
-
-## 3: argnames / argnames<-
-argnames.mkn <- function(x, k, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) ) {
-    if ( missing(k) )
-      k <- attr(x, "k")
-    else
-      if ( !is.null(x) )
-        stop("k can only be be given if x is null")
-
-    base <- ceiling(log10(k + .5))
-    fmt <- sprintf("q%%0%dd%%0%dd", base, base)
-    sprintf(fmt, rep(1:k, each=k-1),
-            unlist(lapply(1:k, function(i) (1:k)[-i])))
-  } else {
-    ret
+  ll <- function(pars, root=ROOT.OBS, root.p=NULL, intermediates=FALSE) {
+    qmat <- f.pars(pars)
+    ans <- all.branches(qmat, intermediates)
+    rootfunc(ans, qmat, root, root.p, intermediates)
   }
+  class(ll) <- c("mkn", "dtlik", "function")
+  ll
 }
-argnames.mk2 <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    c("q01", "q10")
+
+make.mk2 <- function(tree, states, strict=TRUE, control=list())
+  make.mkn(tree, states + 1, 2, strict, check.control.mk2(control))
+
+## 2: info
+make.info.mkn <- function(k, phy) {
+  list(name="mkn",
+       name.pretty="Mk(n)",
+       ## Parameters:
+       np=as.integer(k * k),
+       argnames=default.argnames.mkn(k),
+       ## Variables:
+       ny=as.integer(k), # TODO/NEW: only for ode version...
+       k=as.integer(k),
+       idx.e=integer(0),
+       idx.d=seq_len(k),
+       ## Phylogeny:
+       phy=phy,
+       ## Inference:
+       ml.default="subplex",
+       mcmc.lowerzero=TRUE,
+       ## These are optional
+       doc=NULL,
+       reference=c(
+         "Pagel (1994)",
+         "Lewis (2001)"))
+}
+default.argnames.mkn <- function(k) {
+  base <- ceiling(log10(k + .5))
+  fmt <- sprintf("q%%0%dd%%0%dd", base, base)
+  sprintf(fmt, rep(1:k, each=k-1),
+          unlist(lapply(1:k, function(i) (1:k)[-i])))
+}
+make.info.mk2 <- function(phy) {
+  info <- make.info.mkn(2, phy)
+  info$name <- "mk2"
+  info$name.pretty <- "Mk2"
+  info$argnames <- default.argnames.mk2()
+  info
+}
+default.argnames.mk2 <- function()
+  c("q01", "q10")
+
+## 3: make.cache
+make.cache.mkn <- function(tree, states, k, strict, control) {
+  method <- control$method
+
+  tree <- check.tree(tree)
+  if ( !is.null(states) ) # for multitrait
+    states <- check.states(tree, states, strict=strict,
+                           strict.vals=1:k)
+  cache <- make.cache(tree)
+  if ( method == "mk2" )
+    cache$info <- make.info.mk2(tree)
   else
-    ret
-}
-`argnames<-.mkn` <- function(x, value) {
-  k <- environment(x)$cache$k  
-  if ( length(value) != k*(k-1) )
-    stop("Invalid names length")
-  if ( any(duplicated(value)) )
-    stop("Duplicate argument names")
-  attr(x, "argnames") <- value
-  x  
+    cache$info <- make.info.mkn(k, tree)
+  cache$states  <- states
+  if ( method == "ode" )
+    cache$y <- initial.tip.mkn.ode(cache)
+
+  cache
 }
 
-## 4: find.mle
-## The use of nlminb is here for consistency with ape.  However, this
-## is not a great optimisation method, and may cause problems for some
-## cases.
-find.mle.mkn <- function(func, x.init, method,
-                         fail.value=NA, ...) {
-  ## These parameters are just pulled out of thin air
-  if ( missing(x.init) )
-    x.init <- structure(c(.1, .1), names=argnames(func))
-  if ( missing(method) )
-    method <- "nlminb"
-  NextMethod("find.mle", method=method, class.append="fit.mle.mkn")
+## 4: initial conditions
+initial.conditions.mkn <- function(init, pars, t, idx) {
+  ## In a previous version I had this check here:
+  ## if ( !any(ret > 0) )
+  ##   stop("Incompatible initial conditions at tip ", idx)
+  ## which was nice, but slows things down a bit.
+  ##
+  ## A standalone check might be good.
+  init[,1] * init[,2]
 }
 
-mcmc.mkn <- mcmc.lowerzero
+## 5: rootfunc
+rootfunc.mkn <- function(res, pars, root, root.p, intermediates) {
+  d.root <- res$vals
+  lq <- res$lq
+  k <- length(d.root)
 
-## The other functions are all done by sub-models:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
+  root.p <- root.p.calc(d.root, pars, root, root.p,
+                        stationary.freq.mkn)
+  loglik <- log(sum(root.p * d.root)) + sum(lq)
 
-## Common utility functions for all Mkn-based models.
-check.control.mkn <- function(control, k) {
-  if ( is.null(control$method) ) {
-    control$method <- "exp"
-    if ( is.null(control$use.mk2) )
-      control$use.mk2 <- FALSE
-    else if ( k != 2 && control$use.mk2 )
-      stop("control$use.mk2=TRUE only valid when k=2")
-  } else if ( control$method == "mk2" ) {
-    control$method <- "exp"
-    control$use.mk2 <- TRUE
-  } else if ( control$method == "exp" ) {
-    if ( is.null(control$use.mk2) )
-      control$use.mk2 <- FALSE
-    else if ( k != 2 && control$use.mk2 )
-      stop("control$use.mk2=TRUE only valid when k=2")
-  } else if ( control$method != "ode" ) {
-    stop("Unknown method")
+  if ( intermediates ) {
+    res$root.p <- root.p
+    attr(loglik, "intermediates") <- res
+    attr(loglik, "vals") <- d.root
   }
-  control
+
+  loglik
 }
 
-check.pars.mkn <- function(pars, k) {
-  if ( length(pars) != k*(k-1) )
-    stop(sprintf("Invalid length parameters (expected %d)", k*(k-1)))
-  if ( any(!is.finite(pars)) || any(pars < 0) )
-    stop("Parameters must be non-negative and finite")
-  TRUE
+make.all.branches.mkn <- function(cache, control) {
+  if ( control$method == "ode" )
+    make.all.branches.dtlik(cache, control, initial.conditions.mkn)
+  else
+    make.all.branches.mkn.exp(cache, control)
 }
 
+######################################################################
+## Additional functions:
+stationary.freq.mkn <- function(pars) {
+  ## When used in rootfunc, I think we always have a matrix here.
+  stop("Needs testing")
+  if ( length(pars) == 2 )
+    pars[2:1] / sum(pars)
+  else
+    ## This is really easy (I think we just look at the eigenvalues of
+    ## the Q matrix.
+    .NotYetImplemented()
+}
+
+## Parameter manipulation:
 ## Makes a function that converts k(k-1) parameters into a k^2 Q
 ## matrix.
-make.mkn.pars <- function(k) {
+make.pars.mkn <- function(k) {
   qmat <- matrix(0, k, k)
   idx <- cbind(rep(1:k, each=k-1),
                unlist(lapply(1:k, function(i) (1:k)[-i])))
+  npar <- k*(k-1)
 
   function(pars) {
+    check.pars.nonnegative(pars, npar)
     qmat[idx] <- pars
     diag(qmat) <- -rowSums(qmat)
     qmat
@@ -143,47 +162,24 @@ mkn.Q <- function(pars, k) {
     k <- (1 + sqrt(1 + 4*(length(pars))))/2
   if ( abs(k - round(k)) > 1e-6 || length(pars) != k*(k-1) )
     stop("Invalid parameter length")
-  make.mkn.pars(k)(pars)
+  make.pars.mkn(k)(pars)
 }
 
-## Additional functions:
-stationary.freq.mkn <- function(pars) {
-  if ( length(pars) == 2 )
-    pars[2:1] / sum(pars)
-  else
-    .NotYetImplemented()
+## Checking:
+check.control.mkn <- function(control, k) {
+  control <- modifyList(list(method="exp"), control)
+  if ( control$method == "mk2" && k != 2 )
+    stop("Method 'mk2' only valid when k=2")
+  methods <- c("exp", "mk2", "ode")
+  if ( !(control$method %in% methods) )
+    stop(sprintf("control$method must be in %s",
+                 paste(methods, collapse=", ")))
+  control
 }
 
-root.p.mkn <- function(vals, pars, root, root.p=NULL) {
-  k <- length(vals)
-  if ( !is.null(root.p) ) {
-    if ( root != ROOT.GIVEN )
-      warning("Ignoring specified root state")
-    else if ( length(root.p) != k )
-      stop("root.p of wrong length")
-  }
-
-  if ( root == ROOT.FLAT )
-    p <- rep(1/k, k)
-  else if ( root == ROOT.EQUI )
-    p <- stationary.freq.mkn(pars)
-  else if ( root == ROOT.OBS )
-    p <- vals/sum(vals)
-  else if ( root == ROOT.GIVEN )
-    p <- root.p
-  else if ( root == ROOT.BOTH )
-    p <- NULL
-  else
-    stop("Invalid root mode")
-
-  p
-}
-
-root.mkn <- function(vals, lq, root.p) {
-  logcomp <- sum(lq)
-  if ( is.null(root.p) ) # ROOT.BOTH
-    loglik <- log(vals) + logcomp
-  else
-    loglik <- log(sum(root.p * vals)) + logcomp
-  loglik
+check.control.mk2 <- function(control) {
+  control <- modifyList(list(method="mk2"), control)
+  if ( control$method != "mk2" )
+    stop("Invalid control$method value (just omit it)")
+  control
 }

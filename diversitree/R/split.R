@@ -1,97 +1,46 @@
-## Check that the splits are OK.
-check.split <- function(phy, nodes, split.t) {
-  if ( length(split.t) == 1 && length(nodes) > 1 ) {
-    if ( split.t == 0 || split.t == Inf )
-      split.t <- rep(split.t, length(nodes))
-    else
-      stop("If split.t is length 1, it must be '0' or 'Inf'")
-  } else if ( length(split.t) != length(nodes) ) {
-    stop("'nodes' and 'split.t' must be the same length")
+make.all.branches.split.dtlik <- function(cache, control,
+                                          initial.conditions) {
+  control <- check.control.ode(control)
+  control <- check.control.split(control)
+  caching.branches <- control$caching.branches
+  if ( control$backend == "CVODES" ) {
+    stop("CVODES not yet available for split models")
+  } else {
+    branches.main <- make.branches.dtlik(cache$info, control)
+    branches.aux <- make.branches.aux.dtlik(cache, control)
+    branches.split <- make.branches.split(cache, branches.main,
+                                          branches.aux, control)
+    initial.conditions.split <-
+      make.initial.conditions.split(cache, initial.conditions)
+    function(pars, intermediates, preset=NULL) {
+      if ( caching.branches )
+        caching.branches.set.pars(pars, branches.split)
+      all.branches.matrix(pars, cache,
+                          initial.conditions.split,
+                          branches.split, preset)
+    }    
   }
-    
-  ## Check that all nodes are ok
-  n.tip <- length(phy$tip.label)
-  if ( is.character(nodes) )
-    nodes <- match(nodes, phy$node.label) + n.tip
-  if ( any(is.na(nodes) | nodes <= n.tip+1 | nodes > n.tip + phy$Nnode) )
-    stop("Invalid node specification")
-  
-  ## Check that split times are OK
-  partial <- !(split.t == Inf | split.t == 0)
-  if ( any(partial) )
-    stop("Partial split times not yet allowed")
-
-  list(nodes=c(NA, nodes),
-       split.with.edge=c(NA, split.t == Inf))
 }
 
-## Determine the group membership of every edge.
-## Augment the usual cache vector with some extra information:
-make.cache.split <- function(phy, cache, nodes, split.t) {
-  tmp <- split.group(phy, nodes, split.t)
-  nodes <- tmp$node
-
-  cache$nodes <- tmp$nodes
-  cache$group.nodes <- tmp$group.nodes
-  cache$group.branches <- tmp$group.branches
-  cache$split.with.edge <- tmp$split.with.edge
-
-  cache$n.part <- length(nodes)
-  cache$aux.use <- rep(FALSE, length(cache$group.branches))
-  cache$aux.use[nodes[-1]] <- TRUE
-
-  cache
-}
-
-split.group <- function(phy, nodes, split.t) {
-  tmp <- check.split(phy, nodes, split.t)
-  nodes <- tmp$nodes
-  split.with.edge <- tmp$split.with.edge
-  n.tip <- length(phy$tip.label)
-  edge <- phy$edge
-
-  descendants.idx <- function(node)
-    which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
-  
-  f <- function(node, phy, group) {
-    if ( is.na(node) )
-      return(list(group=group, base=NA))
-    i <- which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
-    base <- group[edge[,2] == node]
-    group[i[group[i] == base]] <- max(group) + 1
-    list(group=group, base=base)
-  }
-
-  group <- rep(1, nrow(edge))
-
-  base <- integer(length(nodes))
-  for ( i in seq_along(nodes) ) {
-    tmp <- f(nodes[i], phy, group)
-    group <- tmp$group
-    base[i] <- tmp$base
-  }
-
-  group <- group[match(seq_len(max(edge)), edge[,2])]
-  group[n.tip + 1] <- 1
-
-  group.branches <- group
-  i <- which(!split.with.edge)
-  if ( length(i) > 0 )
-    group.branches[which(i)] <- base[which(i)]
-
-  list(nodes=c(n.tip+1, nodes[-1]),
-       group.nodes=group, group.branches=group.branches,
-       split.with.edge=split.with.edge)
-}
-
-make.branches.split <- function(cache, branches, branches.aux) {
+## Convert a branches function into one that automatically accounts
+## for splits.
+## TODO: Deal with the case of a null branches.aux function so that
+## this will work for bd-ode and mkn-ode.
+make.branches.split <- function(cache, branches, branches.aux,
+                                control) {
   group <- cache$group.branches
   split.with.edge <- cache$split.with.edge
   aux.use <- cache$aux.use
   aux.i <- cache$aux.i
+  vars.in.matrix <- !is.na(cache$info$ny)
 
-  branches.c     <- make.caching.branches(cache, branches)
-  branches.aux.c <- make.caching.branches.aux(cache, branches.aux)
+  if ( control$caching.branches ) {
+    branches.c     <- make.caching.branches(cache, branches)
+    branches.aux.c <- make.caching.branches.aux(cache, branches.aux)
+  } else {
+    branches.c <- branches
+    branches.aux.c <- branches.aux
+  }
 
   function(y, len, pars, t0, idx) {
     g <- group[idx]
@@ -136,9 +85,9 @@ make.branches.split <- function(cache, branches, branches.aux) {
       grp <- sort.default(unique.default(group[idx]))
       i <- split.default(seq_along(idx), group[idx])
 
-      if ( is.null(cache$vars.in.list) ) {
+      if ( vars.in.matrix ) {
         lq <- numeric(length(len))
-        ans <- matrix(NA, cache$ny, length(len))
+        ans <- matrix(NA, cache$info$ny, length(len))
 
         for ( g.i in seq_along(grp) ) {
           j <- i[[g.i]]
@@ -159,37 +108,153 @@ make.branches.split <- function(cache, branches, branches.aux) {
   }
 }
 
+## Compute E values (or other auxiliary variables) at a split.
+## Unlike the other make.branches functions, this one needs the full
+## cache so that we can get sampling.f out.  This is a bit of a pity.
+make.branches.aux.dtlik <- function(cache, control) {
+  ## The check will happen twice here, but that's OK.  It makes
+  ## name.ode, which is useful.
+  info.aux <- check.info.ode(cache$info, control)
+  info.aux$name.ode <- sprintf("%s_aux", info.aux$name.ode)
+  info.aux$ny       <- info.aux$k
+  info.aux$idx.d    <- integer(0)
+  branches <- make.branches.dtlik(info.aux, control)
+
+  y <- lapply(cache$sampling.f, function(x) 1-x)
+  n <- length(y)
+
+  function(i, len, pars, idx) {
+    if ( i > n )
+      stop("No such partition")
+    branches(y[[i]], len, pars, 0)[[2]]    
+  }
+}
+
 make.initial.conditions.split <- function(cache, initial.conditions) {
   group <- cache$group.nodes
   function(init, pars, t, idx)
     initial.conditions(init, pars[[group[idx]]], t, idx)
 }
 
-ll.xxsse.split <- function(pars, cache, initial.conditions,
-                           branches, condition.surv, root, root.p,
-                           intermediates) {
-  ## always pars[[1]], but being safe...
-  pars.root <- pars[[cache$group.nodes[cache$root]]]
+## TODO/NEW: See the time-based models for what needs doing here to
+## allow non-SSE models to have splits.
+make.rootfunc.split <- function(cache, rootfunc) {
+  grp.root <- cache$group.nodes[cache$root] # should always be 1?
+  function(ans, pars, condition.surv, root, root.p, intermediates) {
+    if ( root == ROOT.EQUI )
+      stop(paste("Can't use ROOT.EQUI:", 
+                 "stationary frequencies are messy for split models."))
+    rootfunc(ans, pars[[grp.root]], condition.surv, root,
+             root.p, intermediates)
+  }
+}
 
-  if ( cache$control$caching.branches )
-    caching.branches.set.pars(pars, branches)
+## TODO/NEW: try replacing with this:
+## make.rootfunc.split <- function(cache, rootfunc) {
+##   grp.root <- cache$group.nodes[cache$root] # should always be 1?
+##   function(ans, pars, ...)
+##     rootfunc(ans, pars[[grp.root]], ...)    
+## }
 
-  ans <- all.branches.matrix(pars, cache, initial.conditions, branches)
-  vals <- ans$init[,cache$root]
-  root.p <- root.p.xxsse(vals, pars.root, root, root.p)
-  loglik <- root.xxsse(vals, pars.root, ans$lq, condition.surv, root.p)
+## Modify a cache for use with a split model.
+## 
+## Determine the group membership of every edge.
+## Augment the usual cache vector with some extra information:
+make.cache.split <- function(phy, cache, nodes, split.t) {
+  tmp <- split.group(phy, nodes, split.t)
+  nodes <- tmp$node
 
-  if ( intermediates ) {
-    ans$root.p <- root.p
-    attr(loglik, "intermediates") <- ans
-    attr(loglik, "vals") <- vals
+  cache$nodes <- tmp$nodes
+  cache$group.nodes <- tmp$group.nodes
+  cache$group.branches <- tmp$group.branches
+  cache$split.with.edge <- tmp$split.with.edge
+
+  cache$n.part <- length(nodes)
+  cache$aux.use <- rep(FALSE, length(cache$group.branches))
+  cache$aux.use[nodes[-1]] <- TRUE
+
+  cache$info <- update.info.split(cache$info, nodes)
+
+  cache
+}
+
+update.info.split <- function(info, nodes) {
+  n.part <- length(nodes)
+ 
+  info$partitioned <- TRUE
+  info$argnames <- argnames.twopart(info$argnames, n.part)
+  info$name.ode <- info$name
+  info$name.pretty <- sprintf("%s (time-chunks)", info$name.pretty)
+  info$name <- sprintf("%s.split", info$name)
+
+  info$n.part <- n.part
+  info$nodes <- nodes
+
+  info
+}
+
+## As above, but do additional work with initial conditions and
+## sampling.f for the xxSSE models.
+make.cache.split.xxsse <- function(phy, cache, nodes, split.t,
+                                   sampling.f) {
+  cache <- make.cache.split(phy, cache, nodes, split.t)
+
+  info <- cache$info
+  n.part <- cache$n.part
+  
+  cache$sampling.f <-
+    check.sampling.f.split(sampling.f, info$k, n.part)
+  cache$aux.i <- info$idx.e
+  cache$y <- make.initial.tip.xxsse.split(cache)
+
+  cache
+}
+
+######################################################################
+## Utility
+split.group <- function(phy, nodes, split.t) {
+  tmp <- check.split(phy, nodes, split.t)
+  nodes <- tmp$nodes
+  split.with.edge <- tmp$split.with.edge
+  n.tip <- length(phy$tip.label)
+  edge <- phy$edge
+
+  descendants.idx <- function(node)
+    which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
+  
+  f <- function(node, phy, group) {
+    if ( is.na(node) )
+      return(list(group=group, base=NA))
+    i <- which(edge[,1] == node | edge[,2] %in% descendants(node, edge))
+    base <- group[edge[,2] == node]
+    group[i[group[i] == base]] <- max(group) + 1
+    list(group=group, base=base)
   }
 
-  loglik  
+  group <- rep(1, nrow(edge))
+
+  base <- integer(length(nodes))
+  for ( i in seq_along(nodes) ) {
+    tmp <- f(nodes[i], phy, group)
+    group <- tmp$group
+    base[i] <- tmp$base
+  }
+
+  group <- group[match(seq_len(max(edge)), edge[,2])]
+  group[n.tip + 1] <- 1
+
+  group.branches <- group
+  i <- which(!split.with.edge)
+  if ( length(i) > 0 )
+    group.branches[which(i)] <- base[which(i)]
+
+  list(nodes=c(n.tip+1, nodes[-1]),
+       group.nodes=group, group.branches=group.branches,
+       split.with.edge=split.with.edge)
 }
 
 make.initial.tip.xxsse.split <- function(cache) {
-  k <- cache$k
+  k <- cache$info$k
   n.part <- cache$n.part
   grp <- cache$group.branches  
   idx.D <- (k+1):(2*k)
@@ -214,35 +279,14 @@ make.initial.tip.xxsse.split <- function(cache) {
   unlist(out, FALSE)
 }
 
+######################################################################
+## Caching branches
+
 ## The first of these that I'll do is fully passive.  It checks to
 ## see if the parameters and input are identical.  This should be
 ## the most basic, and most foolproof.  It may not be the fastest
 ## though, as some of these checks add overhead.  The use of
 ## identical should keep things fairly fast though.
-
-## TODO: We only really need to bother checking the variables for
-## cases where the group has a descendent.
-
-## A caching all.branches:
-all.branches.caching <- function(pars, cache, initial.conditions,
-                                 branches, branches.aux,
-                                 type="matrix") {
-  if ( type == "matrix" )
-    res <- all.branches.matrix(pars, cache, initial.conditions, branches)
-  else
-    res <- all.branches.list(pars, cache, initial.conditions, branches)
-
-  ## Now, update the environment of the branches and branches.aux
-  ## functions with the parameters used and the results:
-  e <- 
-  e.aux <- environment(branches.aux)
-
-  environment(branches)$prev.pars <-
-    environment(branches.aux)$prev.pars <- pars
-
-  res
-}
-
 
 ## I want to make caching versions of the branches function.
 caching.branches.set.pars <- function(p, branches, branches.aux) {
@@ -258,21 +302,19 @@ caching.branches.set.pars <- function(p, branches, branches.aux) {
 }
 
 make.caching.branches <- function(cache, branches) {
-  if ( !cache$control$caching.branches )
-    return(branches)
-
   cat("Using experimental caching branches!\n")
   
   n <- length(cache$len)
   n.part <- cache$n.part
   group <- cache$group.branches
+  vars.in.matrix <- !is.na(cache$info$ny)  
 
   pars.same <- logical(n.part)
   prev.pars <- vector("list", n.part)
   prev.lq <- numeric(n)
   
-  if ( is.null(cache$vars.in.list) ) {
-    prev.vars <- prev.base <- matrix(NA, cache$ny, n)
+  if ( vars.in.matrix ) {
+    prev.vars <- prev.base <- matrix(NA, cache$info$ny, n)
     branches.caching <- function(y, len, p, t0, idx) {
       g <- group[idx[1]]
       if ( pars.same[g] && identical(prev.vars[,idx[1]], y) ) {
@@ -313,9 +355,6 @@ make.caching.branches <- function(cache, branches) {
 ##   normal aux: (g, t, p)
 ##   returned:   (g, t, p, idx)
 make.caching.branches.aux <- function(cache, branches.aux) {
-  if ( !cache$control$caching.branches )
-    return(function(g, t, p, idx) branches.aux(g, t, p))
-  
   n <- length(cache$len)
   prev.aux <- vector("list", n)
   pars.same <- logical(cache$n.part)
@@ -330,4 +369,43 @@ make.caching.branches.aux <- function(cache, branches.aux) {
   }
 
   branches.aux.caching
+}
+
+######################################################################
+## Checking
+check.split <- function(phy, nodes, split.t) {
+  if ( length(split.t) == 1 && length(nodes) > 1 ) {
+    if ( split.t == 0 || split.t == Inf )
+      split.t <- rep(split.t, length(nodes))
+    else
+      stop("If split.t is length 1, it must be '0' or 'Inf'")
+  } else if ( length(split.t) != length(nodes) ) {
+    stop("'nodes' and 'split.t' must be the same length")
+  }
+    
+  ## Check that all nodes are ok
+  n.tip <- length(phy$tip.label)
+  if ( is.character(nodes) )
+    nodes <- match(nodes, phy$node.label) + n.tip
+  if ( any(is.na(nodes) | nodes <= n.tip+1 | nodes > n.tip + phy$Nnode) )
+    stop("Invalid node specification")
+  
+  ## Check that split times are OK
+  partial <- !(split.t == Inf | split.t == 0)
+  if ( any(partial) )
+    stop("Partial split times not yet allowed")
+
+  list(nodes=c(NA, nodes),
+       split.with.edge=c(NA, split.t == Inf))
+}
+
+check.control.split <- function(control) {
+  if ( is.null(control$caching.branches) )
+    control$caching.branches <- FALSE
+  else {
+    val <- control$caching.branches
+    if ( !(length(val) == 1 && val %in% c(TRUE, FALSE)) )
+      stop("Invalid value for control$caching.branches")
+  }
+  control
 }

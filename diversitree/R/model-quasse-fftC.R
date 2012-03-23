@@ -21,7 +21,7 @@ make.branches.quasse.fftC <- function(control) {
   
   f.hi <- make.pde.quasse.fftC(nx*r, dx/r, dt.max, 2L, flags)
   f.lo <- make.pde.quasse.fftC(nx,   dx,   dt.max, 2L, flags)
-  make.branches.quasse(f.hi, f.lo, control)
+  combine.branches.quasse(f.hi, f.lo, control)
 }
 
 make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
@@ -159,7 +159,7 @@ make.branches.aux.quasse.fftC <- function(control, sampling.f) {
   n <- length(sampling.f)
   e0 <- 1 - unlist(sampling.f)
 
-  function(i, len, pars) {
+  function(i, len, pars, idx) {
     if ( i > n )
       stop("No such partition")
     if ( length(len) > 1 )

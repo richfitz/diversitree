@@ -53,10 +53,9 @@ make.asr.stoch.constrained <- function(lik, ...) {
 ## Next, the utility functions for the different types of models This
 ## is to asr.marginal what all.branches is for the core models.  Here,
 ## the argument 'res' is the result of running all.branches
-do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
-                            initial.conditions,
-                            branches, root,
-                            ...) {
+do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
+                              initial.conditions, branches, root,
+                              ...) {
   ## Store these for easier calculation.
   children <- cache$children
   parent <- cache$parent
@@ -93,10 +92,9 @@ do.asr.marginal <- function(pars, cache, res, nodes, states.idx,
         branch.init[,j] <- y.in
       }
 
-      ## TODO: Could just do y.in here?
-      ans <- root(pars, branch.init[,root.idx], lq)
+      ans <- root(list(vals=branch.init[,root.idx], lq=lq), pars)
 
-      ## explots R's exp(-Inf) == 0
+      ## explots IEEE arithmetic's exp(-Inf) == 0
       p[st] <- if ( is.na(ans) ) -Inf else ans
     }
 
@@ -117,15 +115,53 @@ do.asr.marginal.C <- function(pars, cache, ptr, nodes, states.idx.C,
   else
     nodes <- nodes + cache$n.tip
 
-  ## Initial run through sets up the internal data structures (these
-  ## are never used in the R side; we're calling this for its side
-  ## effects).
-  ignore <- all.branches.C(pars)
-
   ## Then we actually compute the marginal ASRs:
   .Call("r_asr_marginal", ptr, pars, toC.int(nodes),
         states.idx.C, parent.C, root.f, env, PACKAGE="diversitree")
 }
+
+make.do.asr.marginal <- function(all.branches, rootfunc, states.idx) {
+  eb <- environment(all.branches)
+  cache <- eb$cache
+
+  if ( eb$control$backend == "CVODES" ) {
+    ptr <- eb$ptr
+    env <- new.env()
+    states.idx.C <- toC.int(states.idx)
+    parent.C <- cache$parent
+    
+    function(pars, nodes, preset, ...) {
+      if ( !is.null(preset) )
+        stop("Cannot yet do CVODES calculations with preset data")
+      root.f <- function(pars, vals, lq)
+        rootfunc(list(vals=vals, lq=lq), pars, ...)
+      ## Initial run through sets up the internal data structures (these
+      ## are never used in the R side; we're calling this for its side
+      ## effects).
+      if ( is.null(nodes) )
+        ## Careful here: the indices in this cache were modified by
+        ## toC.cache().
+        nodes <- as.integer(cache$root:max(cache$order))
+      else
+        nodes <- toC.int(nodes + cache$n.tip)
+      
+      ignore <- all.branches(pars, TRUE, preset)
+      .Call("r_asr_marginal", ptr, pars, nodes,
+            states.idx.C, parent.C, root.f, env, PACKAGE="diversitree")
+    }
+  } else {
+    branches <- eb$branches
+    initial.conditions <- eb$initial.conditions
+    function(pars, nodes, preset, ...) {
+      root.f <- function(res, pars)
+        rootfunc(res, pars, ...)
+      res <- all.branches(pars, TRUE, preset)
+      do.asr.marginal.R(pars, cache, res, nodes, states.idx,
+                        initial.conditions, branches, root.f)
+    }
+  }
+}
+
 
 ## Utility function for drawing one or more samples from the joint
 ## distribution.
@@ -154,3 +190,4 @@ do.asr.joint <- function(n, k, order.C, parent.C, li, pij, root.p,
           pij, root.p, as.01, PACKAGE="diversitree")
   }
 }
+

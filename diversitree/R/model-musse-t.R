@@ -1,13 +1,27 @@
-## Models should provide:
-##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
+make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
+                         strict=TRUE, control=list()) {
+  cache <- make.cache.musse.t(tree, states, k, functions,
+                              sampling.f, strict)
+  all.branches <- make.all.branches.t.dtlik(cache, control,
+                                            initial.conditions.musse)
+  rootfunc <- make.rootfunc.t(cache, rootfunc.musse)
+  f.pars <- make.pars.t.musse(cache$functions, cache)
+  
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
+    pars2 <- f.pars(pars)
+    ans <- all.branches(pars2, intermediates)
+    rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
+  }
+  class(ll) <- c("musse.t", "musse", "dtlik", "function")
+  ll
+}
+
+make.cache.musse.t <- function(tree, states, k, functions,
+                               sampling.f, strict) {
+  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
+  update.cache.t(cache, functions)  
+}
 
 ## MuSSE/t is a bunch harder than the basic BiSSE/t or BD/t models, as
 ## the diagonal of the Q matrix needs to be specified; this is
@@ -19,48 +33,22 @@
 ## and generate the Q matrix ourselves.  This might violate the
 ## assumptions of one element per function (and then require unlist()
 ## again).
-make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
-                         strict=TRUE, control=list()) {
-  control <- check.control.ode(control)
-  if ( control$backend == "CVODES" )
-    stop("Cannot use CVODES backend with musse.t")
-
-  cache <- make.cache.musse(tree, states, k, sampling.f, strict)
-
-  if ( is.null(names(functions)) && length(functions) == k*(k+1) )
-    names(functions) <- argnames.musse(NULL, k)
-
-  pars.t <- make.pars.t.musse(functions, k)
-
-  branches <- make.branches.musse.t(cache, control)
-  initial.conditions <-
-    make.initial.conditions.t(initial.conditions.musse)
-
-  ll.musse.t <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                         root.p=NULL, intermediates=FALSE) {
-    if ( !is.null(root.p) &&  root != ROOT.GIVEN )
-      warning("Ignoring specified root state")
-    f.pars <- pars.t(pars)
-    ll.xxsse.t(f.pars, cache, initial.conditions, branches,
-               condition.surv, root, root.p, intermediates)
-  }
-
-  class(ll.musse.t) <- c("musse.t", "musse", "function")
-  attr(ll.musse.t, "argnames") <- attr(pars.t, "argnames")
-  attr(ll.musse.t, "k") <- k
-  ll.musse.t
-}
-
-make.pars.t.musse <- function(functions, k) {
+make.pars.t.musse <- function(functions, cache=NULL,
+                        check.negative.const=TRUE,
+                        check.negative.var=TRUE) {
+  if ( is.null(cache) )
+    stop("Cache must be provided for make.pars.musse.t")
+  k <- cache$info$k
   if ( length(functions) != k * (k + 1) )
     stop("Wrong number of functions")
 
-  obj <- check.functions.t(functions)
+  obj <- cache$functions.info
 
+  ## Unpack the function information:
   n.args <- obj$n.args
   idx <- obj$idx
   is.constant <- obj$is.constant
-  is.constant.arg <- obj$is.constant.arg
+  is.constant.arg <- obj$is.constant.arg # extra to MuSSE
   idx.constant <- obj$idx.constant
   i.var <- which(!is.constant)
 
@@ -68,7 +56,6 @@ make.pars.t.musse <- function(functions, k) {
   idx.qmat <- cbind(rep(1:k, each=k-1),
                unlist(lapply(1:k, function(i) (1:k)[-i])))
   idx.q <- (2*k+1):(k*(1+k))
-  
   if ( !all(is.constant[idx.q]) )
     stop("Time varying Q matrix not yet dealt with")
   
@@ -83,13 +70,11 @@ make.pars.t.musse <- function(functions, k) {
   idx.constant.target <-
     c(which(is.constant[1:(2*k)]), (2*k+1):(k*(k+2)))
   
-  ret <- function(pars) {
+  function(pars) {
     if ( length(pars) != n.args )
       stop(sprintf("Invalid argument length: expected %d", n.args))
-    p.const <- pars[is.constant.arg]
-    if ( any(p.const < 0) || any(!is.finite(p.const)) )
-      stop("Negative/nonfinite parameter specified (time constant)")
     names(pars) <- NULL # because of do.call
+    check.nonnegative(pars[is.constant.arg])
 
     ## Fill in constant times.
     qmat[idx.qmat] <- pars[idx.constant.q]
@@ -97,35 +82,14 @@ make.pars.t.musse <- function(functions, k) {
     out[idx.constant.target] <- c(pars[idx.constant.lm], qmat)
 
     function(t) {
-      ## Surprisingly, this for loop was faster than lapply.
-      for ( i in i.var )
+      for ( i in i.var ) # Loop faster than lapply
         out[[i]] <- do.call(functions[[i]],
                             c(list(t), pars[idx[[i]]]))
-      p.var <- out[i.var]
-      if ( any(p.var < 0) || any(!is.finite(p.var)) )      
-        stop("Negative/nonfinite parameter specified (time variable)")
+      check.nonnegative(out[i.var])      
       out
     }
   }
-
-  attr(ret, "n.args") <- n.args
-  attr(ret, "argnames") <- obj$argnames
-  attr(ret, "is.constant.f") <- is.constant
-  attr(ret, "is.constant.arg") <- obj$is.constant.arg
-
-  ret
 }
 
-`argnames<-.musse.t` <- function(x, value) {
-  .NotYetImplemented()
-}
-
-## 8: branches
-make.branches.musse.t <- function(cache, control) {
-  k <- cache$k
-  np <- as.integer(k * (k + 2))
-  neq <- as.integer(2 * k)
-  comp.idx <- as.integer((k+1):(2*k))
-  make.ode.branches.t("musse_t", "diversitree", neq, np, comp.idx,
-                      control)
-}
+make.branches.musse.t <- function(cache, control)
+  make.branches.dtlik.t(cache$info, control)

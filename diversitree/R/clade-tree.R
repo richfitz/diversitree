@@ -1,5 +1,4 @@
 ## Support for trees with unresolved clades
-
 make.clade.tree <- function(tree, clades) {
   if ( !identical(class(tree), "phylo") )
     stop("tree must be a plain 'phylo' tree")
@@ -37,11 +36,6 @@ make.unresolved.bisse <- function(clades, states) {
 make.unresolved.bd <- function(clades)
   sapply(clades, length)
 
-polytomies.to.clades <- function(tree) {
-  .Deprecated("clades.from.polytomies")
-  clades.from.polytomies(tree)
-}
-
 clades.from.polytomies <- function(tree) {
   from <- tree$edge[,1]
   to   <- tree$edge[,2]
@@ -52,6 +46,7 @@ clades.from.polytomies <- function(tree) {
   poly.nodes <- as.integer(names(edge.counts[edge.counts > 2]))
 
   ## Find who the ancestors of the polytomy nodes are:
+  ## TODO: I think this might be descendants?
   ans <- lapply(poly.nodes, ancestors2, tree)
 
   ## Now, some of these are nested within one another:
@@ -93,6 +88,9 @@ clades.from.polytomies <- function(tree) {
 ## }
 
 ## Renamed poorly because of a clash with util.R:ancestors
+## TODO: I believe that this is actually descendents()
+## It can be replaced by:
+##   function(x, tree) descendants(x, tree$edge)
 ancestors2 <- function(x, tree, tips.only=FALSE) {
   from <- tree$edge[,1]
   to   <- tree$edge[,2]
@@ -174,4 +172,9 @@ plot.clade.tree <- function(x, as.clade.tree=TRUE, transform=identity,
     n.taxa <- NULL
 
   plot2.phylo(x, n.taxa=n.taxa, ...)
+}
+
+polytomies.to.clades <- function(tree) {
+  .Deprecated("clades.from.polytomies")
+  clades.from.polytomies(tree)
 }

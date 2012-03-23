@@ -1,97 +1,70 @@
 ## Models should provide:
 ##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
+##   2. info
+##   3. make.cache, including initial tip conditions
+##   4. initial.conditions(init, pars,t, idx)
+##   5. rootfunc(res, pars, ...)
+
+## Common other functions include:
+##   stationary.freq
+##   starting.point
+##   branches
 
 ## 1: make
 make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
                        nt.extra=10, strict=TRUE, control=list()) {
-  control <- check.control.ode(control)
-  backend <- control$backend
-  
-  cache <- make.cache.bisse(tree, states, unresolved=unresolved,
-                            sampling.f=sampling.f, nt.extra=nt.extra,
-                            strict=strict)
-  if ( backend == "CVODES" )
-    all.branches <- make.all.branches.C.bisse(cache, control)
-  else
-    branches <- make.branches.bisse(cache, control)
+  cache <- make.cache.bisse(tree, states, unresolved, sampling.f,
+                            nt.extra, strict)
+  unresolved <- cache$unresolved
+  all.branches <- make.all.branches.dtlik(cache, control,
+                                          initial.conditions.bisse)
+  rootfunc <- rootfunc.musse
 
-  if ( backend == "CVODES" && !is.null(cache$unresolved) )
-    stop("Cannot yet use CVODES backend with unresolved clades")
-
-  ll.bisse <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                       root.p=NULL, intermediates=FALSE) {
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
     check.pars.bisse(pars)
-    if ( !is.null(root.p) &&  root != ROOT.GIVEN )
-      warning("Ignoring specified root state")
-
-    if ( !is.null(cache$unresolved) )
-      cache$preset <- 
-        branches.unresolved.bisse(pars, cache$unresolved)
-
-    if ( backend == "CVODES" )
-      ll.xxsse.C(pars, all.branches,
-                 condition.surv, root, root.p, intermediates)
-    else
-      ll.xxsse(pars, cache, initial.conditions.bisse, branches,
-               condition.surv, root, root.p, intermediates)
+    preset <- branches.unresolved.bisse(pars, unresolved)
+    ans <- all.branches(pars, intermediates, preset)
+    rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
-
-  class(ll.bisse) <- c("bisse", "function")
-  ll.bisse
+  class(ll) <- c("bisse", "dtlik", "function")
+  ll
 }
 
-## 2: print
-print.bisse <- function(x, ...) {
-  cat("BiSSE likelihood function:\n")
-  print(unclass(x))
+## 2: info
+make.info.bisse <- function(phy) {
+  list(name="bisse",        # canonical name (as in make.<name>)
+       name.pretty="BiSSE", # pretty name for printing
+       ## Parameters:
+       np=6L, # number of parameters the ODE takes, not the function.
+       argnames=default.argnames.bisse(),
+       ## Variables:
+       ny=4L,     # number of variables
+       k=2L,      # number of states (NA if continuous)
+       idx.e=1:2, # index of 'E' variables, for xxsse models
+       idx.d=3:4, # index of 'D' variables, for xxsse and mk models
+       ## Phylogeny:
+       phy=phy,   # here to help with printing, possibly plotting
+       ## Inference:
+       ml.default="subplex", # default ML search
+       mcmc.lowerzero=TRUE,  # all paramters positive? (for mcmc)
+       ## These are optional
+       doc=NULL,    # extra string to print during print()
+       reference=c( # vector of references
+         "Maddison et al. (2007) doi:10.1080/10635150701607033",
+         "FitzJohn et al. (2009) doi:10.1093/sysbio/syp067"))
 }
+default.argnames.bisse <- function() 
+  c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10")
 
-## 3: argnames / argnames<-
-argnames.bisse <- function(x, ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) )
-    c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10")
-  else
-    ret
-}
-`argnames<-.bisse` <- function(x, value) {
-  if ( length(value) != 6 )
-    stop("Invalid names length")
-  attr(x, "argnames") <- value
-  x  
-}
-
-## 4: find.mle
-find.mle.bisse <- function(func, x.init, method,
-                           fail.value=NA, ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method, class.append="fit.mle.bisse")
-}
-
-mcmc.bisse <- mcmc.lowerzero
-
-## Make requires the usual functions:
-## 5: make.cache (initial.tip, root)
+## 3: make.cache (& initial.tip)
 make.cache.bisse <- function(tree, states, unresolved=NULL,
                              sampling.f=NULL, nt.extra=10,
                              strict=TRUE) {
-  ## TODO: There is a potential issue here with states, as
-  ## 'unresolved' may contain one of the states.  For now I am
-  ## disabling the check, but this is not great.
-  if ( strict && !is.null(unresolved) )
-    strict <- FALSE
-  
   tree <- check.tree(tree)
-  states <- check.states(tree, states, strict=strict, strict.vals=0:1)
+  states <- check.states(tree, states,
+                         strict=strict && is.null(unresolved),
+                         strict.vals=0:1)
 
   if ( inherits(tree, "clade.tree") ) {
     if ( !is.null(unresolved) )
@@ -99,92 +72,43 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
     unresolved <- make.unresolved.bisse(tree$clades, states)
     states <- states[tree$tip.label]
   }
-
-  ## Check 'sampling.f'
   if ( !is.null(sampling.f) && !is.null(unresolved) )
     stop("Cannot specify both sampling.f and unresolved")
-  else
-    sampling.f <- check.sampling.f(sampling.f, 2)
 
   cache <- make.cache(tree)
-  cache$ny <- 4L
-  cache$k <- 2L
-  cache$tip.state  <- states
-  cache$unresolved <- unresolved
-  cache$sampling.f <- sampling.f
+  cache$info <- make.info.bisse(tree)
+  cache$states     <- states
+  cache$sampling.f <- check.sampling.f(sampling.f, 2)
 
-  unresolved <- check.unresolved(cache, unresolved, nt.extra)
-  cache$unresolved <- unresolved
-
-  if ( !is.null(unresolved) ) {
-    cache$tips <- cache$tips[-unresolved$i]
-    cache$tip.state <- cache$tip.state[-unresolved$i]
+  cache$unresolved <- check.unresolved(cache, unresolved, nt.extra)
+  if ( !is.null(cache$unresolved) ) {
+    cache$tips   <- cache$tips[-cache$unresolved$i]
+    cache$states <- cache$states[-cache$unresolved$i]
   }
 
-  ## This avoids a warning in the case where all tips are unresolved.
-  if ( length(cache$tips) > 0 )
-    cache$y <- initial.tip.bisse(cache)
+  if ( strict && !is.null(unresolved) ) {
+    seen <- ((0:1) %in% unique(na.omit(cache$states)) ||
+             sapply(cache$unresolved[c("n0", "n1")], sum) > 0)
+    if ( !all(seen) )
+      stop("Because strict state checking requested, all (and only) ",
+           "states in 0 1, are allowed")
+  }
+
+  if ( length(cache$tips) > 0 ) # in case all tips are unresolved.
+    cache$y <- initial.tip.xxsse(cache, base.zero=TRUE)
 
   cache
 }
 
-## By the time this hits, unresolved clades and any other non-standard
-## tips have been removed.  We have an index "tips" (equal to 1:n.tip
-## for plain bisse) that is the "index" (in phy$edge numbering) of the
-## tips, and a state vector cache$tip.state, both of the same length.
-## The length of the terminal branches is cache$len[cache$tips].
-##
-## Allowing for unknown state tips, there are three possible states
-##   (0, 1, NA -> 1, 2, 3)
-## Initial conditions at the tips are given by their tip states:
-## There are three types of initial condition in bisse:
-##   state0: c(f_0, 0,   1-f_0, 1-f_1)
-##   state1: c(0,   f_1, 1-f_0, 1-f_1)
-##   state?: c(f_0, f_1, 1-f_0, 1-f_1)
-initial.tip.bisse <- function(cache) {
-  f <- cache$sampling.f
-  y <- list(c(1-f, f[1], 0),
-            c(1-f, 0, f[2]),
-            c(1-f, f))
-  y.i <- cache$tip.state + 1
-  y.i[is.na(y.i)] <- 3
-
-  tips <- cache$tips
-
-  ## This would return a data structure appropriate for the more basic
-  ## tip treatment:
-  ##   dt.tips.ordered(y[y.i], tips, cache$len[tips])
-  dt.tips.grouped(y, y.i, tips, cache$len[tips])
-}
-
-
-## 6: ll
-
-## 7: initial.conditions:
+## 4: initial.conditions:
 ## Note that we ignore both 't' and 'idx'.
 initial.conditions.bisse <- function(init, pars, t, idx)
   c(init[c(1,2),1],
     init[c(3,4),1] * init[c(3,4),2] * pars[c(1,2)])
 
-## 8: branches
-make.branches.bisse <- function(cache, control) {
-  neq <- 4L
-  np <- 6L
-  comp.idx <- as.integer(3:4)
-  make.ode.branches("bisse", "diversitree", neq, np, comp.idx,
-                    control)
-}
-
-make.all.branches.C.bisse <- function(cache, control) {
-  neq <- 4L
-  np <- 6L
-  comp.idx <- as.integer(3:4)
-  make.all.branches.C(cache, "bisse", "diversitree",
-                      neq, np, comp.idx, control)
-}
-
-## 9: branches.unresolved
 branches.unresolved.bisse <- function(pars, unresolved) {
+  if ( is.null(unresolved) )
+    return(NULL)
   Nc <- unresolved$Nc
   k <- unresolved$k
   nsc <- unresolved$nsc
@@ -209,11 +133,8 @@ branches.unresolved.bisse <- function(pars, unresolved) {
        base=t(base))
 }
 
+###########################################################################
 ## Additional functions
-bisse.stationary.freq <- function(pars) {
-  .Deprecated("stationary.freq.bisse")
-  stationary.freq.bisse(pars)
-}
 stationary.freq.bisse <- function(pars) {
   lambda0 <- pars[1]
   lambda1 <- pars[2]
@@ -226,17 +147,18 @@ stationary.freq.bisse <- function(pars) {
   eps <- (lambda0 + mu0 + lambda1 + mu1)*1e-14
   if ( abs(g) < eps ) {
     if ( q01 + q10 == 0 )
-      0.5
+      p <- 0.5
     else
-      q10/(q01 + q10)
+      p <- q10/(q01 + q10)
   } else {
     roots <- quadratic.roots(g, q10+q01-g, -q10)
     roots <- roots[roots >= 0 & roots <= 1]
     if ( length(roots) > 1 )
-      NA
+      p <- NA
     else
-      roots
+      p <- roots
   }
+  c(p, 1-p)
 }
 
 starting.point.bisse <- function(tree, q.div=5, yule=FALSE) {
@@ -245,13 +167,48 @@ starting.point.bisse <- function(tree, q.div=5, yule=FALSE) {
     p <- rep(c(pars.bd, (pars.bd[1] - pars.bd[2]) / q.div), each=2)
   else
     p <- rep(c(pars.bd, pars.bd[1] / q.div), each=2)
-  names(p) <- argnames.bisse(NULL)
+  names(p) <- default.argnames.bisse()
   p
 }
-starting.point <- bisse.starting.point <- function(tree, q.div=5) {
-  .Deprecated("starting.point.bisse")
-  starting.point.bisse(tree, q.div)
+
+check.unresolved <- function(cache, unresolved, nt.extra) {
+  if ( is.null(unresolved) ) {
+    return(NULL)
+  } else if ( nrow(unresolved) == 0 ) {
+    warning("Ignoring empty 'unresolved' argument")
+    return(NULL)
+  }
+
+  required <- c("tip.label", "Nc", "n0", "n1")
+  if ( !all(required %in% names(unresolved)) )
+    stop("Required columns missing from unresolved clades")
+
+  unresolved$tip.label <- as.character(unresolved$tip.label)
+  if ( !all(unresolved$tip.label %in% cache$tip.label) )
+    stop("Unknown tip species in 'unresolved'")
+
+  if ( max(unresolved$Nc + nt.extra) > 200 )
+    stop("The largest unresolved clade supported has %d species",
+         200 - nt.extra)
+
+  unresolved$i <- match(unresolved$tip.label, cache$tip.label)
+  unresolved$target <- cache$tips[unresolved$i]
+
+  unresolved$k   <- unresolved$n1
+  unresolved$nsc <- unresolved$n0 + unresolved$n1
+  unresolved <- as.list(unresolved)
+  unresolved$nt.extra <- nt.extra
+
+  unresolved$len <- cache$len[unresolved$target]
+
+  unresolved
 }
+
+## For historical and debugging purposes, not used directly in the
+## calculations, but branches function is generated this way
+## internally.
+make.branches.bisse <- function(cache, control)
+  make.branches.dtlik(cache$info, control)
 
 ## This is here for reference, but not exported yet.  It should be
 ## tweaked in several ways
@@ -306,35 +263,5 @@ all.models.bisse <- function(f, p, ...) {
        ans3=ans3)
 }
 
-check.unresolved <- function(cache, unresolved, nt.extra) {
-  if ( is.null(unresolved) ) {
-    return(NULL)
-  } else if ( nrow(unresolved) == 0 ) {
-    warning("Ignoring empty 'unresolved' argument")
-    return(NULL)
-  }
-
-  required <- c("tip.label", "Nc", "n0", "n1")
-  if ( !all(required %in% names(unresolved)) )
-    stop("Required columns missing from unresolved clades")
-
-  unresolved$tip.label <- as.character(unresolved$tip.label)
-  if ( !all(unresolved$tip.label %in% cache$tip.label) )
-    stop("Unknown tip species in 'unresolved'")
-
-  if ( max(unresolved$Nc + nt.extra) > 200 )
-    stop("The largest unresolved clade supported has %d species",
-         200 - nt.extra)
-
-  unresolved$i <- match(unresolved$tip.label, cache$tip.label)
-  unresolved$target <- cache$tips[unresolved$i]
-
-  unresolved$k   <- unresolved$n1
-  unresolved$nsc <- unresolved$n0 + unresolved$n1
-  unresolved <- as.list(unresolved)
-  unresolved$nt.extra <- nt.extra
-
-  unresolved$len <- cache$len[unresolved$target]
-
-  unresolved
-}
+check.pars.bisse <- function(pars)
+  check.pars.nonnegative(pars, 6)

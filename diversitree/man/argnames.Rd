@@ -1,11 +1,7 @@
 \name{argnames}
 \alias{argnames}
 \alias{argnames<-}
-\alias{argnames.bisse}
-\alias{argnames.geosse}
 \alias{argnames.constrained}
-\alias{argnames<-.bisse}
-\alias{argnames<-.geosse}
 \alias{argnames<-.constrained}
 
 \title{Argument Names for Vector-Argument Functions}
@@ -22,8 +18,6 @@
 \usage{
 argnames(x, ...)
 argnames(x) <- value
-\method{argnames}{bisse}(x, ...)
-\method{argnames}{bisse}(x) <- value
 \method{argnames}{constrained}(x, ...)
 \method{argnames}{constrained}(x) <- value
 }

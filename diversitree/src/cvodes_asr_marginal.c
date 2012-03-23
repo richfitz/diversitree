@@ -111,7 +111,7 @@ void asr_marginal_1(dt_obj *obj, double *pars, int node,
 
   while ( idx != root ) {
     dt_cvodes_run(integrator, vals,
-		  len + idx, 1, depth[idx],
+		  len + idx, 1, depth[idx], /* len[] and length(len) */
 		  obj->comp_idx, obj->comp_n, eps,
 		  &idx, base, lq);
     idx = parent[idx];

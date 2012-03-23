@@ -20,7 +20,7 @@ make.branches.quasse.mol <- function(control) {
   
   f.hi <- make.pde.quasse.mol(nx*r, dx/r, 2L, atol, rtol)
   f.lo <- make.pde.quasse.mol(nx,   dx,   2L, atol, rtol)
-  make.branches.quasse(f.hi, f.lo, control)
+  combine.branches.quasse(f.hi, f.lo, control)
 }
 
 make.pde.quasse.mol <- function(nx, dx, nd, atol, rtol) {

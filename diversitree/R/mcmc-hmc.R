@@ -1,4 +1,11 @@
 ## MCMC updates via Hamiltonian (Hybrid) Monte Carlo (HMC).
+## f  = lik
+## q  = x.init
+## fq = y.init
+## w, lower, upper, control: as usual.
+##
+## f(x) is supposed to compute y with an attribute 'gr' that is the
+## gradient.
 sampler.hmc.bounded <- function(f, q, fq, w, lower, upper,
                                 control) {
   ## The issue here is that I don't get a chance to do any error

@@ -1,32 +1,70 @@
 ## This differs from normal mkn in the interpretation of the arguments
-## only; the actual calculation of the values is passed off to mkn, as
-## usual...
+## only; the actual calculation of the values is passed off to mkn.
+
+## TODO: Updating this to allow missing data will require pulling it
+## apart like make.musse.multitrait().  This should happen at some
+## point.
 
 ## 1: make
 make.mkn.multitrait <- function(tree, states, depth=NULL,
                                 allow.multistep=FALSE,
-                                strict=TRUE,
-                                control=list()) {
+                                strict=TRUE, control=list()) {
+  cache <- make.cache.mkn.multitrait(tree, states, depth,
+                                     allow.multistep, strict,
+                                     control)
+  lik.mkn <- make.mkn(tree, cache$states.mkn, cache$info$k, FALSE,
+                      cache$control.mkn)
+  f.pars <- make.pars.mkn.multitrait(cache)
+
+  ll <- function(pars, root=ROOT.OBS, root.p=NULL,
+                 intermediates=FALSE) {
+    pars2 <- f.pars(pars)
+    lik.mkn(pars2, root, root.p, intermediates)
+  }
+  class(ll) <- c("mkn.multitrait", class(lik.mkn))
+  ll
+}
+
+make.info.mkn.multitrait <- function(n.trait, tr, phy) {
+  k <- 2^n.trait
+  ret <- make.info.mkn(k, phy)
+  ret$name <- "mkn.multitrait"
+  ret$name.pretty <- "Mk(n) (multitrait)"
+  ret$name.ode <- "mkn"
+  ret$mcmc.lowerzero <- FALSE
+  ret$n.trait <- n.trait
+  ret$argnames <- colnames(tr)
+  ret
+}
+
+make.cache.mkn.multitrait <- function(tree, states, depth,
+                                      allow.multistep, strict,
+                                      control) {
+  n.trait <- ncol(states)
+  k <- 2^n.trait
+  
+  if ( is.null(control$method) )
+    control$method <- if (n.trait > 3) "ode" else "mkn"
+
+  states <- check.states.musse.multitrait(tree, states, strict=strict,
+                                          strict.vals=0:1)
   ## TODO: This cannot be hard to do, if I can do it in MuSSE!
+  ## The main issue is getting ode and exp to agree.
   if ( any(is.na(states)) )
     stop("Missing data not yet allowed")
 
-  n.trait <- ncol(states)
-  k <- 2^n.trait
-
-  if ( is.null(control$method) )
-    control$method <- if (n.trait > 3) "ode" else "mkn"
-  control <- check.control.mkn(control, k)
-  
-  states <- check.states.musse.multitrait(tree, states, strict=strict,
-                                          strict.vals=0:1)
-
+  ## #### Make new states
+  ## TODO/NEW:
+  ## I think that this is actually somewhat general, and something
+  ## very similar is used in initial.tip.musse.multitrait().
+  ## I should make a file 'multitrait' and pull general support stuff
+  ## like that into that file.
   code <- as.matrix(states)
   storage.mode(code) <- "character"
   code[is.na(code)] <- "."
   code <- apply(code, 1, paste, collapse="")
   types <- unique(code)
-  
+
   ## This is the "key"; the mapping from a series of binary traits
   ## onto the Mk mapping
   key <- apply(do.call(expand.grid, rep(list(0:1), n.trait)),
@@ -34,72 +72,17 @@ make.mkn.multitrait <- function(tree, states, depth=NULL,
 
   states.mkn <- match(code, types)
   names(states.mkn) <- rownames(states)
+  cache$states.mkn <- states.mkn
+  ## #### End
 
-  tr <- mkn.multitrait.translate(n.trait, depth,
-                                 colnames(states),
-                                 allow.multistep)
-
-  lik <- make.mkn(tree, states.mkn, k, FALSE, control)
-
-  ll.mkn <- function(pars, root=ROOT.OBS, root.p=NULL,
-                     intermediates=FALSE, pars.only=FALSE) {
-    pars2 <- drop(tr %*% pars)
-    if ( pars.only )
-      pars2
-    else
-      lik(pars2, root=root, root.p=root.p,
-          intermediates=intermediates)
-  }
-
-  class(ll.mkn) <- c("mkn.multitrait", "mkn", "function")
-  attr(ll.mkn, "k") <- k
-  attr(ll.mkn, "n.trait") <- n.trait
-  ll.mkn
+  cache$control.mkn <- control
+  cache$tr <- mkn.multitrait.translate(n.trait, depth,
+                                       colnames(states),
+                                       allow.multistep)
+  cache$info <- make.info.mkn.multitrait(n.trait, cache$tr, tree)  
+  cache
 }
 
-## 2: print
-print.mkn.multitrait <- function(x, ...) {
-  cat("Mkn (Multitrait) likelihood function:\n")
-  print(unclass(x))
-}
-
-## 3: argnames / argnames <-
-argnames.mkn.multitrait <- function(x, k=attr(x, "k"), ...) {
-  ret <- attr(x, "argnames")
-  if ( is.null(ret) ) {
-    colnames(environment(x)$tr)
-  } else {
-    ret
-  }
-}
-`argnames<-.mkn.multitrait` <- function(x, value) {
-  stop("Not yet implemented")
-}
-
-## 4: find.mle
-## I think that nlminb is not doing a good job with complicated models
-## here.
-find.mle.mkn.multitrait <- function(func, x.init, method,
-                                    fail.value=NA, ...) {
-  if ( missing(method) )
-    method <- "subplex"
-  NextMethod("find.mle", method=method, class.append="fit.mle.mkn")
-}
-## Zero is no longer an appropriate lower bound, as the effects can
-## just as easily be negative.  We will just have to find bounds by
-## trial and error; the function won't allow movement of the
-## underlying basis into the negative region.
-mcmc.mkn.multitrait <- mcmc.default
-
-## 5: make.cache
-
-## 6: ll is done within make.musse.multitrait
-
-## 7: initial.conditions (unchanged from mkn)
-
-## 8: branches (unchanged from musse)
-
-## Parameter translation
 mkn.multitrait.translate <- function(n.trait, depth=NULL,
                                      names=NULL,
                                      allow.multistep=FALSE) {
@@ -116,4 +99,20 @@ mkn.multitrait.translate <- function(n.trait, depth=NULL,
     stop("requested depth too large")
 
   reparam.q(n.trait, depth, names, allow.multistep)
+}
+
+make.pars.mkn.multitrait <- function(cache) {
+  n.trait <- cache$n.trait
+  k <- cache$info$k
+  tr <- cache$tr
+  npar <- ncol(tr)
+  f.pars <- make.pars.mkn(k)
+
+  function(pars) {
+    if ( length(pars) != npar )
+      stop(sprintf("Invalid length parameters (expected %d)", 
+                   npar))
+    pars.mkn <- drop(tr %*% pars)
+    f.pars(pars.mkn)
+  }
 }

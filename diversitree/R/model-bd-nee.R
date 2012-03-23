@@ -1,100 +1,70 @@
-## The B-D model is different to the others in that I am not using
-## most of the infrastructure - instead the entire calculations are
-## done at once.
+## Nee 1994 equations.
+make.cache.bd.nee <- function(tree=NULL, sampling.f=NULL,
+                              unresolved=NULL, times=NULL) {
+  if ( !is.null(sampling.f) && !is.null(unresolved) )
+    stop("Cannot specify both sampling.f and unresolved")
+  sampling.f <- check.sampling.f(sampling.f, 1)
+  unresolved <- check.unresolved.bd(tree, unresolved)
 
-## Models should provide:
-##   1. make
-##   2. print
-##   3. argnames / argnames<-
-##   4. find.mle
-## Generally, make will require:
-##   5. make.cache (also initial.tip, root)
-##   6. ll
-##   7. initial.conditions
-##   8. branches
-##   9. branches.unresolved
+  if ( is.null(times) ) { # proper tree
+    tree <- check.tree(tree)
+    times <- branching.times(tree)
+  } else { ## Special case...
+    if ( !is.null(tree) )
+      stop("Can only supply times if tree=NULL")
+  }
 
-## 1: make
-make.bd.nee <- function(tree, sampling.f=NULL, unresolved=NULL,
-                        times=NULL) { 
-  cache <- make.cache.bd.nee(tree, times, sampling.f, unresolved)
+  times <- as.numeric(sort(times, decreasing=TRUE))
+  x <- c(NA, times)
+  N <- length(x)
+  n.node <- length(times) # == tree$Nnode
 
-  ## This allows r < 0, a > 1.  a < 0 is not allowed though
-  ## Also, if r < 0, then a must > 1 (and vv.).  XOR captures this.
-  ##   if ( a < 0 || sign(1-a) != sign(r) ) return(-Inf)
-  ## Alternatively, just enforce all(pars > 0)?
-  ll <- function(pars, condition.surv=TRUE) {
-    N <- cache$N
-    x <- cache$x
-    f <- cache$f
-    unresolved <- cache$unresolved
+  list(N=N, x=x, f=sampling.f, unresolved=unresolved, n.node=n.node)
+}
 
-    check.pars.bd(pars)
+make.all.branches.bd.nee <- function(cache, control) {
+  N <- cache$N
+  x <- cache$x
+  f <- cache$f
+  unresolved <- cache$unresolved
+
+  sum.x.3.N <- sum(x[3:N])
+  N.fact <- lfactorial(N - 1)
+
+  function(pars, intermediates, preset=NULL) { # preset ignored 
     if ( pars[2] == pars[1] )
       pars[1] <- pars[1] + 1e-12
     r <- pars[[1]] - pars[[2]]
     a <- pars[[2]] / pars[[1]]
 
     if ( f < 1 )
-      loglik <- lfactorial(N - 1) +
-        (N - 2) * log(f*abs(r)) + N * log(abs(1 - a)) +
-          r * sum(x[3:N]) -
-            2*sum(log(abs(f * exp(r * x[2:N]) - a + 1 - f)))
-    else # this may not be faster enough to warrant keeping.
-      loglik <- lfactorial(N - 1) +
-        (N - 2) * log(abs(r)) + N * log(abs(1 - a)) + r * sum(x[3:N]) -
-          2*sum(log(abs(exp(r * x[2:N]) - a)))
-
-    if ( !condition.surv )
-      loglik <- loglik +
-        log(f * f * r * (1 - a)) -
-          2*log(abs(exp(-r * x[2])*(a - 1 + f) - f))
-
+      loglik <- N.fact +
+        (N - 2) * log(f*abs(r)) + N * log(abs(1 - a)) + r * sum.x.3.N -
+          2*sum(log(abs(f*exp(r * x[2:N]) - a + 1 - f)))
+    else
+      loglik <- N.fact +
+        (N - 2) * log(  abs(r)) + N * log(abs(1 - a)) + r * sum.x.3.N -
+          2*sum(log(abs(  exp(r * x[2:N]) - a        )))
     if ( !is.null(unresolved) ) {
       ert <- exp(r * unresolved$t)
       loglik <- loglik +
         sum((unresolved$n-1) * (log(abs(ert - 1)) - log(abs(ert - a))))
     }
 
-    loglik
+    ## At some point, this should be e.root only.  See derivations.pdf
+    e <- log(f * f * r * (1 - a)) -
+      2*log(abs(exp(-r * x[2])*(a - 1 + f) - f))
+    list(vals=c(loglik, e))
   }
-  class(ll) <- c("bd", "function")
-  ll
 }
 
-## 5: make.cache
-make.cache.bd.nee <- function(tree=NULL, times=NULL,
-                          sampling.f=NULL, unresolved=NULL) {
-  if ( !is.null(times) && !is.null(tree) ) {
-    stop("times cannot be specified if tree given")
-  } else if ( is.null(times) && is.null(tree) ) {
-    stop("Either times or tree must be specified")
-  } else if ( is.null(times) ) {
-    tree <- check.tree(tree)
-    times <- as.numeric(sort(branching.times(tree), decreasing=TRUE))
-  } else {
-    times <- as.numeric(sort(times, decreasing=TRUE))
-  }
-
-  unresolved <- check.unresolved.bd(tree, unresolved)
-
-  if ( !is.null(sampling.f) && !is.null(unresolved) )
-    stop("Cannot specify both sampling.f and unresolved")
-  else
-    sampling.f <- check.sampling.f(sampling.f, 1)
-
-  x <- c(NA, times)
-  N <- length(x)
-
-  if ( is.null(tree) ) {
-    tot.len <- sum(diff(times[1] - c(times, 0)) *
-                   2:(length(times) + 1))
-    n.node <- length(times)
-  } else {
-    tot.len <- sum(tree$edge.length)
-    n.node <- tree$Nnode
-  }
-
-  list(N=N, x=x, f=sampling.f, unresolved=unresolved, tot.len=tot.len,
-       n.node=n.node)
+rootfunc.bd.nee <- function(res, pars, condition.surv,
+                            intermediates) {
+  if ( intermediates )
+    stop('intermediates cannot be produced -- use method="ode"')
+  vals <- res$vals  
+  loglik <- vals[[1]]
+  if ( !condition.surv ) # notice this is opposite to usual!
+    loglik <- loglik + vals[[2]]
+  loglik
 }

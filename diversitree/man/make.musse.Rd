@@ -99,7 +99,7 @@ argnames(lik.m) # MuSSE: 1/2
 
 ## You can get the expected argument order for any number of states
 ## this way (sorry - clunky).  The help file also lists the order.
-diversitree:::argnames.musse(NULL, 3)
+diversitree:::default.argnames.musse(3)
 
 ## Here are the parameters:
 pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3

@@ -17,7 +17,8 @@ exponential.t(t, y0, y1, r)
 sigmoid.t(t, y0, y1, tmid, r)
 stepf.t(t, y0, y1, tc)
 
-make.pars.t(functions)
+make.pars.t(functions, cache=NULL, check.negative.const=TRUE,
+            check.negative.var=TRUE)
 }
 
 \arguments{
@@ -41,6 +42,12 @@ make.pars.t(functions)
 
   \item{functions}{A list of functions with \code{t} as their first
     argument.}
+
+  \item{cache}{Internal use -- please leave \code{NULL}.}
+
+  \item{check.negative.const, check.negative.var}{Logicals, indicating
+    if negative parameters should be checked for, for time-constant and
+    time-varying parameters respectively.}
 }
 
 \details{

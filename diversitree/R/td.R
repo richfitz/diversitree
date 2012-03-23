@@ -1,7 +1,24 @@
 ## Time chunks.
 
-## The make.branches.td function converts a normal "branches" function
-## into a time-dependent function.
+make.all.branches.td.dtlik <- function(cache, control,
+                                       initial.conditions) {
+  control <- check.control.ode(control)
+
+  if ( control$backend == "CVODES" ) {
+    stop("CVODES not yet available for time-varying models")
+  } else {
+    branches.td <- make.branches.td.dtlik(cache$info, control)
+    initial.conditions.td <-
+      make.initial.conditions.td(initial.conditions)
+    function(pars, intermediates, preset=NULL)
+      all.branches.matrix(pars, cache, initial.conditions.td,
+                          branches.td, preset)
+  }
+}
+
+make.branches.td.dtlik <- function(info, control)
+  make.branches.td(make.branches.dtlik(info, control))
+
 make.branches.td <- function(branches) {
   function(y, len, pars, t0, idx) {
     t <- pars[,1]
@@ -52,27 +69,51 @@ make.initial.conditions.td <- function(initial.conditions) {
     initial.conditions(init, get.par.td(pars, t), t, idx)
 }
 
+make.rootfunc.td <- function(cache, rootfunc) {
+  t.root <- cache$depth[cache$root]
+  function(ans, pars, condition.surv, root, root.p, intermediates) {
+    if ( root == ROOT.EQUI )
+      stop(paste("Can't use ROOT.EQUI:", 
+                 "stationary frequencies are messy for time models."))
+    rootfunc(ans, get.par.td(pars, t.root), condition.surv, root,
+             root.p, intermediates)
+  }
+}
+
+## TODO/NEW: try this:
+## make.rootfunc.t <- function(cache, rootfunc) {
+##   t.root <- cache$depth[cache$root]
+##   function(ans, pars, ...)
+##     rootfunc(ans, get.par.td(pars, t.root), ...)
+## }
+
+
+update.info.td <- function(info, n.epoch) {
+  n.epoch <- check.n.epoch(n.epoch)
+  argnames.td <- c(sprintf("t.%d", seq_len(n.epoch-1)),
+                   argnames.twopart(info$argnames, n.epoch))
+
+  info$time.chunks <- TRUE
+  info$argnames <- argnames.td
+  info$name.ode <- info$name
+  info$name.pretty <- sprintf("%s (time-chunks)", info$name.pretty)
+  info$name <- sprintf("%s.td", info$name)  
+
+  info$n.epoch <- n.epoch
+  info
+}
+
+######################################################################
+## Parameter generator function:
 get.par.td <- function(pars, t)
   pars[which(pars[,1] > t)[1],-1]
 
-## This is identical to the version in diversitree-branches.R, except
-## for the root parameter treatment.
-ll.xxsse.td <- function(pars, cache, initial.conditions,
-                        branches, condition.surv, root, root.p,
-                        intermediates) {
-  pars.root <- get.par.td(pars, cache$depth[cache$root])
-  
-  ans <- all.branches.matrix(pars, cache, initial.conditions, branches)
-  vals <- ans$init[,cache$root]
-  root.p <- root.p.xxsse(vals, pars.root, root, root.p)
-  loglik <- root.xxsse(vals, pars.root, ans$lq, condition.surv,
-                       root.p)
-
-  if ( intermediates ) {
-    ans$root.p <- root.p
-    attr(loglik, "intermediates") <- ans
-    attr(loglik, "vals") <- vals
-  }
-
-  loglik  
+######################################################################
+## Checking
+check.n.epoch <- function(n.epoch) {
+  n.epoch <- check.integer(n.epoch)
+  if ( !is.finite(n.epoch) || n.epoch < 1 )
+    stop("n.epoch must be finite and at least 1")
+  n.epoch
 }
+

@@ -4,7 +4,10 @@
 \title{Mk2 and Mk-n Models of character evolution [temporary extension
   with derivatives]}
 
-\description{Currently a restricted-feature-set version of
+\description{
+  \strong{Not currently working}
+
+  Currently a restricted-feature-set version of
   \code{\link{make.mkn}}, but including gradient (first derivative)
   information along with the likelihood.  Currently lacks several
   features of the full \code{mkn} model: no support for missing trait
@@ -31,8 +34,4 @@
 
 \author{Richard G. FitzJohn}
 \keyword{models}
-
-
-
-
 

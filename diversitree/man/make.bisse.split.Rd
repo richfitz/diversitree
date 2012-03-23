@@ -79,16 +79,13 @@ nodes.i <- match(nodes, phy$node.label) + length(phy$tip.label)
 
 nodelabels(node=nodes.i, pch=19, cex=2, col="#FF000099")
 
-## Split these at the base of the branch
-split.t <- Inf
-
 ## To make a split BiSSE function, pass the node locations and times in:
-lik.s <- make.bisse.split(phy, phy$tip.state, nodes.i, split.t)
+lik.s <- make.bisse.split(phy, phy$tip.state, nodes.i)
 
 ## The parameters must be a list of the same length as the number of
 ## partitions.  Partition '1' is the root partition, and partition i is
 ## the partition rooted at the node[i-1]
-pars4 <- rep(list(pars), 4)
+pars4 <- rep(pars, 4)
 pars4
 
 ## Run the likelihod calculation:
@@ -98,7 +95,7 @@ lik.s(pars4) # -93.62479
 lik.s(pars4) - lik.b(pars)
 
 ## You can use the labelled nodes rather than indices:
-lik.s2 <- make.bisse.split(phy, phy$tip.state, nodes, split.t)
+lik.s2 <- make.bisse.split(phy, phy$tip.state, nodes)
 identical(lik.s(pars4), lik.s2(pars4))
 
 ## This also works where some tips are unresolved clades.  Here are a
@@ -109,12 +106,12 @@ unresolved <-
 
 ## Plain BiSSE with unresolved clades:
 lik.u.b <- make.bisse(phy, phy$tip.state, unresolved=unresolved)
-lik.u.b(pars) # -139.3669
+lik.u.b(pars) # -139.3688
 
 ## Split BiSSE with unresolved clades:
-lik.u.s <- make.bisse.split(phy, phy$tip.state, nodes, split.t,
+lik.u.s <- make.bisse.split(phy, phy$tip.state, nodes,
                             unresolved=unresolved)
-lik.u.s(pars4) # -139.3669
+lik.u.s(pars4) # -139.3688
 
 lik.u.b(pars) - lik.u.s(pars4) # numerical error only
 }

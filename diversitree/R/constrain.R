@@ -1,14 +1,102 @@
-## This is still useful:
 argnames <- function(x, ...)
   UseMethod("argnames")
 `argnames<-` <- function(x, value)
   UseMethod("argnames<-")
-`argnames<-.constrained` <- function(x, value) {
-  stop("Cannot set argnames on constrained function")
-}
-argnames.constrained <- function(x, ...)
-  environment(x)$names.rhs
 
+argnames.constrained <- function(x, ...)
+  attr(x, "argnames")
+`argnames<-.constrained` <- function(x, value)
+  stop("Cannot set argnames on constrained function")
+
+is.constrained <- function(x)
+  inherits(x, "constrained")
+
+## First up, consider the one-shot case: don't worry about incremental
+## updates.
+## 
+## For the first case, everything is OK on the lhs and rhs
+## For subsequent cases:
+##   lhs cannot contain things that are
+##      - constrained things (already lhs anywhere)
+##      - things constrained to (things on the rhs anywhere)
+##   rhs cannot contain things that are
+##      - constrained things (already lhs anywhere)
+## It is possibly worth pulling out all the numerical constants and
+## the "paired" parameters here to avoid using eval where
+## unnecessary.  However, this makes the function substantially uglier
+## for a very minor speedup.
+constrain <- function(f, ..., formulae=NULL, names=argnames(f),
+                      extra=NULL) {
+  if ( is.constrained(f) ) {
+    formulae <- c(attr(f, "formulae"), formulae)
+    f <- attr(f, "func")
+  }
+
+  formulae <- c(formulae, list(...))
+  names.lhs <- names.rhs <- names
+  rels <- list()
+  
+  for ( formula in formulae ) {
+    res <- constrain.parse(formula, names.lhs, names.rhs, extra)
+    if ( attr(res, "lhs.is.target") ) {
+      i <- which(sapply(rels, function(x) identical(x, res[[1]])))
+      rels[i] <- res[[2]]
+
+      ## This will not work with *expressions* involving the LHS; that
+      ## would require rewriting the expressions themselves (which
+      ## would not be too hard to do).  But for now let's just cause
+      ## an error...
+      lhs.txt <- as.character(res[[1]])
+      if ( any(sapply(rels, function(x) lhs.txt %in% all.vars(x))) )
+        stop(sprintf("lhs (%s) is in an expression and can't be constrained",
+                     lhs.txt))
+    }
+    
+    names.lhs <- setdiff(names.lhs, unlist(lapply(res, all.vars)))
+    names.rhs <- setdiff(names.rhs, as.character(res[[1]]))
+    rels <- c(rels, structure(res[2], names=as.character(res[[1]])))
+  }
+
+  i <- match(unique(sapply(rels, as.character)), extra)
+  final <- c(extra[sort(i[!is.na(i)])], names.rhs)
+  npar <- length(final)
+
+  ## "free" are the parameters that have nothing special on their RHS
+  ## and are therefore passed directly through
+  free <- setdiff(names.rhs, names(rels))
+  free.i <- match(free, names) # index in full variables
+  free.j <- match(free, final) # index in given variables.
+
+  ## Targets are processed in the same order as given by formulae. 
+  target.i <- match(names(rels), names)
+
+  pars.out <- rep(NA, length(names))
+  names(pars.out) <- names
+  g <- function(pars, ..., pars.only=FALSE) {
+    if ( length(pars) != npar )
+      stop(sprintf("Incorrect parameter length: expected %d, got %d",
+                   npar, length(pars)))
+
+    pars.out[free.i] <- pars[free.j]
+    e <- structure(as.list(pars), names=final)
+    pars.out[target.i] <- unlist(lapply(rels, eval, e))
+
+    if ( pars.only )
+      pars.out
+    else
+      f(pars.out, ...)
+  }
+
+  class(g) <- c("constrained", class(f))
+  attr(g, "argnames") <- final
+  attr(g, "formulae") <- formulae
+  attr(g, "extra") <- extra
+  attr(g, "func") <- f
+  g
+}
+
+
+## Parsing constraints:
 ## The LHS of a formula must be a single variable name that exists in
 ## "names.lhs"
 ##
@@ -81,134 +169,30 @@ constrain.parse <- function(formula, names.lhs, names.rhs,
   res
 }
 
-## First up, consider the one-shot case: don't worry about incremental
-## updates.
+constrain.i <- function(f, p, i.free) {
+  npar <- length(i.free)
+  argnames <- try(argnames(f), silent=TRUE)
+  if ( inherits(argnames, "try-error") )
+    argnames <- NULL
+  else if ( length(p) != length(argnames) )
+    stop(sprintf("Incorrect parameter length: expected %d, got %d",
+                 length(argnames), length(p)))
 
-## For the first case, everything is OK on the lhs and rhs
-## For subsequent cases:
-##   lhs cannot contain things that are
-##      - constrained things (already lhs anywhere)
-##      - things constrained to (things on the rhs anywhere)
-##   rhs cannot contain things that are
-##      - constrained things (already lhs anywhere)
-## It is possibly worth pulling out all the numerical constants and
-## the "paired" parameters here to avoid using eval where
-## unnecessary.  However, this makes the function substantially uglier
-## for a very minor speedup.
-constrain <- function(f, ..., formulae=NULL, names=argnames(f),
-                      extra=NULL) {
-  if ( inherits(f, "constrained") ) {
-    formulae <- c(attr(f, "formulae"), formulae)
-    f <- attr(f, "func")
-  }
-
-  formulae <- c(formulae, list(...))
-  names.lhs <- names.rhs <- names
-  rels <- list()
-  
-  for ( formula in formulae ) {
-    res <- constrain.parse(formula, names.lhs, names.rhs, extra)
-    if ( attr(res, "lhs.is.target") ) {
-      i <- which(sapply(rels, function(x) identical(x, res[[1]])))
-      rels[i] <- res[[2]]
-
-      ## This will not work with *expressions* involving the LHS; that
-      ## would require rewriting the expressions themselves (which
-      ## would not be too hard to do).  But for now let's just cause
-      ## an error...
-      lhs.txt <- as.character(res[[1]])
-      if ( any(sapply(rels, function(x) lhs.txt %in% all.vars(x))) )
-        stop(sprintf("lhs (%s) is in an expression and can't be constrained",
-                     lhs.txt))
-    }
-    
-    names.lhs <- setdiff(names.lhs, unlist(lapply(res, all.vars)))
-    names.rhs <- setdiff(names.rhs, as.character(res[[1]]))
-    rels <- c(rels, structure(res[2], names=as.character(res[[1]])))
-  }
-
-  i <- match(unique(sapply(rels, as.character)), extra)
-  final <- c(extra[sort(i[!is.na(i)])], names.rhs)
-  npar <- length(final)
-
-  ## "free" are the parameters that have nothing special on their RHS
-  ## and are therefore passed directly through
-  free <- setdiff(names.rhs, names(rels))
-  free.i <- match(free, names) # index in full variables
-  free.j <- match(free, final) # index in given variables.
-
-  ## Targets are processed in the same order as given by formulae. 
-  target.i <- match(names(rels), names)
-
-  pars <- rep(NA, length(names))
-  names(pars) <- names
-  g <- function(x, ..., pars.only=FALSE) {
-    if ( length(x) != npar )
-      stop(sprintf("x of wrong length (expected %d)", npar))
-
-    pars[free.i] <- x[free.j]
-    e <- structure(as.list(x), names=final)
-    pars[target.i] <- unlist(lapply(rels, eval, e))
-
-    if ( pars.only )
-      pars
-    else
-      f(pars, ...)
-  }
-
-  class(g) <- c("constrained", class(f))
-  attr(g, "argnames") <- final
-  attr(g, "formulae") <- formulae
-  attr(g, "extra") <- extra
-  attr(g, "func") <- f
-  g
-}
-
-argnames.constrained <- function(x, ...)
-  attr(x, "argnames")
-
-print.constrained <- function(x, ...) {
-  rels <- environment(x)$rels
-  NextMethod("print")
-  cat("Free parameters:", paste(argnames(x), collapse=", "), "\n")
-  cat("Constraints:\n")
-  cat(sprintf("\t%s ~ %s\n", names(rels),
-              unlist(lapply(rels, deparse))))
-}
-
-update.constrained <- function(object, free, ...) {
-  func <- attr(object, "func")
-  formulae <- attr(object, "formulae")
-  extra <- attr(object, "extra")
-
-  lhs <- sapply(formulae, function(x) as.character(x[[2]]))
-  i <- match(free, lhs)
-  if ( any(is.na(i)) )
-    stop("Variable(s) ", paste(free[i], collapse=", "),
-         " are not constrained")
-  formulae <- formulae[-i]
-  if ( length(formulae) > 0 )
-    constrain(func, formulae=formulae, extra=extra)
-  else
-    func
-}
-
-## This is a simple constraining function...information coming soon
-## (not exported)
-constrain.i <- function(f, p, i) {
-  n <- length(i)
-  g <- function(x, ...) {
-    if ( length(x) != n )
+  pars.out <- p
+  g <- function(pars, ..., pars.only=FALSE) {
+    if ( length(pars) != npar )
       stop(sprintf("Incorrect parameter length: expected %d, got %d",
-                   n, length(x)))
-    p[i] <- x
-    f(p, ...)
+                   npar, length(pars)))
+    pars.out[i.free] <- pars
+    if ( pars.only )
+      pars.out
+    else
+      f(pars.out, ...)
   }
 
-  class(g) <- c("constrained.i", class(f)) # HACK!
-  tmp <- try(argnames(f), silent=TRUE)
-  if ( !inherits(tmp, "try-error") && !is.null(tmp) )
-    attr(g, "argnames") <- tmp[i]
+  class(g) <- c("constrained.i", "constrained", class(f))
+  if ( !is.null(argnames) )
+    attr(g, "argnames") <- argnames[i.free]
   attr(g, "func") <- f
   g
 }
