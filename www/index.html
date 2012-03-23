@@ -71,55 +71,16 @@ source('http://www.zoology.ubc.ca/prog/diversitree/logo.R')]" />
        al. 1994</a>).
      </p>
 
+     <p><b>Install diversitree</b> from within R:</p>
+     <pre>install.packages("diversitree")</pre>
+     <p>or see <a href="#source">below</a> for more information, or
+     for installation from source.</p>
+
       <h2>applications</h2>
       <p>
 	Diversitree has been used in a number of <a
 	href="studies.html">studies</a>.  If you use diversitree in a
 	paper, please let me know!
-      </p>
-
-      <h2>Download &amp; installation</h2>
-      <p>The simplest route is to install the package through R:</p>
-      <pre>install.packages("diversitree")</pre>
-      <p>will install diversitree from CRAN (<a
-      href="http://cran.r-project.org/web/packages/diversitree/">current
-      CRAN version</a>: 0.7-2: a new version has been uploaded and
-      will be compiled/spread over the mirrors in a few days)</p>
-
-      <p>Alternatively, diversitree can be installed from source.
-      Download the source package from 
-      <a href="diversitree_0.9-1.tar.gz">here</a> (current version
-      0.9-1).
-      </p>
-      <p>It is important that this file is not uncompressed by your
-      browser.  If the file is downloaded without the "gz" extension,
-      try right-clicking the file and selecting "Save file as" (or
-      similar depending on your browser).  Mac users might try
-      </p>
-      <pre>curl -O http://www.zoology.ubc.ca/prog/diversitree/diversitree_0.9-1.tar.gz</pre>
-      <p>
-	from the command line.
-      </p>
-
-      <p>
-	This download is a source package only; you will need a
-	working C and Fortran compiler to install the package.  (Xcode +
-	<a href="http://r.research.att.com/tools/">gfortran</a> is
-	sufficient on Mac OS X, most Linux systems are probably fine
-	as-is, and on windows consider <a
-	href="http://www.mingw.org/">MinGW</a> or the tools <a
-	href="http://www.murdoch-sutherland.com/Rtools/">here</a>).
-	First, install the packages <a
-	href="http://cran.r-project.org/web/packages/deSolve/index.html">deSolve</a>,
-	<a
-	    href="http://cran.r-project.org/web/packages/ape/index.html">ape</a>,
-	and <a
-	href="http://cran.r-project.org/web/packages/subplex/index.html">subplex</a>
-	From within R, run
-      </p>
-      <pre>install.packages("diversitree_0.9-1.tar.gz", repos=NULL, type="source")</pre>
-      <p>
-	which will compile and install the package.
       </p>
 
       <p>See <a href="installation.html">here</a> for more information, for
@@ -161,6 +122,59 @@ source('http://www.zoology.ubc.ca/prog/diversitree/logo.R')]" />
       <p>
 	A history of previous releases, and copies of previous
 	versions, can be found <a href="changes.html">here</a>.
+      </p>
+
+      <a name="source"></a>
+      <h2>Download &amp; installation</h2>
+      <p>The simplest route is to install the package through R:</p>
+      <pre>install.packages("diversitree")</pre>
+      <p>which will install diversitree from CRAN (<a
+      href="http://cran.r-project.org/web/packages/diversitree/">current
+      CRAN version</a>: 0.9-1)</p>
+
+      <p>Alternatively, diversitree can be installed from source.
+      Download the source package from 
+      <a href="diversitree_0.9-1.tar.gz">here</a> (current version
+      0.9-1).
+      </p>
+      <p>It is important that this file is not uncompressed by your
+      browser.  If the file is downloaded without the "gz" extension,
+      try right-clicking the file and selecting "Save file as" (or
+      similar depending on your browser).  Mac users might try
+      </p>
+      <pre>curl -O http://www.zoology.ubc.ca/prog/diversitree/diversitree_0.9-1.tar.gz</pre>
+      <p>
+	from the command line.
+      </p>
+
+      <p>
+	This download is a source package only; you will need a
+	working C and Fortran compiler to install the package.  (Xcode +
+	<a href="http://r.research.att.com/tools/">gfortran</a> is
+	sufficient on Mac OS X, most Linux systems are probably fine
+	as-is, and on windows consider <a
+	href="http://www.mingw.org/">MinGW</a> or the tools <a
+	href="http://www.murdoch-sutherland.com/Rtools/">here</a>).
+	First, install the packages <a
+	href="http://cran.r-project.org/web/packages/deSolve/index.html">deSolve</a>,
+	<a
+	    href="http://cran.r-project.org/web/packages/ape/index.html">ape</a>,
+	and <a
+	href="http://cran.r-project.org/web/packages/subplex/index.html">subplex</a>
+	From within R, run
+      </p>
+      <pre>install.packages("diversitree_0.9-1.tar.gz", repos=NULL, type="source")</pre>
+      <p>
+	which will compile and install the package.
+      </p>
+
+      <p>diversitree is also on github -- <a
+      href="https://github.com/richfitz/diversitree">github.com/richfitz/diversitree</a>.
+      If you want to play with the sources, this is probably the place
+      to get it.  Please let me know if you do though.  Also, be aware
+      that I use this as a backup and the version on github may not
+      compile, may work incorrectly, or cause any number of problems
+      for your analyses.
       </p>
 
       <h2>References</h2>

@@ -25,7 +25,7 @@ make.branches.dtlik.t <- function(info, control) {
       br(y, len, list(pars, e), t0, idx)
   } else {
     ## I can't quite remember why this works...
-    setfunc <- sprintf("r_set_tfunc_%s", name)
+    setfunc <- sprintf("r_set_tfunc_%s", info$name)
     dummy <- rep(0.0, info$np)
     function(y, len, pars, t0, idx) {
       .Call(setfunc, pars, e, PACKAGE=dll)

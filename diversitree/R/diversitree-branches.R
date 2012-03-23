@@ -385,7 +385,7 @@ make.branches.lsoda <- function(info, control=list()) {
   eps      <- control$eps
   tol      <- control$tol  
   branches <- function(y, len, pars, t0, idx)
-    t(lsoda(y, c(t0, t0+len), derivs.mk2new, pars,
+    t(lsoda(y, c(t0, t0+len), derivs, pars,
             rtol=tol, atol=tol)[-1,-1,drop=FALSE])
   make.branches.comp(branches, comp.idx, eps)
 }
