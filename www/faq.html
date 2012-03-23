@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" ?><!-- -*-nxml-*- -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>diversitree: Frequently Asked Questions</title>
+    <link rel="Stylesheet" type="text/css" href="stylesheet.css"
+	  media="all" />
+    <link href='http://fonts.googleapis.com/css?family=Oswald|Vollkorn:400italic,400' rel='stylesheet' type='text/css'/>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22401624-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">Frequently Asked Questions</h1>
+
+    <h2>Large clades</h2>
+    <p class="question">Q: I have really large clades (say 1000+
+    species); is there any way that I can use the "unresolved clade
+    BiSSE" with my tree?</p>
+
+    <p>
+      I don't think that the approach that I use for the unresolved
+      clades will scale to any more than about 200 species (even at
+      that limit, it can be pretty poorly behaved).  There are a
+      couple of reasons for this:
+    </p>
+
+    <p>
+      First, the time requirements grow exponentially (from memory
+      space grows something like n^4, which is pretty nasty,
+      too). Basically, this means that even if you could find the
+      computational power to do a clade of size n, a clade of size n+1
+      could take a thousand years, perhaps.  This is the bane of a
+      huge number of computational problems.
+    </p>
+
+    <p>
+      Second, and more subtly, there is a machine precision issue.
+      Floating point arithmetic can be unreliable for numbers smaller
+      than about 1e-8, and totally useless for numbers smaller than
+      1e-15 (try <code>(1 + 1e-16) - 1</code> in R on most platforms
+      to see what I mean).  Because you are spreading a single unit of
+      probability over an increasingly large space, a huge number of
+      the cells (almost certainly including the one that you end up
+      caring about) will be these really unreliable numbers. I've seen
+      this creep in for clades that are smaller than 200 species where
+      there is moderate extinction rates.
+    </p>
+
+    <h2>Positive log-likelihood values</h2>
+    <p class="question">Q: I am getting positive log likelihood
+    values!  I thought that log likelihoods had to be negative - is
+    this a problem with my tree or with diversitree?</p>
+
+    <p>
+      The log likelihood is just <i>proportional</i> to the
+      probability of observing the data, up to some unknown
+      normalising constant.
+    </p>
+
+    <p>
+      For BiSSE-style models, these generally arise in trees that have
+      a very short root-tip distance.  This means that per unit tree
+      time the speciation rates must be very large (on the order of
+      log(<i>N</i>)/<i>t</i>) for a tree with <i>N</i> tips and
+      root-tip distance <i>t</i>.  At each node, the conditional
+      likelihoods are multiplied by the speciation rates, so there is
+      a multiplication by (<i>(N-1)&lambda;</i>).
+    </p>
+
+    <p>
+      If these bother you, just multiply the branch lengths of your
+      tree:
+    </p>
+    <pre>
+         phy$edge.length &lt;- phy$edge.length * 100
+    </pre>
+    <p>
+      The estimated rates will now be a factor of 100 smaller, and the
+      log likelihoods will probably be negative.
+    </p>
+
+    <h2>deSolve version</h2>
+    <p class="question">
+      Q: I get this warning message when running diversitree:
+    </p>
+
+    <pre>
+         Warning message:
+         In make.ode(derivs, dll, initfunc, neq, safe) :
+         diversitree is not known to work with deSolve>   X.XX.X
+         falling back on slow version</pre>
+    <p class="question">
+      It does seem to run slow. Is there a solution to this, and is
+      this why it is running slow?
+    </p>
+
+    <p>
+      This error message appears whenever the installed deSolve
+      version is more recent than the current diversitree.
+    </p>
+
+    <p>
+      deSolve's ode solvers look up the memory address of the derivative
+      functions every time they are evaluated.  This is a nontrivial
+      operation, and happens for every branch on a tree -- thousands of
+      times during an ML search or MCMC chain.  To get around this, I use
+      non-exported Fortran functions in deSolve directly, and remember the
+      address of the derivative functions after the first lookup.  However,
+      if the definitions of these change R will crash (not an error, but a
+      complete crash).  When the deSolve version is not known to work, this
+      caching is skipped, and the calculations slow down.
+    </p>
+
+    <p>
+    To work around this problem, there are two options:</p>
+    <ol>
+      <li>Downgrade to the previous deSolve version indicated in the
+      warning message.  Older versions can be installed from this <a
+      href="http://cran.r-project.org/src/contrib/Archive/deSolve/">source
+      archive</a>.</li>
+      <li>For Linux and OSX users, pass <code>method="CVODES"</code>
+      to the make.xxx function to use a different backend.  This
+      does not work on windows.</li>
+    </ol>
+    </div>
+
+    <ul class="footer">
+      <li>© 2012 <a href="http://www.zoology.ubc.ca/~fitzjohn">Rich
+      FitzJohn</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="studies.html">Studies</a></li>
+      <li><a href="faq.html">FAQ</a></li>
+      <li><a href="http://cran.r-project.org/web/packages/diversitree">CRAN</a></li>
+    </ul>
+
+  </body>
+</html>
