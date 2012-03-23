@@ -82,7 +82,7 @@
 ## 1e-15 and things like that.  This may not be a problem in reality.
 
 all.branches.matrix <- function(pars, cache, initial.conditions,
-                                branches, preset) {
+                                branches, preset=NULL) {
   len <- cache$len
   depth <- cache$depth
   children <- cache$children
@@ -389,7 +389,6 @@ make.branches.lsoda <- function(info, control=list()) {
             rtol=tol, atol=tol)[-1,-1,drop=FALSE])
   make.branches.comp(branches, comp.idx, eps)
 }
-environment(make.branches.lsoda) <- environment(make.bisse)
 
 make.all.branches.dtlik <- function(cache, control,
                                     initial.conditions) {
@@ -408,6 +407,15 @@ make.all.branches.dtlik <- function(cache, control,
       all.branches.matrix(pars, cache, initial.conditions,
                           branches, preset)
   }
+}
+
+make.all.branches.lsoda <- function(cache, control=list(),
+                                    initial.conditions) {
+  control <- check.control.ode(control)
+  branches <- make.branches.lsoda(cache$info, control)
+  function(pars, intermediates, preset=NULL)
+    all.branches.matrix(pars, cache, initial.conditions,
+                        branches, preset)
 }
 
 ## Utility functions for organising initial conditions.

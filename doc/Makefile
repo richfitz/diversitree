@@ -17,6 +17,15 @@ clean: tidy
 	rm -f cache/diversitree-tutorial-*pdf
 	rm -f diversitree-tutorial.pdf diversitree-tutorial.tex
 
+diversitree-ext.tex: diversitree-ext.Rnw
+	Sweave.sh -t --cache=cache diversitree-ext.Rnw
+	rm -f Rplots.pdf
+
+diversitree-ext.pdf: diversitree-ext.tex
+	pdflatex diversitree-ext
+	pdflatex diversitree-ext
+
+
 
 # all: diversitree-tutorial.pdf
 
