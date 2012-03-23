@@ -1,0 +1,834 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{relsize}
+\usepackage{Sweave}
+\usepackage{natbib}
+\usepackage[garamond]{mathdesign}
+\usepackage{amsmath}
+
+\DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=2em} 
+\DefineVerbatimEnvironment{Scode}{Verbatim}{xleftmargin=2em}
+\fvset{listparameters={\setlength{\topsep}{0pt}}} 
+\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}} 
+\SweaveOpts{keep.source=TRUE}
+
+\usepackage{color}
+\definecolor{navy}{rgb}{0,0,0.4}
+\usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
+
+\newcommand{\code}{\texttt}
+\newcommand\R{\textsf{R}}
+\newcommand{\BiSSE}{\textsc{BiSSE}}
+\newcommand{\MuSSE}{\textsc{MuSSE}}
+\newcommand{\QuaSSE}{\textsc{QuaSSE}}
+\newcommand{\diversitree}{\textsf{diversitree}}
+\newcommand{\deSolve}{\textsf{deSolve}}
+\newcommand{\ape}{\textsf{ape}}
+
+\newcommand{\ud}{\mathrm{d}}
+
+<<results=hide,echo=FALSE>>=
+if ( require(cacheSweave) )
+  setCacheDir("cache")
+@ 
+
+% Because they look like rubbish in the final version:
+<<echo=FALSE,results=hide>>=
+options(show.signif.stars=FALSE)
+@ 
+
+%\VignetteIndexEntry{Extending diversitree}
+%\VignettePackage{diversitree}
+
+\title{Extending \diversitree}
+\author{Rich FitzJohn}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+The \diversitree\ package is set up so that it is relatively
+straightforward to implement new models, and take advantage of a
+number of package features with little effort, such as the maximum
+likelihood inference, MCMC, and support for constraining functions,
+etc.
+
+The package contains a number of support features for writing a model
+where the calculations can be grouped into three types:
+\begin{enumerate}
+\item Propagating variables from the tip to base of a branch
+\item Combining variables at nodes
+\item Combining variables at the root
+\end{enumerate}
+A large number of models can be implemented this way.  It may not
+always be the most efficient, but it can require very little writing.
+
+% Karen says add more about general direction -- flag the book keeping
+% section and possibly also functional programming techniques.
+
+The code below requires that \diversitree\ is loaded.
+<<>>=
+library(diversitree)
+@ 
+There are a number of functions that are used that are not exported
+from the package namespace by default.  Wherever you see a
+``\code{diversitree:::}'' operator, this extracts these hidden
+functions.
+
+\diversitree\ make heavy use of ``functional programming'' techniques.
+In particular, functions are often used as arguments to functions, and
+functions are often returned from functions.  This can be confusing at
+first, but avoids large parameter lists being passed around, and means
+that higher level functions (such as those that we will use below) do
+not need to know anything about how the calculations are being carried
+out.
+
+\section{Re-implementing the Mk2 model}
+
+The Mk2 model already exists in \diversitree, but we'll re-implement
+it here\footnote{The version in \diversitree\ is substantially faster
+  than this version as it is implemented quite differently, but this
+  is a simple model to demonstrate how tip-to-root calculation models
+  can be implemented.}.
+
+There are a couple of key calculation features that we need first: a
+function to compute the probabilities along a branch, and a function
+to combine probabilities at nodes.  After that, we will sort out the
+book-keeping, assemble the likelihood function and test it out.
+
+\subsection{Branch calculations}
+Let $D_i(t)$ be the probability that a branch at some time $t$ before
+the present (at $t=0$) will yield all the observed data descended from
+that branch, and let $q_{ij}$ the the rate of transition from state
+$i$ to $j$.
+%
+Along a single branch, the Mk2 model can be expressed as a pair of
+coupled ordinary differential equations (ODEs):
+\begin{equation}
+  \label{eq:mk2}
+  \begin{split}
+  \frac{\ud D_0(t)}{\ud t} =& -q_{01} D_0(t) + q_{01}D_1(t)\\
+  \frac{\ud D_1(t)}{\ud t} =& -q_{10} D_1(t) + q_{10}D_0(t)
+  \end{split}
+\end{equation}
+For clarity, $D_0(t)$ and $D_1(t)$ are our variables, and $q_{01}$ and
+$q_{10}$ are our parameters.
+
+These can be solved numerically, given initial conditions ${D_0(0),
+  D_1(0)}$, using \deSolve.  The \deSolve\ integrators require
+functions that take three arguments:
+\begin{itemize}
+\item \code{t}: Time at which the derivatives will be evaluated
+  (ignored here, and in most current \diversitree\ models).
+\item \code{y}: Vector of variables.
+\item \code{pars}: Vector of parameters.
+\end{itemize}
+It must return a list, the first (and possibly only) element of which
+is a vector of derivatives of each of the variables.
+%
+We can do this entirely within \R\ code this way (illustrated for
+clarity, not speed):
+<<>>=
+derivs.mk2new <- function(t, y, pars) {
+  D0 <- y[1]
+  D1 <- y[2]
+
+  q01 <- pars[1]
+  q10 <- pars[2]
+
+  dDdt <- c(-q01 * D0 + q01 * D1,
+            -q10 * D1 + q10 * D0)
+
+  list(dDdt)
+}
+@ 
+
+We can test this out with the \code{lsoda} function\footnote{The
+  \deSolve\ package provides an interface to a large number of
+  integrators.  The \code{lsoda} integrator seems to perform well.}.
+We need to specify the initial conditions of the variables, the times
+at which to return the values of the variables, our derivative
+function, and the parameters to pass through to this function.  All
+other arguments are optional.  Here, the initial condition
+``\code{y}'' of \code{c(0,1)} corresponds to a tip in state 1, and the
+time vector ``\code{tt}'' gives equal-spaced times between 0 and 5.
+\code{lsoda} returns a matrix, where each row corresponds to a time in
+the time vector, and the first column is time: this is dropped with
+the \code{[,-1]} below.  The remaining columns represent the different
+variables.
+<<>>=
+y <- c(0, 1)
+tt <- seq(0, 5, length=101)
+pars <- c(.5, 1)
+out <- lsoda(y, tt, derivs.mk2new, pars)[,-1]
+@ 
+
+The variables are shown in figure \ref{fig:mk2-output}.  This plot
+shows the probability of observing a tip in state 1, given that we are
+in state 0 ($D_0(t)$: black solid) or state 1 ($D_1(t)$: red dashed)
+over time.  Close to the present, the data is much more likely if we
+are in the same state as the tip, but as time increases, we converge
+on the stationary distribution for the parameters, indicated by the
+dotted black line (at $\Pr(\mathrm{state} = 1) = q_{01}/(q_{01} +
+q_{10})$).
+
+\begin{figure}
+<<fig=TRUE>>=
+matplot(tt, out, type="l")
+legend("topright", c("State 0", "State 1"), col=1:2, lty=1:2)
+abline(h=pars[1]/sum(pars), lty=3)
+@ 
+\caption{Evolution of the $D$ variables under Mk2 model, starting from
+a tip in state $1$.}
+\label{fig:mk2-output}
+\end{figure}
+
+The integration appears to work.  However, we still have to do a
+little work to convert this into what \diversitree\ needs for
+calculations along branches.  It is not the case here directly, but
+for many problems, the $D$ values shrink over time, and underflow can
+be a problem (the numbers get too small to accurately work with
+because of the finite precision available in floating point
+numbers)\footnote{This is a problem with Mk2, but only because of
+  combining probabilities at nodes, which we will get to later.}  This
+can be avoided by, at the end of the integration, we can sum the data
+columns to get the factor $z$.  We can then remember $\ln(z)$, and
+divide the elements of the returned vector by $z$, so that at least
+one element stays around order 1 (the largest element in the mk2 model
+output will never be smaller than 0.5).
+
+For its branches function, \diversitree\ requires a function that
+takes the arguments
+\begin{itemize}
+\item \code{y}: Initial conditions, as above
+\item \code{len}: Sorted vector of lengths of time for which the
+  integration should performed
+\item \code{pars}: Vector of parameters, as above
+\item \code{t0}: Initial time.
+\item \code{idx}: The branch index (described later)
+\end{itemize}
+These arguments do not all need to be used (often \code{idx} is
+ignored), but they must be present.
+%
+Integration starts at \code{t0}, and runs for length of time
+\code{len[1]} to time \code{t0 + len[1]}, then up to time \code{t0 +
+  len[2]}, and so on.
+%
+The required return value differs from what \deSolve\ returns.
+\diversitree\ expects a list with two elements.  The first element is
+a vector of ``compensation factors'' from above, and the second is a
+matrix with \code{length(y)} rows and \code{length(len)} columns.
+
+% If the output is stored in matrix \code{out}, then the value of the
+% $i$th variable at the $j$th time in \code{len} will be
+% \begin{Soutput}
+%   out[j,i+1] * exp(out[j,1])
+% \end{Soutput}
+% though we will rarely need to compute it this way.
+
+The \code{make.branches.lsoda()} function will convert the derivative
+function above to the required format automatically.   This function
+is not exported by default, so we'll extract it:
+<<>>=
+make.branches.lsoda <- diversitree:::make.branches.lsoda
+@ 
+We must give it list with elements:
+<<>>=
+info <- list(ny=2, idx.d=1:2, derivs=derivs.mk2new)
+@ 
+where \code{ny} is the number of variables ($2$ here), \code{idx.d} is
+the indices of the ``data'' variables, which may become small (here,
+$1$ and $2$ -- both of them), and \code{derivs} is the derivatives
+function as above, in the format that \code{lsoda} expects.  We are
+going to add more things to that list over time.
+
+Generating our function:
+<<>>=
+branches.mk2new <- make.branches.lsoda(info)
+@ 
+The returned function has more arguments:
+<<>>=
+args(branches.mk2new)
+@ 
+And returns a list:
+<<>>=
+out.new <- branches.mk2new(y, tt, pars, 0)
+@ 
+
+\subsection{Calculations at nodes}
+The probability that a node is in state $i$ at a node is just the
+probability that it will yield its two descendant branches, which is
+their product.  The argument list for this function must be
+\code{init}, which is a list of length 2, each element of which are
+the variable values at the base of the daughter branches from the
+current node, \code{pars} (vector of parameters), \code{t} (time, away
+from the present), and \code{is.root} (whether the node is the root
+node).  It must return a vector of variables as output:
+<<ic>>=
+initial.conditions.mk2new <- function(init, pars, t, is.root=FALSE)
+  init[[1]] * init[[2]]
+@
+
+\subsection{Calculations at the root}
+At the root we will have two variables that need combining.  There are
+a number of different ways of doing this.  Here we'll use the simplest
+approach and use a flat prior on the root state: i.e., assume that
+there is a $0.5$ probability for both the root being in state $0$ or
+$1$.
+
+\subsection{Initial conditions, and ``caching'' information about the
+  tree}
+To plan our traversal along the tree, the \code{make.cache} function
+(not exported by default) works out the order in which nodes will be
+processed, and sorts components of the tree appropriately.  First,
+review a few features of tree \code{ape}'s tree format.
+\begin{itemize}
+\item A tree, \code{phy} has \code{length(phy\$tip.label)} species
+  (say, \code{n.tip == length(phy\$tip.label)}).
+\item Within the ``edge matrix'' (\code{phy\$edge}), indices
+  \code{1:n.tip} refer to taxa, index \code{n.tip+1} refers to the
+  root, and \code{(n.tip+2):(2*n.tip - 1)} refer to internal nodes.
+\end{itemize}
+Below I will use ``entity'' to refer to a node or terminal.  These
+correspond to the \code{n.ent == 2*n.tip - 1} unique indices within
+the edge matrix.
+
+% \begin{itemize}
+% \item \code{tip.label}: The tree's tip labels
+% \item \code{children}: A \code{n.ent} $\times$ 2 matrix where each row
+%   represents one of the ``entities'', and the elements of this are the
+%   indices of the children of this index.
+% \item \code{len}: The length of each of the branches (including one of
+%   length \code{NA} that subtends the root -- needed for consistency).
+% \item \code{children}: A matrix
+% \end{itemize}
+
+To this cache, we must add the initial conditions.  These can take two
+different forms, though only the one relevant for a modest number of
+discrete characters is covered here.  The \code{dt.tips.grouped}
+function takes arguments
+\begin{itemize}
+\item \code{y}: a list of possible initial conditions.  \code{y[[i]]}
+  will contain the initial condition for the \code{i}'th possible
+  state (\code{i} here is 1 for state 0, 2 for state 1 and 3 for state
+  \code{NA} [unknown state]).
+\item \code{y.i}: a vector indicating which of these three
+  possibilities each tip falls into.
+\item \code{tips}: a vector of tip indices, generated as part of the
+  cache object.
+\item \code{t}: a vector of times.
+\end{itemize}
+
+This will probably change very shortly so that \code{tips} and
+\code{t} are replaced with \code{cache}.  The \code{check.states}
+function makes sure that the states are ordered appropriately for the
+given tree.
+
+<<>>=
+make.cache <- diversitree:::make.cache
+check.tree <- diversitree:::check.tree
+check.states <- diversitree:::check.states
+dt.tips.grouped <- diversitree:::dt.tips.grouped
+<<cache>>=
+make.cache.mk2new <- function(tree, states, strict) {
+  tree <- check.tree(tree)
+  states <- check.states(tree, states, strict=strict, strict.vals=0:1)
+  cache <- make.cache(tree)
+  cache$tip.state  <- states
+  
+  y <- list(c(1, 0), c(0, 1), c(1, 1))
+  y.i <- cache$tip.state + 1
+  y.i[is.na(y.i)] <- 3
+  tips <- cache$tips
+
+  cache$y <- dt.tips.grouped(y, states + 1, tips, cache$len[tips])
+  
+  cache
+}
+@ 
+
+\subsection{Constructing the likelihood function}
+Finally, put it all together.  The key function here is
+\code{all.branches} (not exported by default).  This takes the three
+components that we have built: \code{cache}, \code{initial.conditions}
+and \code{branches} and computes values tip to base for each branch in
+the tree.  This returns a list with three elements:
+\begin{itemize}
+\item \code{init}: variable values at the tip of each branch
+\item \code{base}: variable values at the base of each branch
+\item \code{lq}: The compensation factor for each branch.
+\end{itemize}
+
+Recall that the compensation factor is the log of the sum of the
+variables at the base of each branch.  These need multiplying back
+through the likelihood, which we can do by adding the log of the sums
+back.  The value of the variables at the root can is in
+\code{ans\$init[[cache\$root]]}.  If we have a flat prior on the root
+(i.e., assign equal probability to each state), then combining with
+the compensation factor stored in \code{ans\$lq}, we have
+\code{log(sum(ans\$init[[cache\$root]])/2) + sum(ans\$lq)} as the log
+likelihood. 
+
+Putting it all together gives
+<<>>=
+all.branches <- diversitree:::all.branches
+<<ll>>=
+make.mk2new <- function(tree, states, strict=TRUE) {
+  cache <- make.cache.mk2new(tree, states, strict)
+  branches.mk2new <- make.branches.mk2new()
+  ll <- function(pars) {
+    if ( length(pars) != 2 )
+      stop("Invalid parameter length (expected 2)")
+    if ( any(pars < 0) || any(!is.finite(pars)) )
+      return(-Inf)
+    
+    ans <- all.branches(pars, cache, initial.conditions.mk2new,
+                        branches.mk2new)
+    d.root <- ans$init[[cache$root]]
+    p.root <- c(.5, .5)
+    log(sum(d.root * p.root)) + sum(ans$lq)
+  }
+  class(ll) <- c("mk2new", "function")
+  ll
+}
+@ 
+
+\subsection{Extra bits}
+Many of the functions require that names can be associated to the
+vector of parameters to the likelihood function.  This is done through
+\R's S3 class system.  In its most simple form, where renames are not
+possible, this is all that is required:
+<<argnames>>=
+argnames.mk2new <- function(x, ...)
+  c("q01", "q10")
+@ 
+where the ``canonical'' argument list is returned.  If you want these
+to be renameable, a little more effort is required -- see the source
+code for details.  The part of the function name after the period must
+match the likelihood function's class name.
+
+The defaults should be reasonable for \code{find.mle}, but if you want
+to change the default optimisation algorithm, you can define a
+\code{find.mle} method for this function:
+<<find.mle>>=
+find.mle.mk2new <- function(func, x.init, method, fail.value=NA, 
+                            ...) {
+  if ( missing(method) )
+    method <- "nlminb"
+  NextMethod("find.mle", method=method, class.append="fit.mle.mk2new")
+}
+@ 
+(this also sets the class of the resulting fit object to be
+\code{fit.mle.mk2new}, but this will not affect anything unless you
+write methods for this).
+
+For MCMC, again, the defaults are reasonable, but the default argument
+list can be tidied slightly by specifying a common function that has a
+zero lower bound on the parameters
+<<mcmc>>=
+mcmc.mk2new <- diversitree:::mcmc.lowerzero
+@ 
+
+\subsection{Testing the function out}
+That's it -- we should be good to go.  Let's test this on a simulated tree
+
+<<>>=
+pars <- c(.1, .1, .03, .03, .1, .2)
+set.seed(3)
+phy <- trees(pars, "bisse", max.taxa=25, max.t=Inf, x0=0)[[1]]
+@ 
+
+Here is the likelihood function from \diversitree:
+<<>>=
+lik.dt <- make.mk2(phy, phy$tip.state)
+lik.dt(c(.1, .2), root=ROOT.FLAT)
+@ 
+and here is our new version:
+<<>>=
+lik.new <- make.mk2new(phy, phy$tip.state)
+lik.new(c(.1, .2))
+@ 
+
+The calculations are very similar, accurate to something on the order
+of $10^{-7}$ (may vary by machine).
+<<>>=
+lik.new(c(.1, .2)) - lik.dt(c(.1, .2), root=ROOT.FLAT)
+@ 
+
+The entire implementation is shown in figure \ref{fig:mk2-model}.
+
+All of the normal ML and MCMC routines will work on this new
+function.  For example, we can find the ML point:
+<<cache=TRUE>>=
+fit.new <- find.mle(lik.new, c(.1, .2))
+coef(fit.new)
+logLik(fit.new)
+@ 
+and this agrees well with the version in \diversitree:
+
+<<>>=
+fit.old <- find.mle(lik.dt, c(.1, .2))
+all.equal(coef(fit.old), coef(fit.new))
+all.equal(logLik(fit.old), logLik(fit.new))
+@ 
+
+\begin{figure}
+\RecustomVerbatimEnvironment{Sinput}{Verbatim}%
+{formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
+<<echo=FALSE>>=
+oo <- options(continue="  ", prompt="  ")
+<<eval=FALSE>>=
+<<ll>>
+<<branches>>
+<<ic>>
+<<cache>>  
+<<argnames>>
+<<echo=FALSE,eval=TRUE>>=
+options(oo)
+@ 
+\caption{The entire implementation of the Mk2 model}
+\label{fig:mk2-model}
+\end{figure}
+
+\section{Speeding things up}
+While the calculations above are similar to the diversitree version,
+they are fairly slow.  For 10 evaluations:
+<<>>=
+(t.new <- system.time(replicate(10, lik.new(c(.1, .2)))))
+(t.old <- system.time(replicate(10, lik.dt(c(.1, .2), root=ROOT.FLAT))))
+t.new / t.old
+@ 
+The total slowdown may depend on the exact hardware, but I get about
+$50-60\times$ slower calculations with our new version, compared with the
+version in \diversitree.  
+
+\subsection{Integrating the ODEs in C}
+One way of speeding things up is to push the derivative calculations
+into compiled code via C.  Once these are written out in R, this is
+actually very easy to do.  Please see the \deSolve\ manual for details
+-- this example follows very closely.  The file
+\code{diversitree-ext-eqs.c} contains the derivative calculations from
+above implemented in C -- these look extremely similar.  See figure
+\ref{fig:c-code} for a listing.
+
+\begin{figure}
+\RecustomVerbatimEnvironment{Soutput}{Verbatim}%
+{formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
+<<echo=FALSE>>=
+writeLines(readLines("diversitree-ext-eqs.c"))
+@ 
+\caption{Contents of \code{diversitree-ext-eqs.c}}
+\label{fig:c-code}
+\end{figure}
+
+Compile the file from the shell (not \R) command prompt by typing
+\begin{Schunk}
+\begin{Scode}
+R CMD SHLIB diversitree-ext-eqs.c
+\end{Scode}
+\end{Schunk}
+<<echo=FALSE>>=
+system("R CMD SHLIB diversitree-ext-eqs.c")
+@ 
+and load the library into \R with
+<<>>=
+dyn.load("diversitree-ext-eqs.so")
+@ 
+
+We can then repeat the test integration from above:
+<<>>=
+tt <- seq(0, 5, length=101)
+pars <- c(.5, 1)
+out.C <- lsoda(0:1, tt, "derivs_mk2new", pars,
+               initfunc="initmod_mk2new",
+               dll="diversitree-ext-eqs")[,-1]
+@ 
+and compare this with the \R\ version from above
+<<>>=
+out.R <- lsoda(0:1, tt, derivs.mk2new, pars)[,-1]
+all.equal(out.C, out.R)
+@ 
+(these may actually be identical on some machines).
+
+We could then construct a branches function in much the same way as above:
+<<>>=
+make.branches.mk2new.C <- function() {
+  RTOL <- ATOL <- 1e-8
+  ode.mk2new <- function(y, len, pars, t0)
+    lsoda(y, c(t0, t0+len), "derivs_mk2new", pars,
+          initfunc="initmod_mk2new", dll="diversitree-ext-eqs", 
+          rtol=RTOL,atol=ATOL)[-1,-1,drop=FALSE]
+  make.branches(ode.mk2new, 1:2)
+}
+@ 
+but it can be much faster to bypass some of the internal \code{lsoda}
+code\footnote{Every time \code{lsoda} is called, it looks for the
+  memory address of the derivative and initialisation functions --
+  this can incur a significant computational cost.  However, these do
+  not change from invocation to invocation, so it can be a large time
+  saving to cache the addresses.}.  The function \code{make.ode} does
+this, falling back onto the version above when \code{safe} is
+\code{TRUE}.  The $2$ in the argument list indicates that there are
+two variables.
+<<>>=
+make.ode <- diversitree:::make.ode
+make.branches.mk2new.C <- function(safe=FALSE) {
+  RTOL <- ATOL <- 1e-8
+  ode.mk2new <- make.ode("derivs_mk2new", "diversitree-ext-eqs",
+                         "initmod_mk2new", 2, safe)
+  branches <- function(y, len, pars, t0) {
+    t.default(ode.mk2new(y, c(t0, t0+len), pars, rtol=RTOL,
+                         atol=ATOL)[-1,-1,drop=FALSE])
+  }
+  
+  make.branches(branches, 1:2)
+}
+@ 
+Test this new function against the previous R version:
+<<>>=
+tt <- seq(0, 5, length=101)
+pars <- c(.5, 1)
+
+branches.R <- make.branches.mk2new()
+branches.C <- make.branches.mk2new.C()
+
+out.R <- branches.R(0:1, tt, pars, 0)
+out.C <- branches.C(0:1, tt, pars, 0)
+
+all.equal(out.R, out.C, check.attributes=FALSE)
+@ 
+
+The new likelihood function can then be written:
+<<>>=
+make.mk2new.C <- function(tree, states, strict=TRUE) {
+  cache <- make.cache.mk2new(tree, states, strict)
+  branches.mk2new <- make.branches.mk2new.C()
+  ll <- function(pars) {
+    if ( length(pars) != 2 )
+      stop("Invalid parameter length (expected 2)")
+    if ( any(pars < 0) || any(!is.finite(pars)) )
+      return(-Inf)
+    
+    ans <- all.branches(pars, cache, initial.conditions.mk2new,
+                        branches.mk2new)
+    d.root <- ans$init[[cache$root]]
+    p.root <- c(.5, .5)
+    log(sum(d.root * p.root)) + sum(ans$lq)
+  }
+  class(ll) <- c("mk2new", "function")
+  ll
+}
+@ 
+(the only difference here compared with the above version is that
+\code{make.branches.mk2new.C()} is used rather than
+\code{make.branches.mk2new()}).
+
+This likelihood function returns identical values to the \R\ version:
+<<>>=
+lik.C <- make.mk2new.C(phy, phy$tip.state)
+lik.C(c(.1, .2)) - lik.new(c(.1, .2))
+@ 
+However, the speedup is moderate: the C version is $11\times$ faster
+than the \R\ version, but still $5\times$ slower than the diversitree
+version.
+<<>>=
+(t.C <- system.time(replicate(10, lik.C(c(.1, .2)))))
+t.new / t.C
+t.C / t.old
+@ 
+
+\subsection{Faster still: direct calculation}
+It may not be necessary to go through the hassle of numerical
+integration.  The solution to the differential equations above are
+straightforward, so we can get exact answers directly.  This gives the
+following function
+<<>>=
+branches.mk2new.direct <- function(y, len, pars, t0) {
+  D0 <- y[1]
+  D1 <- y[2]
+  
+  q01 <- pars[1]
+  q10 <- pars[2]
+
+  x <- exp(-(q01+q10)*len) * (D0 - D1)
+  z <- q10 * D0 + q01 * D1
+  cbind(z + x * q01, z - x * q10) / (q01 + q10)
+}
+@ 
+
+This agrees with the \R\ calculation to acceptable accuracy:
+<<>>=
+out.direct <- branches.mk2new.direct(0:1, tt, pars, 0)
+all.equal(out.direct, lsoda(0:1, tt, derivs.mk2new, pars)[,-1],
+          check.attributes=FALSE)
+@ 
+
+We can build a ``branches'' function with all the necessary underflow
+compensation:
+<<>>=
+branches.direct <- make.branches(branches.mk2new.direct, 1:2)
+@ 
+and compare this again:
+<<>>=
+out.direct <- branches.direct(0:1, tt, pars, 0)
+all.equal(out.R, out.direct, check.attributes=FALSE)
+@ 
+
+<<>>=
+make.mk2new.direct <- function(tree, states, strict=TRUE) {
+  cache <- make.cache.mk2new(tree, states, strict)
+  branches.mk2new <- make.branches(branches.mk2new.direct, 1:2)
+  ll <- function(pars) {
+    if ( length(pars) != 2 )
+      stop("Invalid parameter length (expected 2)")
+    if ( any(pars < 0) || any(!is.finite(pars)) )
+      return(-Inf)
+    
+    ans <- all.branches(pars, cache, initial.conditions.mk2new,
+                        branches.mk2new)
+    d.root <- ans$init[[cache$root]]
+    p.root <- c(.5, .5)
+    log(sum(d.root * p.root)) + sum(ans$lq)
+  }
+  class(ll) <- c("mk2new", "function")
+  ll
+}
+@ 
+(again, the only difference here compared with the above version is
+that the branches function has changed).
+
+These are the same to the sort of tolerance we would expect:
+<<>>=
+lik.direct <- make.mk2new.direct(phy, phy$tip.state)
+lik.direct(c(.1, .2)) - lik.new(c(.1, .2))
+@ 
+and we are now exactly agreeing with \diversitree, whose calculations
+are also exact.
+<<>>=
+lik.direct(c(.1, .2)) - lik.dt(c(.1, .2), root=ROOT.FLAT)
+@ 
+This is only $3\times$ slower than the \diversitree\ version now.
+<<>>=
+(t.direct <- system.time(replicate(10, lik.direct(c(.1, .2)))))
+t.direct / t.old
+@ 
+(The \diversitree\ function is faster as it trades off generality for
+speed, and takes advantage of some features of the model to do almost
+all of the calculations at once.)
+
+\section{Re-implementing \BiSSE.}
+As an example of a state-dependent diversification model, with more
+moving parts than the Mk2 model, here, we'll re-implement the \BiSSE\
+model.  This section assumes knowledge of the functions from above.
+
+\subsection{Branch calculations}
+As above, let $D_{Ni}(t)$ be the probability that a branch at some
+time $t$ before the present (at $t=0$) will yield all the observed
+data descended from that branch, and now let $E_i(t)$ be the
+probability that a lineage in state $i$ at time $t$ will go completely
+extinct by the present, leaving no descendants.  \BiSSE\ has six
+parameters: $\lambda_i$ is the rate of speciation of a lineage in
+state $i$, $\mu_i$ is the rate of extinction of a lineage in state
+$i$, and as above $q_{ij}$ the the rate of transition from state $i$
+to $j$.
+
+\begin{equation}
+  \label{eq:BiSSE}
+  \begin{split}
+    \frac{\ud D_{Ni}}{\ud t} =& -(\lambda_i + \mu_i + q_{ij})D_{Ni}(t)
+    + q_{ij}D_{Nj}(t)
+    + 2\lambda_iE_i(t)D_{Ni}(t)
+    \\
+    \frac{\ud E_i}{\ud t}
+    =& \mu_i - (\mu_i + q_{ij} + \lambda_i)E_i(t)
+    + q_{ij}E_j(t) + \lambda_i E_i(t)^2
+  \end{split}
+\end{equation}
+
+Let's order the parameters $\{E_0, E_1, D_{N0}, D_{N1}\}$, and the
+parameters $\{\lambda_0, \lambda_1, \mu_0, \mu_1, q_{01}, q_{10}\}$.
+<<derivs-bisse>>=
+derivs.bissenew <- function(t, y, pars) {
+  E0 <- y[1]
+  E1 <- y[2]
+  D0 <- y[3]
+  D1 <- y[4]
+
+  lambda0 <- pars[1]
+  lambda1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+
+  list(c(-(mu0 + q01 + lambda0) * E0 + lambda0 * E0 * E0 + mu0 + q01 * E1,
+         -(mu1 + q10 + lambda1) * E1 + lambda1 * E1 * E1 + mu1 + q10 * E0,
+         -(mu0 + q01 + lambda0) * D0 + 2 * lambda0 * E0 * D0 + q01 * D1,
+         -(mu1 + q10 + lambda1) * D1 + 2 * lambda1 * E1 * D1 + q10 * D0))
+}
+@ 
+
+Test this out with a branch that begins in state $0$.  This means that
+$E_i$ is zero for both states, $D_{N0}=1$ (as we have a tip in state
+with probability $1$) and $D_{N1}=0$ (as there is no chance to move
+into state $1$ in zero time), so the initial conditions are
+<<>>=
+y <- c(0, 0, 1, 0)
+@ 
+Picking parameters that reflect a 2-fold increase in speciation rate
+for state $1$:
+<<>>=
+pars <- c(.1, .2, .03, .03, .01, .01)
+@ 
+Integrating over $30$ time units, and recording the output regularly:
+<<>>=
+tt <- seq(0, 30, length=101)
+out <- lsoda(y, tt, derivs.bissenew, pars)[,-1]
+@ 
+The output is plotted in figure \ref{fig:bisse-output}.
+
+\begin{figure}
+<<fig=TRUE>>=
+matplot(tt, out, type="l", lty=c(2, 2, 1, 1), col=c("black", "red"))
+legend("topright", c("State 0", "State 1"), col=1:2, lty=1:2)
+@ 
+\caption{Evolution of the variables under the \BiSSE\ model, starting
+  from a tip in state $0$.  Black lines indicate state $0$, red lines
+  indicate state $1$.  Dashed lines are $E_i(t)$, and solid lines are
+  $D_{Ni}(t)$.}
+\label{fig:bisse-output}
+\end{figure}
+Note that the extinction curves rise to an asymptote over time (this
+will be similar to $\mu_i/\lambda_i$, but will not exactly equal this
+where $q_{ij}>0$).  The $D_{Ni}(t)$ curve for the observed state
+decreases over time.  The other $D$ curve increases slightly, then
+decreases.
+
+The $D$ variables will require underflow protection, but the $E$
+variables should be left alone.
+<<>>=
+make.branches.bissenew <- function() {
+  RTOL <- ATOL <- 1e-8
+  ode.bissenew <- function(y, len, pars, t0)
+    lsoda(y, c(t0, t0+len), derivs.bissenew, pars, rtol=RTOL,
+          atol=ATOL)[-1,-1,drop=FALSE]
+  make.branches(ode.bissenew, c(3,4))
+}
+@ 
+
+\subsection{Calculations at nodes}
+At the node, the $E$ variables are unchanged, and should be identical
+so we can take either
+
+\end{document}
+
+% LocalWords:  ij ODEs derivs mk dDdt tt lsoda matplot topright lty abline len
+% LocalWords:  RTOL ATOL rtol atol init ic vals lq argnames NextMethod mle mcmc
+% LocalWords:  phy lik dt coef logLik Sinput formatcom framerule px xleftmargin
+% LocalWords:  fontsize oo eval eqs Soutput writeLines readLines CMD SHLIB dyn
+% LocalWords:  initfunc initmod dll cbind
