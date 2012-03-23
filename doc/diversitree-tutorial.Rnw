@@ -31,7 +31,7 @@
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset
-options(show.signif.stars=FALSE)
+options(show.signif.stars=FALSE, continue="  ")
 ## This helps add real chi^2 numbers to the text
 chi <- function(m1, m2, digits=1)
   round(2*(m1$lnLik - m2$lnLik), digits)
@@ -1348,7 +1348,7 @@ for a full explanation of the model assumptions.
 
 Simulating trees under GeoSSE is not yet part of {\tt diversitree},
 but it can be done with a separate program, \citeauthor{simtreesdd}.
-A simulated tree is included and shown in \prettyref{fig:phy}.
+A simulated tree is included and shown in Figure \ref{fig:geosse-phy}.
 <<loadlib>>=
 data("geosse")
 phy <- geosse.phy
@@ -1359,7 +1359,7 @@ plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5)
 @
 \begin{figure}
 \centering
-<<plottree2, echo=false, fig=true>>=
+<<geosse-phy, echo=false, fig=true>>=
 statecols <- c("AB"="purple", "A"="blue", "B"="red")
 plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5, no.margin=TRUE)
 @
@@ -1367,7 +1367,7 @@ plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5, no.margin=TRUE)
     0.7, 0.7, 2.5, 0.5)}.  The tip state colors are purple for species
   present in both regions (AB), blue for species only in region A, and
   red for species only in region B.}
-\label{fig:phy}
+\label{fig:geosse-phy}
 \end{figure}
 
 An extremely crude starting point for parameter estimation can be
@@ -1446,9 +1446,9 @@ if ( file.exists(.save) ) {
 }
 @ 
 
-Marginal posterior distributions are shown in \prettyref{fig:mcmc}.
-We can also compare rate estimates by looking at posterior
-probabilities of their differences.
+Marginal posterior distributions are shown in Figure
+\ref{fig:geosse-mcmc}.  We can also compare rate estimates by looking
+at posterior probabilities of their differences.
 <<mcmcprob>>=
 mcmc2diff <- with(mcmc2, data.frame(s.diff=sA-sB, 
                                     x.diff=xA-xB, 
@@ -1465,7 +1465,7 @@ region B).
 
 \begin{figure}
 \centering
-<<mcmcplot, fig=true>>=
+<<geosse-mcmc-plot,fig=TRUE>>=
 col1 <- c("red", "orange", "blue", "purple", "black", "gray")
 col2 <- col1[c(1,3,5)]
 ## mcmc2diff <- with(mcmc2, data.frame(s.diff=sA-sB, x.diff=xA-xB, d.diff=dA-dB))
@@ -1477,17 +1477,17 @@ legend("topright", colnames(mcmc2diff), col=col2, lty=1)
 title(xlab="rate", ylab="posterior probability density", outer=T, line=-1)
 @
 \caption{Posterior probability distributions for the six-rate GeoSSE
-  model, for the tree shown in \prettyref{fig:phy}.  Uncertainty is
-  largest for dispersal and smallest for speciation.  Regional
-  differences in speciation and, to some extent, in dispersal are
-  recovered.}
-\label{fig:mcmc}
+  model, for the tree shown in Figure \ref{fig:geosse-phy}.
+  Uncertainty is largest for dispersal and smallest for speciation.
+  Regional differences in speciation and, to some extent, in dispersal
+  are recovered.}
+\label{fig:geosse-mcmc}
 \end{figure}
 
 \subsection{Additional options}
 
 GeoSSE likelihood functions can be built with randomly-incomplete
-sampling \citep{fitzjohn2009}.  There is not currently support for
+sampling \citep{FitzJohn-2009-595}.  There is not currently support for
 unresolved clades.
 <<samp>>=
 p <- coef(ml1)
