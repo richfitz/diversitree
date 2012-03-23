@@ -1,6 +1,15 @@
 -*-org-*-
 There are a great many things left to do.
 
+* Arising from the cleanup
+** Speed up Mk2
+Much of the time in Mk2 is wasted.  This could be heaps faster purely
+in C I think (speedup of up to 4x)
+
+** Simulation code
+This is a complete mess.  When I merge in the SCM code, some time
+tidying this would be useful.
+
 * Architectural changes
 ** Generalise the MCMC
 This is started to some degree 
@@ -36,8 +45,14 @@ I would like to include some real-world cases.  There are a few trees
 and data sets kicking around that might be distributable by now.
 
 * Minor things
-** "strict" needs adding to bisse, mk2, mkn, etc.
+** DONE "strict" needs adding to bisse, mk2, mkn, etc.
 ** DONE A common mechanism for 2-part argnames (split, td models)
+** find.mle could return a stats4 mle object?
+TODO: consider making stats4 mle objects, rather than those below:
+new("mle", call = call, coef = coef, fullcoef = unlist(fullcoef), 
+vcov = vcov, min = min, details = oout, minuslogl = minuslogl, 
+method = method)
+
 * Misc old bits:
 ** DONE Give a more informative message if running BiSSE on a NULL tree:
 Peter Midford, 21/5/2009: 2:46pm
@@ -438,7 +453,7 @@ If starting point fails, optimisation appears to proceed still.
 ** DONE Remove first "pars" argument from do.asr.joint(); it is not needed.
 ** DONE Box constraints for subplex
 Useful where optimisation goes off into silly spaces.
-** Catch Flag: 1
+** DONE Catch Flag: 1
 In R/model-bisse-unresolved.R, where flag > 0, throw an error.
 
 I think this is done now?
@@ -451,7 +466,7 @@ whether they are added perhaps?
 fixed- I just removed them...
 
 ** diversitree.unrel below here.
-*** GEMM clear-up
+*** DONE GEMM clear-up
 I use different do_gemm functions in diversitree and
 diversitree_unrel; it would be good to use the same one with a
 configurable "beta" parameter.
@@ -462,4 +477,4 @@ over to MuSSE.
 ** DONE unresolved and preset
 These basically do the same thing and I should probably merge things
 to make this more robust.
-** Rewrite the tutorial document
+** DONE Rewrite the tutorial document

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?><!-- -*-nxml-*- -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Diversitree: Installation</title>
+    <link rel="Stylesheet" type="text/css" href="stylesheet.css"
+	  media="all" />
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22401624-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+  </head>
+  <body>
+    <div class="container">
+    <h1>Installation notes</h1>
+
+    <p>
+    The easiest way to install the package is with
+    </p>
+    <pre>install.packages("diversitree")</pre> 
+    <p>which will get the
+    most recent version from CRAN.  However, this is sometimes out of
+    date, as I don't put every version up there.  In that case, you
+    will probably have to install from source.
+    </p>
+
+    <h2 class="preservecase">QuaSSE installation issues</h2>
+    <p>
+      QuaSSE requires that the <a href="http://fftw.org">fftw</a>
+      (Fastest Fourier Transforms in the West) libraries are
+      installed.  If you want to use QuaSSE, before installing
+      diversitree, <a
+      href="http://fftw.org/download.html">download</a> and install
+      fftw.  If you install fftw in a different location than a
+      "standard" location (i.e., somewhere that your C compiler will
+      find headers and libraries automatically) you have to tell the
+      compilers where it is:
+    </p>
+    <pre>
+R CMD INSTALL diversitree --configure-args='--with-fftw=/path/to/fftw'</pre>
+    <p>where the path will be the path so that the files</p>
+    <pre>
+/path/to/fftw/include/fftw3.h
+/path/to/fftw/lib/lib/fftw3.so</pre>
+    <p>exist.  When installing, look for a line that says</p>
+    <pre>Using fftw for QuaSSE FFT calculations</pre>
+
+    <p>in the output.  If you see</p>
+    <pre>configure: WARNING: No fftw found - QuaSSE/fftC will not be available</pre>
+    <p>then diversitree could not find the fftw libraries.</p>
+
+    <p>
+      <b>On Windows</b>, set the environment variable
+      <code>LIB_FFTW</code> to point to the directory that contains
+      <code>include/fftw.h</code>, and install the package.  Far less
+      checking is done when installing on windows, due to limitations
+      with the build system there.  As I don't have a windows system
+      at present, I cannot test this, and am only assured that it
+      works.  Alternatively, email me if the CRAN version is out of
+      date, and I can arrange to have a binary package built for you.
+    </p>
+
+    <h2 class="preservecase">mac os x 10.5 (leopard) and R 2.10.1</h2>
+    <p>
+      R 2.10.1 and Mac OS X 10.5 (leopard)'s default Xcode appear not
+      to play well together and the installation will not work,
+      failing with an error like
+    </p>
+    <pre>
+gcc-4.2 -arch i386 -std=gnu99 -I/Library/Frameworks/R.framework...
+make: gcc-4.2: Command not found
+make: *** [bisse-eqs.o] Error 127
+ERROR: compilation failed for package ‘diversitree’</pre>
+    <p>
+      This type of error will occur for all R packages.  To get around
+      this, either install Xcode 3.1.4 (available with some hunting
+      from <a
+      href="http://connect.apple.com">http://connect.apple.com</a>,
+      which includes a more recent Xcode.  This is a big download and
+      you need to create a apple developer account.
+    </p>
+    <p>
+      Alternatively, you can work around the issue by changing the
+      default compilers.  Create a directory <code>~/.R</code> and
+      download <a href="Makevars">this file</a>.  Don't forget to
+      delete this file when you upgrade either R or OSX!
+    </p>
+    <p>From within R</p>
+    <pre>
+dir.create("~/.R", FALSE)
+download.file("http://www.zoology.ubc.ca/prog/diversitree/Makevars",
+              "~/.R/Makevars")</pre>
+    </div>
+    <ul class="footer">
+      <li>© 2012 <a href="http://www.zoology.ubc.ca/~fitzjohn">Rich
+      FitzJohn</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="studies.html">Studies</a></li>
+      <li><a href="faq.html">FAQ</a></li>
+      <li><a href="http://cran.r-project.org/web/packages/diversitree">CRAN</a></li>
+    </ul>
+  </body>
+</html>

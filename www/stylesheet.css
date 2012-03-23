@@ -1,109 +1,136 @@
-body {
-    font-family: Helvetica, Arial, sans-serif;
-}
+/* See http://simplenoteapp.com/features/ */
+/* Other ideas: http://sparkleshare.org/ */
+html { background: #eee; margin: 0; padding: 0; }
 
-h1 {
-    padding: .1em;
-    padding-top: .2em;
-    padding-left: 0.6em;
-    border-left: 0.125em solid #36648B;
-    border-top: 1px solid #36648B;
-    line-height: 1.2em;
-}
+body { font-family: Helvetica, sans-serif;
+       color: #333; 
+       text-rendering: optimizeLegibility; 
+       padding: 0 5px; 
+       margin: 0 auto; 
+       font-size: 14px;
+       width: 80%;
+       max-width: 60em; /* 960px */
+       position: relative; 
+       line-height: 1.5; 
+       border: 1px solid transparent; 
+     }
 
-a:hover {
+h1 { font-family: 'Oswald', Helvetica, sans-serif;
+     text-transform: lowercase; 
+     font-size: 250%;
+     text-shadow: 1px 1px 5px #ccc;
+     /*color: #1b0e2b }*/
+     color: #291441 }
+
+h2 { font-family: 'Oswald', Helvetica, sans-serif; 
+     text-transform: lowercase; 
+     font-size: 170%;
+     padding-left: 1em;
+     color: #434047;
+     border-bottom: 1px solid rgba(0, 0, 0, 0.2); }
+.preservecase { text-transform: none; }
+
+a { /*font-weight: bold; */
+    color: #319ccf; 
     text-decoration: none;
-}
+  }
+a:visited { color: #63319c; }
+a:focus, a:hover { color: #319ccf; 
+		   text-decoration: underline; }
+a.img { border: 0; }
 
-table {
-    width: 75%;
-    background-color: #fafafa;
-    border: 1px #6699CC solid;
-    border-collapse: collapse;
-    border-spacing: 0px; 
-    margin-left: 10%;
-}
-td, th {
-    padding: 0.5ex 1ex 0.5ex 1ex;
-    padding: 1ex;
-    text-align: left;
-}
-th {
-    border: 1px solid #6699CC;
-    border-bottom-width: 2px;
-    background-color: #BEC8D1;
-}
-td {
-    border: 1px solid #9CF;
-    background-color: #fafafa; 
-}
+/*a:hover {
+  text-decoration: none;
+  }*/
 
-/* Special types */
-td.date {
-    white-space:nowrap;
-    text-align:right;
-}
-td.presenter {
-    white-space:nowrap;
-}
-td.nomeeting {
-    text-align: center;
-}
+.footer a { font-weight: bold; 
+	    color: #555; 
+	    padding: 2px 10px; 
+	    border: 0; }
+.footer a:hover { text-decoration: underline; }
 
-.odd td {
-    background-color: #eeeeee;
-}
-.nomeeting td {
-    background-color: #E9B3A5;
-}
+.footer { position: absolute; 
+	  left: 5%; 
+	  margin: 0 0 0 10px; 
+	  right: 30px; 
+	  bottom: 12px; 
+	  font-size: 12px; 
+	  color: #444; }
 
-/* Menu at the bottom */
-ul.nav {
-    margin-left:auto;
-    margin-right:auto;
-    margin-top:0;
-    margin-bottom: 0;
-    padding:0;
-    list-style:none;
-    display:table;
-}
-.nav li {
-    display: inline;
-    border-right: 1px solid black;
-    padding: 0px 0.6ex 0px 0.6ex;
-    white-space: nowrap;
-    text-align: centre;
-}
-.nav li:last-child {
-    border: 0;
-}
+.footer li { float: left; margin: 0 1em 0 0; }
+.footer { margin: 16px 10px 48px 10px; position: static; }
+.footer li:first-child { padding-right: 35px; }
 
-.nav li:hover {
-    background: #dddddd;
-}
+.container { background: #fff;
+	     margin: 60px 0 0 0; 
+	     padding: 2em 4em 3em 2em;
+	     /* Curvy outside */
+	     -moz-border-radius:    10px;
+	     -webkit-border-radius: 10px;
+	     -o-border-radius:      10px;
+	     -ms-border-radius:     10px;
+	     -khtml-border-radius:  10px;
+	     border-radius:         10px;
+	     /* Shadow */
+	     -moz-box-shadow:    0 6px 10px rgba(0, 0, 0, 0.5);
+	     -webkit-box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+	     -o-box-shadow:      0 6px 10px rgba(0, 0, 0, 0.5);
+	     box-shadow:         0 6px 10px rgba(0, 0, 0, 0.5); }
 
-div.banner {
-    margin-left:auto;
-    margin-right: auto;
-    text-align: center;
-}
-.banner img {
-    border: 1px solid black;
-}
+.container p { padding-left: 4em; }
 
-.badges { 
-    margin: 0;
-    margin-top: .5ex;
-    border: 0;
-    padding: 0;
-    text-align: right;
-    color: black;
-}
+.question { font-style: italic; }
+
+/*ul { list-style-type: none; }*/
 
 div.float-right {
     float: right;
+    padding-top: 2em;
+    padding-right: .5em;
 }
 
 div.float-left {
     float: left;
 }
+
+ul.changes li {
+    margin-bottom: 2ex;
+}
+ul.changes li li {
+    margin-bottom: 0ex;
+}
+
+ul.footer {
+    list-style-type: none;    
+}
+ul.references {
+    padding-left: 0;
+    list-style-type: none;
+}
+ul.references li {
+    font-size: 90%;
+    display: block;
+    padding-left: 6.5em;
+    text-indent: -2.5em;
+    margin-bottom: 1ex;
+}
+
+.container ol {
+    padding-left: 8em;
+}
+
+ul.studies li { 
+    margin-bottom: 1ex; 
+}
+
+/* Code Samples */
+pre {
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    margin-left: 4em;
+    padding-left: 1em;
+}
+
+
+/* eae5d2*/

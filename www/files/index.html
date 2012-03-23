@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?><!-- -*-nxml-*- -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>diversitree/files</title>
+    <link rel="Stylesheet" type="text/css" href="../stylesheet2.css"
+	  media="all" />
+  </head>
+  <body>
+    <div class="container">
+    <h1>Files</h1>
+
+    This directory contains files used to run the examples in the
+    diversitree tutorial document:
+
+    <ul>
+      <li><a href="Lislevand-states.csv"
+	     class="filename">Lislevand-states.csv</a>: Measures of
+      sexual dimorphism.  Data are from Lislevand T., Figuerola J.,
+      and Székely T. 2007. Avian body sizes in relation to fecundity,
+      mating system, display behavior, and resource sharing. Ecology
+      88:1605.</li>
+      <li><a href="Redding-2010.csv"
+      class="filename">Redding-2010.csv</a>: Primate body size data.
+      From Redding D.W., DeWolff C., Mooers A.Ø. 2010. Evolutionary
+      distinctiveness, threat status and ecological oddity in
+      primates. Conserv.  Biol. 24:1052–1058.</li>
+      <li><a href="Thomas-tree.nex"
+	     class="filename">Thomas-tree.nex</a>: Shorebird
+      phylogeny, from Thomas G.H., Wills M.A., and Székely T. 2004. A
+      supertree approach to shorebird phylogeny. BMC Evolutionary Biology
+      4:28.</li>
+      <li><a href="Thomas-tree-exemplar.nex"
+	     class="filename">Thomas-tree-exemplar.nex</a>: Shorebird
+      phylogeny, but trimmed down to only "exemplar" species.</li>
+      <li><a href="Thomas-unresolved.csv"
+	     class="filename">Thomas-unresolved.csv</a>: Unresolved
+      clade information for the exemplar tree.  This is derived from
+      the Lislevand et al. sexual dimorphism data, assuming a 15%
+      cut-off.</li>
+      <li><a href="Vos-2006.nex" class="filename">Vos-2006.nex</a>:
+      Phylogenetic tree of Primates, with polytomies randomly resolved
+      and branch lengths simulated from a birth death.  From Vos R.A.,
+      Mooers A.Ø. 2006. A new dated supertree of the Primates.
+      Chapter 5. In <i>Inferring large phylogenies: the big tree
+      problem</i> (R Vos, Ph.D. thesis) Simon Fraser University.</li>
+    </ul>
+
+    <p>If you want to recompile the tutorial document, you will need
+    these files.</p>
+    <ul>
+      <li><a href="diversitree-tutorial.Rnw"
+	     class="filename">diversitree-tutorial.Rnw</a>: Sweave
+      source file for the tutorial document</li>
+      <li><a href="refs.bib" class="filename">refs.bib</a>: BibTeX
+      database needed to compile the tutorial document.</li>
+      <li><a href="refstyle.bst" class="filename">refstyle.bst</a>: BibTeX style file</li>
+    </ul>
+
+    <p>To compile, run <code>R CMD Sweave
+    diversitree-tutorial.Rnw</code> to create the LaTeX source file,
+    then run pdflatex, bibtex, pdflatex and pdflatex on the file
+    <code>diversitree-tutorial.tex</code> that is produced</p>
+
+    <p>However, because some of the examples are computationally
+    intensive, regenerating the file takes many hours (27 hours on a
+    2008 MacPro).  If you use <a
+    href="http://cran.r-project.org/web/packages/cacheSweave/index.html">cacheSweave</a>
+    with <a
+    href="http://gregor.gorjanc.googlepages.com/Sweave.sh">Sweave.sh</a>,
+    subsequent compilations are very fast (&lt; 1 min).</p>
+    </div>
+      <ul class="footer">
+	<li>© 2012 <a href="http://www.zoology.ubc.ca/~fitzjohn">Rich
+	FitzJohn</a></li>
+	<li><a href="../index.html">Home</a></li>
+	<li><a href="../studies.html">Studies</a></li>
+	<li><a href="../faq.html">FAQ</a></li>
+	<li><a href="http://cran.r-project.org/web/packages/diversitree">CRAN</a></li>
+      </ul>
+  </body>
+</html>
