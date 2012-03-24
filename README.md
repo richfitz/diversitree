@@ -9,6 +9,7 @@ released version from CRAN:
 
 
 The interesting directories are:
+
 * diversitree: the R package
 * diversitree-tests: testing functions that exercise most of the
 package's main features (run `Rscript zzz.R` in this directory to run
