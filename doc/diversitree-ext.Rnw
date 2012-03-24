@@ -33,7 +33,8 @@
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset
-options(show.signif.stars=FALSE, continue="  ")
+if ( !interactive() )
+  options(show.signif.stars=FALSE, prompt="  ", continue="  ")
 @ 
 
 %\VignetteIndexEntry{Extending diversitree}
@@ -128,7 +129,7 @@ functions that take three arguments:
 \end{itemize}
 It must return a list, the first (and possibly only) element of which
 is a vector of derivatives of each of the variables.  Please see the
-documentation for \code{deSolve} for more information.
+documentation for \code{lsoda} for more information.
 %
 We can do this entirely within \R\ code this way (illustrated for
 clarity, not speed):
@@ -230,15 +231,16 @@ matrix with \code{length(y)} rows and \code{length(len)} columns.
 % \end{Soutput}
 % though we will rarely need to compute it this way.
 
-The \code{make.branches.lsoda()} function will convert the derivative
+The \code{make.branches()} function will convert the derivative
 function above to the required format automatically.   This function
 is not exported by default, so we'll extract it:
 <<>>=
-make.branches.lsoda <- diversitree:::make.branches.lsoda
+make.branches.dtlik <- diversitree:::make.branches.dtlik
+check.control.ode <- diversitree:::check.control.ode
 @ 
 We must give it list with elements:
 <<>>=
-info <- list(ny=2, idx.d=1:2, derivs=derivs.mk2new)
+info <- list(name="mk2new", np=2, ny=2, idx.d=1:2, derivs=derivs.mk2new)
 @ 
 where \code{ny} is the number of variables ($2$ here), \code{idx.d} is
 the indices of the ``data'' variables, which may become small (here,
@@ -248,7 +250,7 @@ going to add more things to that list over time.
 
 Generating our function:
 <<>>=
-branches.mk2new <- make.branches.lsoda(info)
+branches.mk2new <- make.branches.dtlik(info, check.control.ode())
 @ 
 The returned function has more arguments:
 <<>>=
@@ -257,6 +259,7 @@ args(branches.mk2new)
 And returns a list:
 <<>>=
 out.new <- branches.mk2new(y, tt, pars, 0)
+str(out.new)
 @ 
 
 \subsection{Calculations at nodes}
@@ -269,7 +272,7 @@ from the current node, \code{pars} (vector of parameters), \code{t}
 (time, away from the present), and \code{is.root} (whether the node is
 the root node).  It must return a vector of variables as output:
 <<ic>>=
-initial.conditions.mk2new <- function(init, pars, t, is.root=FALSE)
+initial.conditions.mk2new <- function(init, pars, t, idx)
   init[,1] * init[,2]
 @
 
@@ -289,16 +292,6 @@ recall a few features of tree \code{ape}'s tree format.
 Below I will use ``entity'' to refer to a node or terminal.  These
 correspond to the \code{n.ent == 2*n.tip - 1} unique indices within
 the edge matrix.
-
-% \begin{itemize}
-% \item \code{tip.label}: The tree's tip labels
-% \item \code{children}: A \code{n.ent} $\times$ 2 matrix where each row
-%   represents one of the ``entities'', and the elements of this are the
-%   indices of the children of this index.
-% \item \code{len}: The length of each of the branches (including one of
-%   length \code{NA} that subtends the root -- needed for consistency).
-% \item \code{children}: A matrix
-% \end{itemize}
 
 We also need initial conditions, corresponding to the tip states.
 These can take two different forms, though only the one relevant for a
@@ -339,16 +332,12 @@ make.cache.mk2new <- function(tree, states, strict) {
   tree <- check.tree(tree)
   states <- check.states(tree, states, strict=strict, strict.vals=0:1)
   cache <- make.cache(tree)
-  cache$tip.state  <- states
   cache$info <- list(name="mk2new", np=2, ny=2, idx.d=1:2,
                      derivs=derivs.mk2new, argnames=c("q01", "q10"))
   
   y <- list(c(1, 0), c(0, 1), c(1, 1))
-  y.i <- cache$tip.state + 1
-  y.i[is.na(y.i)] <- 3
-
-  tips <- cache$tips
-  cache$y <- dt.tips.grouped(y, states + 1, tips, cache$len[tips])
+  y.i <- states + 1
+  cache$y <- dt.tips.grouped(y, y.i, cache)
   
   cache
 }
@@ -379,16 +368,16 @@ likelihood.
 
 Putting it all together gives
 <<>>=
-make.all.branches.lsoda <- diversitree:::make.all.branches.lsoda
+make.all.branches.dtlik <- diversitree:::make.all.branches.dtlik
 check.pars.nonnegative <- diversitree:::check.pars.nonnegative
 <<ll>>=
 make.mk2new <- function(tree, states, strict=TRUE) {
   cache <- make.cache.mk2new(tree, states, strict)
-  all.branches <- make.all.branches.lsoda(cache, list(),
+  all.branches <- make.all.branches.dtlik(cache, list(),
                                           initial.conditions.mk2new)
   ll <- function(pars) {
     check.pars.nonnegative(pars, 2)
-    ans <- all.branches(pars, cache)
+    ans <- all.branches(pars)
     d.root <- ans$vals
     log(sum(d.root * c(.5, .5))) + sum(ans$lq)
   }
@@ -404,16 +393,17 @@ That's it -- we should be good to go.  Let's test this on a simulated tree
 pars <- c(.1, .1, .03, .03, .1, .2)
 set.seed(3)
 phy <- trees(pars, "bisse", max.taxa=25, max.t=Inf, x0=0)[[1]]
+states <- phy$tip.state
 @ 
 
 Here is the likelihood function from \diversitree:
 <<>>=
-lik.dt <- set.defaults(make.mk2(phy, phy$tip.state), root=ROOT.FLAT)
+lik.dt <- set.defaults(make.mk2(phy, states), root=ROOT.FLAT)
 lik.dt(c(.1, .2))
 @ 
 and here is our new version:
 <<>>=
-lik.new <- make.mk2new(phy, phy$tip.state)
+lik.new <- make.mk2new(phy, states)
 lik.new(c(.1, .2))
 @ 
 
@@ -444,14 +434,13 @@ all.equal(logLik(fit.old), logLik(fit.new))
 \RecustomVerbatimEnvironment{Sinput}{Verbatim}%
 {formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
 <<echo=FALSE>>=
-oo <- options(continue="  ", prompt="  ")
+## oo <- options(continue="  ", prompt="  ")
 <<eval=FALSE>>=
 <<ll>>
-<<branches>>
-<<ic>>
 <<make-cache>>  
+<<ic>>
 <<echo=FALSE,eval=TRUE>>=
-options(oo)
+## options(oo)
 @ 
 \caption{The entire implementation of the Mk2 model}
 \label{fig:mk2-model}
@@ -466,97 +455,374 @@ they are fairly slow.  For 10 evaluations:
 t.new / t.old
 @ 
 The total slowdown may depend on the exact hardware, but I get about
-$180\times$ slower calculations with our new version, compared with the
+$170\times$ slower calculations with our new version, compared with the
 version in \diversitree.
+
+\section{Reimplementing \BiSSE}
+\label{sec:reimplementing-bisse}
+
+As an example of a state-dependent diversification model, with more
+moving parts than the Mk2 model, here, we'll re-implement the \BiSSE\
+model.  This section assumes knowledge of the functions from above,
+and of the \BiSSE\ model.
+
+\subsection{Branch calculations}
+As above, let $D_{Ni}(t)$ be the probability that a branch at some
+time $t$ before the present (at $t=0$) will yield all the observed
+data descended from that branch, and now let $E_i(t)$ be the
+probability that a lineage in state $i$ at time $t$ will go completely
+extinct by the present, leaving no descendants.  \BiSSE\ has six
+parameters: $\lambda_i$ is the rate of speciation of a lineage in
+state $i$, $\mu_i$ is the rate of extinction of a lineage in state
+$i$, and as above $q_{ij}$ the the rate of transition from state $i$
+to $j$.
+
+\begin{equation}
+  \label{eq:BiSSE}
+  \begin{split}
+    \frac{\ud D_{Ni}}{\ud t} =& -(\lambda_i + \mu_i + q_{ij})D_{Ni}(t)
+    + q_{ij}D_{Nj}(t)
+    + 2\lambda_iE_i(t)D_{Ni}(t)
+    \\
+    \frac{\ud E_i}{\ud t}
+    =& \mu_i - (\mu_i + q_{ij} + \lambda_i)E_i(t)
+    + q_{ij}E_j(t) + \lambda_i E_i(t)^2
+  \end{split}
+\end{equation}
+
+Let's order the variables $\{E_0, E_1, D_{N0}, D_{N1}\}$, and the
+parameters $\{\lambda_0, \lambda_1, \mu_0, \mu_1, q_{01}, q_{10}\}$.
+As for Mk2, we build a derivatives function following \deSolve's
+conventions:
+\begin{samepage}
+<<derivs-bisse>>=
+derivs.bissenew <- function(t, y, pars) {
+  E0 <- y[1]
+  E1 <- y[2]
+  D0 <- y[3]
+  D1 <- y[4]
+
+  lambda0 <- pars[1]
+  lambda1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+
+  list(c(-(mu0 + q01 + lambda0) * E0 + lambda0 * E0 * E0 + mu0 + q01 * E1,
+         -(mu1 + q10 + lambda1) * E1 + lambda1 * E1 * E1 + mu1 + q10 * E0,
+         -(mu0 + q01 + lambda0) * D0 + 2 * lambda0 * E0 * D0 + q01 * D1,
+         -(mu1 + q10 + lambda1) * D1 + 2 * lambda1 * E1 * D1 + q10 * D0))
+}
+@ 
+\end{samepage}
+
+Test this out with a branch that begins in state $0$.  This means that
+$E_i$ is zero for both states, $D_{N0}=1$ (as we have a tip in state
+with probability $1$) and $D_{N1}=0$ (as there is no chance to move
+into state $1$ in zero time), so the initial conditions are
+<<>>=
+y <- c(0, 0, 1, 0)
+@ 
+Picking parameters that reflect a 2-fold increase in speciation rate
+for state $1$:
+<<>>=
+pars <- c(.1, .2, .03, .03, .01, .01)
+@ 
+Integrating over $30$ time units, and recording the output regularly:
+<<>>=
+tt <- seq(0, 30, length=101)
+out <- lsoda(y, tt, derivs.bissenew, pars)[,-1]
+@ 
+The output is plotted in figure \ref{fig:bisse-output}.
+
+\begin{figure}
+<<fig=TRUE>>=
+matplot(tt, out, type="l", lty=c(2, 2, 1, 1), col=c("black", "red"))
+legend("topright", c("State 0", "State 1"), col=1:2, lty=1:2)
+@ 
+\caption{Evolution of the variables under the \BiSSE\ model, starting
+  from a tip in state $0$.  Black lines indicate state $0$, red lines
+  indicate state $1$.  Dashed lines are $E_i(t)$, and solid lines are
+  $D_{Ni}(t)$.}
+\label{fig:bisse-output}
+\end{figure}
+Note that the extinction curves rise to an asymptote over time (this
+will be similar to $\mu_i/\lambda_i$, but will not exactly equal this
+where $q_{ij}>0$).  The $D_{Ni}(t)$ curve for the observed state
+decreases over time.  The other $D$ curve increases slightly, then
+decreases.
+
+At the node, the $E$ variables are unchanged, and should be identical
+so we can take either branch.  The $D$ variables are multiplied
+together and with $\lambda$:
+<<ic-bisse>>=
+initial.conditions.bissenew <- function(init, pars, t, idx) {
+  E       <- init[c(1,2),1] # take the first branch arbitrarily
+  D.left  <- init[c(3,4),1]
+  D.right <- init[c(3,4),2]
+  lambda  <- pars[c(1,2)]
+  c(E, D.left * D.right * lambda)
+}
+@ 
+
+As above, we'll create an ``info'' list.  Note that \code{ny} is now
+$4$, corresponding to our four variables.  I've also declared that the
+function will take 6 parameters (\code{np=6}), that variables $3$ and
+$4$ are the ``data'' variables, and will require underflow protection.
+I also named the model ``bissenew'' and declared the default parameter
+names.
+<<cache-bisse>>=
+make.cache.bissenew <- function(tree, states, strict) {
+  tree <- check.tree(tree)
+  states <- check.states(tree, states, strict=strict, strict.vals=0:1)
+  cache <- make.cache(tree)
+  cache$states <- states
+  cache$info <- 
+    list(name="bissenew", np=6, ny=4, idx.d=3:4,
+         derivs=derivs.bissenew,
+         argnames=c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10"))
+  cache$y <- initial.tip.state.bissenew(cache)
+  cache
+}
+<<initial-tip-bisse>>=
+initial.tip.state.bissenew <- function(cache) {
+  y <- list(c(0, 0, 1, 0), # in state 0: E* = 0, D0 = 1, D1 = 0
+            c(0, 0, 0, 1), # in state 1: E* = 0, D0 = 0, D1 = 1
+            c(0, 0, 1, 1)) # in state ?: E* = 0, D0 = 1, D1 = 1
+  y.i <- cache$states + 1
+  dt.tips.grouped(y, y.i, cache)
+}
+@ 
+
+<<ll-bisse>>=
+make.bissenew <- function(tree, states, strict=TRUE, control=list()) {
+  cache <- make.cache.bissenew(tree, states, strict)
+  all.branches <- make.all.branches.dtlik(cache, control,
+                                          initial.conditions.bissenew)
+  ll <- function(pars) {
+    check.pars.nonnegative(pars, 6)
+    ans <- all.branches(pars)
+    d.root <- ans$vals[cache$info$idx.d]
+    log(sum(d.root * c(.5, .5))) + sum(ans$lq)
+  }
+  class(ll) <- c("bissenew", "dtlik", "function")
+  ll
+}
+@ 
+
+Test this out by making a likelihood function and evaluating it at the
+true parameters:
+<<>>=
+lik.new <- make.bissenew(phy, states)
+lik.new(pars)
+@ 
+
+Compared with \diversitree's \BiSSE\ calculation (note that we set
+some defaults here so that root treatment will be same):
+<<>>=
+lik.old <- make.bisse(phy, states)
+lik.old <- set.defaults(lik.old, condition.surv=FALSE, root=ROOT.FLAT)
+lik.old(pars)
+@ 
+
+These are really close:
+<<>>=
+lik.old(pars) - lik.new(pars)
+@ 
+However, they again differ markedly in time (by a factor of about
+15).
+<<>>=
+(t.new <- system.time(replicate(10, lik.new(pars)))[[1]])
+(t.old <- system.time(replicate(10, lik.old(pars)))[[1]])
+t.new / t.old
+@ 
 
 \subsection{Integrating the ODEs in C}
 One way of speeding things up is to push the derivative calculations
 into compiled code via C.  Once these are written out in R, this is
 actually very easy to do.  Please see the \deSolve\ manual for details
 -- this example follows very closely.  The file
-\code{diversitree-ext-eqs.c} contains the derivative calculations from
-above implemented in C -- these look almost identical.  See figure
-\ref{fig:c-code} for a listing.
+\code{diversitree-ext-bisse.c} contains the derivative calculations
+from above implemented in C -- these look almost identical.  See
+figure \ref{fig:c-code-bisse} for a listing.
 \begin{figure}
 \RecustomVerbatimEnvironment{Soutput}{Verbatim}%
 {formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
 <<echo=FALSE>>=
-writeLines(readLines("diversitree-ext-eqs.c"))
+writeLines(readLines("diversitree-ext-bisse.c"))
 @ 
-\caption{Contents of \code{diversitree-ext-eqs.c}}
-\label{fig:c-code}
+\caption{Contents of \code{diversitree-ext-bisse.c}}
+\label{fig:c-code-bisse}
 \end{figure}
 
 Compile the file from the shell (not \R) command prompt by typing
 \begin{Schunk}
 \begin{Scode}
-R CMD SHLIB diversitree-ext-eqs.c
+R CMD SHLIB diversitree-ext-bisse.c
 \end{Scode}
 \end{Schunk}
 <<echo=FALSE>>=
-system("R CMD SHLIB diversitree-ext-eqs.c")
+system("R CMD SHLIB diversitree-ext-bisse.c")
 @ 
-and load the library into \R with
+and load the library into \R\ with
 <<>>=
-dyn.load("diversitree-ext-eqs.so")
+dyn.load("diversitree-ext-bisse.so")
 @ 
+
 We can then repeat the test integration from above:
 <<>>=
-tt <- seq(0, 5, length=101)
-pars <- c(.5, 1)
-out.C <- lsoda(0:1, tt, "derivs_mk2new", pars,
-               initfunc="initmod_mk2new",
-               dll="diversitree-ext-eqs")[,-1]
+out.C <- lsoda(y, tt, "derivs_bissenew", pars,
+               initfunc="initmod_bissenew",
+               dll="diversitree-ext-bisse")[,-1]
 @ 
 and compare this with the \R\ version from above
 <<>>=
-out.R <- lsoda(0:1, tt, derivs.mk2new, pars)[,-1]
-all.equal(out.C, out.R)
+all.equal(out.C, out)
 @ 
 (these may actually be identical on some machines).
 
-Now, all we have to do is modify the and \code{make.mk2new} functions
-to use this, by replacing\linebreak \code{make.all.branches.lsoda} with
-\code{make.all.branches.dtlik}.  The second line (assigning
-\code{dll}) would normally be done in \code{make.cache.mk2new}.
-\begin{samepage}
+Now, all we have to do is modify the \code{make.cache.bissenew}
+function, changing the specification of the \code{info} list.  This
+time, we do not add \code{derivs} element (as this will always cause
+the R calculations to be used), and indicate the name of the shared
+library in which the derivative functions (in C) are contained (note
+that we do not specify the filename extension here).
 <<>>=
-make.all.branches.dtlik <- diversitree:::make.all.branches.dtlik
-<<ll-C>>=
-make.mk2new.C <- function(tree, states, strict=TRUE) {
-  cache <- make.cache.mk2new(tree, states, strict)
-  cache$info$dll <- "diversitree-ext-eqs"
-  all.branches <- make.all.branches.dtlik(cache, list(),
-                                          initial.conditions.mk2new)
-  ll <- function(pars) {
-    check.pars.nonnegative(pars, 2)
-    ans <- all.branches(pars, cache)
-    d.root <- ans$vals
-    log(sum(d.root * c(.5, .5))) + sum(ans$lq)
-  }
-  class(ll) <- c("mk2new", "dtlik", "function")
-  ll
+make.cache.bissenew <- function(tree, states, strict) {
+  tree <- check.tree(tree)
+  states <- check.states(tree, states, strict=strict, strict.vals=0:1)
+  cache <- make.cache(tree)
+  cache$states <- states
+  cache$info <- 
+    list(name="bissenew", np=6, ny=4, idx.d=3:4,
+         dll="diversitree-ext-bisse",
+         argnames=c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10"))
+  cache$y <- initial.tip.state.bissenew(cache)
+  cache
 }
 @ 
-\end{samepage}
+%
+The \code{make.bissenew} function does not need modification.
+
+How does this work?  Recall that we set \code{name="bissenew"}.  When
+using the \code{deSolve} backend (which is the default), when
+\code{info\$name} is set to \code{xxx}, \R\ will look for loaded
+symbols \code{initmod\_xxx} and \code{derivs\_xxx}.  Using this it
+builds a ``branches'' function (\code{make.branches.dtlik} is called
+by \code{make.all.branches} to do this).  The \code{np} and \code{ny}
+elements provide important information to this process about how many
+parameters and variables to expect, and \code{idx.d} indicates which
+variables contain conditional likelihoods.
+
 Using this:
 <<>>=
-lik.C <- make.mk2new.C(phy, phy$tip.state)
-lik.C(c(.1, .2))
-lik.C(c(.1, .2)) - lik.new(c(.1, .2))
+lik.C <- make.bissenew(phy, states)
+lik.C(pars)
+lik.C(pars) - lik.new(pars)
 @ 
-However, the speedup is moderate: the C version is $11\times$ faster
-than the \R\ version, but still $16\times$ slower than the diversitree
-version.
+The new likelihood function is now about as fast as the \diversitree\
+version:
 <<>>=
-(t.C <- system.time(replicate(10, lik.C(c(.1, .2))))[[1]])
+(t.C <- system.time(replicate(10, lik.C(pars)))[[1]])
 t.new / t.C
 t.C / t.old
 @ 
 
+With a little more work, we can make this faster still.  On
+non-windows platforms, \diversitree\ can use the ``cvodes'' solver,
+and carry out all calculations in C.  This eliminates quite a bit of
+overhead from the calculations.  It does require that the CVODES
+header files are on the compiler's search path.  The unexported
+function \code{cvodes.headers} can determine what the appropriate flag
+will be (be aware it will change with every new R version).  When
+placed in a file called ``Makevars'', this will be used, and the
+following line writes this out:
+<<>>=
+diversitree:::cvodes.headers(to.Makevars=TRUE)
+@ 
+The file \code{diversitree-ext-cvodes.c} contains support for both
+types of ODE solver, and is shown in figure \ref{fig:c-code-cvodes}.
 
+\begin{figure}
+\RecustomVerbatimEnvironment{Soutput}{Verbatim}%
+{formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
+<<echo=FALSE>>=
+writeLines(readLines("diversitree-ext-bisse.c"))
+@ 
+\caption{Contents of \code{diversitree-ext-bisse.c}}
+\label{fig:c-code-cvodes}
+\end{figure}
 
+As above, compile with
+\begin{Schunk}
+\begin{Scode}
+R CMD SHLIB diversitree-ext-cvodes.c
+\end{Scode}
+\end{Schunk}
+<<echo=FALSE>>=
+system("R CMD SHLIB diversitree-ext-cvodes.c")
+@ 
+and load the library into \R\ with
+<<>>=
+dyn.load("diversitree-ext-cvodes.so")
+@ 
 
+We need another version of \code{make.cache.bissenew}, but only to
+update the filename of the shared library.
+<<make-cache-bisse-final>>=
+make.cache.bissenew <- function(tree, states, strict) {
+  tree <- check.tree(tree)
+  states <- check.states(tree, states, strict=strict, strict.vals=0:1)
+  cache <- make.cache(tree)
+  cache$states <- states
+  cache$info <- 
+    list(name="bissenew", np=6, ny=4, idx.d=3:4,
+         dll="diversitree-ext-cvodes",
+         argnames=c("lambda0", "lambda1", "mu0", "mu1", "q01", "q10"))
+  cache$y <- initial.tip.state.bissenew(cache)
+  cache
+}
+@ 
+
+Now, when we make the likelihood function, we need to pass in
+\code{list(backend="CVODES")} to tell \diversitree\ that we want the
+alternative backend.
+<<>>=
+lik.CV <- make.bissenew(phy, states, control=list(backend="CVODES"))
+lik.CV(pars)
+lik.CV(pars) - lik.old(pars)
+@ 
+We can still make the \deSolve-based version by passing in
+\code{backend="deSolve"}, or by omitting the control argument:
+<<>>=
+lik.Cd <- make.bissenew(phy, states, control=list(backend="deSolve"))
+lik.Cd(pars)
+@ 
+\begin{samepage}
+The CVODES-based likelihood function is now about 5 times faster than
+the \deSolve\ based version (the speedup varies a lot based on tree
+size).
+<<>>=
+(t.CV <- system.time(replicate(10, lik.CV(pars)))[[1]])
+t.CV / t.old
+@ 
+See figure \ref{fig:bisse-code} for the complete listing.
+\end{samepage}
+
+\begin{figure}
+\RecustomVerbatimEnvironment{Sinput}{Verbatim}%
+{formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
+<<eval=FALSE>>=
+<<ll-bisse>>
+<<make-cache-bisse-final>>  
+<<initial-tip-bisse>>
+<<ic-bisse>>
+<<echo=FALSE,eval=TRUE>>=
+@   
+  \caption{The entire implementation of the \BiSSE\ model}
+  \label{fig:bisse-code}
+\end{figure}
 
 \end{document}
 

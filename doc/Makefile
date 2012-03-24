@@ -12,6 +12,8 @@ diversitree-tutorial.pdf: diversitree-tutorial.tex
 
 tidy:
 	rm -f *.aux *.bbl *.blg *.log *.log *.out *.toc Rplots.pdf
+	rm -f Makevars
+	rm -f *.so *.o
 
 clean: tidy
 	rm -f cache/diversitree-tutorial-*pdf
