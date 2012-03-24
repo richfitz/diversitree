@@ -34,7 +34,7 @@
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset
 if ( !interactive() )
-  options(show.signif.stars=FALSE, prompt="  ", continue="  ")
+  options(show.signif.stars=FALSE, continue="  ")
 @ 
 
 %\VignetteIndexEntry{Extending diversitree}
@@ -434,13 +434,13 @@ all.equal(logLik(fit.old), logLik(fit.new))
 \RecustomVerbatimEnvironment{Sinput}{Verbatim}%
 {formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
 <<echo=FALSE>>=
-## oo <- options(continue="  ", prompt="  ")
+oo <- options(continue="  ", prompt="  ")
 <<eval=FALSE>>=
 <<ll>>
 <<make-cache>>  
 <<ic>>
 <<echo=FALSE,eval=TRUE>>=
-## options(oo)
+options(oo)
 @ 
 \caption{The entire implementation of the Mk2 model}
 \label{fig:mk2-model}
@@ -770,6 +770,7 @@ dyn.load("diversitree-ext-cvodes.so")
 
 We need another version of \code{make.cache.bissenew}, but only to
 update the filename of the shared library.
+\begin{samepage}
 <<make-cache-bisse-final>>=
 make.cache.bissenew <- function(tree, states, strict) {
   tree <- check.tree(tree)
@@ -784,6 +785,7 @@ make.cache.bissenew <- function(tree, states, strict) {
   cache
 }
 @ 
+\end{samepage}
 
 Now, when we make the likelihood function, we need to pass in
 \code{list(backend="CVODES")} to tell \diversitree\ that we want the
@@ -813,12 +815,15 @@ See figure \ref{fig:bisse-code} for the complete listing.
 \begin{figure}
 \RecustomVerbatimEnvironment{Sinput}{Verbatim}%
 {formatcom=\color{black},frame=single,framerule=1px,xleftmargin=2em,fontsize=\relsize{-1}}
+<<echo=FALSE>>=
+oo <- options(continue="  ", prompt="  ")
 <<eval=FALSE>>=
 <<ll-bisse>>
 <<make-cache-bisse-final>>  
 <<initial-tip-bisse>>
 <<ic-bisse>>
 <<echo=FALSE,eval=TRUE>>=
+options(oo)
 @   
   \caption{The entire implementation of the \BiSSE\ model}
   \label{fig:bisse-code}
