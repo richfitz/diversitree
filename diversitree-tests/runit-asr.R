@@ -34,11 +34,10 @@ test.asr.bisse <- function() {
   checkEquals(st.id2, st.m, tolerance=1e-7)  
 
   lik2 <- make.bisse(phy, phy$tip.state, control=list(backend="cvodes"))
-  lik3 <- make.bisse(phy, phy$tip.state, control=list(backend="CVODES"))
-
   st2 <- asr.marginal(lik2, p)
   checkEquals(st, st2, tol=5e-7)
 
+  lik3 <- make.bisse(phy, phy$tip.state, control=list(backend="CVODES"))
   st3 <- asr.marginal(lik3, p)
   checkEquals(st, st3, tol=5e-7)
 }
