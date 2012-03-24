@@ -24,11 +24,9 @@ make.cache.bd.ode <- function(tree, sampling.f, unresolved) {
 }
 initial.tip.bd.ode <- function(cache) {
   f <- cache$sampling.f
-  tips <- cache$tips
-  
   y <- list(c(1-f, f))
-  y.i <- rep(1, length(tips))
-  dt.tips.grouped(y, y.i, tips, cache$len[tips])
+  y.i <- rep(1, length(cache$tips))
+  dt.tips.grouped(y, y.i, cache)
 }
 
 ## 4: initial.conditions

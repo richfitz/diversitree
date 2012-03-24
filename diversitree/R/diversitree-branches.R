@@ -355,7 +355,9 @@ make.branches.comp <- function(branches, comp.idx, eps=0) {
 
 make.ode <- function(info, control) {
   backend  <- control$backend
-  if ( backend == "deSolve" )
+  if ( is.function(info$derivs) )
+    ode <- make.ode.R(info, control)
+  else if ( backend == "deSolve" )
     ode <- make.ode.deSolve(info, control)
   else if ( backend == "cvodes" )
     ode <- make.ode.cvodes(info, control)
@@ -368,58 +370,30 @@ make.branches.dtlik <- function(info, control) {
   info     <- check.info.ode(info, control)
   comp.idx <- info$idx.d
   eps      <- control$eps
-  ode <- make.ode(info, control)
+  ode      <- make.ode(info, control)
   branches <- function(y, len, pars, t0, idx)
     ode(y, c(t0, t0+len), pars)
   make.branches.comp(branches, comp.idx, eps)  
 }
 
-## Used in the tutorial only.
-make.branches.lsoda <- function(info, control=list()) {
-  control <- check.control.ode(control)
-  derivs <- info$derivs
-  if ( !is.function(derivs) )
-    stop("info$derivs must be a function")
-  
-  comp.idx <- check.integer(info$idx.d)
-  eps      <- control$eps
-  tol      <- control$tol  
-  branches <- function(y, len, pars, t0, idx)
-    t(lsoda(y, c(t0, t0+len), derivs, pars,
-            rtol=tol, atol=tol)[-1,-1,drop=FALSE])
-  make.branches.comp(branches, comp.idx, eps)
-}
-
 make.all.branches.dtlik <- function(cache, control,
                                     initial.conditions) {
   control <- check.control.ode(control)
-  info <- cache$info
   if ( control$backend == "CVODES" ) {
-    name <- if (is.null(info$name.ode)) info$name else info$name.ode
-    ny <- as.integer(info$ny)
-    np <- as.integer(info$np)
-    comp.idx <- as.integer(info$idx.d)
-    make.all.branches.C(cache, name, "diversitree",
-                        ny, np, comp.idx, control)
-  } else {
-    branches <- make.branches.dtlik(info, control)
+    make.all.branches.C(cache, control)
+  } else { # deSolve and cvodes:
+    branches <- make.branches.dtlik(cache$info, control)
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache, initial.conditions,
                           branches, preset)
   }
 }
 
-make.all.branches.lsoda <- function(cache, control=list(),
-                                    initial.conditions) {
-  control <- check.control.ode(control)
-  branches <- make.branches.lsoda(cache$info, control)
-  function(pars, intermediates, preset=NULL)
-    all.branches.matrix(pars, cache, initial.conditions,
-                        branches, preset)
-}
-
 ## Utility functions for organising initial conditions.
-dt.tips.grouped <- function(y, y.i, tips, t) {
+dt.tips.grouped <- function(y, y.i, cache) {
+  tips <- cache$tips
+  t <- cache$len[tips]
+  
   if ( !is.list(y) )
     stop("'y' must be a list of initial conditions")
   if ( max(y.i) > length(y) || min(y.i) < 1 )
@@ -428,6 +402,14 @@ dt.tips.grouped <- function(y, y.i, tips, t) {
     stop("y must be same length as tips")
   if ( length(y.i) != length(t) )
     stop("y must be the same length as t")
+
+  if ( any(is.na(y.i)) ) {
+    k <- cache$info$k
+    if ( !is.null(k) && !is.na(k) && length(y) == k + 1 )
+      y.i[is.na(y.i)] <- k + 1
+    else
+      stop("Unhandled NA values in state vector")
+  }
 
   types <- sort(unique(y.i))
   res <- vector("list", length(types))
@@ -501,6 +483,5 @@ initial.tip.xxsse <- function(cache, base.zero=FALSE) {
     y.i[multistate$i] <- y.i.multi + k + 1
   }
 
-  tips <- cache$tips
-  dt.tips.grouped(y, y.i, tips, cache$len[tips])
+  dt.tips.grouped(y, y.i, cache)
 }

@@ -12,7 +12,7 @@ make.ode.deSolve <- function(info, control) {
   derivs <- sprintf("derivs_%s", model)
 
   if ( safe ) {
-    function(vars, pars, times) {
+    function(vars, times, pars) {
       ret <- t(lsoda(vars, times, pars, rtol=rtol, atol=atol,
                      initfunc=initfunc, func=derivs,
                      dllname=dll)[-1,-1,drop=FALSE])
@@ -100,5 +100,21 @@ make.ode.deSolve <- function(info, control) {
         stop("Integration error: integration stopped prematurely")
       ret[-1,-1,drop=FALSE]
     }
+  }
+}
+
+## For testing new models.  Selected by make.ode() when info$derivs is
+## a function
+make.ode.R <- function(info, control) {
+  derivs <- info$derivs
+  rtol <- atol <- control$tol
+  if ( !is.function(derivs) )
+    stop("info$derivs must be a function")
+
+  function(vars, times, pars) {
+    ret <- t(lsoda(vars, times, derivs, pars,
+                   rtol=rtol, atol=atol)[-1,-1,drop=FALSE])
+    dimnames(ret) <- NULL
+    ret
   }
 }

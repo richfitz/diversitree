@@ -1,3 +1,21 @@
+2012-03-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/check.R: typo in check.scalar(), more informative error in
+	check.loaded.symbol().
+
+	* R/cvodes.R: function 'cvodes.headers()' to generate appropriate
+	headers for using cvodes-based integrators.
+
+	* R/deSolve.R: Function arguments were transposed!  Plus pure-R
+	ode generation.
+
+	* R/diversitree-branches.R: Support for pure-R odes (replacing
+	make.branches.lsoda and all.branches.lsoda).  Simplify argument
+	list for dt.tips.grouped().
+
+	* R/model-bd-ode.R, R/model-mkn-ode.R, R/model-musse-multitrait.R:
+	use new dt.tips.grouped().
+
 2012-03-22  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* Too many files to list: huge rewrite of most behind the scenes

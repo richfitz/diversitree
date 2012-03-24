@@ -31,7 +31,7 @@ make.asr.marginal.mkn <- function(lik, ...) {
 
 make.asr.joint.mkn <- function(lik, ...) {
   k <- get.info(lik)$k
-  cache <- environment(lik)$cache
+  cache <- get.cache(lik)
   is.mk2 <- inherits(lik, "mk2")
 
   order.C <- toC.int(rev(cache$order))
@@ -47,7 +47,7 @@ make.asr.joint.mkn <- function(lik, ...) {
 
 make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
   is.mk2 <- inherits(lik, "mk2")
-  cache <- environment(lik)$cache
+  cache <- get.cache(lik)
   k <- as.integer(get.info(lik)$k)
 
   if ( is.mk2 ) {

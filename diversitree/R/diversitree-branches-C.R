@@ -1,13 +1,20 @@
-make.all.branches.C <- function(cache, model, dll, neq, np, comp.idx,
-                                control) {
+## make.all.branches.C <- function(cache, model, dll, neq, np, comp.idx,
+##                                 control) {
+make.all.branches.C <- function(cache, control) {
   check.cvodes(error=TRUE)
+  info     <- check.info.ode(cache$info, control)
+  model    <- info$name.ode
+  neq      <- as.integer(info$ny)
+  np       <- as.integer(info$np)
+  comp.idx <- as.integer(info$idx.d)
+  dll      <- info$dll
+  rtol <- as.numeric(control$tol)
+  atol <- rep(rtol, neq)
+  eps  <- as.numeric(control$eps)
 
-  tol <- control$tol
-  eps <- control$eps
-
-  cache <- toC.cache(cache, comp.idx)
-  neq <- as.integer(neq)
-  np  <- as.integer(np)
+  ## This is depended on by make.do.asr.marginal, which reaches in
+  ## here to access the cache.
+  cache.C <- toC.cache(cache, comp.idx)
 
   rhs.name <- sprintf("derivs_%s_cvode", model)
   ic.name  <- sprintf("initial_conditions_%s", model)
@@ -15,11 +22,8 @@ make.all.branches.C <- function(cache, model, dll, neq, np, comp.idx,
   rhs <- getNativeSymbolInfo(rhs.name, PACKAGE=dll)$address
   ic  <- getNativeSymbolInfo(ic.name,  PACKAGE=dll)$address
 
-  rtol <- as.numeric(tol)
-  atol <- rep(as.numeric(tol), neq)
-
-  ptr <- .Call("r_make_dt_obj", cache, neq, np, rhs, ic, rtol, atol,
-               eps, PACKAGE="diversitree")
+  ptr <- .Call("r_make_dt_obj", cache.C, neq, np, rhs, ic,
+               rtol, atol, eps, PACKAGE="diversitree")
 
   function(pars, intermediates=FALSE, preset=NULL) {
     if ( !is.null(preset) )
@@ -59,4 +63,3 @@ toC.cache <- function(cache, comp.idx) {
 
   cache
 }
-

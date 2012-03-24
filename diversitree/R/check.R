@@ -186,7 +186,7 @@ check.integer <- function(x) {
 
 check.scalar <- function(x) {
   if ( length(x) != 1 )
-    stop(deparse(substitute(x)), "must be a scalar")
+    stop(deparse(substitute(x)), " must be a scalar")
   x
 }
 
@@ -220,8 +220,12 @@ check.control.ode <- function(control=list()) {
 }
 
 check.loaded.symbol <- function(symbol, dll="") {
-  if ( !is.loaded(symbol, dll) )
-    stop(sprintf("Can't find C function %s", symbol))
+  if ( !is.loaded(symbol, dll) ) {
+    msg <- sprintf("Can't find C function %s", symbol)
+    if ( dll != "" )
+      sprintf("%s in shared library %s", msg, dll)
+    stop(msg)
+  }
   TRUE
 }
 
@@ -241,7 +245,9 @@ check.info.ode <- function(info, control=NULL) {
 
   if ( !is.null(control) ) {
     backend <- control$backend
-    if ( backend == "deSolve" ) {
+    if ( is.function(info$derivs) ) {
+      backend <- "R" # no effect.
+    } else if ( backend == "deSolve" ) {
       check.loaded.symbol(sprintf("initmod_%s", model), dll)
       check.loaded.symbol(sprintf("derivs_%s", model),  dll)
     } else if ( backend == "cvodes" ) {

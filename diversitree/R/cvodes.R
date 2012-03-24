@@ -85,3 +85,14 @@ check.cvodes <- function(error=TRUE) {
     stop("diversitree built without CVODES support")
   ok
 }
+
+cvodes.headers <- function(to.Makevars=FALSE, ...) {
+  str <- sprintf("PKG_CPPFLAGS=-I%s/include",
+                 path.package("diversitree"))
+  if ( to.Makevars ) {
+    writeLines(str, "Makevars", ...)
+    invisible(str)
+  } else {
+    str
+  }
+}

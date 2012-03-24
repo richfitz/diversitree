@@ -7,9 +7,7 @@
 make.asr.marginal.musse <- function(lik, ...) {
   e <- environment(lik)
   f.pars <- e$f.pars
-  states.idx <- get.info(lik)$idx.d
-
-  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc, states.idx)
+  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc)
   asr <- function(pars, nodes=NULL, condition.surv=TRUE,
                   root=ROOT.FLAT, root.p=NULL, ...) {
     pars2 <- f.pars(pars)

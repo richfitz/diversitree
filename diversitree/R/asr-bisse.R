@@ -7,9 +7,7 @@
 make.asr.marginal.bisse <- function(lik, ...) {
   e <- environment(lik)
   unresolved <- e$unresolved
-  states.idx <- get.info(lik)$idx.d
-
-  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc, states.idx)
+  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc)
   asr <- function(pars, nodes=NULL, condition.surv=TRUE,
                   root=ROOT.FLAT, root.p=NULL, ...) {
     check.pars.bisse(pars)

@@ -104,8 +104,7 @@ initial.tip.musse.multitrait <- function(cache) {
               c(1-f, ifelse(seq_len(k) %in% i, f, 0)))
   y.i <- match(code, types)
 
-  tips <- cache$tips
-  dt.tips.grouped(y, y.i, tips, cache$len[tips])
+  dt.tips.grouped(y, y.i, cache)
 }
 
 ######################################################################
@@ -121,7 +120,7 @@ starting.point.musse.multitrait <- function(tree, lik, q.div=5,
   if ( !inherits(lik, "musse.multitrait") )
     stop("'lik' must be a musse.multitrait model")
   
-  tr <- environment(lik)$cache$tr
+  tr <- get.cache(lik)$tr
 
   pars.bd <- suppressWarnings(starting.point.bd(tree, yule))
   r <- if  ( pars.bd[1] > pars.bd[2] )
