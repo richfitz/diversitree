@@ -3,32 +3,19 @@
 \usepackage{relsize}
 \usepackage{natbib}
 \usepackage{amsmath}
-\usepackage{color}
-
-% I like Garamond (who doesn't?).  However, it's not included in most
-% TeX distributions due to licence restrictions.  Either use
-% getfontsnonfree to install it, remove this line to get computer
-% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
-% Palatino, which is also quite nice.
-\usepackage[garamond]{mathdesign}
+\usepackage{xcolor}
 
 \definecolor{navy}{rgb}{0,0,0.4}
 \usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
 
 \newcommand{\code}{\texttt}
-\newcommand\R{\textsf{R}}
-\newcommand{\BiSSE}{\textsc{BiSSE}}
-\newcommand{\MuSSE}{\textsc{MuSSE}}
-\newcommand{\QuaSSE}{\textsc{QuaSSE}}
-\newcommand{\diversitree}{\textsf{diversitree}}
-\newcommand{\deSolve}{\textsf{deSolve}}
-\newcommand{\ape}{\textsf{ape}}
 \newcommand{\ud}{\mathrm{d}}
 
 \usepackage{Sweave}
 \usepackage{dtsweave}
 \SweaveOpts{keep.source=TRUE,eps=FALSE}
 \SweaveOpts{prefix.string=cache/diversitree-ext}
+
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset.  Also set the
@@ -37,10 +24,17 @@ if ( !interactive() )
   options(show.signif.stars=FALSE, continue="  ")
 @ 
 
+% I like Garamond (who doesn't?).  However, it's not included in most
+% TeX distributions due to licence restrictions.  Either use
+% getfontsnonfree to install it, remove this line to get computer
+% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
+% Palatino, which is also quite nice.
+\usepackage[garamond]{mathdesign}
+
 %\VignetteIndexEntry{Extending diversitree}
 %\VignettePackage{diversitree}
 
-\title{Extending \diversitree}
+\title{Extending diversitree}
 \author{Rich FitzJohn}
 
 \begin{document}
@@ -49,7 +43,7 @@ if ( !interactive() )
 
 \section{Introduction}
 
-The \diversitree\ package is set up so that it is relatively
+The diversitree package is set up so that it is relatively
 straightforward to implement new models, and take advantage of a
 number of package features with little effort, such as the maximum
 likelihood inference, MCMC, and support for constraining functions,
@@ -68,7 +62,7 @@ always be the most efficient, but it can require very little writing.
 % Karen says add more about general direction -- flag the book keeping
 % section and possibly also functional programming techniques.
 
-The code below requires that \diversitree\ is loaded.
+The code below requires that diversitree is loaded.
 <<>>=
 library(diversitree)
 @ 
@@ -77,7 +71,7 @@ from the package namespace by default.  Wherever you see a
 ``\code{diversitree:::}'' operator, this extracts these hidden
 functions.
 
-\diversitree\ make heavy use of ``functional programming'' techniques.
+diversitree make heavy use of ``functional programming'' techniques.
 In particular, functions are often used as arguments to functions, and
 functions are often returned from functions.  This can be confusing at
 first, but avoids large parameter lists being passed around, and means
@@ -87,8 +81,8 @@ out.
 
 \section{Re-implementing the Mk2 model}
 
-The Mk2 model already exists in \diversitree, but we'll re-implement
-it here\footnote{The version in \diversitree\ is substantially faster
+The Mk2 model already exists in diversitree, but we'll re-implement
+it here\footnote{The version in diversitree is substantially faster
   than this version as it is implemented quite differently, but this
   is a simple model to demonstrate how tip-to-root calculation models
   can be implemented.}.
@@ -117,11 +111,11 @@ For clarity, $D_0(t)$ and $D_1(t)$ are our variables, and $q_{01}$ and
 $q_{10}$ are our parameters.
 
 These can be solved numerically, given initial conditions ${D_0(0),
-  D_1(0)}$, using \deSolve.  The \deSolve\ integrators require
+  D_1(0)}$, using deSolve.  The deSolve integrators require
 functions that take three arguments:
 \begin{itemize}
 \item \code{t}: Time at which the derivatives will be evaluated
-  (ignored here, and in most current \diversitree\ models).
+  (ignored here, and in most current diversitree models).
 \item \code{y}: Vector of variables.
 \item \code{pars}: Vector of parameters.
 \end{itemize}
@@ -129,7 +123,7 @@ It must return a list, the first (and possibly only) element of which
 is a vector of derivatives of each of the variables.  Please see the
 documentation for \code{lsoda} for more information.
 %
-We can do this entirely within \R\ code this way (illustrated for
+We can do this entirely within R code this way (illustrated for
 clarity, not speed):
 <<>>=
 derivs.mk2new <- function(t, y, pars) {
@@ -147,7 +141,7 @@ derivs.mk2new <- function(t, y, pars) {
 @ 
 
 We can test this out with the \code{lsoda} function\footnote{The
-  \deSolve\ package provides an interface to a large number of
+  deSolve package provides an interface to a large number of
   integrators.  The \code{lsoda} integrator seems to perform well.}.
 We need to specify the initial conditions of the variables, the times
 at which to return the values of the variables, our derivative
@@ -187,7 +181,7 @@ a tip in state $1$.}
 \end{figure}
 
 The integration appears to work.  However, we still have to do a
-little work to convert this into what \diversitree\ needs for
+little work to convert this into what diversitree needs for
 calculations along branches.  It is not the case here directly, but
 for many problems, the $D$ values shrink over time, and underflow can
 be a problem (the numbers get too small to accurately work with
@@ -200,7 +194,7 @@ divide the elements of the returned vector by $z$, so that at least
 one element stays around order 1 (the largest element in the mk2 model
 output will never be smaller than 0.5).
 
-For its branches function, \diversitree\ requires a function that
+For its branches function, diversitree requires a function that
 takes the arguments
 \begin{itemize}
 \item \code{y}: Initial conditions, as above
@@ -217,8 +211,8 @@ Integration starts at \code{t0}, and runs for length of time
 \code{len[1]} to time \code{t0 + len[1]}, then up to time \code{t0 +
   len[2]}, and so on.
 %
-The required return value differs from what \deSolve\ returns.
-\diversitree\ expects a list with two elements.  The first element is
+The required return value differs from what deSolve returns.
+diversitree expects a list with two elements.  The first element is
 a vector of ``compensation factors'' from above, and the second is a
 matrix with \code{length(y)} rows and \code{length(len)} columns.
 
@@ -394,7 +388,7 @@ phy <- trees(pars, "bisse", max.taxa=25, max.t=Inf, x0=0)[[1]]
 states <- phy$tip.state
 @ 
 
-Here is the likelihood function from \diversitree:
+Here is the likelihood function from diversitree:
 <<>>=
 lik.dt <- set.defaults(make.mk2(phy, states), root=ROOT.FLAT)
 lik.dt(c(.1, .2))
@@ -420,7 +414,7 @@ fit.new <- find.mle(lik.new, c(.1, .2))
 coef(fit.new)
 logLik(fit.new)
 @ 
-and this agrees well with the version in \diversitree:
+and this agrees well with the version in diversitree:
 
 <<>>=
 fit.old <- find.mle(lik.dt, c(.1, .2))
@@ -454,22 +448,22 @@ t.new / t.old
 @ 
 The total slowdown may depend on the exact hardware, but I get about
 $170\times$ slower calculations with our new version, compared with the
-version in \diversitree.
+version in diversitree.
 
-\section{Reimplementing \BiSSE}
+\section{Reimplementing BiSSE}
 \label{sec:reimplementing-bisse}
 
 As an example of a state-dependent diversification model, with more
-moving parts than the Mk2 model, here, we'll re-implement the \BiSSE\
+moving parts than the Mk2 model, here, we'll re-implement the BiSSE
 model.  This section assumes knowledge of the functions from above,
-and of the \BiSSE\ model.
+and of the BiSSE model.
 
 \subsection{Branch calculations}
 As above, let $D_{Ni}(t)$ be the probability that a branch at some
 time $t$ before the present (at $t=0$) will yield all the observed
 data descended from that branch, and now let $E_i(t)$ be the
 probability that a lineage in state $i$ at time $t$ will go completely
-extinct by the present, leaving no descendants.  \BiSSE\ has six
+extinct by the present, leaving no descendants.  BiSSE has six
 parameters: $\lambda_i$ is the rate of speciation of a lineage in
 state $i$, $\mu_i$ is the rate of extinction of a lineage in state
 $i$, and as above $q_{ij}$ the the rate of transition from state $i$
@@ -490,7 +484,7 @@ to $j$.
 
 Let's order the variables $\{E_0, E_1, D_{N0}, D_{N1}\}$, and the
 parameters $\{\lambda_0, \lambda_1, \mu_0, \mu_1, q_{01}, q_{10}\}$.
-As for Mk2, we build a derivatives function following \deSolve's
+As for Mk2, we build a derivatives function following deSolve's
 conventions:
 \begin{samepage}
 <<derivs-bisse>>=
@@ -539,7 +533,7 @@ The output is plotted in figure \ref{fig:bisse-output}.
 matplot(tt, out, type="l", lty=c(2, 2, 1, 1), col=c("black", "red"))
 legend("topright", c("State 0", "State 1"), col=1:2, lty=1:2)
 @ 
-\caption{Evolution of the variables under the \BiSSE\ model, starting
+\caption{Evolution of the variables under the BiSSE model, starting
   from a tip in state $0$.  Black lines indicate state $0$, red lines
   indicate state $1$.  Dashed lines are $E_i(t)$, and solid lines are
   $D_{Ni}(t)$.}
@@ -616,7 +610,7 @@ lik.new <- make.bissenew(phy, states)
 lik.new(pars)
 @ 
 
-Compared with \diversitree's \BiSSE\ calculation (note that we set
+Compared with diversitree's BiSSE calculation (note that we set
 some defaults here so that root treatment will be same):
 <<>>=
 lik.old <- make.bisse(phy, states)
@@ -639,7 +633,7 @@ t.new / t.old
 \subsection{Integrating the ODEs in C}
 One way of speeding things up is to push the derivative calculations
 into compiled code via C.  Once these are written out in R, this is
-actually very easy to do.  Please see the \deSolve\ manual for details
+actually very easy to do.  Please see the deSolve manual for details
 -- this example follows very closely.  The file
 \code{diversitree-ext-bisse.c} contains the derivative calculations
 from above implemented in C -- these look almost identical.  See
@@ -650,7 +644,7 @@ figure \ref{fig:c-code-bisse} for a listing.
   \label{fig:c-code-bisse}
 \end{figure}
 
-Compile the file from the shell (not \R) command prompt by typing
+Compile the file from the shell (not R) command prompt by typing
 \begin{Schunk}
 \begin{Scode}
 R CMD SHLIB diversitree-ext-bisse.c
@@ -659,7 +653,7 @@ R CMD SHLIB diversitree-ext-bisse.c
 <<echo=FALSE>>=
 system("R CMD SHLIB diversitree-ext-bisse.c")
 @ 
-and load the library into \R\ with
+and load the library into R with
 <<>>=
 dyn.load("diversitree-ext-bisse.so")
 @ 
@@ -670,7 +664,7 @@ out.C <- lsoda(y, tt, "derivs_bissenew", pars,
                initfunc="initmod_bissenew",
                dll="diversitree-ext-bisse")[,-1]
 @ 
-and compare this with the \R\ version from above
+and compare this with the R version from above
 <<>>=
 all.equal(out.C, out)
 @ 
@@ -701,7 +695,7 @@ The \code{make.bissenew} function does not need modification.
 
 How does this work?  Recall that we set \code{name="bissenew"}.  When
 using the \code{deSolve} backend (which is the default), when
-\code{info\$name} is set to \code{xxx}, \R\ will look for loaded
+\code{info\$name} is set to \code{xxx}, R will look for loaded
 symbols \code{initmod\_xxx} and \code{derivs\_xxx}.  Using this it
 builds a ``branches'' function (\code{make.branches.dtlik} is called
 by \code{make.all.branches} to do this).  The \code{np} and \code{ny}
@@ -715,7 +709,7 @@ lik.C <- make.bissenew(phy, states)
 lik.C(pars)
 lik.C(pars) - lik.new(pars)
 @ 
-The new likelihood function is now about as fast as the \diversitree\
+The new likelihood function is now about as fast as the diversitree
 version:
 <<>>=
 (t.C <- system.time(replicate(10, lik.C(pars)))[[1]])
@@ -724,7 +718,7 @@ t.C / t.old
 @ 
 
 With a little more work, we can make this faster still.  On
-non-windows platforms, \diversitree\ can use the ``cvodes'' solver,
+non-windows platforms, diversitree can use the ``cvodes'' solver,
 and carry out all calculations in C.  This eliminates quite a bit of
 overhead from the calculations.  It does require that the CVODES
 header files are on the compiler's search path.  The unexported
@@ -753,7 +747,7 @@ R CMD SHLIB diversitree-ext-cvodes.c
 <<echo=FALSE>>=
 system("R CMD SHLIB diversitree-ext-cvodes.c")
 @ 
-and load the library into \R\ with
+and load the library into R with
 <<>>=
 dyn.load("diversitree-ext-cvodes.so")
 @ 
@@ -778,14 +772,14 @@ make.cache.bissenew <- function(tree, states, strict) {
 \end{samepage}
 
 Now, when we make the likelihood function, we need to pass in
-\code{list(backend="CVODES")} to tell \diversitree\ that we want the
+\code{list(backend="CVODES")} to tell diversitree that we want the
 alternative backend.
 <<>>=
 lik.CV <- make.bissenew(phy, states, control=list(backend="CVODES"))
 lik.CV(pars)
 lik.CV(pars) - lik.old(pars)
 @ 
-We can still make the \deSolve-based version by passing in
+We can still make the deSolve-based version by passing in
 \code{backend="deSolve"}, or by omitting the control argument:
 <<>>=
 lik.Cd <- make.bissenew(phy, states, control=list(backend="deSolve"))
@@ -793,7 +787,7 @@ lik.Cd(pars)
 @ 
 \begin{samepage}
 The CVODES-based likelihood function is now about 5 times faster than
-the \deSolve\ based version (the speedup varies a lot based on tree
+the deSolve based version (the speedup varies a lot based on tree
 size).
 <<>>=
 (t.CV <- system.time(replicate(10, lik.CV(pars)))[[1]])
@@ -815,7 +809,7 @@ oo <- options(continue="  ", prompt="  ")
 <<echo=FALSE,eval=TRUE>>=
 options(oo)
 @   
-  \caption{The entire implementation of the \BiSSE\ model}
+  \caption{The entire implementation of the BiSSE model}
   \label{fig:bisse-code}
 \end{figure}
 
