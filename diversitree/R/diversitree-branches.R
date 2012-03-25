@@ -241,6 +241,12 @@ make.cache <- function(tree) {
   i <- abs(depth - depth2) < 1e-8
   depth[i] <- depth2[i]
 
+  if ( is.ultrametric(tree) )
+    ## It is possible that an ultrametric tree will not quite have the
+    ## tips around zero.  This ensures it, which is is required for
+    ## dt.tips.grouped to work at present.
+    depth[tips] <- 0
+
   ## TODO: I don't need this ancestor thing for much - drop it here
   ## and move it to the asr code that actually uses it (this takes a
   ## lot of time, and is only used by the ASR code).
@@ -411,6 +417,9 @@ dt.tips.grouped <- function(y, y.i, cache) {
       stop("Unhandled NA values in state vector")
   }
 
+  if ( max(abs(cache$depth[tips])) > .Machine$double.eps^0.5 )
+    stop("This currently only works for ultrametric trees")
+
   types <- sort(unique(y.i))
   res <- vector("list", length(types))
 
@@ -418,7 +427,8 @@ dt.tips.grouped <- function(y, y.i, cache) {
     j <- which(y.i == type)
     i <- order(t[j])
     res[[type]] <- list(y=y[[type]], y.i=type,
-                        target=tips[j][i], t=t[j][i])
+                        target=tips[j][i], t=t[j][i],
+                        type="GROUPED")
   }
   res
 }

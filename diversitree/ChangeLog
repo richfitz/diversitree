@@ -1,3 +1,18 @@
+2012-03-25  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
+
+	* R/check.R: Negative branch length check was being skipped.
+
+	* R/diversitree-branches.R: More safety checking for ultrametric
+	trees, in preparation of allowing eventual non-ultrametric trees
+	for more models.
+
+	* R/model-bm-direct.R: Clarify branches calculations.
+
+	* R/plot-alt-extra.R: add drop=TRUE to prevent de-dataframing.
+
+	* R/profiles-plot.R: More automation (legends, argument names, and
+	opacity).
+
 2012-03-23  Rich FitzJohn  <fitzjohn@zoology.ubc.ca>
 
 	* R/check.R: typo in check.scalar(), more informative error in

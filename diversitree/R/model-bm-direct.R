@@ -67,6 +67,9 @@ make.all.branches.bm.direct <- function(cache, control) {
 ## Additional functions
 
 ## branches
+## Unlike the ODE-based functions, this ignores t0 and carries out
+## calculations along length=len (rather than looking at c(t0,
+## t0+len)).
 branches.bm.direct <- function(y, len, pars, t0, idx) {
   m <- y[1]
   v <- y[2]

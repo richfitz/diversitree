@@ -237,9 +237,7 @@ samples <- mcmc(lik, fit$par, nsteps=1000, prior=prior, w=w,
 ## profiles.
 col <- c("blue", "red")
 profiles.plot(samples[c("lambda0", "lambda1")], col.line=col, las=1,
-              xlab="Speciation rate",
-              ylab="Posterior probability density")
-legend("topright", c("lambda0", "lambda1"), col=col, lty=1)
+              xlab="Speciation rate", legend="topright")
 }
 
 ## BiSSE reduces to the birth-death model and Mk2 when diversification

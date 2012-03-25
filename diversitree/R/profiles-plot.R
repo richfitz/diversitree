@@ -2,9 +2,12 @@
 ## single unique y value very nicely.  I should probably draw a delta
 ## function?
 profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
-                           n.br=50, ...) {
+                          n.br=50, opacity=.5,
+                          xlab="Parameter estimate",
+                          ylab="Probability density",
+                          legend.pos=NULL, ...) {
   if ( missing(col.fill) )
-    col.fill <- add.alpha(col.line, .5)
+    col.fill <- add.alpha(col.line, 1-opacity)
   if ( is.null(xlim) )
     r <- range(unlist(y))
   else
@@ -18,7 +21,8 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
     ymax <- max(sapply(hh, function(x) max(x$density)))
   ylim <- c(-0.075, 1.05) * ymax
   
-  plot(NA, xlim=xlim, ylim=ylim, type="n", yaxs="i", ...)
+  plot(NA, xlim=xlim, ylim=ylim, type="n", yaxs="i", xlab=xlab,
+       ylab=ylab, ...)
   for ( i in seq_along(y) )
     add.profile.shading(hh[[i]], ci[[i]], col.fill[i])
   for ( i in seq_along(y) )
@@ -28,6 +32,9 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
   for ( i in seq_along(y) )
     arrows(ci[[i]][1], z[i], ci[[i]][2], z[i], code=3, angle=90,
            length=0.02, col=col.line[i])
+
+  if ( !is.null(legend.pos) )
+    legend(legend.pos, names(y), fill=col.fill, border=col.line, bty="n")
 }
 
 add.profile.shading <- function(h, ci, col) {

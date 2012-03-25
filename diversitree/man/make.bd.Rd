@@ -140,8 +140,7 @@ samples$r <- with(samples, lambda - mu)
 ## well with the estimated ones.
 col <- c("red", "blue", "green3")
 profiles.plot(samples[c("lambda", "mu", "r")], col.line=col, las=1,
-             ylab="Probability density", xlab="Parameter estimate")
-legend("topright", c("lambda", "mu", "r"), fill=col)
+              legend="topright")
 abline(v=0, lty=2)
 abline(v=c(.1, .03, .07), col=col)
 
