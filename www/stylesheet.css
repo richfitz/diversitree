@@ -79,6 +79,9 @@ a.img { border: 0; }
 
 .container p { padding-left: 4em; }
 
+.container ul { padding-left: 4em;
+		padding-right: 4em; }
+
 .question { font-style: italic; }
 
 /*ul { list-style-type: none; }*/
@@ -132,5 +135,8 @@ pre {
     padding-left: 1em;
 }
 
+.filename {
+    font-family: courier;
+}
 
 /* eae5d2*/

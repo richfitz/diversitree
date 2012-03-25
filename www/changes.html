@@ -7,6 +7,17 @@
     <link rel="Stylesheet" type="text/css" href="stylesheet.css"
 	  media="all" />
     <link href='http://fonts.googleapis.com/css?family=Oswald|Vollkorn:400italic,400' rel='stylesheet' type='text/css'/>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22401624-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
   </head>
 
   <body>
@@ -14,6 +25,24 @@
       <h1>diversitree: Changes and releases</h1>
 
       <ul class="changes">
+	<li><b>25 March 2012 [<a
+	href="archive/diversitree_0.9-2.tar.gz">0.9-2</a>]</b>
+	New models and extensions to models: 
+	<ul>
+	  <li>geiger-style vcv based calculations for
+	  <code>make.ou</code>, via <code>method="vcv"</code>.</li>
+	</ul>
+	Bug fixes, etc:
+	<ul>
+	  <li><code>sim.character</code> was broken in 0.9-1</li>
+	  <li><code>Improved <code>profiles.plot</code> (automatic
+	  legends, better colour control).</code></li>
+	  <li>Improved likelihood function printing.</li>
+	  <li>This version also has had an enormous behind-the-scenes
+	  rewrite (again).  Despite the small list of changes,
+	  thousands of lines of code have changed, and bugs may still
+	  remain.</li>
+	</ul>
 	<li><b>13 March 2012 [<a
 	href="archive/diversitree_0.9-1.tar.gz">0.9-1</a>]</b> New models and
 	extensions to models:

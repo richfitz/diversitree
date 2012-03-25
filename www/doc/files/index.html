@@ -4,15 +4,26 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>diversitree/files</title>
-    <link rel="Stylesheet" type="text/css" href="../stylesheet2.css"
+    <link rel="Stylesheet" type="text/css" href="../../stylesheet.css"
 	  media="all" />
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22401624-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
   </head>
   <body>
     <div class="container">
     <h1>Files</h1>
 
-    This directory contains files used to run the examples in the
-    diversitree tutorial document:
+    <p>This directory contains files used to run the examples in the
+    diversitree tutorial document:</p>
 
     <ul>
       <li><a href="Lislevand-states.csv"
@@ -45,17 +56,26 @@
       Mooers A.Ø. 2006. A new dated supertree of the Primates.
       Chapter 5. In <i>Inferring large phylogenies: the big tree
       problem</i> (R Vos, Ph.D. thesis) Simon Fraser University.</li>
+      <li>
+	<a href="arc.dat" class="filename">arc.dat</a>,
+	<a href="arc.tre" class="filename">arc.tre</a>,
+	<a href="cea.dat" class="filename">cea.dat</a> and
+	<a href="cea.tre" class="filename">cea.tre</a>.  Phylogenies
+	and data for the GeoSSE multi-tree example.</li>
     </ul>
 
     <p>If you want to recompile the tutorial document, you will need
-    these files.</p>
+    these files placed into a directory "<code>data</code>".  You can
+    get all the files at once <a href="data.tar.gz">here</a>.</p>
+
     <ul>
       <li><a href="diversitree-tutorial.Rnw"
 	     class="filename">diversitree-tutorial.Rnw</a>: Sweave
       source file for the tutorial document</li>
       <li><a href="refs.bib" class="filename">refs.bib</a>: BibTeX
       database needed to compile the tutorial document.</li>
-      <li><a href="refstyle.bst" class="filename">refstyle.bst</a>: BibTeX style file</li>
+      <li><a href="refstyle.bst" class="filename">refstyle.bst</a>:
+      BibTeX style file</li>
     </ul>
 
     <p>To compile, run <code>R CMD Sweave
@@ -74,9 +94,9 @@
       <ul class="footer">
 	<li>© 2012 <a href="http://www.zoology.ubc.ca/~fitzjohn">Rich
 	FitzJohn</a></li>
-	<li><a href="../index.html">Home</a></li>
-	<li><a href="../studies.html">Studies</a></li>
-	<li><a href="../faq.html">FAQ</a></li>
+	<li><a href="../../index.html">Home</a></li>
+	<li><a href="../../studies.html">Studies</a></li>
+	<li><a href="../../faq.html">FAQ</a></li>
 	<li><a href="http://cran.r-project.org/web/packages/diversitree">CRAN</a></li>
       </ul>
   </body>
