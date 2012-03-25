@@ -122,7 +122,7 @@ would welcome data sets.
 \subsection{Regenerating this file}
 This file is written in ``Sweave'', which allows mixing R code and
 \LaTeX\ markup.  If you want to regenerate the file, or run the
-empirical examples, you will need some data files, vailable at
+empirical examples, you will need some data files, available at
 \url{http://www.zoology.ubc.ca/prog/diversitree/files/}, which must be
 present in the directory \code{data}.  Some of the code chunks take a
 very long time to run (total processing time is currently about 40
@@ -324,7 +324,7 @@ species), which is no longer significant at the 5\% level.
 
 As with the birth death models above, diversitree supports both
 simulating discrete characters and estimating rates of character
-evolution.  The implemented methods are a little idosyncratic, as they
+evolution.  The implemented methods are a little idiosyncratic, as they
 are primarily here for completeness (representing special cases of the
 joint diversification-character evolution models), but are also useful
 in their own right.
@@ -1152,7 +1152,7 @@ c(linear=coef(mle.d.l)[["drift"]],
   sigmoidal=coef(mle.d.s)[["drift"]],
   hump=coef(mle.d.h)[["drift"]])
 @ 
-However, the precice estimate depends strongly on the speciation model
+However, the precise estimate depends strongly on the speciation model
 assumed.
 
 Next, consider splitting the tree.  MEDUSA \citep{Alfaro-2009-13410}
@@ -1296,7 +1296,7 @@ acceptable performance and accuracy, but this is not always possible.
   towards the root).  By default, this happens at 10\% of the tree
   depth.  Smaller values will be faster, but less accurate.
 
-\item \code{xmid}: Mid point to center the character space.  By
+\item \code{xmid}: Mid point to centre the character space.  By
   default this is at the mid point of the extremes of the character
   states.
 
@@ -1315,7 +1315,7 @@ acceptable performance and accuracy, but this is not always possible.
 
 The GeoSSE model (Geographic State Speciation and Extinction) combines
 features of the constant-rates birth-death model with a three-state
-Markov model.  It differs from BiSSE in parameterizing the model to
+Markov model.  It differs from BiSSE in parameterising the model to
 represent diversification and range shifts among two regions, which
 includes allowing widely-distributed species whose ranges may change
 in conjunction with a speciation event.  See \citet{Goldberg-2011-451}
@@ -1591,7 +1591,15 @@ be found in the online documentation.
 % LocalWords:  topright lty mk eb rbind tmp sapply setdiff len csv dimorph plt
 % LocalWords:  tipmap yy loc cbind rowSums cumsum rect mfrow cex sqrt rle ym Nc
 % LocalWords:  Chionidae Thinocoridae ifelse Dromas nex musse quasse sd nodrift
-% LocalWords:  parscale xmid xr lc sc noroptimal reltol xmin xmax mgp lim dx
+% LocalWords:  parscale xmid xr lc sc noroptimal reltol xmin xmax mgp lim dx sA
 % LocalWords:  lastPP phylo envir PlotPhyloEnv Ntip uniroot usr dy xpd ln nd dt
-% LocalWords:  Tarsiidae Hominoidea Cercopithecoidea superfamily Nnode sep
-% LocalWords:  fftC fftR fft nx tc bm
+% LocalWords:  Tarsiidae Hominoidea Cercopithecoidea superfamily Nnode sep GHz
+% LocalWords:  fftC fftR fft nx tc bm diversitree Pagel Univariate Ornstein pos
+% LocalWords:  Uhlenbeck speciation Maddison phylogenies FitzJohn MuSSE QuaSSE
+% LocalWords:  GeoSSE BiSSEness Magnuson ClaSSE Cladogenetic classe practice sB
+% LocalWords:  online MacPro cacheSweave taxon clades taxa subplex distr eaab
+% LocalWords:   sim autocorrelation speciates bisse clade supertree
+% LocalWords:  Lislevand polytomies gray polytomy monomorphic eval sigmoidal xA
+% LocalWords:  color Vos Redding Alfaro cmp lccl AIC parameterising simtreesdd
+% LocalWords:  loadlib geosse plottree statecols params colors parstart sAB xB
+% LocalWords:  dA mlans eq

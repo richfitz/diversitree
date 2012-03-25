@@ -58,4 +58,4 @@ make.asr.stoch(lik, ...)
 }
 
 \author{Richard G. FitzJohn}
-\keyword{model}
+\keyword{models}
