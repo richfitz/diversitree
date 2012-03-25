@@ -1,17 +1,9 @@
 \documentclass[11pt]{article}
 \usepackage{fullpage}
-\usepackage{Sweave}
 \usepackage{natbib}
 \usepackage{amsmath}
-
-% I like Garamond (who doesn't?).  However, it's not included in most
-% TeX distributions due to licence restrictions.  Either use
-% getfontsnonfree to install it, remove this line to get computer
-% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
-% Palatino, which is also quite nice.
-\usepackage[garamond]{mathdesign}
-
 \usepackage{color}
+
 \definecolor{navy}{rgb}{0,0,0.4}
 \usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
 
@@ -26,8 +18,9 @@
 \newcommand{\diversitree}{\textsf{diversitree}}
 \newcommand{\ape}{\textsf{ape}}
 
+\usepackage{Sweave}
+\usepackage{dtsweave}
 \SweaveOpts{prefix.string=cache/diversitree-tutorial,eps=FALSE}
-
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset
@@ -36,6 +29,13 @@ options(show.signif.stars=FALSE, continue="  ")
 chi <- function(m1, m2, digits=1)
   round(2*(m1$lnLik - m2$lnLik), digits)
 @ 
+
+% I like Garamond (who doesn't?).  However, it's not included in most
+% TeX distributions due to licence restrictions.  Either use
+% getfontsnonfree to install it, remove this line to get computer
+% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
+% Palatino, which is also quite nice.
+\usepackage[garamond]{mathdesign}
 
 %\VignetteIndexEntry{Introduction to diversitree}
 %\VignettePackage{diversitree}
@@ -577,8 +577,7 @@ $\lambda_1$.
 \begin{figure}
   \centering
 <<bisse-mcmc-fig,fig=TRUE>>=
-## See \link{profiles.plot} for more information on plotting these
-## profiles.
+## See ?profiles.plot for more information
 col <- c("blue", "red")
 profiles.plot(samples[c("lambda0", "lambda1")], col.line=col, las=1,
               xlab="Speciation rate",
@@ -650,7 +649,25 @@ tree <- read.nexus("data/Thomas-tree.nex")
 The tree contains many polytomies; the original tree, and a simplified
 tree with polytomies converted into clades are shown in figure
 \ref{fig:shorebird-tree}.
-%
+
+\setkeys{Gin}{width=1.0\textwidth}
+\begin{figure}
+  \centering
+<<shorebirds-tree,fig=TRUE,width=8,height=5,echo=FALSE,results=hide>>=
+par(mar=rep(.5, 4), mfrow=c(1, 2))
+plot(tree, show.tip.label=FALSE)
+tree.clade <- clades.from.polytomies(tree)
+plt <- plot(tree.clade, show.tip.label=FALSE, clade.fill="gray")
+@ 
+\caption{The shorebird supertree \citep{Thomas-2004-28}.  On the left,
+  the original tree with all polytomies and 350 species.  On the
+  right, the polytomies have been collapsed, to leave 135 tips, with
+  tips representing from 1 to 47 species.}
+  \label{fig:shorebird-tree}
+\end{figure}
+\setkeys{Gin}{width=0.8\textwidth}
+
+
 The character states are stored as the size of the difference of mass
 between sexes, divided by the mean across sexes
 \citep[see][]{FitzJohn-2009-595}.
@@ -668,28 +685,6 @@ difference of 10\% would be considered ``dimorphic'':
 <<>>=
 head((abs(states) > .1) + 0)
 @ 
-
-\setkeys{Gin}{width=1.0\textwidth}
-\begin{figure}
-  \centering
-<<shorebirds-tree,fig=TRUE,width=8,height=5,echo=FALSE,results=hide>>=
-## TODO: Fixing this needs doing: traits need adding, and a higher
-## level classification, too.
-par(mar=rep(.5, 4), mfrow=c(1, 2))
-plot(tree, show.tip.label=FALSE)
-tree.clade <- clades.from.polytomies(tree)
-plt <- plot(tree.clade, cex=.5, label.offset=3, transform=sqrt,
-            tip.color="white", clade.fill="gray")
-@ 
-\caption{The shorebird supertree \citep{Thomas-2004-28}.  On the left,
-  the original tree with all polytomies and 350 species.  On the
-  right, the polytomies have been collapsed, to leave 135 tips, with
-  tips representing from 1 to 47 species.  The tips are colour coded
-  to indicate state: red is sexually dimorphic, blue is monomorphic,
-  and white is missing data.}
-  \label{fig:shorebird-tree}
-\end{figure}
-\setkeys{Gin}{width=0.8\textwidth}
 
 The simplest way of working with this tree is to use the
 \code{clades.from.polytomies} function.  This collapses all daughters
