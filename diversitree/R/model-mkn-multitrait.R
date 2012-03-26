@@ -17,8 +17,10 @@ make.mkn.multitrait <- function(tree, states, depth=NULL,
   f.pars <- make.pars.mkn.multitrait(cache)
 
   ll <- function(pars, root=ROOT.OBS, root.p=NULL,
-                 intermediates=FALSE) {
+                 intermediates=FALSE, pars.only=FALSE) {
     pars2 <- f.pars(pars)
+    if ( pars.only )
+      return(pars2)
     lik.mkn(pars2, root, root.p, intermediates)
   }
   class(ll) <- c("mkn.multitrait", class(lik.mkn))
@@ -108,11 +110,10 @@ make.pars.mkn.multitrait <- function(cache) {
   npar <- ncol(tr)
   f.pars <- make.pars.mkn(k)
 
-  function(pars) {
+  function(pars, pars.only=FALSE) {
     if ( length(pars) != npar )
       stop(sprintf("Invalid length parameters (expected %d)", 
                    npar))
-    pars.mkn <- drop(tr %*% pars)
-    f.pars(pars.mkn)
+    drop(tr %*% pars)
   }
 }

@@ -25,11 +25,16 @@ make.musse.multitrait <- function(tree, states, sampling.f=NULL,
   all.branches <- make.all.branches.dtlik(cache, control,
                                           initial.conditions.musse)
   rootfunc <- rootfunc.musse
-  f.pars <- make.pars.musse.multitrait(cache)
+  f.pars.musse <- make.pars.musse.multitrait(cache)
+  f.pars       <- make.pars.musse(cache$info$k)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
-                 root.p=NULL, intermediates=FALSE) {
-    pars2 <- f.pars(pars)
+                 root.p=NULL, intermediates=FALSE, pars.only=FALSE) {
+    pars.musse <- f.pars.musse(pars)
+    if ( pars.only )
+      return(pars.musse)
+    ## Below here is identical to as musse's likelihood function:
+    pars2 <- f.pars(pars.musse)
     ans <- all.branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
@@ -219,14 +224,12 @@ make.pars.musse.multitrait <- function(cache) {
   n.trait <- cache$n.trait
   tr <- cache$tr
   npar <- ncol(tr)
-  f.pars <- make.pars.musse(k)
 
   function(pars) {
     if ( length(pars) != npar )
       stop(sprintf("Invalid length parameters (expected %d)", 
                    npar))
-    pars.musse <- drop(tr %*% pars)
-    f.pars(pars.musse)
+    drop(tr %*% pars)
   }
 }
 
