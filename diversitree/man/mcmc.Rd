@@ -35,7 +35,9 @@ sampler.norm(lik, x.init, y.init, w, lower, upper, control)
   \item{prior}{An optional prior probability distribution function.
     This must be a function that returns the log prior probability,
     given a parameter vector. See \code{\link{make.prior}} for more
-    information.}
+    information.  If no prior is given, unbounded (and therefore
+    \dQuote{improper}) priors are used for all parameters, which can
+    cause the MCMC to fail in some situations.}
 
   \item{sampler}{Sampler to use for the MCMC.  There are currently only
     two implemented; \code{sampler.slice} (the default, and generally
