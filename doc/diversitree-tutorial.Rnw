@@ -754,6 +754,21 @@ if ( file.exists(.save) ) {
 }
 @ 
 
+\begin{figure}[p]
+  \centering
+<<shorebird-mcmc-plot,fig=TRUE>>=
+par(mar=c(4.1, 4.1, .5, .5))
+col <- c("#004165", "#618e02")
+## col <- c("#004165", "#eaab00")
+profiles.plot(samples[c("lambda0", "lambda1")], col, las=1,
+              legend.pos="topright", xlab="Speciation rate estimate")
+@ 
+  \caption{Posterior probability distributions for speciation rates
+for non-dimorphoc species (blue) and dimorphic species (yellow),
+estimated using MCMC.}
+\label{fig:shorebird-mcmc-plot}
+\end{figure}
+
 Setting up the likelihood function above assumed that the tree being
 used contained polytomies, and this is the source of the unresolved
 clades.  However, it is probably more common to have an ``exemplar''
