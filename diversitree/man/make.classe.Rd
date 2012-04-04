@@ -64,7 +64,7 @@
       intermediates=FALSE)
   }
 
-  The arguments are of this function are explained in \link{make.bisse}.
+  The arguments of this function are explained in \link{make.bisse}.
   The speciation rate parameters are lambda_ijk, ordered with k changing
   fastest and insisting on j < k.
 
