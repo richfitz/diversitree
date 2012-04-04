@@ -3,6 +3,7 @@
 \alias{tree.bd}
 \alias{tree.bisse}
 \alias{tree.bisseness}
+\alias{tree.classe}
 \alias{tree.musse}
 \alias{tree.musse.multitrait}
 \alias{tree.quasse}
@@ -12,16 +13,18 @@
 \title{Evolve Birth-Death Trees}
 
 \description{Evolves one or more trees under the BiSSE (Binary State
-  Speciation and Extinction) birth-death model, MuSSE (Multi-State
-  Speciation and Extinction) model, or a simple character independent
-  birth-death model.  For BiSSE and MuSSE trees, it simultaneously
-  evolves a binary character that affects speciation and/or extinction,
-  and the tree itself.
+  Speciation and Extinction), MuSSE (Multi-State Speciation and
+  Extinction), BiSSE-ness (BiSSE-node enhanced state shift), or ClaSSE
+  (Cladogenetic State change Speciation and Extinction) model, or a
+  simple character independent birth-death model.  For the SSE models, 
+  it simultaneously evolves a character that affects speciation and/or
+  extinction, and the tree itself.
 }
 
 \usage{
-trees(pars, type=c("bisse", "bisseness", "bd", "musse", "quasse", "yule"),
-      n=1, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)
+trees(pars, type=c("bisse", "bisseness", "bd", "classe", "musse",
+      "quasse", "yule"), n=1, max.taxa=Inf, max.t=Inf,
+      include.extinct=FALSE, ...)
 
 tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA)
@@ -35,6 +38,9 @@ tree.quasse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA,
 
 tree.bisseness(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
                x0=NA)
+
+tree.classe(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
+           x0=NA)
 
 tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
 tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
