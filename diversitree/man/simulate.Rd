@@ -72,8 +72,8 @@ prune(phy, to.drop=NULL)
   
   \item{x0}{Initial character state at the root (state 0 or 1).  A value
     of \code{NA} will randomly choose a state from the model's
-    equilibrium distribution for a BiSSE model, but a non-NA value must
-    be specified for MuSSE and QuaSSE.}
+    equilibrium distribution for a BiSSE or ClaSSE model, but a non-NA 
+    value must be specified for MuSSE and QuaSSE.}
 
   \item{n.trait, depth}{For \code{tree.musse.multitrait} only, these
     specify the number of binary traits and the style of parameters

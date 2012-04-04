@@ -215,7 +215,20 @@ test.params <- function()
     checkEquals(parlist$q[1,3], 23, tolerance=tol)
     checkIdentical(pars, diversitree:::flatten.pars.classe(parlist))
 
-    # (not really parameters, but related to stationary.freq.classe)
     ans <- matrix(c(-78, 37, 43, 55, -87, 69, 81, 90, -99), nrow=3)
     checkEquals(diversitree:::projection.matrix.classe(pars, 3), ans)
+}
+
+# simulator
+test.sim <- function()
+{
+    set.seed(1)
+    phy <- trees(pars3.classe, type="classe", n=2, max.t=1)
+    checkEquals(lapply(phy, Ntip), list(109, 8))
+    lnL <- make.classe(phy[[1]], phy[[1]]$tip.state, 2)
+    checkEquals(lnL(pars3.classe), -7.294721, tolerance=tol)
+
+    set.seed(3)
+    phy <- tree.classe(pars2.classe, max.t=3)
+    checkEquals(as.numeric(table(phy$tip.state)), c(19, 39, 17))
 }
