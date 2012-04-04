@@ -141,11 +141,10 @@ rootfunc.classe <- function(res, pars, condition.surv, root, root.p,
   root.p <- root.p.calc(d.root, pars, root, root.p, root.equi)
  
   if ( condition.surv ) {
-    e.root <- vals[i]
     ## species in state i are subject to all lambda_ijk speciation rates
     nsum <- k*(k+1)/2
     lambda <- colSums(matrix(pars[1:(nsum*k)], nrow=nsum))
-    ## d.root <- d.root / (lambda * (1-e.root)^2) # old
+    e.root <- vals[i]
     d.root <- d.root / sum(root.p * lambda * (1 - e.root)^2)
   }
 
@@ -195,6 +194,7 @@ stationary.freq.classe <- function(pars, k) {
         eqfreq <- 0.5
       else
         eqfreq <- ss2/(ss1 + ss2)
+      eqfreq <- c(eqfreq, 1 - eqfreq)
     } else {
       roots <- quadratic.roots(g, ss2 + ss1 - g, -ss2)
       eqfreq <- roots[roots >= 0 & roots <= 1]
@@ -211,14 +211,22 @@ stationary.freq.classe <- function(pars, k) {
 
 ## like stationary.freq.geosse()
 stationary.freq.classe.ev <- function(pars, k) {
+  A <- projection.matrix.classe(pars, k)
+  ## continuous time, so the dominant eigenvalue is the largest one
+  ## return its eigenvector, normalized
+  evA <- eigen(A)
+  i <- which(evA$values == max(evA$values))
+  evA$vectors[,i] / sum(evA$vectors[,i])
+}
+
+projection.matrix.classe <- function(pars, k) {
+  A <- matrix(0, nrow=k, ncol=k)
+
   nsum <- k*(k+1)/2
   kseq <- seq_len(k)
   pars.lam <- pars[seq(1, nsum*k)]
   pars.mu <- pars[seq(nsum*k+1, (nsum+1)*k)]
   pars.q <- pars[seq((nsum+1)*k+1, length(pars))]
-
-  ## will be the transition matrix
-  A <- matrix(0, nrow=k, ncol=k)
 
   ## array indices of lambda's in parameter vector
   idx.lam <- cbind(rep(kseq, each=nsum), rep(rep(kseq, times=seq(k,1,-1)), k),
@@ -241,12 +249,7 @@ stationary.freq.classe.ev <- function(pars, k) {
   diag(A) <- 0
   diag(A) <- -colSums(A) + unlist(lapply(kseq, function(i) 
                  sum(pars.lam[seq((i-1)*nsum+1, i*nsum)]) - pars.mu[i]))
-
-  ## continuous time, so the dominant eigenvalue is the largest one
-  ## return its eigenvector, normalized
-  evA <- eigen(A)
-  i <- which(evA$values == max(evA$values))
-  evA$vectors[,i] / sum(evA$vectors[,i])
+  A
 }
 
 ## For historical and debugging purposes, not used directly in the
