@@ -214,5 +214,8 @@ test.params <- function()
     checkEquals(parlist$mu[2], 20, tolerance=tol)
     checkEquals(parlist$q[1,3], 23, tolerance=tol)
     checkIdentical(pars, diversitree:::flatten.pars.classe(parlist))
-}
 
+    # (not really parameters, but related to stationary.freq.classe)
+    ans <- matrix(c(-78, 37, 43, 55, -87, 69, 81, 90, -99), nrow=3)
+    checkEquals(diversitree:::projection.matrix.classe(pars, 3), ans)
+}
