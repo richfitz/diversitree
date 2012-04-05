@@ -59,7 +59,8 @@
   The parameter vector \code{pars} is ordered \code{sA}, \code{sB},
   \code{sAB}, \code{xA}, \code{xB}, \code{dA}, \code{dB}.
 
-  Unresolved clade methods are not available for GeoSSE.  
+  Unresolved clade methods are not available for GeoSSE.  With three
+  states, it would rapidly become computationally infeasible.
 }
 
 
@@ -74,31 +75,31 @@
 }
 
 \examples{
-## Tree simulation under GeoSSE is currently only available through the
-## SimTreeSDD program (\url{http://tigger.uic.edu/~eeg/code/code.html}).
-## Here is an example, created with the values in "pars".
-
+## Parameter values
 pars <- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
-data("geosse")
+names(pars) <- diversitree:::default.argnames.geosse()
 
-## The likelihood function
-lik <- make.geosse(geosse.phy, geosse.phy$tip.state)
+## Simulate a tree
+set.seed(5)
+phy <- tree.geosse(pars, max.t=4, x0=0)
 
 ## See the data
 statecols <- c("AB"="purple", "A"="blue", "B"="red")
-plot(geosse.phy, tip.color=statecols[geosse.phy$tip.state+1], cex=0.5)
+plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5)
+
+## The likelihood function
+lik <- make.geosse(phy, phy$tip.state)
 
 ## With "true" parameter values
-names(pars) <- argnames(lik)
-lik(pars) # -297.6749
+lik(pars) # -168.4791
 
 ## A guess at a starting point.
-p <- starting.point.geosse(geosse.phy)
+p <- starting.point.geosse(phy)
 
-## Start an ML search from this point (takes several minutes to run).
+## Start an ML search from this point (takes a couple minutes to run).
 \dontrun{
 fit <- find.mle(lik, p, method="subplex")
-logLik(fit) # -295.0275
+logLik(fit) # -165.9965
 
 ## Compare with sim values.
 rbind(real=pars, estimated=round(coef(fit), 2))
@@ -106,19 +107,18 @@ rbind(real=pars, estimated=round(coef(fit), 2))
 ## A model with constraints on the dispersal rates.
 lik.d <- constrain(lik, dA ~ dB)
 fit.d <- find.mle(lik.d, p[-7])
-logLik(fit.d) # -296.5956
+logLik(fit.d) # -166.7076
 
 ## A model with constraints on the speciation rates.
 lik.s <- constrain(lik, sA ~ sB, sAB ~ 0)
 fit.s <- find.mle(lik.s, p[-c(2,3)])
-logLik(fit.s) # -302.5542
+logLik(fit.s) # -169.0123
 }
 
 ## "Skeletal tree" sampling is supported.  For example, if your tree
 ## includes all AB species, half of A species, and a third of B species,
 ## create the likelihood function like this:
-lik.f <- make.geosse(geosse.phy, geosse.phy$tip.state,
-                     sampling.f=c(1, 0.5, 1/3))
+lik.f <- make.geosse(phy, phy$tip.state, sampling.f=c(1, 0.5, 1/3))
 
 ## If you have external evidence that the base of your tree must have
 ## been in state 1, say (endemic to region A), you can fix the root 
