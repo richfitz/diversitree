@@ -4,6 +4,7 @@
 \alias{tree.bisse}
 \alias{tree.bisseness}
 \alias{tree.classe}
+\alias{tree.geosse}
 \alias{tree.musse}
 \alias{tree.musse.multitrait}
 \alias{tree.quasse}
@@ -14,16 +15,17 @@
 
 \description{Evolves one or more trees under the BiSSE (Binary State
   Speciation and Extinction), MuSSE (Multi-State Speciation and
-  Extinction), BiSSE-ness (BiSSE-node enhanced state shift), or ClaSSE
-  (Cladogenetic State change Speciation and Extinction) model, or a
-  simple character independent birth-death model.  For the SSE models, 
-  it simultaneously evolves a character that affects speciation and/or
+  Extinction), BiSSE-ness (BiSSE-node enhanced state shift), ClaSSE
+  (Cladogenetic State change Speciation and Extinction), or GeoSSE
+  (Geographic State Speciation and Extinction) model, or a simple
+  character independent birth-death model.  For the SSE models, it
+  simultaneously evolves a character that affects speciation and/or
   extinction, and the tree itself.
 }
 
 \usage{
-trees(pars, type=c("bisse", "bisseness", "bd", "classe", "musse",
-      "quasse", "yule"), n=1, max.taxa=Inf, max.t=Inf,
+trees(pars, type=c("bisse", "bisseness", "bd", "classe", "geosse",
+      "musse", "quasse", "yule"), n=1, max.taxa=Inf, max.t=Inf,
       include.extinct=FALSE, ...)
 
 tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
@@ -40,6 +42,9 @@ tree.bisseness(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
                x0=NA)
 
 tree.classe(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
+           x0=NA)
+
+tree.geosse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
            x0=NA)
 
 tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
@@ -72,8 +77,8 @@ prune(phy, to.drop=NULL)
   
   \item{x0}{Initial character state at the root (state 0 or 1).  A value
     of \code{NA} will randomly choose a state from the model's
-    equilibrium distribution for a BiSSE or ClaSSE model, but a non-NA 
-    value must be specified for MuSSE and QuaSSE.}
+    equilibrium distribution for a BiSSE, ClaSSE, or GeoSSE model, but a
+    non-NA value must be specified for MuSSE and QuaSSE.}
 
   \item{n.trait, depth}{For \code{tree.musse.multitrait} only, these
     specify the number of binary traits and the style of parameters

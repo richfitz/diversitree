@@ -16,8 +16,8 @@
 ## 'model' object, I will design the calling structure in a way that
 ## is similar to S3 generics/methods.
 trees <- function(pars,
-                  type=c("bisse", "bisseness", "bd", "classe", "musse",
-                    "quasse", "yule"), n=1,
+                  type=c("bisse", "bisseness", "bd", "classe", "geosse",
+                         "musse", "quasse", "yule"), n=1,
                   max.taxa=Inf, max.t=Inf, include.extinct=FALSE,
                   ...) {
   if ( is.infinite(max.taxa) && is.infinite(max.t) )
@@ -28,6 +28,7 @@ trees <- function(pars,
               bisseness=tree.bisseness,
               bd=tree.bd,
               classe=tree.classe,
+              geosse=tree.geosse,
               musse=tree.musse,
               yule=tree.yule)
   trees <- vector("list", n)  
