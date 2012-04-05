@@ -113,3 +113,27 @@ test.split <- function()
     checkEquals(lnL.full(pars0), lnL.split(rep(pars0, 3)), tolerance=tol)
     checkEquals(lnL.split(c(pars0, pars0*1.5, pars0*0.5)), -23.82277, tolerance=tol)
 }
+
+# simulator
+test.sim <- function()
+{
+    pars.g <- pars0
+    names(pars.g) <- diversitree:::default.argnames.geosse()
+    pars.c <- diversitree:::pars.ge.to.cl(pars.g)
+
+    set.seed(1)
+    phy <- trees(pars.g, type="geosse", n=2, max.t=4, x0=0)
+    checkEquals(lapply(phy, Ntip), list(20, 132))
+    lnL <- make.geosse(phy[[2]], phy[[2]]$tip.state)
+    checkEquals(lnL(pars.g), -252.7173, tolerance=tol)
+
+    set.seed(3)
+    phy <- tree.geosse(pars.g, max.t=5)
+    checkEquals(as.numeric(table(phy$tip.state)), c(31, 54, 33))
+    lnL.g <- make.geosse(phy, phy$tip.state)
+
+    set.seed(3)
+    phy2 <- tree.classe(pars.c, max.t=5)
+    lnL.c <- make.classe(phy2, phy2$tip.state, 3)
+    checkEquals(lnL.c(pars.c), lnL.g(pars.g), tolerance=tol)
+}
