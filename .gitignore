@@ -7,10 +7,12 @@ www/studies.bib
 www/studies.html
 www/bib/studies_tmp.html
 www/doc
+www/bib/studies.html
 
 ## These are generated too:
 logo/logo.pdf
 logo/logo.png
+logo/beetles.eps.xml
 
 ## Byproducts of all vignettes:
 doc/cache
