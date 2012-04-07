@@ -32,4 +32,10 @@ You need to generate the configure script.  In the
 
 The package should then be installable the usual way.
 
+Branches
+--------
+
+The "master" branch contains the bleeding edge version of diversitree.
+It may or may not work for you.  The "release" branch contains stable
+releases, which you can usually get from the diversitree website.
 
