@@ -2,8 +2,10 @@ export TMPDIR=.
 
 all: studies.html
 
-install: studies.html
-	cp studies.html studies.bib ..
+install: ../studies.html
+
+../studies.html: studies.html
+	cp -p studies.html studies.bib ..
 
 studies.html: studies_tmp.html template.html
 	python process.py
