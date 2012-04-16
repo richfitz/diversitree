@@ -49,7 +49,7 @@ make.br.bm <- function(pars) {
 }
 
 ## OU: three parameters -- s2, alpha, theta
-make.br.bm <- function(pars) {
+make.br.ou <- function(pars) {
   s2    <- pars[1]
   alpha <- pars[2]
   theta <- pars[3]
