@@ -1,0 +1,371 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{relsize}
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{xcolor}
+
+\definecolor{navy}{rgb}{0,0,0.4}
+\usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
+
+\newcommand{\code}{\texttt}
+\newcommand{\ud}{\mathrm{d}}
+
+\usepackage{Sweave}
+\usepackage{dtsweave}
+\SweaveOpts{keep.source=TRUE,eps=FALSE}
+\SweaveOpts{prefix.string=cache/diversitree-tuning}
+
+\usepackage{enumitem}
+\newenvironment{cdescription}{\begin{description}[font=\tt,leftmargin=4em,labelindent=2em,noitemsep]}{\end{description}}
+
+<<results=hide,echo=FALSE>>=
+library(cacheSweave)
+## Remove stars, as they don't look nice when typeset
+options(show.signif.stars=FALSE, continue="  ")
+## This helps add real chi^2 numbers to the text
+chi <- function(m1, m2, digits=1)
+  round(2*(m1$lnLik - m2$lnLik), digits)
+@ 
+
+\title{Tuning diversitree}
+\author{Rich FitzJohn}
+\date{15 April 2012, version 0.9-2}
+
+\usepackage{minionpro}
+
+\begin{document}
+
+\maketitle
+
+Diversitree can be rather slow.  Or rather, many of the methods in
+diversitree require significant amounts of computational time to run.
+Most of the methods in diversitree (and all of the ``xxSSE'' methods)
+involve solving systems of nonlinear differential equations for every
+branch in a tree (of which there are $2n-2$ for a tree with $n$
+species).  For large trees, this is expensive.
+
+It is possible to tune the performance of diversitree by changing how
+these calculations are performed.  Diversitree handles discrete and
+continuous traits in quite different ways, so the tuning approaches
+are described separately.
+
+
+\section{Discrete traits}
+
+To control the way calculations are carried out, all methods take a
+\code{control} argument.  When specified, this is a list of tag/value
+pairs, such as
+<<eval=FALSE>>=
+list(tag1=value1, tag2=value2)
+@ 
+The possible entries are listed below.
+
+\begin{cdescription}
+\item[backend] This takes values \code{deSolve} (the default),
+  \code{cvodes} and \code{CVODES}.  
+
+  The \code{"deSolve"} backend uses the R package ``deSolve'' to carry
+  out the calculations, in turn using the LSODA solver.  This is a
+  great general purpose ODE solver, and is available on all R
+  platforms.  However, while the calculations for each branch are done
+  entirely within compiled code, node calculations and substantial
+  amounts of book-keeping are done in R code, which is not optimal.
+  See \code{safe} below for the other disadvantage of this backend.
+  
+  The \code{"cvodes"} backend uses the \textsc{cvodes} algorithm from
+  the sundials suite of solvers (it actually uses the \textsc{cvode}
+  algorithm, but sensitivity calculations are not yet supported).
+  Like the \code{deSolve} backend, only the integration is done in R,
+  with node calculations and book-keeping done in R.  This backend
+  is about 20\% slower than \code{deSolve} for BiSSE.
+  %
+  The \code{cvodes} backend is not available on Windows.
+  
+  The \code{"CVODES"} backend also uses the \textsc{cvodes} algorithm.
+  However, \textsc{all} calculations are carried out in compiled
+  code.
+  %
+  This option is not available for all model types.  In particular,
+  \code{classe}, \code{bisseness}, split models, and time-dependent
+  models are not yet implemented.
+  %
+  This backend is about 5 times faster than \code{deSolve} for BiSSE,
+  but is also not available on Windows.
+  
+\item[safe] When using the \code{deSolve} backend, to speed up
+  calculations diversitree uses non-exported compiled functions within
+  the deSolve package\footnote{Specifically, we use the compiled
+    \textsc{lsoda} wrapper function \code{call\_lsoda} directly,
+    rather than the R function \code{lsoda()}}.  deSolve's function
+  definitions may change between package versions, and if called can
+  cause R to crash (not an error, but an full crash).  To avoid this,
+  if the installed deSolve version is not known to work, diversitree
+  will fall back on a ``safe'' version, in which the public deSolve
+  interface is used.  This is very slow.  This approach can be forced
+  by specifying \code{safe=TRUE}, though there are few cases where
+  this is desired.
+  %
+  This option has no effect for the \code{"cvodes"} and \code{"CVODES"}
+  backends.
+
+\item[unsafe] This is the opposite of \code{safe}.  When \code{TRUE},
+  even if the deSolve version is not known to work, the calculations
+  will proceed anyway.  This can crash R, or potentially produce
+  incorrect results (though this is unlikely and can be checked by
+  confiring with \code{safe=TRUE}).  However, this option may be
+  useful if the diversitree version lags behind the installed deSolve
+  version.  This is especially true for windows users, for whom
+  compilation of diversitree is often tricky.
+  %
+  This option has no effect for the \code{"cvodes"} and \code{"CVODES"}
+  backends.
+  
+\item[tol] This controls the degree of accuracy of the integration of
+  each branch.  By default a value of \code{1e-8} is used
+  ($10^{-8}$).  Decreasing this value increases the accuracy of the
+  calculations, but increases the required running time.
+  %
+  Informally, the \textsc{lsoda} algorithm estimates errors, $e$ and
+  attempts to keep them below $\mathtt{tol} \times y + \mathtt{tol}$.
+  %
+  The \textsc{cvodes} algorithm uses a similar error control 
+  $\sum_i^n \frac{1}{n}(e_i/(\mathtt{tol} \times y + \mathtt{tol}))^2$
+  where $e_i$ is the estimated error for the $i$th variable.
+  %
+  If the requested accuracy is not possible, the calculations will
+  fail with an error.  Values below \code{sqrt(.Machine\$double.eps)}
+  (which is usually around \code{1e-8}) are optimistic.
+  %
+  Note that because of error propagation, the error for the entire
+  likelihood calculation will be substantially higher.\footnote{The
+    form $\mathtt{tol} \times y + \mathtt{tol}$ in the above
+    expressions arises because the algorithm \textit{actually} uses
+    $\mathtt{rtol} \times y + \mathtt{atol}$ where \code{rtol} is a
+    relative tolerance and \code{atol} is an absolute tolerance.
+    However, these are not separately tunable in the current
+    diversitree version.}
+
+\item[eps] At the end of each branch, diversitree checks the value of
+  all ``data'' variables (in BiSSE-type models, these are the $D$
+  variables).  If any of these are below \code{eps} diversitree splits
+  the branch in two and runs the calculations on each half, repeating
+  this until the desired accuracy is reached.  This is useful on very
+  long branches where speciation and extinction rates are similar, as
+  negative $D$ values can be produced.  The default is \code{eps=0},
+  which simply enforces positive values.  Specifying \code{eps=-Inf}
+  will disable this check.  In theory, small positive numbers may help
+  in some difficult-to-solve models (again, speciation rates close to
+  extinction rates) but in models with rapid character evolution,
+  variables may never take values much above zero.
+\end{cdescription}
+
+For example,
+<<eval=FALSE>>=
+make.bisse(phy, states, 
+           control=list(backend="CVODES", tol=1e-5, eps=-Inf))
+@ 
+specifies that the \code{CVODES} backend will be used, error
+tolerances have increased, and positive $D$ values are no longer being
+enforced.  This will run faster than the default options, but the
+answers will be less accuate.
+
+The elements of the \code{control} argument are checked to make sure
+that the values make sense, but mis-spellings of element names are not
+checked.  For example, \code{control=list(bakend="CVODES")} will still
+use the \textsc{lsoda} ODE solver for the calculations, with no
+warning given.
+
+\subsection{Mk2 \& Mkn}
+By default, likelihoods under these models are treated differently to
+the xxSSE models.  Because there are no $E$ variables to compute, it
+is feasible to simultaneously generate a matrix $P_{ij}(t)$ that
+describes the probability of moving from state $i$ to state $j$ over
+time $t$.  This is not possible in BiSSE and related models as the
+starting and ending times matter (rather than just the elapsed time)
+because of the influence of $E(t)$.
+%
+By default, diversitree computes this matrix for all branch lengths in
+the tree and then uses this to quickly compute the likelihood.  Almost
+all of these calculations are in compiled code, and should be fairly
+quick.
+
+For \code{mk2}, the $P_{ij}(t)$ matrix can be computed exactly, and
+all \code{control} options will be ignored.
+%
+For \code{mkn}, the calculation of $P_{ij}(t)$ still requires
+numerical integration, and the options \code{backend}, \code{safe},
+\code{unsafe}, and \code{tol} in the previous section are available.
+However, neither \code{backend="CVODES"} or \code{eps} make sense in
+this case.
+
+As the number of states increases, computing the transition
+probability matrix becomes expensive.  This is particularly the case
+for \code{make.mkn.multitrait} where the number of possible states
+grows exponentially in the number of traits ($n$ binary traits require
+$2^n$ possible states, which is $2^{2n}$ elements in $P_{ij}(t)$).
+%
+In such cases, there is an option that changes the algorithm:
+\begin{cdescription}
+\item[method] Specifying \code{method="ode"} uses a branch-by-branch
+  approach that avoids computing the transition probability matrix.
+  When this is specified, the algorithm used is exactly the same as
+  that used for BiSSE-type models, and all the control parameters in
+  the previous section are available.  The default is
+  \code{method="exp"} (the name here derives from the approach used by
+  ``ape'' to carry out the same calculations through matrix
+  exponentiation -- see 19 dubious ways).
+\end{cdescription}
+
+\section{Continuous traits}
+
+\subsection{QuaSSE}
+
+\begin{cdescription}
+\item[method] one of \code{"fftC"} or \code{"fftR"} to switch between
+  C (relatively fast) and R (slow) back-ends for the integration.
+  Both use non-adaptive fft-based convolutions to perform most of the
+  integration.  Specifying \code{"mol"} will use an experimental
+  methods-of-lines approach.
+  
+\item[dt.max] Maximum time step to use for the integration.  By
+  default, this will be set to 1/1000 of the tree depth.  Smaller
+  values will slow down calculations, but improve accuracy.
+
+\item[nx] The number of bins into which the character space is divided
+  (default=1024).  Larger values will be slower and more accurate.
+  For the \code{fftC} integration method, this should be an integer
+  power of 2 (512, 2048, etc).
+
+\item[r] Scaling factor that multiplies \code{nx} for a ``high
+  resolution'' section at the tips of the tree (default=4, giving a
+  high resolution character space divided into 4096 bins).  This helps
+  improve accuracy while possibly tight initial probability
+  distributions flatten out as time progresses towards the root.
+  Larger values will be slower and more accurate.  For the \code{fftC}
+  integration method, this should be a small power of 2 (e.g., 2, 4,
+  8), so that \code{nx*r} is also a power of 2.
+  
+\item[tc] where in the tree to switch to the low-resolution
+  integration (zero corresponds to the present, larger numbers moving
+  towards the root).  By default, this happens at 10\% of the tree
+  depth.  Smaller values will be faster, but less accurate.
+
+  % Not really a tuning parameter.
+  % 
+  % \item[xmid] Mid point to centre the character space.  By
+  %   default this is at the mid point of the extremes of the
+  %   character
+  %   states.
+
+  %   Not currently implemented?  Doesn't work with split models, but
+  %   NOT ENFORCED?
+  % \item[tips.combined] Get a modest speed-up by simultaneously
+  %   integrating all tips?  By default, this is \code{FALSE}, but
+  %   speedups of up to 25\% are possible with this set to \code{TRUE}.
+
+% \item[w] Number of standard deviations of the normal
+%   distribution induced by Brownian motion to use when doing the
+%   convolutions (default=5).  Probably best to leave this one alone.
+\end{cdescription}
+
+\subsection{BM and OU}
+These models share no parameters with the QuaSSE in their control.
+
+\begin{cdescription}
+\item[method] This switches between two totally different algorithms
+  for computing likelihoods.  The default, \code{method="vcv"} uses a
+  variance-covariance matrix approach, as implemented in Geiger and
+  ape (REFS).  This is very fast for small trees.  
+  
+  For large trees (hundreds of species), the matrix inversions
+  involved involved in these calculations become very computationally
+  expensive.  In this case, specifying \code{method= "direct"} uses an
+  algorithm more like the BiSSE/QuaSSE methods, where each branch is
+  treated separately.  As I have not seen this noted elsewhere, this
+  is described below.
+\end{cdescription}
+  
+For Brownian motion and Ornstein-Uhlenbeck, the conditional
+likelihood function for some branch can be entirely described as
+scaled gaussian functions with mean $\mu_i$, variance $\sigma_i^2$,
+and normalisation constant $z_i$.  For tips where a trait is known
+to be $x$ with no error, this is a delta function at a know value
+($\mu_i = x$, $\sigma_i^2 = 0$, $z_i = 1$).  If a distribution is
+used at the tips, then $\sigma_i^2 = s_x$.
+
+For Brownian motion, the along-branch calculations require adjusting
+these variables so that
+\begin{gather*}
+  \mu_i(t_1) = \mu_i(t_0)\\
+  \sigma^2(t_1) = \sigma^2(t_0) + \sigma^2(t_1 - t_0)\\
+  z_i(t_1) = 1
+\end{gather*}
+This comes from the solution to the backward Kolmogorov equation.
+
+For OU, these equations are
+\begin{gather*}
+  \mu_i(t_1) = e^{(t_1-t_0)\alpha}(\mu_i(t_0) - \theta) + \theta\\
+  \sigma^2(t_1) = 
+  \frac{e^{(2 (t_1-t_0) \alpha)} - 1}{2\alpha} + 
+  e^{(2 (t_1-t_0) \alpha)} \sigma^2(t_0)\\
+  z_i(t_1) = e^{(t_1-t_0)\alpha}
+\end{gather*}
+
+In both cases, at a node that joins two branches $a$ and $b$
+\begin{gather*}
+  \mu_c = \frac{\mu_a \sigma_b^2 + \mu_b \sigma_a^2}{\sigma_a^2 + \sigma_b^2}\\
+  \sigma^2_c= \frac{\sigma_a^2 \sigma_b^2}{\sigma_a^2 + \sigma_b^2}\\
+  % Delay log transformation
+  z_c = \frac{-(\mu_a - \mu_b)^2}{(2 (\sigma_a^2 + \sigma_b^2))} - \log(2\pi (\sigma_a^2 + \sigma_b^2)) / 2
+\end{gather*}
+
+At the base of the tree, we have a gaussian function with mean $\mu_r$
+and variance $\sigma^2_r$, along with the total normalisation constant
+$z = \prod_{i} z_i$.  To convert this to a single likelhood value, we
+can evaluate this function at it's maximum value; that is 
+\begin{equation*} % 
+  L = z \times \frac{1}{\sqrt{2\pi\sigma^2_r}}
+\end{equation*}
+Alternatiively, we can use a flat prior on the root state, $x$, and
+integrate over possible values
+\begin{equation*}
+  L = z \times \int_{-\infty}^{\infty}
+  \exp\left(\frac{(\mu_r - x)^2}{2\sigma^2_r}\right)
+  \frac{1}{\sqrt{2\pi\sigma^2_r}} = z
+\end{equation*}
+This is poorly behaved for Ornstein-Uhlenbeck models, however, with
+implausibly large likelihoods being produced.
+%
+A third option is the ``observed prior'' distribution suggested for
+use in QuaSSE (FitzJohn 2010).
+
+\section{``Split'' models}
+All models that allow for different regions of the tree to have
+different rates (\code{make.bisse.split}, \code{make.quasse.split},
+etc) have one additional control parameter:
+\begin{cdescription}
+\item [caching.branches] 
+  When \code{TRUE}, this will try to minimise recalculating
+  likelihoods for regions of the tree where parameters have not changed.
+  % 
+  Every function evaluation, the values at the beginning and end of
+  each branch, plus the parameters, are remembered.  If in the next
+  evaluation both the parameters and initial conditions are unchanged,
+  the previous base values are returned.  Otherwise the branch is
+  calculated as usual.
+  % 
+  This is useful during \code{mcmc} updates, or with many \code{ml}
+  search algorithms, where only a fraction of parameters are changed
+  at once.  For slow models, such as QuaSSE, this can make split
+  models as quick to search with as non-split models, despite the
+  increase in paramter space dimensionality.
+  % 
+  This is not yet available for the \code{CVODES} backend, and is
+  silently ignored.
+\end{cdescription}
+
+
+
+\end{document}
