@@ -36,19 +36,6 @@ else
    PKG_LIBS="${PKG_LIBS} -lfftw3"
 fi
 
-dnl Faster gcc flags
-AC_ARG_ENABLE([gcc-speedy],
-	AS_HELP_STRING([--enable-gcc-speedy],
-		[use agressive optimisation with gcc]),
-	[gcc_speedy=$enableval])
-if [ test x"$gcc_speedy" = xyes ]; then
-	PKG_CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer"
-	echo "Using fast options"
-else
-	PKG_CFLAGS=""
-	echo "Using default options"
-fi
-
 AC_ARG_ENABLE([cvodes],
 	AS_HELP_STRING([--enable-cvodes],
 		[enable the cvodes integrator]),
@@ -62,16 +49,12 @@ else
 	AC_DEFINE(WITH_CVODES, 1, Define to enable CVODES)
 fi
 
-
 AC_ARG_ENABLE([gcc-strict],
 	AS_HELP_STRING([--enable-gcc-strict],
 		[use strict gcc error checking]),
 	[gcc_strict=$enableval])
 if [ test x"$gcc_strict" = xyes ]; then
    echo "Using strict C checking"
-   PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
-elif test "${GCC}" = yes; then
-   echo "Using strict C checking (GCC detected)"
    PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
 else
    echo "Using normal C checking"

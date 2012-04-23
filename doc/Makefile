@@ -1,5 +1,9 @@
 all: diversitree-tutorial.pdf diversitree-ext.pdf
 
+%.tex: %.Rnw
+	Sweave.sh -t --cache=cache $<
+	rm -f Rplots.pdf
+
 diversitree-tutorial.tex: diversitree-tutorial.Rnw
 	Sweave.sh -t --cache=cache diversitree-tutorial.Rnw
 	rm -f Rplots.pdf
@@ -9,6 +13,9 @@ diversitree-tutorial.pdf: diversitree-tutorial.tex
 	bibtex diversitree-tutorial
 	pdflatex diversitree-tutorial
 	pdflatex diversitree-tutorial
+
+diversitree-tuning.pdf: diversitree-tuning.tex
+	pdflatex diversitree-tuning
 
 tidy:
 	rm -f *.aux *.bbl *.blg *.log *.log *.out *.toc Rplots.pdf
