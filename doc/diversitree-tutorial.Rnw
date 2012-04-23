@@ -1274,6 +1274,8 @@ coef(mle.cl)
 The speciation rate in the foreground clade is a negative function of
 body size (\code{l.m.2} is negative) -- increasing body size decreases the speciation rate.
 
+% TODO: Demonstrate how to plot the fits, as in the paper, as there is some confusion here.
+
 \subsection{Controlling the calculations}
 
 There are a number of ways to control the behaviour of the integrator:

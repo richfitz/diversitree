@@ -38,12 +38,8 @@ and/or just for certain parameters.
 
 * Documentation
 ** Tutorial document
-Most methods still need documentation and demonstration.  In most
-cases this can come from the online manual, I think.
-
-I would like to include some real-world cases.  There are a few trees
-and data sets kicking around that might be distributable by now.
-
+Plot QuaSSE fits, as there has been some confusion about these.  A
+"plot" method might be useful, even.
 * Minor things
 ** DONE "strict" needs adding to bisse, mk2, mkn, etc.
 ** DONE A common mechanism for 2-part argnames (split, td models)
