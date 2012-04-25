@@ -16,6 +16,13 @@ test.bm <- function() {
   lik.direct <- make.bm(bird.orders, x, control=list(method="direct"))
   fit2 <- find.mle(lik.direct, .1)
 
+  ## With the C-based direct calculations
+  lik.direct.C <- make.bm(bird.orders, x,
+                          control=list(method="direct", backend="C"))
+  fit3 <- find.mle(lik.direct.C, .1)
+
+  all.equal(fit2, fit3)
+  
   ## All the same (need to drop the function from this though)
   checkEquals(fit1[-7], fit2[-7])
 
@@ -35,12 +42,22 @@ test.ou <- function() {
                  names=bird.orders$tip.label)
 
   ## With the VCV approach
-  lik.ou <- make.ou(bird.orders, x)
-  fit1 <- find.mle(lik.ou, c(.1, .1, .1))
+  lik.vcv <- make.ou(bird.orders, x, control=list(method="vcv"))
+  system.time(fit1 <- find.mle(lik.vcv, c(.1, .1, .1)))
 
+  lik.direct <- make.ou(bird.orders, x, control=list(method="direct"))
+  system.time(fit2 <- find.mle(lik.direct, c(.1, .1, .1)))
+
+  lik.direct.C <- make.ou(bird.orders, x,
+                          control=list(method="direct", backend="C"))
+  system.time(fit3 <- find.mle(lik.direct.C, c(.1, .1, .1)))
+
+  all.equal(fit1, fit2)
+  all.equal(fit1, fit3)
+  
   library(geiger)
-  fit3 <- fitContinuous(bird.orders, x, model="OU")
-  checkEquals(fit3$Trait1$lnl, fit1$lnLik)
+  system.time(fit4 <- fitContinuous(bird.orders, x, model="OU"))
+  checkEquals(fit4$Trait1$lnl, fit1$lnLik)
   ## These are quite different, but the likelihood there suggests a
   ## ridge...
   ## checkEquals(c(fit3$Trait1$beta,fit3$Trait1$alpha),

@@ -261,19 +261,6 @@ check.info.ode <- function(info, control=NULL) {
   info
 }
 
-check.control.continuous <- function(control) {
-  defaults <- list(method="vcv")
-  control <- modifyList(defaults, control)
-  if ( length(control$method) != 1 )
-    stop("control$method must be a scalar")
-  methods <- c("vcv", "direct")
-  if ( !(control$method %in% methods) )
-    stop(sprintf("control$method must be in %s",
-                 paste(methods, collapse=", ")))
-  control
-}
-
-
 ## For almost all models, there there must be a certain number of
 ## finite non-negative parameters.
 check.pars.nonnegative <- function(pars, npar) {

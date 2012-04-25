@@ -89,3 +89,20 @@ SEXP matrix_to_list(SEXP r_m) {
   UNPROTECT(1);
   return ret;
 }
+
+/* Utility function for accessing list elements by name.  This is
+   needed to stop the argument list getting out of control */
+SEXP getListElement(SEXP list, const char *str) {
+  SEXP elmt = R_NilValue, names = getAttrib(list, R_NamesSymbol);
+  int i; 
+  for ( i = 0; i < length(list); i++ )
+    if ( strcmp(CHAR(STRING_ELT(names, i)), str) == 0 ) { 
+      elmt = VECTOR_ELT(list, i); 
+      break; 
+    }
+
+  if ( elmt == R_NilValue )
+    error("%s missing from list", str);
+
+  return elmt;
+} 

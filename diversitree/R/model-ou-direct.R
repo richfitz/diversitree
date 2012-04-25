@@ -1,8 +1,11 @@
 make.all.branches.ou.direct <- function(cache, control) {
-  function(pars, intermediates, preset=NULL)
-    all.branches.matrix(pars, cache,
-                        initial.conditions.bm.direct,
-                        branches.ou, preset)
+  if ( control$backend == "R" )  
+    function(pars, intermediates, preset=NULL)
+      all.branches.matrix(pars, cache,
+                          initial.conditions.bm.direct,
+                          branches.ou, preset)
+  else
+    make.all.branches.continuous(cache, control)    
 }
 
 ## In ou, for a branch that ends with mean m (y[1]), the mean moves to

@@ -47,7 +47,6 @@ typedef struct {
   double *lq;
 } dt_obj;
 
-SEXP getListElement(SEXP list, const char *str);
 void dt_setup_tips(dt_obj *obj, SEXP cache);
 void dt_setup_internal(dt_obj *obj, SEXP cache);
 

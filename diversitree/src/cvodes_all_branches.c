@@ -4,6 +4,7 @@
 #include "config.h"
 #ifdef WITH_CVODES
 
+#include "util.h"
 #include "cvodes/include/cvodes/cvodes.h"
 #include "cvodes/include/nvector/nvector_serial.h"  
 #include "cvodes/include/sundials/sundials_types.h"
@@ -422,23 +423,6 @@ SEXP r_dt_cvodes_run(SEXP extPtr, SEXP y, SEXP len, SEXP pars,
   UNPROTECT(3);
   return ret;
 }
-
-/* Utility function for accessing list elements by name.  This is
-   needed to stop the argument list getting out of control */
-SEXP getListElement(SEXP list, const char *str) {
-  SEXP elmt = R_NilValue, names = getAttrib(list, R_NamesSymbol);
-  int i; 
-  for ( i = 0; i < length(list); i++ )
-    if ( strcmp(CHAR(STRING_ELT(names, i)), str) == 0 ) { 
-      elmt = VECTOR_ELT(list, i); 
-      break; 
-    }
-
-  if ( elmt == R_NilValue )
-    error("%s missing from list", str);
-
-  return elmt;
-} 
 
 /* I wonder if the problem is the tips? */
 SEXP r_dt_debug(SEXP extPtr) {

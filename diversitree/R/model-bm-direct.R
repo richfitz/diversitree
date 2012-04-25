@@ -57,10 +57,13 @@ rootfunc.bm.direct <- function(res, pars, root, root.x,
 }
 
 make.all.branches.bm.direct <- function(cache, control) {
-  function(pars, intermediates, preset=NULL)
-    all.branches.matrix(pars, cache,
-                        initial.conditions.bm.direct,
-                        branches.bm.direct, preset)
+  if ( control$backend == "R" )
+    function(pars, intermediates, preset=NULL)
+      all.branches.matrix(pars, cache,
+                          initial.conditions.bm.direct,
+                          branches.bm.direct, preset)
+  else # backend == "C"
+    make.all.branches.continuous(cache, control)
 }
 
 ###########################################################################
