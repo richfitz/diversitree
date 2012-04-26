@@ -279,14 +279,15 @@ These models share no parameters with the QuaSSE in their control.
   variance-covariance matrix approach, as implemented in Geiger and
   ape (REFS).  This is very fast for small trees.  
   
-  For large trees (hundreds of species), the matrix inversions
+  For large trees (hundreds of species), the matrix calculations
   involved involved in these calculations become very computationally
   expensive.  In this case, specifying \code{method= "direct"} uses an
   algorithm more like the BiSSE/QuaSSE methods, where each branch is
   treated separately.  As I have not seen this noted elsewhere, this
   is described below.
 \end{cdescription}
-  
+
+
 For Brownian motion and Ornstein-Uhlenbeck, the conditional
 likelihood function for some branch can be entirely described as
 scaled gaussian functions with mean $\mu_i$, variance $\sigma_i^2$,
