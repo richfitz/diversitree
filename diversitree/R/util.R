@@ -129,7 +129,7 @@ toC.int <- function(x) {
 ## Used by bm.vcv
 dmvnorm2 <- function(x, mean, sigma, sigma.inv, log=FALSE) {
   distval <- mahalanobis(x, center=mean, cov=sigma.inv, TRUE)
-  logdet <- as.numeric(determinant(sigma, TRUE)$modulus)
+  logdet <- as.numeric(determinant.matrix(sigma, TRUE)$modulus)
   logretval <- -(length(x) * log(2 * pi) + logdet + distval)/2
   if ( log )
     logretval
