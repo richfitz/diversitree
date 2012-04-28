@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 library(RUnit)
 library(diversitree)
 
