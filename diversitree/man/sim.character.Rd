@@ -13,7 +13,8 @@ sim.character(tree, pars, x0=0, model="bm", br=NULL)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{A bifurcating phylogenetic tree, in \code{ape}
+    \dQuote{phylo} format.}
 
   \item{pars}{A set of model parameters (see Details below), as the
     order and interpretation depends on the model.}

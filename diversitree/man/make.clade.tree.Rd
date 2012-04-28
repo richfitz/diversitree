@@ -17,7 +17,9 @@ clades.from.classification(tree, class, check=TRUE)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{phylo} (Ape) format.}
+  \item{tree}{An ultrametric phylogenetic tree, in \code{ape}
+    \dQuote{phylo} format.}
+
   \item{clades}{A list, where the name of each element represents a tip
     in \code{tree} and each element is a character vector containing the
     names of species contained within that clade.}

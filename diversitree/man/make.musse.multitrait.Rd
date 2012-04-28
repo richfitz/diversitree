@@ -37,7 +37,8 @@ starting.point.musse.multitrait(tree, lik, q.div=5, yule=FALSE)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
 
   \item{states}{A \code{data.frame} of character states, each column of
     which represents a different binary state (with values 0 or 1), and

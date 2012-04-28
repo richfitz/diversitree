@@ -15,7 +15,8 @@ make.bisseness(tree, states, unresolved=NULL, sampling.f=NULL,
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be 0 or
     1, or \code{NA} if the state is unknown.  This vector must have

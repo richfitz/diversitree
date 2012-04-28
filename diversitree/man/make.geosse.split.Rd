@@ -12,7 +12,8 @@ make.geosse.split(tree, states, nodes, split.t,
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be an
     integer between 0 and 2: see \code{\link{make.geosse}}.  This vector

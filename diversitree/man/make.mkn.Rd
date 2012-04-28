@@ -21,7 +21,9 @@ make.mkn(tree, states, k, strict=TRUE, control=list())
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  % TODO: Drop requirements.
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be 0 or
     1 for \code{make.mk2} or 1 to \code{k} for \code{make.mkn}.}

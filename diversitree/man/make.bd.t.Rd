@@ -12,7 +12,8 @@ make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL,
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
 
   \item{functions}{A named list of functions of time.  See details.}
 

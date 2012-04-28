@@ -21,7 +21,8 @@ starting.point.bd(tree, yule=FALSE)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{times}{Vector of branching times, as returned by
     \code{branching.times}.  You don't need to use this unless you know

@@ -12,7 +12,8 @@ make.quasse.split(tree, states, states.sd, lambda, mu, nodes, split.t,
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be a
     numeric real values.  Missing values (\code{NA}) are not yet handled.
