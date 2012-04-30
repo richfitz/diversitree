@@ -114,7 +114,7 @@ make.unipar <- function(f, x, i) {
 
 make.prior.exponential <- function(r) {
   function(pars)
-    sum(log(r) - pars * r)
+    sum(dexp(pars, r, log=TRUE))
 }
 
 ## This is still experimental, and will not work nicely unless
@@ -146,7 +146,7 @@ make.prior.uniform <- function(lower, upper) {
   p <- log(1/(upper - lower))
   function(x) {
     ret <- rep(p, length.out=length(x))
-    ret[x < lower | x > upper] <- 0
+    ret[x < lower | x > upper] <- -Inf
     ret
   }
 }
