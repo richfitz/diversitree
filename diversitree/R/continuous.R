@@ -4,7 +4,12 @@ check.control.continuous <- function(control) {
 
   if ( length(control$method) != 1 )
     stop("control$method must be a scalar")
-  methods <- c("vcv", "direct")
+  if ( identical(control$method, "direct") ) {
+    warning('method="direct" is deprecated, please use method="pruning"')
+    control$method <- "pruning"
+  }
+    
+  methods <- c("vcv", "pruning")
   if ( !(control$method %in% methods) )
     stop(sprintf("control$method must be in %s",
                  paste(methods, collapse=", ")))

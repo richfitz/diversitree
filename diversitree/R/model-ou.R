@@ -21,8 +21,8 @@ make.ou <- function(tree, states, states.sd=0, control=list()) {
     all.branches <- make.all.branches.ou.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else {
-    all.branches <- make.all.branches.ou.direct(cache, control)
-    rootfunc <- rootfunc.bm.direct
+    all.branches <- make.all.branches.ou.pruning(cache, control)
+    rootfunc <- rootfunc.bm.pruning
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,

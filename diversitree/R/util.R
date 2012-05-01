@@ -137,6 +137,15 @@ dmvnorm2 <- function(x, mean, sigma, sigma.inv, log=FALSE) {
     exp(logretval)
 }
 
+dmvnorm3 <- function(x, mean, sigma.inv, logdet, log=FALSE) {
+  distval <- mahalanobis(x, center=mean, cov=sigma.inv, TRUE)
+  logretval <- -(length(x) * log(2 * pi) + logdet + distval)/2
+  if ( log )
+    logretval
+  else
+    exp(logretval)
+}
+
 combine <- function(liks) {
   if ( !is.list(liks) )
     stop("liks must be a list")

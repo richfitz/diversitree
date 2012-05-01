@@ -15,13 +15,24 @@ make.all.branches.bm.vcv <- function(cache, control) {
 
   if ( all(states.sd == 0) ) {
     VI.tmp <- solve(vcv)
-    function(x, intermediates) {
-      VI <- VI.tmp / x
-      ## By my calculations t(1) %*% VI %*% 1 = sum(VI)
-      ## t(one) %*% VI %*% states = sum(colSums(VI) * states)
-      ## mu <- solve(t(one) %*% VI %*% one) %*% (t(one) %*% VI %*% states)
-      mu <- sum(colSums(VI) * states) / sum(VI)
-      dmvnorm2(states, rep(mu, n.tip), vcv * x, VI, log=TRUE)
+    if ( is.null(control$experimental) ) {
+      function(x, intermediates) {
+        VI <- VI.tmp / x
+        ## By my calculations t(1) %*% VI %*% 1 = sum(VI)
+        ## t(one) %*% VI %*% states = sum(colSums(VI) * states)
+        ## mu <- solve(t(one) %*% VI %*% one) %*% (t(one) %*% VI %*% states)
+        mu <- sum(colSums(VI) * states) / sum(VI)
+        logdet <- nrow(vcv) * log(x) + ldet
+        dmvnorm3(states, rep(mu, n.tip), VI, logdet, log=TRUE)
+      }
+    } else {
+      ldet <- determinant(vcv, log=TRUE)
+      function(x, intermediates) {
+        VI <- VI.tmp / x
+        mu <- sum(colSums(VI) * states) / sum(VI)
+        logdet <- nrow(vcv) * log(x) + ldet
+        dmvnorm3(states, rep(mu, n.tip), VI, logdet, log=TRUE)
+      }
     }
   } else {
     function(x, intermediates) {
@@ -36,8 +47,8 @@ make.all.branches.bm.vcv <- function(cache, control) {
 
 rootfunc.bm.vcv <- function(res, pars, root, root.x, intermediates) {
   if ( root != ROOT.MAX )
-    stop('root cannot be modified -- use method="direct"')
+    stop('root cannot be modified -- use method="pruning"')
   if ( intermediates )
-    stop('intermediates cannot be produced -- use method="direct"')
+    stop('intermediates cannot be produced -- use method="pruning"')
   res
 }

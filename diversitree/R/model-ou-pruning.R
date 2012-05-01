@@ -1,8 +1,8 @@
-make.all.branches.ou.direct <- function(cache, control) {
+make.all.branches.ou.pruning <- function(cache, control) {
   if ( control$backend == "R" )  
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache,
-                          initial.conditions.bm.direct,
+                          initial.conditions.bm.pruning,
                           branches.ou, preset)
   else
     make.all.branches.continuous(cache, control)    

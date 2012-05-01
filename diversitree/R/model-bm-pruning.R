@@ -1,4 +1,4 @@
-initial.tip.bm.direct <- function(cache) {
+initial.tip.bm.pruning <- function(cache) {
   y <- mapply(function(mean, sd) c(mean, sd*sd, 0),
               cache$states, cache$states.sd, SIMPLIFY=TRUE)
   dt.tips.ordered(y, cache$tips, cache$len[cache$tips])
@@ -6,7 +6,7 @@ initial.tip.bm.direct <- function(cache) {
 
 ## 4: initial.conditions
 ## Note that we ignore both 't' and 'idx'.
-initial.conditions.bm.direct <- function(init, pars, t, idx) {
+initial.conditions.bm.pruning <- function(init, pars, t, idx) {
   m1 <- init[1,1]
   m2 <- init[1,2]
   v1 <- init[2,1]
@@ -19,7 +19,7 @@ initial.conditions.bm.direct <- function(init, pars, t, idx) {
 }
 
 ## 5: rootfunc
-rootfunc.bm.direct <- function(res, pars, root, root.x,
+rootfunc.bm.pruning <- function(res, pars, root, root.x,
                                intermediates) {
   vals <- res$vals
   lq <- res$lq
@@ -56,12 +56,12 @@ rootfunc.bm.direct <- function(res, pars, root, root.x,
   loglik
 }
 
-make.all.branches.bm.direct <- function(cache, control) {
+make.all.branches.bm.pruning <- function(cache, control) {
   if ( control$backend == "R" )
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache,
-                          initial.conditions.bm.direct,
-                          branches.bm.direct, preset)
+                          initial.conditions.bm.pruning,
+                          branches.bm.pruning, preset)
   else # backend == "C"
     make.all.branches.continuous(cache, control)
 }
@@ -73,7 +73,7 @@ make.all.branches.bm.direct <- function(cache, control) {
 ## Unlike the ODE-based functions, this ignores t0 and carries out
 ## calculations along length=len (rather than looking at c(t0,
 ## t0+len)).
-branches.bm.direct <- function(y, len, pars, t0, idx) {
+branches.bm.pruning <- function(y, len, pars, t0, idx) {
   m <- y[1]
   v <- y[2]
   z <- y[3]

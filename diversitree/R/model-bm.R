@@ -7,8 +7,8 @@ make.bm <- function(tree, states, states.sd=0, control=list()) {
     all.branches <- make.all.branches.bm.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else {
-    all.branches <- make.all.branches.bm.direct(cache, control)
-    rootfunc <- rootfunc.bm.direct
+    all.branches <- make.all.branches.bm.pruning(cache, control)
+    rootfunc <- rootfunc.bm.pruning
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
@@ -62,7 +62,7 @@ make.cache.bm <- function(tree, states, states.sd, control) {
   if ( method == "vcv" )
     cache$vcv <- vcv.phylo(tree)
   else
-    cache$y <- initial.tip.bm.direct(cache)
+    cache$y <- initial.tip.bm.pruning(cache)
   cache$info <- make.info.bm(tree)
   cache
 }

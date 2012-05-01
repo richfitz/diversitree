@@ -37,7 +37,7 @@ make.ou(tree, states, states.sd=0, control=list())
   based approach to compute the likelihood.  This is similar to the
   approach used by geiger, and is the default for \code{make.bm} (but is
   not available for \code{make.ou}).  The alternative is to specify
-  \code{control=list(method="direct")} which uses the transition density
+  \code{control=list(method="pruning")} which uses the transition density
   function for brownian motion along each branch, similar to how most
   methods in diversitree are computed.  This second approach is much
   faster for very large trees.
@@ -67,9 +67,9 @@ x <- structure(rnorm(length(bird.orders$tip.label)),
 ## With the VCV approach
 fit1 <- find.mle(make.bm(bird.orders, x), .1)
 
-## With the direct calculations
-lik.direct <- make.bm(bird.orders, x, control=list(method="direct"))
-fit2 <- find.mle(lik.direct, .1)
+## With the pruning calculations
+lik.pruning <- make.bm(bird.orders, x, control=list(method="pruning"))
+fit2 <- find.mle(lik.pruning, .1)
 
 ## All the same (need to drop the function from this though)
 all.equal(fit1[-7], fit2[-7])
