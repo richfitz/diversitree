@@ -10,7 +10,8 @@
 \usage{
 trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
            type="f", w=1/50, legend=length(cols) > 1, cex.lab=.5,
-           font.lab=3, cex.legend=.75, margin=1/4)
+           font.lab=3, cex.legend=.75, margin=1/4,
+           check=TRUE, quiet=FALSE)
 }
 
 \arguments{
@@ -48,7 +49,14 @@ trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
 
   \item{margin}{How much space, relative to the total tree depth, should
     be reserved when plotting a higher level classification.}
-  }
+
+  \item{check}{When TRUE (by default), this will check that the classes
+    specified by \code{class} are monophyletic.  If not, classes will be 
+    concatenated and a warning raised.}
+
+  \item{quiet}{When TRUE (FALSE by default), this suppresses the warning
+    caused by \code{check=TRUE}.}
+}
 
 
 \examples{
