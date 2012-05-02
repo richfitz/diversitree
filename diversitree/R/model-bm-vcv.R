@@ -22,11 +22,10 @@ make.all.branches.bm.vcv <- function(cache, control) {
         ## t(one) %*% VI %*% states = sum(colSums(VI) * states)
         ## mu <- solve(t(one) %*% VI %*% one) %*% (t(one) %*% VI %*% states)
         mu <- sum(colSums(VI) * states) / sum(VI)
-        logdet <- nrow(vcv) * log(x) + ldet
-        dmvnorm3(states, rep(mu, n.tip), VI, logdet, log=TRUE)
+        dmvnorm2(states, rep(mu, n.tip), vcv * x, VI, log=TRUE)
       }
     } else {
-      ldet <- determinant(vcv, log=TRUE)
+      ldet <- as.numeric(determinant(vcv, log=TRUE)$modulus)
       function(x, intermediates) {
         VI <- VI.tmp / x
         mu <- sum(colSums(VI) * states) / sum(VI)
