@@ -82,6 +82,10 @@ check.states <- function(tree, states, allow.unnamed=FALSE,
   ## TODO: When multistate characters are present, this may fail even
   ## for cases where it should not.
   if ( !is.null(strict.vals) ) {
+    if ( isTRUE(all.equal(strict.vals, 0:1)) )
+      if ( is.logical(states) )
+        states[] <- as.integer(states)
+    
     if ( strict ) {
       if ( !isTRUE(all.equal(sort(strict.vals),
                              sort(unique(na.omit(states))))) )
