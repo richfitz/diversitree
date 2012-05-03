@@ -55,7 +55,7 @@ AC_ARG_ENABLE([gcc-strict],
 	[gcc_strict=$enableval])
 if [ test x"$gcc_strict" = xyes ]; then
    echo "Using strict C checking"
-   PKG_CFLAGS="-Wall -ansi -pedantic ${PKG_CFLAGS}"
+   PKG_CFLAGS="-Wall -pedantic ${PKG_CFLAGS}"
 else
    echo "Using normal C checking"
 fi
