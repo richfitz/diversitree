@@ -11,7 +11,7 @@
 \newcommand{\code}{\texttt}
 \newcommand{\ud}{\mathrm{d}}
 
-\usepackage{Sweave}
+\usepackage{graphicx}
 \usepackage{dtsweave}
 \SweaveOpts{keep.source=TRUE,eps=FALSE}
 \SweaveOpts{prefix.string=cache/diversitree-ext}
