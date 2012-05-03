@@ -1,10 +1,26 @@
+% Don't use fancy code environments:
 \newif\ifplain\plainfalse
 \DeclareOption{plain}{\plaintrue}
+
+% Leave previously set fonts alone
+\newif\ifleavefonts\leavefontsfalse
+\DeclareOption{leavefonts}{\leavefontstrue}
+
 \ProcessOptions\relax
 
-\RequirePackage{fancyvrb}
 \RequirePackage{xcolor}
+\RequirePackage{fancyvrb}
 \RequirePackage{relsize}
+\RequirePackage{graphicx}
+
+\ifleavefonts\relax\else
+\IfFileExists{MinionPro.sty}
+{\message{*** Loading MinionPro}%
+  \RequirePackage{MnSymbol}%
+  \RequirePackage[mathlf,minionint]{MinionPro}}
+{\message{*** Falling back on Palatino}%
+  \RequirePackage{mathpazo}}
+\fi
 
 \ifplain
 % 1. Schunk

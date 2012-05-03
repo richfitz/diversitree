@@ -2,16 +2,17 @@
 \usepackage{fullpage}
 \usepackage{natbib}
 \usepackage{amsmath}
-\usepackage{color}
 
+\usepackage{xcolor}
 \definecolor{navy}{rgb}{0,0,0.4}
 \usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
 
-\newcommand{\code}{\texttt}
+\usepackage{dtsweave}
+% Needed or Sweave adds it in:
+% \usepackage{Sweave}
+\SweaveOpts{keep.source=TRUE,eps=FALSE}
+\SweaveOpts{prefix.string=cache/diversitree-tutorial}
 
-\usepackage{Sweave}
-%\usepackage{dtsweave}
-\SweaveOpts{prefix.string=cache/diversitree-tutorial,eps=FALSE}
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset
@@ -20,13 +21,6 @@ options(show.signif.stars=FALSE, continue="  ")
 chi <- function(m1, m2, digits=1)
   round(2*(m1$lnLik - m2$lnLik), digits)
 @ 
-
-% I like Garamond (who doesn't?).  However, it's not included in most
-% TeX distributions due to licence restrictions.  Either use
-% getfontsnonfree to install it, remove this line to get computer
-% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
-% Palatino, which is also quite nice.
-\usepackage[garamond]{mathdesign}
 
 %\VignetteIndexEntry{Introduction to diversitree}
 %\VignettePackage{diversitree}
