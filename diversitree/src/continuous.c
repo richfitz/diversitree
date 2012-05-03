@@ -68,15 +68,16 @@ static void dt_obj_cont_finalize(SEXP extPtr) {
 }
 
 void dt_cont_setup_tips(dt_obj_cont *obj, SEXP cache) {
-  SEXP y, tip_y, tip_len;
+  SEXP y, tip_y, tip_target_r;
   int i, idx, neq = obj->neq, *tip_target;
   int n_tip;
 
   y = getListElement(cache, "y");
-  tip_y      = getListElement(y, "y");
-  tip_target = INTEGER(getListElement(y, "target"));
+  tip_y        = getListElement(y, "y");
+  tip_target_r = getListElement(y, "target");
+  tip_target   = INTEGER(tip_target_r);
   
-  n_tip = obj->n_tip = LENGTH(tip_len);
+  n_tip = obj->n_tip = LENGTH(tip_target_r);
   if ( nrows(tip_y) != neq || ncols(tip_y) != n_tip )
     error("Incorrect tip state dimensions");
 
