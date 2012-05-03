@@ -269,6 +269,11 @@ check.states.musse.multitrait <- function(tree, states,
     stop("Not all species have state information")
 
   if ( !is.null(strict.vals) ) {
+    if ( isTRUE(all.equal(strict.vals, 0:1)) ) {
+      i.log <- sapply(states, is.logical)
+      states[,i.log] <- sapply(states[,i.log], as.integer)
+    }
+    
     if ( strict ) {
       f <- function(x)
         !isTRUE(all.equal(sort(strict.vals),
@@ -285,8 +290,7 @@ check.states.musse.multitrait <- function(tree, states,
     }
   }
 
-  ret <- as.matrix(states[tree$tip.label,])
-  ret
+  as.matrix(states[tree$tip.label,,drop=FALSE])
 }
 
 check.depth <- function(depth, n.trait) {
