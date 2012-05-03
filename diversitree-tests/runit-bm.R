@@ -23,12 +23,13 @@ test.bm <- function() {
 
   all.equal(fit2, fit3)
   
-  ## All the same (need to drop the function from this though)
-  checkEquals(fit1[-7], fit2[-7])
+  ## All the same:
+  checkEquals(fit1, fit2)
+  checkEquals(fit1, fit3)
 
   library(geiger)
-  fit3 <- fitContinuous(bird.orders, x)
-  checkEquals(fit3$Trait1$lnl, fit1$lnLik)
+  fit4 <- fitContinuous(bird.orders, x)
+  checkEquals(fit4$Trait1$lnl, fit1$lnLik)
   ## These actually differ very slightly:
   ## checkEquals(fit3$Trait1$beta, fit1$par, check.attributes=FALSE)
 }
