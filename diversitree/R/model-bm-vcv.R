@@ -15,23 +15,12 @@ make.all.branches.bm.vcv <- function(cache, control) {
 
   if ( all(states.sd == 0) ) {
     VI.tmp <- solve(vcv)
-    if ( is.null(control$experimental) ) {
-      function(x, intermediates) {
-        VI <- VI.tmp / x
-        ## By my calculations t(1) %*% VI %*% 1 = sum(VI)
-        ## t(one) %*% VI %*% states = sum(colSums(VI) * states)
-        ## mu <- solve(t(one) %*% VI %*% one) %*% (t(one) %*% VI %*% states)
-        mu <- sum(colSums(VI) * states) / sum(VI)
-        dmvnorm2(states, rep(mu, n.tip), vcv * x, VI, log=TRUE)
-      }
-    } else {
-      ldet <- as.numeric(determinant(vcv, log=TRUE)$modulus)
-      function(x, intermediates) {
-        VI <- VI.tmp / x
-        mu <- sum(colSums(VI) * states) / sum(VI)
-        logdet <- nrow(vcv) * log(x) + ldet
-        dmvnorm3(states, rep(mu, n.tip), VI, logdet, log=TRUE)
-      }
+    ldet <- as.numeric(determinant(vcv, logarithm=TRUE)$modulus)
+    function(x, intermediates) {
+      VI <- VI.tmp / x
+      mu <- sum(colSums(VI) * states) / sum(VI)
+      logdet <- nrow(vcv) * log(x) + ldet
+      dmvnorm3(states, rep(mu, n.tip), VI, logdet, log=TRUE)
     }
   } else {
     function(x, intermediates) {
