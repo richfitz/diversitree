@@ -12,6 +12,27 @@ descendants <- function(node, edge) {
   unlist(ans)
 }
 
+descendants.C <- function(node, edge, n.tip) {
+  storage.mode(edge) <- "integer"
+  storage.mode(node) <- "integer"
+  storage.mode(n.tip) <- "integer"
+  .Call("r_descendants", node, edge, n.tip, PACKAGE="diversitree")
+}
+
+descendants.flag.C <- function(node, edge, n.tip) {
+  storage.mode(edge) <- "integer"
+  storage.mode(node) <- "integer"
+  storage.mode(n.tip) <- "integer"
+  .Call("r_descendants_flag", node, edge, n.tip, PACKAGE="diversitree")
+}
+
+descendants.idx.C <- function(node, edge, n.tip) {
+  storage.mode(edge) <- "integer"
+  storage.mode(node) <- "integer"
+  storage.mode(n.tip) <- "integer"
+  .Call("r_descendants_idx", node, edge, n.tip, PACKAGE="diversitree")
+}
+
 ancestors <- function(phy, i=seq_along(phy$tip.label)) {
   anc <- i
   edge <- phy$edge

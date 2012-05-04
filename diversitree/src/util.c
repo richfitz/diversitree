@@ -106,3 +106,87 @@ SEXP getListElement(SEXP list, const char *str) {
 
   return elmt;
 } 
+/* Tree utilities */
+int descendants(int node, int *edge, int nedge, int ntip, int *desc);
+void descendants_flag(int node, int *edge, int nedge, int ntip, 
+		      int *flag);
+
+SEXP r_descendants(SEXP node, SEXP edge, SEXP ntip) {
+  int nedge = nrows(edge), *desc = (int *)R_alloc(nedge, sizeof(int));
+  int n, *ret_c, node_c = INTEGER(node)[0];
+  SEXP ret;
+  n = descendants(node_c, INTEGER(edge), nedge,
+		  INTEGER(ntip)[0], desc);
+  PROTECT(ret = allocVector(INTSXP, n+1));
+  ret_c = INTEGER(ret);
+  ret_c[0] = node_c;
+  memcpy(ret_c + 1, desc, n*sizeof(int));
+  UNPROTECT(1);
+  return ret;
+}
+
+/* if column 1 was sorted, this would be faster... */
+int descendants(int node, int *edge, int nedge, int ntip, int *desc) {
+  const int *from = edge, *to = edge + nedge;
+  int i, n = 0, ni;
+  for ( i = 0; i < nedge; i++ ) {
+    if ( from[i] == node ) {
+      *desc = to[i];
+      if ( to[i] > ntip ) /* R indexing... */
+	ni = descendants(to[i], edge, nedge, ntip, desc+1) + 1;
+      else 
+	ni = 1;
+      n += ni;
+      desc += ni;
+    }
+  }
+  return n;
+}
+
+SEXP r_descendants_flag(SEXP node, SEXP edge, SEXP ntip) {
+  int nedge = nrows(edge);
+  int i, *ret_c, node_c = INTEGER(node)[0];
+  int *to = INTEGER(edge) + nedge;
+  SEXP ret;
+  PROTECT(ret = allocVector(LGLSXP, nedge));
+  ret_c = INTEGER(ret);
+  for ( i = 0; i < nedge; i++ )
+    ret_c[i] = to[i] == node_c;
+  descendants_flag(node_c, INTEGER(edge), nedge, INTEGER(ntip)[0],
+		   ret_c);
+  UNPROTECT(1);
+  return ret;
+}
+
+void descendants_flag(int node, int *edge, int nedge, int ntip, 
+		      int *flag) {
+  const int *from = edge, *to = edge + nedge;
+  int i;
+  for ( i = 0; i < nedge; i++ ) {
+    if ( from[i] == node ) {
+      flag[i] = 1;
+      if ( to[i] > ntip ) /* R indexing... */
+	descendants_flag(to[i], edge, nedge, ntip, flag);
+    }
+  }
+}
+
+SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip) {
+  int nedge = nrows(edge);
+  SEXP ret, flag;
+  int *flag_c, *tmp = (int*)R_alloc(nedge, sizeof(int));
+  int i, n=0;
+  PROTECT(flag = r_descendants_flag(node, edge, ntip));
+  flag_c = INTEGER(flag);
+
+  for ( i = 0 ; i < nedge; i++ )
+    if ( flag_c[i] )
+      tmp[n++] = i + 1;
+
+  PROTECT(ret = allocVector(INTSXP, n));
+  memcpy(INTEGER(ret), tmp, n*sizeof(int));
+  UNPROTECT(2);
+
+  return ret;
+}
+
