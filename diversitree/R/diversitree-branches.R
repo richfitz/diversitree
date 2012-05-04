@@ -220,7 +220,12 @@ make.cache <- function(tree) {
 
   is.tip <- idx <= n.tip
 
-  children <- lapply(idx[!is.tip], function(x) edge[edge[,1] == x,2])
+  ## To construct the children vector, this is what I used to do:
+  ##   lapply(idx[!is.tip], function(x) edge[edge[,1] == x,2])
+  ## But this is slow for large trees.  This is faster:
+  children <- split(edge[,2], edge[,1])
+  names(children) <- NULL
+
   ## Technically, this is already checked by check.tree, but I'm happy
   ## leaving it in.
   if ( !all(sapply(children, length)==2) )
