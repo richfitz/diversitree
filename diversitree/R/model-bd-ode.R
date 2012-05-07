@@ -44,11 +44,12 @@ rootfunc.bd.ode <- function(res, pars, condition.surv,
   const <- lfactorial((length(lq) + 1)/2 - 1)
   
   if ( condition.surv ) {
-    e.root <- vals[1]
-    lambda <- pars[1]
+    e.root <- vals[[1]]
+    lambda <- pars[[1]]
     d.root <- d.root/(lambda * (1 - e.root)^2)
   }
   loglik <- log(d.root) + sum(lq) + const
+  names(loglik) <- NULL
 
   if ( intermediates ) {
     attr(loglik, "intermediates") <- res
