@@ -33,6 +33,29 @@ descendants.idx.C <- function(node, edge, n.tip) {
   .Call("r_descendants_idx", node, edge, n.tip, PACKAGE="diversitree")
 }
 
+get.children <- function(edge, n.tip) {
+  ## To construct the children vector, this is what I used to do:
+  ##   lapply(idx[!is.tip], function(x) edge[edge[,1] == x,2])
+  ## But this is slow for large trees.  This is faster:
+  ## children <- split(edge[,2], edge[,1])
+  ## Surprisingly, most of the time is in coercing edge[,1] into a
+  ## factor.
+  x <- as.integer(edge[,1])
+  levels <- as.integer((n.tip+1):max(edge[,1]))
+  f <- match(x, levels)
+  levels(f) <- as.character(levels)
+  class(f) <- "factor"
+  children <- split(edge[,2], f)
+  names(children) <- NULL
+
+  ## In most cases, this will have been checked by check.tree()
+  ## This is currently the time sink here.
+  if ( !all(unlist(lapply(children, length)) == 2) )
+    stop("Multifircations/unbranched nodes in tree - best get rid of them")
+
+  rbind(matrix(NA, n.tip, 2), t(matrix(unlist(children), 2)))
+}
+
 ancestors <- function(phy, i=seq_along(phy$tip.label)) {
   anc <- i
   edge <- phy$edge
