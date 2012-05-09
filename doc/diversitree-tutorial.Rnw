@@ -726,10 +726,10 @@ filled.arcs(theta - dt, theta + dt,  max(plt$xy$x) + w/2, w, cols)
     unresolved clades, with the height of the triangle being
     proportional to the square root of the number of species.
     Character states at the 15\% threshold level are indicated at the
-    tips; gray=sexually dimorphic, black=sexually monomorphic, and
-    white=no data.  For unresolved clades, the colour is scaled to
-    indicate the proportion of species in each state.  For clarity,
-    only family or subfamily names are shown.}
+    tips; gray indicates sexually dimorphic, black indicates sexually
+    monomorphic, and white indicates no data.  For unresolved clades,
+    the degree of shading indicates the proportion of species in each
+    state.  For clarity, only family or subfamily names are shown.}
   \label{fig:shorebird-tree-with-traits}
 \end{figure}
 \setkeys{Gin}{width=0.8\textwidth}
