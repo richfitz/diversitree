@@ -30,7 +30,7 @@ make.bisse.split <- function(tree, states, nodes, split.t=Inf,
     ans <- all.branches(pars, intermediates, preset)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
-  class(ll) <- c("bisse.split", "bisse", "function")
+  class(ll) <- c("bisse.split", "bisse", "dtlik", "function")
   ll
 }
 
