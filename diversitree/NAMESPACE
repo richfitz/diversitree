@@ -96,11 +96,16 @@ export(invert)
 export(big.brother)
 export(set.defaults)
 export(combine)
+
 export(profiles.plot)
 export(trait.plot)
+
 export(make.prior.exponential)
 export(make.prior.uniform)
+
 export(prune)
+export(get.descendants)
+
 
 ## Support for time-dependent models
 export(constant.t)

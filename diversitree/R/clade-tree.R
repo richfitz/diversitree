@@ -67,26 +67,6 @@ clades.from.polytomies <- function(tree) {
   make.clade.tree(tree2, clades.spp)
 }
 
-## All ancestors of node 'x' in 'tree'
-## ancestors <- function(x, tree, tips.only=FALSE) {
-##   from <- tree$edge[,1]
-##   to   <- tree$edge[,2]
-##   n.taxa <- length(tree$tip.label)
-##   is.node <- seq_len(n.taxa) %in% from
-##   anc <- list(x)
-##   n <- 1
-##   while ( length(x) > 0 ) {
-##     kids <- to[from %in% x]
-##     anc[[n <- n + 1]] <- kids
-##     x <- kids[is.node[kids]]
-##   }
-##   anc <- sort(unlist(anc))
-##   if ( tips.only )
-##     anc[anc <= n.taxa]
-##   else
-##     anc
-## }
-
 ## Renamed poorly because of a clash with util.R:ancestors
 ## TODO: I believe that this is actually descendents()
 ## It can be replaced by:

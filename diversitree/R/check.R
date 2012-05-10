@@ -182,6 +182,8 @@ check.integer <- function(x) {
   if ( is.null(x) )
     stop("NULL argument for ", deparse(substitute(x)))
   nna <- !is.na(x)
+  if ( length(x) > 0 && !any(nna) )
+    stop("No non-NA values for ", deparse(substitute(x)))
   if ( length(x) && max(abs(x[nna] - round(x[nna]))) > 1e-8 )
     stop("Non-integer argument for ", deparse(substitute(x)))
   storage.mode(x) <- "integer"

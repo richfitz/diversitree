@@ -113,3 +113,30 @@ branching.depth <- function(len, children, order, tips) {
     depth[i] <- depth[children[i,1]] + len[children[i,1]]
   depth
 }
+
+get.descendants <- function(node, tree, tips.only=FALSE,
+                            edge.index=FALSE) {
+  n.tip <- length(tree$tip.label)
+  if ( length(node) != 1 )
+    stop("'node' must be scalar")
+  if ( is.character(node) ) {
+    node <- match(node, tree$node.label) + n.tip
+    if ( is.na(node) )
+      stop(sprintf("Node '%s' not found in tree"), node)
+  } else {
+    node <- check.integer(node)
+    if ( node >= 1 && node < phy$Nnode ) # on 1..(n.node), probably
+      node <- node + n.tip
+    else if ( !(node > n.tip && node <= n.tip + phy$Nnode) )
+      stop("Invalid node number")
+  }
+    
+  edge <- tree$edge
+
+  desc <- descendants.C(node, edge, n.tip)
+  if ( tips.only )
+    desc <- desc[desc <= n.tip]
+  if ( edge.index )
+    desc <- match(desc, edge[,2])
+  desc
+}
