@@ -1,5 +1,13 @@
 ## Tests of the QuaSSE internal functions.
-test.quasse.internal <- function() {
+test.quasse.internal.nodrift <- function() {
+  dotest.quasse.internal(0)
+}
+
+test.quasse.internal.drift <- function() {
+  dotest.quasse.internal(.01)
+}
+
+dotest.quasse.internal <- function(drift=0) {
   library(diversitree)
   library(RUnit)
   
@@ -32,13 +40,12 @@ test.quasse.internal <- function() {
 
   lambda <- sigmoid.x
   mu <- constant.x
-  drift <- 0
   diffusion <- 0.01
   sd <- 1/20
   len <- 2 # Integrate down a branch length of 2
 
   args <- list(lambda=1:4, mu=5, drift=6, diffusion=7)
-  pars <- c(.1, .2, 0, 2.5, .03, 0, .01)
+  pars <- c(.1, .2, 0, 2.5, .03, drift, diffusion)
 
   ext.fft <- quasse.extent(control.fft, drift, diffusion)
 
@@ -73,13 +80,16 @@ test.quasse.internal <- function() {
 
   ans.fftC <- pde.fftC(vars.fft, len, pars.fft$lo, 0)
   ans.fftR <- pde.fftR(vars.fft, len, pars.fft$lo, 0)
-  ans.mol <- pde.mol(vars.mol, len, pars.mol$lo, 0)
 
   ## TEST
   checkEquals(ans.fftC, ans.fftR)
-  checkEquals(ans.mol[[1]], ans.fftC[[1]], tolerance=1e-5)
-  checkEquals(ans.mol[[2]], ans.fftC[[2]][seq_len(ndat),], tolerance=0.0004)
 
+  if ( drift == 0 ) {
+    ans.mol <- pde.mol(vars.mol, len, pars.mol$lo, 0)
+    checkEquals(ans.mol[[1]], ans.fftC[[1]], tolerance=1e-5)
+    checkEquals(ans.mol[[2]], ans.fftC[[2]][seq_len(ndat),], tolerance=0.0004)
+  }
+  
   branches.fftC <- make.branches.quasse.fftC(control.fft)
   branches.fftR <- make.branches.quasse.fftR(control.fft)
   branches.mol  <- make.branches.quasse.mol(control.mol)
@@ -94,12 +104,16 @@ test.quasse.internal <- function() {
 
   ans.b.fftC <- branches.fftC(vars.hi.fft, len, pars.fft, 0)
   ans.b.fftR <- branches.fftR(vars.hi.fft, len, pars.fft, 0)
-  ans.b.mol <- branches.mol(vars.hi.mol, len, pars.mol, 0)
 
   ## TEST:
   checkEquals(ans.b.fftC, ans.b.fftR)
-  checkEquals(c(ans.b.fftC[1],
-                matrix(ans.b.fftC[-1], ncol=2)[seq_len(ndat),]),
-              ans.b.mol, tolerance=0.00015)
+
+  if ( drift == 0 ) {
+    ans.b.mol <- branches.mol(vars.hi.mol, len, pars.mol, 0)
+    checkEquals(c(ans.b.fftC[1],
+                  matrix(ans.b.fftC[-1], ncol=2)[seq_len(ndat),]),
+                ans.b.mol, tolerance=0.00015)
+  }
 }
+
 

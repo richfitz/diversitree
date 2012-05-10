@@ -39,15 +39,16 @@ make.pde.quasse.fftR <- function(nx, dx, dt.max, nd) {
   }
 }
 
+## Note that the sign of drift here needs inverting.  (see
+## src/quasse-eqs-fftC.c:qf_setup_kern() for the equivalent flip).
 quasse.integrate.fftR <- function(vars, lambda, mu, drift, diffusion,
                                   nstep, dt, nx, ndat, dx, nkl, nkr) {
-  kern <- fftR.make.kern(dt * drift, sqrt(dt * diffusion),
+  kern <- fftR.make.kern(-dt * drift, sqrt(dt * diffusion),
                          nx, dx, nkl, nkr)
   fy <- fft(kern)  
   for ( i in seq_len(nstep) ) {
     vars <- fftR.propagate.t(vars, lambda, mu, dt, ndat)
-    vars <- fftR.propagate.x(vars, drift, diffusion, dt, nx, dx,
-                             fy, nkl, nkr)
+    vars <- fftR.propagate.x(vars, nx, fy, nkl, nkr)
   }
   vars
 }
@@ -73,8 +74,7 @@ fftR.propagate.t <- function(vars, lambda, mu, dt, ndat) {
   vars
 }
 
-fftR.propagate.x <- function(vars, drift, diffusion, dt, nx, dx, fy,
-                             nkl, nkr) {
+fftR.propagate.x <- function(vars, nx, fy, nkl, nkr) {
   ifft <- function(x) fft(x, inverse=TRUE)
   f <- function(z, fy, n) {
     nx <- length(z)

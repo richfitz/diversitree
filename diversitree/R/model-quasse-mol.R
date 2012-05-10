@@ -27,6 +27,8 @@ make.pde.quasse.mol <- function(nx, dx, nd, atol, rtol) {
   diffusion.scal <- 1/(2 * dx^2)
 
   function(y, len, pars, t0, method="lsodes", ...) {
+    if ( pars$drift != 0 )
+      stop('Nonzero drift non currently supported with method="mol"')
     pars <- c(pars$lambda, pars$mu, pars$lambda + pars$mu,
               pars$drift, pars$diffusion * diffusion.scal)
     

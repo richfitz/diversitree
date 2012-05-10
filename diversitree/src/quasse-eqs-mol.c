@@ -24,6 +24,7 @@ void initmod_quasse_mol(void (* odeparms)(int *, double *)) {
   parms_quasse = REAL(get_deSolve_gparms());
 } 
 
+/* Note that drift is not currently supported */
 void derivs_quasse_mol(int *neq, double *t, double *y, double *ydot, 
 		       double *yout, int *ip) {
   const int nx = *neq / 2;
