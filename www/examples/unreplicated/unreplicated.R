@@ -1,31 +1,69 @@
 ## % Unreplicated correlated evolution
 
-## `r opts_chunk$set(tidy=FALSE)`
+### Set options
 ##+ echo=FALSE,results=FALSE
-options(show.signif.stars=FALSE, continue="  ")
+opts_chunk$set(tidy=FALSE, fig.height=5)
+options(show.signif.stars=FALSE)
+
+### Bibliography
+##+ echo=FALSE,results=FALSE
+library(knitcitations)
+library(methods)
+refs <- read.bibtex("../refs.bib")
+
+## Most of the likelihood methods in diversitree (and other programs)
+## are prone to be mislead by unreplicated associations; for example
+
+## * If a tree has a highly diverse clade with one of the states
+##   overrepresented BiSSE may conclude that trait is significantly
+##   associated with increased rates of speciation.
+
+## * Given a pair of binary traits, $A$ and $B$, if one clade has
+##   mostly species with states $A=1$, $B=1$, while the rest of the
+##   tree is mostly $A=0$, $B=0$, discrete
+##   `r citep(refs[["Pagel-1994-37"]])` or diversitree's `mkn.multitrait`
+##   may conclude there is significant assoociation between these
+##   traits (that is, the rate of evolution of one trait depends on
+##   the state of the other).
+
+## ML doesn't count the number of instances of transitions, just
+## strength of evidence for the alternate models.  These are the sort
+## of unreplicated comparisons that the comparative method is meant to
+## avoid, and which are used to motivate
+## `r citet(refs[["Felsenstein-1985-1"]])`.  This issue was discussed by
+## `r citet(refs[["Read-1995-99"]])` but it is not widely appreciated.
+
+## Here, I show a couple of toy examples as to how the problem can
+## arise under multistate Markov model and BiSSE, and how
+## phylogenetically independent contrasts is not immune to this
+## problem (but that it may be easily detectable).
+
+## # Mkn multitrait / `r citet(refs[["Pagel-1994-37"]])` discrete
 
 ## First, load diversitree and simulate a pure birth tree (with rate
-## .1)
+## .1).
 library(diversitree)
 set.seed(1)
 n.spp <- 30
 phy <- ladderize(tree.yule(.1, max.taxa=n.spp))
 
-##+ fig.height=5,fig.cap="Simulated pure birth tree"
+## This will be tree used for all examples
+
+##+ fig.cap="Simulated pure birth tree"
 plot(phy, show.node.label=TRUE, no.margin=TRUE, cex=.8)
 
-## nd14 will be our target node.
+## nd14 will be our target node; below this point, the clade will
+## behave "differently" to the rest of the clade.
 target <- "nd14"
 
 ## Convert this name to Ape's node index:
 idx <- match(target, phy$node.label) + n.spp
 
-## Identify descendants of this node
-desc <- diversitree:::descendants(idx, phy$edge)
-desc <- sort(desc[desc < n.spp])
+## Identify descendant species of this node
+desc <- sort(get.descendants(target, phy, tips.only=TRUE))
 
 ## Here is our focal group, highlighted in red
-##+ fig.height=5,fig.cap="Focal group at node 'nd14'"
+##+ fig.cap="Focal group at node 'nd14'"
 plot(phy, tip.color=ifelse(1:n.spp %in% desc, "#ef2929", "black"),
      no.margin=TRUE)
 nodelabels(node=idx, pch=19, cex=2, col="#ef2929")
@@ -33,6 +71,7 @@ nodelabels(node=idx, pch=19, cex=2, col="#ef2929")
 ## Trait 1 is shared across this group, and with nobody else.
 t1 <- as.integer(1:n.spp %in% desc)
 names(t1) <- phy$tip.label
+t1
 
 ## Determine rate coefficients for the evolution of this trait,
 ## assuming a Mk2 model:
@@ -43,17 +82,18 @@ zapsmall(coef(fit1))
 ## Now, suppose we have two perfectly codistribted traits "a" and "b";
 traits <- data.frame(a=t1, b=t1)
 
-## Making a 2-trait likelihood function, assuming that the two traits
+## Make a 2-trait likelihood function, assuming that the two traits
 ## are independent:
 lik2 <- make.mkn.multitrait(phy, traits, depth=0)
+argnames(lik2)
 
-## And fitting the ML model
+## And fit this model with ML:
 p2 <- rep(coef(fit1), 2)
 names(p2) <- NULL
 fit2 <- find.mle(lik2, p2)
 
-## We get the same basic coefficients when the traits are assumed to
-## evolve independently.
+## We get the same basic coefficients when treating the traits
+## separately:
 zapsmall(coef(fit1))
 zapsmall(coef(fit2))
 all.equal(coef(fit2)[1:2], coef(fit1), check.attr=FALSE)
@@ -70,7 +110,7 @@ p3[argnames(lik2)] <- coef(fit2)
 ##+ fit.lik3,cache=TRUE
 fit3 <- find.mle(lik3, rep(.1, 8))
 
-## Basically once trait 'a' has shifted from 0->1, we instantaneously
+## Basically once trait 'a' has shifted from $0\to 1$, we instantaneously
 ## shift in state 'b'.
 zapsmall(coef(fit3))
 
@@ -90,16 +130,17 @@ t2 <- replicate(100,
                 simplify=FALSE)
 
 ## And fit these the same way:
-## This fails to run in sowsear with blank lines below -- fix and push.
 f <- function(t2) {
   lik0 <- make.mkn.multitrait(phy, data.frame(a=t1, b=t2), depth=0)
   p0 <- rep(r, 4)
   fit0 <- find.mle(lik0, p0)
+
   lik1 <- make.mkn.multitrait(phy, data.frame(a=t1, b=t2))
   p1 <- rep(0, 8)
   names(p1) <- argnames(lik1)
   p1[argnames(lik0)] <- coef(fit0)
   fit1 <- find.mle(lik1, p1)
+
   fit1$lnLik - fit0$lnLik
 }
 
@@ -116,6 +157,11 @@ hist(ans, xlim=range(ans, dll), main="", las=1,
      xlab="Likelihood impovement")
 abline(v=dll, col="red")
 abline(v=qchisq(1/20, 4, lower=FALSE)/2, col="blue")
+
+## Most of the time, a random character would not be significantly
+## associated with our special trait.  But two perfectly co-occurring
+## traits have extremely high support for a model that treats their
+## evolution as non-independent, even though this is unreplicated.
 
 ## # BiSSE
 
@@ -138,10 +184,9 @@ anova(fit.ssd, sid=fit.sid)
 ## Next, tweak the tree so that the focal clade is apparently
 ## different.  This is a bit of a pain to do.  First, identify all
 ## edges descended from that node
-desc <- diversitree:::descendants(idx, phy$edge)
-i <- phy$edge[,2] %in% desc
+i <- phy$edge[,2] %in% sort(get.descendants(target, phy))
 
-##+ fig.height=5,fig.cap="Edges descended from focal node"
+##+ fig.cap="Edges descended from focal node"
 plot(phy, no.margin=TRUE,
      edge.color=ifelse(i, "#ef2929", "black"),
      tip.color=ifelse(1:n.spp %in% desc, "#ef2929", "black"))     
@@ -161,7 +206,7 @@ phy2$edge.length[j] <-
 is.ultrametric(phy2)
 
 ## Here is the compressed tree:
-##+ fig.height=5,fig.cap="Edges descended from focal node"
+##+ fig.cap=""
 plot(phy2, no.margin=TRUE,
      edge.color=ifelse(i, "#ef2929", "black"),
      tip.color=ifelse(1:n.spp %in% desc, "#ef2929", "black"))     
@@ -179,7 +224,7 @@ lik2.sid <- constrain(lik2, lambda1 ~ lambda0, mu1 ~ mu0)
 fit2.sid <- find.mle(lik2.sid, p[argnames(lik2.sid)])
 
 ## There is now significant association between the trait and
-## diversification!
+## diversification, even though this is not replicated!
 anova(fit2.ssd, sid=fit2.sid)
 
 ## Generalise this a bit to look how the likelihood improvement varies
@@ -283,9 +328,79 @@ anova(fit.bs.sdd, sid=fit.bs.sid)
 ## diversification shift happens rather closer to the node.  So that
 ## aspect of the tree still needs explaining.
 
+## # Continuous traits and phylogenetically independent contrasts
+
+## This is the sort of thing that
+## `r citet(refs[["Felsenstein-1985-1"]])` warns against,
+## but still causes a problem with continous traits, if Brownian
+## motion is not a suitable model.
+set.seed(1)
+x <- sim.character(phy, .1)
+y <- sim.character(phy, .1)
+
+##+ fig.cap="Random (Brownian) traits, with focal clade in red"
+plot(x, y, col=ifelse(1:n.spp %in% desc, "#ef2929", "black"),
+     pch=19, las=1)
+
+## Compute phylogenetically independent contrast with ape's `pic`
+## function.:
+x.pic <- pic(x, phy)
+y.pic <- pic(y, phy)
+
+## and run a correlation test (regression through the origin gives
+## essentially the same result).
+cor.test(x.pic, y.pic)
+
+## Now, replace the values of the focal clade with new trait values,
+## offset by some amount, but evolved under BM with the same rate.
+## First, clip out the subtree corresponding to the focal clade:
+desc <- sort(get.descendants(target, phy, tips.only=TRUE))
+phy.sub <- drop.tip(phy, phy$tip.label[-desc])
+
+## These were the state values at the target node from the original
+## simulation:
+x0 <- attr(x, "node.state")[target]
+y0 <- attr(y, "node.state")[target]
+
+## Offset these values by 3 and continue the simulation, replacing the
+## values in the `x` and `y` vectors
+x[desc] <- sim.character(phy.sub, .1, x0=x0+3)
+y[desc] <- sim.character(phy.sub, .1, x0=y0+3)
+
+##+ fig.cap="Random (Brownian) traits, after perturbing focal clade"
+plot(x, y, col=ifelse(1:n.spp %in% desc, "#ef2929", "black"),
+     pch=19, las=1)
+
+## Recompute the independent contrasts:
+x.pic <- pic(x, phy)
+y.pic <- pic(y, phy)
+
+## Do a correlation test (again, regression through the origin gives
+## essentially the same answer).
+cor.test(x.pic, y.pic)
+## This is actually quite significant; not much less so than the
+## correlation of the raw data.
+cor.test(x, y)
+
+## Plotting the contrasts, there is a fairly clear outlier.
+##+ fig.cap="Independent contrasts in the distorted tree"
+par(mar=c(4.1, 4.1, .5, .5))
+plot(x.pic, y.pic, las=1, pch=19)
+## This is the node that is the parent of the focal clade and another
+## smaller group.
+
+## While similarly mislead, at least independent contrasts provide a
+## simple way of *identifying* the misleading nodes.
+
+## # Bibliography
+##+ echo=FALSE,results="asis"
+bibliography()
+
 ## ## Document details
 
 ## Document compiled on `r as.character(Sys.time(), usetz=TRUE)`
 ## With R version `r R.version$string`
 ## and diversitree version `r packageVersion("diversitree")`.
 ## Original source: [unreplicated.R](unreplicated.R)
+
+## [back](..), [diversitree home](../..)
