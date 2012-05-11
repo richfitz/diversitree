@@ -32,6 +32,30 @@
     will probably have to install from source.
     </p>
 
+    <h2>From Github</h2>
+    
+    <p>
+      In between releases on the diversitree website (and the less
+      frequent CRAN releases), bleeding-edge versions of diversitree
+      can be obtained from github:
+    </p>
+    <pre>
+git clone git://github.com/richfitz/diversitree.git</pre>
+<p>
+    Which will create a directory <code>diversitree</code>.  From 
+    within the <code>diversitree/diversitree</code> directory, run 
+</p>
+    <pre>
+autoheader
+autoconf</pre>
+    <p>to generate the <code>configure</code> script.  From within the
+    <code>diversitree</code> directory, </p>
+    <pre>
+R CMD INSTALL diversitree</pre>
+    <p>or</p>
+    <pre>
+R CMD INSTALL diversitree --configure-args='--with-fftw=/path/to/fftw'</pre>
+
     <h2 class="preservecase">QuaSSE installation issues</h2>
     <p>
       QuaSSE requires that the <a href="http://fftw.org">fftw</a>
@@ -68,37 +92,8 @@ R CMD INSTALL diversitree --configure-args='--with-fftw=/path/to/fftw'</pre>
       date, and I can arrange to have a binary package built for you.
     </p>
 
-    <h2 class="preservecase">mac os x 10.5 (leopard) and R 2.10.1</h2>
-    <p>
-      R 2.10.1 and Mac OS X 10.5 (leopard)'s default Xcode appear not
-      to play well together and the installation will not work,
-      failing with an error like
-    </p>
-    <pre>
-gcc-4.2 -arch i386 -std=gnu99 -I/Library/Frameworks/R.framework...
-make: gcc-4.2: Command not found
-make: *** [bisse-eqs.o] Error 127
-ERROR: compilation failed for package ‘diversitree’</pre>
-    <p>
-      This type of error will occur for all R packages.  To get around
-      this, either install Xcode 3.1.4 (available with some hunting
-      from <a
-      href="http://connect.apple.com">http://connect.apple.com</a>,
-      which includes a more recent Xcode.  This is a big download and
-      you need to create a apple developer account.
-    </p>
-    <p>
-      Alternatively, you can work around the issue by changing the
-      default compilers.  Create a directory <code>~/.R</code> and
-      download <a href="Makevars">this file</a>.  Don't forget to
-      delete this file when you upgrade either R or OSX!
-    </p>
-    <p>From within R</p>
-    <pre>
-dir.create("~/.R", FALSE)
-download.file("http://www.zoology.ubc.ca/prog/diversitree/Makevars",
-              "~/.R/Makevars")</pre>
     </div>
+
     <ul class="footer">
       <li>© 2012 <a href="http://www.zoology.ubc.ca/~fitzjohn">Rich
       FitzJohn</a></li>
