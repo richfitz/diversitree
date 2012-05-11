@@ -229,7 +229,7 @@ double branches_bm(double *vars_in, double len, double *pars,
 double branches_ou(double *vars_in, double len, double *pars, 
 		   double t0, int idx, double *vars_out) {
   const double m = vars_in[0], v = vars_in[1], z = vars_in[2],
-    s2 = pars[0], alpha = pars[1], theta = pars[3];
+    s2 = pars[0], alpha = pars[1], theta = pars[2];
 
   if ( alpha > 0 ) {
     vars_out[0] = exp(len * alpha) * (m - theta) + theta;
