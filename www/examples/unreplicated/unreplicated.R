@@ -403,4 +403,4 @@ bibliography()
 ## and diversitree version `r packageVersion("diversitree")`.
 ## Original source: [unreplicated.R](unreplicated.R)
 
-## [back](..), [diversitree home](../..)
+## [examples](..), [diversitree home](../..)
