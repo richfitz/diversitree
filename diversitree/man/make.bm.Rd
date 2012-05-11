@@ -56,6 +56,12 @@ make.ou(tree, states, states.sd=0, control=list())
   % TODO: Describe root treatments!
 }
 
+\seealso{
+  See
+  \url{http://www.zoology.ubc.ca/prog/diversitree/examples/ou-nonultrametric/}
+  for a discussion about calculations on non-ultrametric trees.
+}
+
 % TODO: Add example section and show equivalence to geiger?
 \examples{
 ## Random data (following APE)
