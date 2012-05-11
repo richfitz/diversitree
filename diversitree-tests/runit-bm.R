@@ -43,6 +43,8 @@ test.ou <- function() {
                  names=bird.orders$tip.label)
 
   ## With the VCV approach
+  ## Note here that the value of theta has no effect on the
+  ## likelihood.  This is a bit surprising, actually.
   lik.vcv <- make.ou(bird.orders, x, control=list(method="vcv"))
   system.time(fit1 <- find.mle(lik.vcv, c(.1, .1, .1)))
 
@@ -52,6 +54,8 @@ test.ou <- function() {
   lik.pruning.C <- make.ou(bird.orders, x,
                            control=list(method="pruning", backend="C"))
   system.time(fit3 <- find.mle(lik.pruning.C, c(.1, .1, .1)))
+
+  lik.pruning.C(coef(fit2))
 
   all.equal(fit1, fit2)
   all.equal(fit1, fit3)
@@ -64,4 +68,3 @@ test.ou <- function() {
   ## checkEquals(c(fit3$Trait1$beta,fit3$Trait1$alpha),
   ##             fit1$par[1:2], check.attributes=FALSE)
 }
-
