@@ -417,12 +417,13 @@ dt.tips.grouped <- function(y, y.i, cache) {
   types <- sort(unique(y.i))
   res <- vector("list", length(types))
 
-  for ( type in types ) {
+  for ( i in seq_along(types) ) {
+    type <- types[i]
     j <- which(y.i == type)
-    i <- order(t[j])
-    res[[type]] <- list(y=y[[type]], y.i=type,
-                        target=tips[j][i], t=t[j][i],
-                        type="GROUPED")
+    ord <- order(t[j])
+    res[[i]] <- list(y=y[[type]], y.i=i,
+                     target=tips[j][ord], t=t[j][ord],
+                     type="GROUPED")
   }
   res
 }

@@ -1,6 +1,7 @@
 \name{make.mkn}
 \alias{make.mkn}
 \alias{make.mk2}
+\alias{make.meristic}
 
 \title{Mk2 and Mk-n Models of character evolution}
 
@@ -18,6 +19,7 @@
 \usage{
 make.mk2(tree, states, strict=TRUE, control=list())
 make.mkn(tree, states, k, strict=TRUE, control=list())
+make.mkn.meristic(tree, states, k, control=list())
 }
 
 \arguments{

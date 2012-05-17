@@ -18,6 +18,7 @@ export(make.mk2)
 export(make.mkn)
 ## export(make.mkn.deriv) # not working right now
 export(make.mkn.multitrait)
+export(make.mkn.meristic)
 export(make.musse)
 export(make.musse.multitrait)
 export(make.musse.split)

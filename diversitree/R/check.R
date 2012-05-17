@@ -243,11 +243,17 @@ check.info.ode <- function(info, control=NULL) {
   info$ny    <- check.integer(check.scalar(info$ny))
   info$np    <- check.integer(check.scalar(info$np))
   info$idx.d <- check.integer(info$idx.d)
+
   if ( is.null(info$dll) )
     info$dll <- "diversitree"
   else if ( !(is.character(info$dll) && length(info$dll)) == 1 )
     stop("dll must be a single string")
   dll <- info$dll
+
+  if ( is.null(info$banded) )
+    info$banded <- FALSE
+  else if ( length(info$banded) != 1 || !is.logical(info$banded) )
+    stop("Invalid value for banded")
 
   if ( !is.null(control) ) {
     backend <- control$backend
@@ -263,6 +269,7 @@ check.info.ode <- function(info, control=NULL) {
       check.loaded.symbol(sprintf("initial_conditions_%s", model), dll)
     }
   }
+
   
   info
 }

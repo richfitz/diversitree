@@ -1,4 +1,4 @@
-/* MknOde - Markov k-state n-parameter character model: ODE version */
+/* Mkn [Ode] - Markov k-state n-parameter character model: ODE version */
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
@@ -29,24 +29,24 @@ void initmod_mknode(void (* odeparms)(int *, double *)) {
 } 
 
 void derivs_mknode(int *neq, double *t, double *y, double *ydot,
-		double *yout, int *ip) {
+		   double *yout, int *ip) {
   do_derivs_mknode(*neq, parms_mknode, y, ydot);
 }
 
 /* CVODES */
 int derivs_mknode_cvode(realtype t, N_Vector y, N_Vector ydot,
-		     void *user_data) {
+			void *user_data) {
   const UserData *data = (UserData*) user_data;
   do_derivs_mknode(data->neq,
-		data->p,
-		NV_DATA_S(y),
-		NV_DATA_S(ydot));
+		   data->p,
+		   NV_DATA_S(y),
+		   NV_DATA_S(ydot));
   return 0;
 }
 
 void initial_conditions_mknode(int neq, double *vars_l, double *vars_r,
-			    double *pars, double t, 
-			    double *vars_out) {
+			       double *pars, double t, 
+			       double *vars_out) {
   const int k = neq;
   int i;
   for ( i = 0; i < k; i++ )

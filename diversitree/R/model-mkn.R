@@ -81,8 +81,10 @@ make.cache.mkn <- function(tree, states, k, strict, control) {
   else
     cache$info <- make.info.mkn(k, tree)
   cache$states  <- states
-  if ( method == "ode" )
+  if ( method == "ode" ) {
     cache$y <- initial.tip.mkn.ode(cache)
+    cache$info$name.ode <- "mknode"
+  }
 
   cache
 }
