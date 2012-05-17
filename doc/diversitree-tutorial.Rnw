@@ -629,6 +629,7 @@ The required files can be downloaded from
 Read in the phylogenetic tree
 <<>>=
 tree <- read.nexus("data/Thomas-tree.nex")
+tree <- ladderize(tree)
 @ 
 The tree contains many polytomies; the original tree, and a simplified
 tree with polytomies converted into clades are shown in figure
