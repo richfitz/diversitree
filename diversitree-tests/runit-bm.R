@@ -34,6 +34,53 @@ test.bm <- function() {
   ## checkEquals(fit3$Trait1$beta, fit1$par, check.attributes=FALSE)
 }
 
+test.bm.stderr <- function() {
+  library(diversitree)
+  library(geiger)
+  library(RUnit)
+
+  set.seed(1)
+  phy <- trees(c(.1, .03), "bd", max.taxa=50)[[1]]
+  states <- sim.character(phy, .1)
+  states["sp62"] <- -10.5
+  se <- .8523
+
+  control.v <- list(method="vcv")
+  control.p <- list(method="pruning", backend="R")
+  control.P <- list(method="pruning", backend="C")
+
+  lik.v.1 <- make.bm(phy, states, 0,  control=control.v)
+  lik.v.2 <- make.bm(phy, states, se, control=control.v)
+  lik.p.1 <- make.bm(phy, states, 0,  control=control.p)
+  lik.p.2 <- make.bm(phy, states, se, control=control.p)
+  lik.P.1 <- make.bm(phy, states, 0,  control=control.P)
+  lik.P.2 <- make.bm(phy, states, se, control=control.P)
+
+  fit.v.1 <- find.mle(lik.v.1, .1)
+  fit.p.1 <- find.mle(lik.p.1, .1)
+  fit.P.1 <- find.mle(lik.P.1, .1)
+
+  fit.v.2 <- find.mle(lik.v.2, .1)
+  fit.p.2 <- find.mle(lik.p.2, .1)
+  fit.P.2 <- find.mle(lik.P.2, .1)
+
+  x <- states
+  attr(x, "node.state") <- NULL
+  fit.g.1 <- fitContinuous(phy, x)
+  fit.g.2 <- fitContinuous(phy, x, meserr=se)
+
+  ## All agree -- nice.
+  checkEquals(unname(coef(fit.v.1)), 3.3765625000)
+  checkEquals(coef(fit.p.1), coef(fit.v.1))
+  checkEquals(coef(fit.P.1), coef(fit.v.1))
+  checkEquals(lik.v.1(fit.g.1$Trait1$beta), fit.g.1$Trait1$lnl)
+
+  checkEquals(unname(coef(fit.v.2)), 0.1237304688)
+  checkEquals(coef(fit.p.2), coef(fit.v.2))
+  checkEquals(coef(fit.P.2), coef(fit.v.2))
+  checkEquals(lik.v.2(fit.g.2$Trait1$beta), fit.g.2$Trait1$lnl)
+}
+
 test.ou <- function() {
   library(diversitree)
   library(RUnit)

@@ -88,7 +88,7 @@ void dt_cont_setup_tips(dt_obj_cont *obj, SEXP cache) {
     idx = tip_target[i];
     memcpy(obj->init   + neq * idx,
 	   REAL(tip_y) + neq * i,
-	   neq * sizeof(int));
+	   neq * sizeof(double));
   }
 }
 
