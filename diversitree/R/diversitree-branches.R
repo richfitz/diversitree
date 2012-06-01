@@ -312,8 +312,7 @@ root.p.calc <- function(vals, pars, root, root.p=NULL,
       stop("Invalid length for root.p")
     p <- root.p
   } else if ( root == ROOT.ALL ) {
-    ## This hasn't actually worked for a little while...
-    .Deprecated("root=ROOT.ALL")
+    p <- NULL
   } else {
     stop("Invalid root mode")
   }

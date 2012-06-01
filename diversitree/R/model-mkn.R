@@ -106,7 +106,10 @@ rootfunc.mkn <- function(res, pars, root, root.p, intermediates) {
 
   root.p <- root.p.calc(d.root, pars, root, root.p,
                         stationary.freq.mkn)
-  loglik <- log(sum(root.p * d.root)) + sum(lq)
+  if ( root == ROOT.ALL )
+    loglik <- log(d.root) + sum(lq)
+  else
+    loglik <- log(sum(root.p * d.root)) + sum(lq)
 
   if ( intermediates ) {
     res$root.p <- root.p

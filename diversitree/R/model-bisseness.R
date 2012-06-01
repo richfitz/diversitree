@@ -167,7 +167,10 @@ rootfunc.bisseness <- function(res, pars, condition.surv, root, root.p,
     d.root <- d.root / sum(root.p * lambda * nonextinct)
   }
 
-  loglik <- log(sum(root.p * d.root)) + sum(lq)
+  if ( root == ROOT.ALL )
+    loglik <- log(d.root) + sum(lq)
+  else
+    loglik <- log(sum(root.p * d.root)) + sum(lq)
 
   if ( intermediates ) {
     res$root.p <- root.p
