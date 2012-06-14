@@ -5,6 +5,8 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
+#include "time_machine.h"
+
 /* For CVODES */
 #include <nvector/nvector_serial.h>
 #include <user_data.h>
@@ -119,4 +121,23 @@ int derivs_bd_t_cvode(realtype t, N_Vector y, N_Vector ydot,
 		 NV_DATA_S(y),
 		 NV_DATA_S(ydot));
   return 0;
+}
+
+/* A second version of time-varying functions, but entirely C based */
+static dt_time_machine* tm_bd_t2;
+
+void do_derivs_bd_t2(double t, double *y, double *ydot) {
+  run_time_machine(tm_bd_t2, t); /* <- ...compute parameters */
+  do_derivs_bd(tm_bd_t2->p_out, y, ydot);
+}
+
+void initmod_bd_t2(void (* odeparms)(int *, double *)) {
+  DL_FUNC get_deSolve_gparms = 
+    R_GetCCallable("deSolve", "get_deSolve_gparms");
+  tm_bd_t2 = (dt_time_machine*)R_ExternalPtrAddr(get_deSolve_gparms());
+}
+
+void derivs_bd_t2(int *neq, double *t, double *y, double *ydot, 
+		 double *yout, int *ip) {
+  do_derivs_bd_t2(*t, y, ydot);
 }
