@@ -17,6 +17,13 @@ typedef struct {
      p_in; we would call f[i] with parameters &p_in[start[i]] */
   int *start;
 
+  int *nonnegative;
+
+  /* Time domain */
+  double t_range[2];
+  
+  dt_spline *spline_data;
+
   //void *spline_data; /* spline data */
 } dt_time_machine;
 

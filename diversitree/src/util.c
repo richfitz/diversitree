@@ -106,6 +106,19 @@ SEXP getListElement(SEXP list, const char *str) {
 
   return elmt;
 } 
+
+SEXP getListElementIfThere(SEXP list, const char *str) {
+  SEXP elmt = R_NilValue, names = getAttrib(list, R_NamesSymbol);
+  int i; 
+  for ( i = 0; i < length(list); i++ )
+    if ( strcmp(CHAR(STRING_ELT(names, i)), str) == 0 ) { 
+      elmt = VECTOR_ELT(list, i); 
+      break; 
+    }
+
+  return elmt;
+} 
+
 /* Tree utilities */
 int descendants(int node, int *edge, int nedge, int ntip, int *desc);
 void descendants_flag(int node, int *edge, int nedge, int ntip, 

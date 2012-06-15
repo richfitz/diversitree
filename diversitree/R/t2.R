@@ -1,8 +1,15 @@
-make.time.machine <- function(functions, np.out=length(functions)) {
+make.time.machine <- function(functions, t.range, np.out, nonnegative,
+                              spline.data=NULL) {
   info.t <- time.machine.types()
   types <- match(functions, names(info.t))
   if ( any(is.na(types)) )
     stop("Unknown time-varying function")
+
+  if ( any(functions == "spline.t") )
+    spline.data <- check.spline.data(spline.data, t.range)
+  else
+    spline.data <- NULL
+  
   n <- sapply(info.t[types], length)
   ## Get the starting position
   start <- cumsum(n) - n + 1
@@ -16,17 +23,30 @@ make.time.machine <- function(functions, np.out=length(functions)) {
   if ( any(duplicated(argnames)) )
     stop("Duplicate argument names: consider different prefixes?")
 
+  if ( is.null(nonnegative) )
+    nonnegative <- TRUE
+  else if ( !is.logical(nonnegative) )
+    stop("nonnegative must be NULL or logical")
+  ## Then check/expand the values:
+  if ( length(nonnegative) == 1 )
+    nonnegative <- rep(nonnegative, np.out)
+  else if ( length(nonnegative) != np.out )
+    stop("Invalid length for nonnegative")
+
   np.in <- length(argnames)  
   ret <- list(np.in=np.in,
-              np.out=np.out,
+              np.out=as.integer(np.out),
               types=types,
               start=start,
-              argnames=argnames)
+              argnames=argnames,
+              nonnegative=nonnegative,
+              t.range=t.range,
+              spline.data=spline.data)
   ret.C <- ret
   ret.C$types <- toC.int(ret$types)
   ret.C$start <- toC.int(ret$start)
   ptr <- ret$ptr <-
-    .Call("r_time_machine", ret.C, PACKAGE="diversitree")
+    .Call("r_make_time_machine", ret.C, PACKAGE="diversitree")
 
   ret$set <- function(pars) {
     if ( length(pars) != np.in )
@@ -66,7 +86,7 @@ make.all.branches.t2.dtlik <- function(cache, control,
   }
 }
 
-update.cache.t2 <- function(cache, functions) {
+update.cache.t2 <- function(cache, functions, spline.data) {
   info <- cache$info
   n.args <- length(info$argnames)
 
@@ -77,9 +97,11 @@ update.cache.t2 <- function(cache, functions) {
     functions <- rep(list(functions), n.args)
   if ( is.null(names(functions)) && length(functions) == n.args )
     names(functions) <- info$argnames
-  ## Ends.
-  
-  cache$time.machine <- make.time.machine(functions, n.args)
+
+  t.range <- range(0, cache$depth[cache$root])
+  cache$time.machine <- make.time.machine(functions, t.range, n.args,
+                                          cache$nonnegative,
+                                          spline.data)
 
   info$time.varying <- TRUE
   info$argnames <- cache$functions.info$argnames
@@ -115,6 +137,51 @@ time.machine.types <- function() {
                  linear.t=c("c", "m"),
                  stepf.t=c("y0", "y1", "tc"),
                  sigmoid.t=c("y0", "y1", "tmid", "r"),
-                 spline.t=c("ymid", "yampl"))
+                 spline.t=c("y0", "y1"))
   info.t[.Call("r_get_time_machine_types", PACKAGE="diversitree")]
+}
+
+## TODO: Check that we span the limits properly.
+check.spline.data <- function(spline.data, t.range) {
+  names.spline.data <- c("t", "y", "deriv")  
+  if ( is.null(names(spline.data)) && length(spline.data) == 3 )
+    names(spline.data) <- names.spline.data
+  if ( !is.list(spline.data) || length(spline.data) != 3 )
+    stop("spline.data must be a list of length 3")
+  if ( !identical(names(spline.data), names.spline.data) )
+    stop("names(spline.data) must be ",
+         paste(dQuote(names.spline.data), collapse=", "))
+  t <- spline.data$t
+  y <- spline.data$y
+  if ( length(t) < 3 )
+    stop("Must have at least three points") # ? or 2?
+  if ( length(t) != length(y) )
+    stop("Lengths of t and y in spline.data must be equal")
+  if ( any(is.na(t)) || any(is.na(y)) )
+    stop("Neither t nor y may contain NA values")
+
+  deriv <- spline.data$deriv
+  if ( length(deriv) != 1 )
+    stop("spline.data$deriv must be an scalar")
+  deriv <- check.integer(spline.data$deriv)
+
+  ## Renormalise y data onto [0,1], after projecting what the actual
+  ## minimum and maximum values are.
+  ## 
+  ## TODO: This could be prone to error, especially as I've just
+  ## hardcoded a "large" number of x spacing in here.  Ideally we
+  ## would be able to provide this with the spline.data?
+  r <- range(spline(t, y,
+                    xout=seq(t.range[1], t.range[2], length=10001))$y)
+  y <- (y - r[1]) / (r[2] - r[1])
+
+  if ( !is.null(t.range) )
+    if ( min(t) > min(t.range) || max(t) < max(t.range) ) {
+      msg <-
+        sprintf("Spline data must span time range: [%s, %s]",
+                min(t.range), max(t.range))
+      stop(msg)
+    }
+  
+  list(t=as.numeric(t), y=as.numeric(y), deriv=deriv)
 }

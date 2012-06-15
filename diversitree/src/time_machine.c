@@ -1,7 +1,9 @@
 #include <R.h>
 #include <Rinternals.h>
-#include "time_machine.h"
+#include "util-splines.h"
 #include "util.h"
+
+#include "time_machine.h"
 
 /* 1. Here are possible types of functions, and their constants */
 #define T_CONSTANT 0
@@ -17,8 +19,12 @@ double t_stepf(double t, double *p) {
   return t <= p[2] ? p[0] : p[1];
 }
 double t_sigmoid(double t, double *p) {
-  //y0    y1   - p0             r       tmid
+  //     y0      y1     y0             r       tmid
   return p[0] + (p[1] - p[0])/(1 + exp(p[4] * (p[3] - t)));
+}
+double t_spline(double t, double *p, dt_spline *obj) {
+  //y0    y1     y0
+  return p[0] + (p[1] - p[0]) * dt_spline_eval1(obj, t);
 }
 
 /* A little helper function to order these in R so I don't have to
@@ -39,12 +45,15 @@ SEXP r_get_time_machine_types() {
 
 /* Make/cleanup function */
 static void dt_time_machine_finalize(SEXP extPtr);
-SEXP r_time_machine(SEXP obj) {
+SEXP r_make_time_machine(SEXP obj) {
   SEXP extPtr;
   /* Extract stored R objects to build the time machine */
   SEXP
     types           = getListElement(obj, "types"),
-    start           = getListElement(obj, "start");
+    start           = getListElement(obj, "start"),
+    nonnegative     = getListElement(obj, "nonnegative"),
+    t_range         = getListElement(obj, "t.range"),
+    spline_data     = getListElementIfThere(obj, "spline.data");
   int np_in = INTEGER(getListElement(obj, "np.in"))[0],
     np_out  = INTEGER(getListElement(obj, "np.out"))[0],
     nf = LENGTH(types);
@@ -57,10 +66,20 @@ SEXP r_time_machine(SEXP obj) {
   ret->p_out   = Calloc(np_out, double);
   ret->nf      = nf;
 
-  ret->types  = Calloc(nf, int);
-  ret->start  = Calloc(nf, int);
-  memcpy(ret->types, INTEGER(types), nf*sizeof(int));
-  memcpy(ret->start, INTEGER(start), nf*sizeof(int));
+  ret->types       = Calloc(nf, int);
+  ret->start       = Calloc(nf, int);
+  ret->nonnegative = Calloc(nf, int);
+  memcpy(ret->types,       INTEGER(types),       nf*sizeof(int));
+  memcpy(ret->start,       INTEGER(start),       nf*sizeof(int));
+  memcpy(ret->nonnegative, LOGICAL(nonnegative), nf*sizeof(int));
+  memcpy(ret->t_range,     REAL(t_range),         2*sizeof(double));
+
+  if ( spline_data != R_NilValue )
+    ret->spline_data = 
+      make_dt_spline(LENGTH(VECTOR_ELT(spline_data, 0)),
+		     REAL(VECTOR_ELT(spline_data, 0)),
+		     REAL(VECTOR_ELT(spline_data, 1)),
+		     INTEGER(VECTOR_ELT(spline_data, 2))[0]);
 
   /* And, done */
   extPtr = R_MakeExternalPtr(ret, R_NilValue, R_NilValue);
@@ -73,6 +92,9 @@ void cleanup_time_machine(dt_time_machine *obj) {
   Free(obj->p_out);
   Free(obj->types);
   Free(obj->start);
+  Free(obj->nonnegative);
+  if ( obj->spline_data != NULL )
+    cleanup_dt_spline(obj->spline_data);
   Free(obj);
 }
 
@@ -99,10 +121,36 @@ static void dt_time_machine_finalize(SEXP extPtr) {
    and if so just skip updating?
 */
 void init_time_machine(dt_time_machine *obj, double *pars) {
-  double *p_out = obj->p_out;
+  double *p_out = obj->p_out, *pi;
   const int np_in = obj->np_in, nf = obj->nf;
-  const int *types = obj->types, *start = obj->start;
+  const int *types = obj->types, *start = obj->start,
+    *nonnegative = obj->nonnegative;
+  double *t_range = obj->t_range;
   int i;
+
+  /* First, check negativity */
+  for ( i = 0; i < nf; i++ ) {
+    if ( nonnegative[i] ) {
+      pi = pars + start[i];
+      switch (types[i]) {
+      case T_CONSTANT:
+	if ( pi[0] < 0 )
+	  error("Negative parameter in constant parameter");
+	break;
+      case T_LINEAR:
+	if ( pi[0] + pi[1] * t_range[0] < 0 ||
+	     pi[0] + pi[1] * t_range[1] < 0)
+	  error("Negative parameter in linear function");
+	break;
+      case T_STEPF:   /* drops through */
+      case T_SIGMOID: /* drops through */
+      case T_SPLINE:
+	if ( pi[0] < 0 || pi[1] < 0 )
+	  error("Negative parameter in step/sigmoid/spline parameter");	
+	break;
+      }
+    }
+  }
 
   /* First, store all parameters */
   memcpy(obj->p_in, pars, np_in*sizeof(double));
@@ -119,7 +167,7 @@ void run_time_machine(dt_time_machine *obj, double t) {
   const int nf = obj->nf, *types = obj->types, *start = obj->start;
   int i;
   for ( i = 0; i < nf; i++ )
-    switch(types[i]) {
+    switch (types[i]) {
     case T_LINEAR: 
       p_out[i] = t_linear(t, p_in + start[i]);
       break;
@@ -128,6 +176,9 @@ void run_time_machine(dt_time_machine *obj, double t) {
       break;
     case T_SIGMOID:
       p_out[i] = t_sigmoid(t, p_in + start[i]);
+      break;
+    case T_SPLINE:
+      p_out[i] = t_spline(t, p_in + start[i], obj->spline_data);
       break;
     }
 }
