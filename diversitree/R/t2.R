@@ -39,6 +39,7 @@ make.time.machine <- function(functions, t.range, np.out, nonnegative,
               types=types,
               start=start,
               argnames=argnames,
+              funnames=names(functions),
               nonnegative=nonnegative,
               t.range=t.range,
               spline.data=spline.data)
@@ -55,9 +56,22 @@ make.time.machine <- function(functions, t.range, np.out, nonnegative,
     invisible(TRUE)
   }
 
+  ## Note that $get() does not set names, as this needs to be fast
+  ## (called by initial.conditions.t).
   ret$get <- function(t)
     .Call("r_run_time_machine", ptr, t, PACKAGE="diversitree")
-  ret$getv <- function(t) t(sapply(t, ret$get))
+  ret$getv <- function(t) {
+    ## TODO: Tweaking for q.
+    ret <- t(sapply(t, ret$get))
+    colnames(ret) <- names(functions)
+    ret
+  }
+  ## TODO: Set up so that only part is evaluated/set, perhaps, for
+  ## speed.
+  ret$get1 <- function(p, t, i) {
+    ret$set(p)
+    ret$get(t)[i]
+  }
   
   ret
 }
@@ -184,4 +198,77 @@ check.spline.data <- function(spline.data, t.range) {
     }
   
   list(t=as.numeric(t), y=as.numeric(y), deriv=deriv)
+}
+
+## Hard coded for bd right now, but will generalise really soon.
+predict.bd.t2 <- function(object, p, t, nt=101, v=NULL,
+                          alpha=1/20, ...) {
+  tm <- get.cache(object)$time.machine
+  if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
+    p <- coef(p)
+  if ( missing(t) )
+    t <- seq(tm$t.range[1], tm$t.range[2], length=nt)
+  if ( is.null(v) )
+    v <- tm$funnames
+  is.matrix <- !is.null(dim(p)) && nrow(p) > 1
+
+  if ( is.matrix ) {
+    ret <- lapply(match(v, tm$funnames), function(i)
+                  average.over.mcmc(p, tm$get1, t, i=i))
+    names(ret) <- v
+  } else {
+    tm$set(p)
+    ret <- tm$getv(t)[,v,drop=FALSE]
+  }
+  list(t=t, y=ret)
+}
+
+## plot.formula does not obey plot() argument names; can I get away
+## with it?
+plot.bd.t2 <- function(lik, p, xlab="Time", ylab="Parameter",
+                       lty=1, lwd=1, v=NULL, col=NULL,
+                       nt=101, legend.pos=NULL, ...) {
+  xy <- predict(lik, p, v=v, nt=nt)
+  is.matrix <- !is.null(dim(p)) && nrow(p) > 1
+  xlim <- rev(range(xy$t))  
+  if ( is.matrix ) {
+    v <- names(xy$y)
+    if ( is.null(col) )
+      col <- seq_along(v)
+    fill <- add.alpha(col, .5)
+    names(col) <- names(fill) <- v
+    ylim <- range(lapply(xy$y, range))
+    plot(NA, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, las=1)
+    tt <- c(xy$t, rev(xy$t))
+    for ( i in rev(v) )
+      polygon(tt, c(xy$y[[i]][,"lower"], rev(xy$y[[i]][,"upper"])),
+              col=fill[i], border=NA)
+    for ( i in rev(v) )
+      lines(xy$t, xy$y[[i]][,"mean"], col=col[i])
+  } else {
+    v <- colnames(xy$y)
+    if ( is.null(col) )
+      col <- seq_along(v)
+    matplot(xy$t, xy$y, type="l", xlim=xlim, las=1, lty=lty,
+            col=col, xlab=xlab, ylab=ylab, lwd=lwd, ...)
+  }
+  if ( !is.null(legend.pos) )
+    legend(legend.pos, v, col=col, lty=lty, lwd=lwd)
+  invisible(v)
+}
+
+## Given a function that takes arguments
+##   f(p, x, ...)
+## where p is the parameter vector and 'x' is the domain position.
+## Additional arguments are passed in.
+average.over.mcmc <- function(p, f, xx, ..., alpha=1/20) {
+  g <- function(xi) {
+    y <- apply(p, 1, f, xi, ...)
+    c(mean(y), hdr.new(y, alpha))
+  }
+  if ( is.data.frame(p) )
+    p <- as.matrix(p)
+  ret <- t(sapply(xx, g))
+  colnames(ret) <- c("mean", "lower", "upper")
+  ret
 }

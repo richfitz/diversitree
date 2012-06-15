@@ -5,6 +5,7 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
+#include "util-splines.h"
 #include "time_machine.h"
 
 /* For CVODES */
@@ -126,8 +127,9 @@ int derivs_bd_t_cvode(realtype t, N_Vector y, N_Vector ydot,
 /* A second version of time-varying functions, but entirely C based */
 static dt_time_machine* tm_bd_t2;
 
+/* Notice that this function does not use the parameters at all */
 void do_derivs_bd_t2(double t, double *y, double *ydot) {
-  run_time_machine(tm_bd_t2, t); /* <- ...compute parameters */
+  run_time_machine(tm_bd_t2, t); /* <- ...compute parameters at t */
   do_derivs_bd(tm_bd_t2->p_out, y, ydot);
 }
 

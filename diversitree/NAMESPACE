@@ -56,6 +56,11 @@ S3method(coef, fit.mle)
 S3method(extractAIC, fit.mle)
 S3method(logLik, fit.mle)
 
+## Changes coming soon.
+S3method(predict, bd.t2)
+S3method(plot, bd.t2)
+S3method(coef, mcmcsamples)
+
 ## Starting points:
 export(starting.point.bisse)
 export(starting.point.bd)
