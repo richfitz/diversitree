@@ -5,12 +5,8 @@
 
 #include "time_machine.h"
 
-/* 1. Here are possible types of functions, and their constants */
-#define T_CONSTANT 0
-#define T_LINEAR   1
-#define T_STEPF    2
-#define T_SIGMOID  3
-#define T_SPLINE   4
+#define FALSE 0
+#define TRUE  1
 
 double t_linear(double t, double *p) {
   return p[0] + t * p[1];
@@ -51,6 +47,7 @@ SEXP r_make_time_machine(SEXP obj) {
   SEXP
     types           = getListElement(obj, "types"),
     start           = getListElement(obj, "start"),
+    target          = getListElement(obj, "target"),
     nonnegative     = getListElement(obj, "nonnegative"),
     t_range         = getListElement(obj, "t.range"),
     spline_data     = getListElementIfThere(obj, "spline.data"),
@@ -70,9 +67,11 @@ SEXP r_make_time_machine(SEXP obj) {
 
   ret->types       = Calloc(nf, int);
   ret->start       = Calloc(nf, int);
+  ret->target      = Calloc(nf, int);
   ret->nonnegative = Calloc(nf, int);
   memcpy(ret->types,       INTEGER(types),       nf*sizeof(int));
   memcpy(ret->start,       INTEGER(start),       nf*sizeof(int));
+  memcpy(ret->target,      INTEGER(target),      nf*sizeof(int));
   memcpy(ret->nonnegative, LOGICAL(nonnegative), nf*sizeof(int));
   memcpy(ret->t_range,     REAL(t_range),         2*sizeof(double));
 
@@ -87,13 +86,15 @@ SEXP r_make_time_machine(SEXP obj) {
     ret->k = 0;
   } else {
     k = ret->k = INTEGER(getListElement(q_info, "k"))[0];
-    idx_q      = INTEGER(getListElement(q_info, "idx.q"))[0];
-    memcpy(ret->q_const,  INTEGER(getListElement(q_info, "q_const")),
-	   k * (k - 1)*sizeof(int));
-    memcpy(ret->q_target, INTEGER(getListElement(q_info, "q_target")),
-	   k * (k - 1)*sizeof(int));
-    ret->q_in  = ret->p_in  + idx_q;
+
+    idx_q = ret->np_out - k*k;
+    if ( idx_q < 0 )
+      error("I'm quite confused about the model that you are making");
     ret->q_out = ret->p_out + idx_q;
+
+    ret->const_q = Calloc(k, int);
+    memcpy(ret->const_q, INTEGER(getListElement(q_info, "const.q")),
+	   k*sizeof(int));
   }
 
   /* And, done */
@@ -107,9 +108,12 @@ void cleanup_time_machine(dt_time_machine *obj) {
   Free(obj->p_out);
   Free(obj->types);
   Free(obj->start);
+  Free(obj->target);
   Free(obj->nonnegative);
   if ( obj->spline_data != NULL )
     cleanup_dt_spline(obj->spline_data);
+  if ( obj->k > 0 )
+    Free(obj->const_q);
   Free(obj);
 }
 
@@ -128,18 +132,15 @@ static void dt_time_machine_finalize(SEXP extPtr) {
    
    Furthermore looping over an array of indices
    (which(type!=constant)) will possibly be faster when most things
-   aren't variable.
+   aren't variable.  But testing if this is a bottleneck is probably
+   useful.
    
-   ** TODO **
-   check to see if pars is the same as previous
-   memcmp(pars, obj->p_in)
-   and if so just skip updating?
 */
 void init_time_machine(dt_time_machine *obj, double *pars) {
   double *p_out = obj->p_out, *pi;
   const int np_in = obj->np_in, nf = obj->nf;
   const int *types = obj->types, *start = obj->start,
-    *nonnegative = obj->nonnegative;
+    *target = obj->target, *nonnegative = obj->nonnegative;
   double *t_range = obj->t_range;
   int i, k = obj->k;
 
@@ -176,46 +177,56 @@ void init_time_machine(dt_time_machine *obj, double *pars) {
       p_out[target[i]] = pars[start[i]];
 
   if ( k > 0 )
-    normalise_q(obj, 1);
-}
-
-void normalise_q(dt_time_machine *obj, int is_const) {
-  int k = obj->k;
-  double *q_out = obj->q_out;
-  double *qi_out, tmp;
-
-  for ( i = 0; i < k; i++ ) {
-    if ( obj->q_const[i] == is_const ) {
-      qi_out = q_out + i;
-      tmp = 0;
-      for ( j = 0; j < k; j++ )
-	if ( j != i )
-	  tmp += q_out[j];
-      qi_out[j] = tmp;
-    }
-  }
+    normalise_q(obj, TRUE);
 }
 
 /* Compute values at a time 't' */
 void run_time_machine(dt_time_machine *obj, double t) {
   double *p_in = obj->p_in, *p_out = obj->p_out;
-  const int nf = obj->nf, *types = obj->types, *start = obj->start;
-  int i;
-  for ( i = 0; i < nf; i++ )
+  const int nf = obj->nf, *types = obj->types, *start = obj->start,
+    *target = obj->target;
+  const double *t_range = obj->t_range;
+  int i, j;
+  if ( t < t_range[0] || t > t_range[1] )
+    error("Time out of supported range");
+  for ( i = 0; i < nf; i++ ) {
+    j = target[i];
     switch (types[i]) {
     case T_LINEAR: 
-      p_out[i] = t_linear(t, p_in + start[i]);
+      p_out[j] = t_linear(t, p_in + start[i]);
       break;
     case T_STEPF:
-      p_out[i] = t_stepf(t, p_in + start[i]);
+      p_out[j] = t_stepf(t, p_in + start[i]);
       break;
     case T_SIGMOID:
-      p_out[i] = t_sigmoid(t, p_in + start[i]);
+      p_out[j] = t_sigmoid(t, p_in + start[i]);
       break;
     case T_SPLINE:
-      p_out[i] = t_spline(t, p_in + start[i], obj->spline_data);
+      p_out[j] = t_spline(t, p_in + start[i], obj->spline_data);
       break;
     }
+  }
+  if ( obj->k > 0 )
+    normalise_q(obj, FALSE);
+}
+
+/* This is called when all the rate parts of the Q matrix are in
+   place, and the diagonals need including */
+void normalise_q(dt_time_machine *obj, int is_const) {
+  int i, j, k = obj->k;
+  double *q_out = obj->q_out;
+  double *qi_out, tmp;
+
+  for ( i = 0; i < k; i++ ) {
+    if ( obj->const_q[i] == is_const ) {
+      qi_out = q_out + i;
+      tmp = 0;
+      for ( j = 0; j < k; j++ )
+	if ( j != i )
+	  tmp += qi_out[j*k];
+      qi_out[i*k] = -tmp;
+    }
+  }
 }
 
 /* R interface to the above functions */

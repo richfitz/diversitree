@@ -17,18 +17,19 @@ typedef struct {
      p_in; we would call f[i] with parameters &p_in[start[i]] */
   int *start;
 
+  /* Target (purely to deal with Q) */
+  int *target;
+
   int *nonnegative;
 
   /* Time domain */
   double t_range[2];
 
   /* Support for q */
-  int  idx_q;   /* index of the q matrix, negative if not present  */
-  int  k;       /* dimension of the q matrix                       */
-  int *q_const; /* array[k]; q_const[i] == 1 if row i all constant */
-  int *q_target;/* mapping...                                      */
-  double *q_out;/* pointer to q within p_in                       */
-  double *q_in; /* pointer to q within p_out                       */
+  int  idx_q;    /* index of the q matrix, negative if not present  */
+  int  k;        /* dimension of the q matrix                       */
+  int *const_q;  /* array[k]; const_q[i] == 1 if row i all constant */
+  double *q_out; /* pointer to q within p_out                       */
   
   dt_spline *spline_data;
 
@@ -39,3 +40,13 @@ typedef struct {
 void init_time_machine(dt_time_machine *obj, double *pars);
 void run_time_machine(dt_time_machine *obj, double t);
 SEXP r_set_tm_bd_t2(SEXP extPtr);
+
+/* These are forward references */
+void normalise_q(dt_time_machine *obj, int is_const);
+
+/* 1. Here are possible types of functions, and their constants */
+#define T_CONSTANT 0
+#define T_LINEAR   1
+#define T_STEPF    2
+#define T_SIGMOID  3
+#define T_SPLINE   4
