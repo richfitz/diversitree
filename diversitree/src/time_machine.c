@@ -53,10 +53,12 @@ SEXP r_make_time_machine(SEXP obj) {
     start           = getListElement(obj, "start"),
     nonnegative     = getListElement(obj, "nonnegative"),
     t_range         = getListElement(obj, "t.range"),
-    spline_data     = getListElementIfThere(obj, "spline.data");
+    spline_data     = getListElementIfThere(obj, "spline.data"),
+    q_info          = getListElementIfThere(obj, "q.info");
   int np_in = INTEGER(getListElement(obj, "np.in"))[0],
     np_out  = INTEGER(getListElement(obj, "np.out"))[0],
     nf = LENGTH(types);
+  int k, idx_q;
   dt_time_machine *ret;
 
   ret = (dt_time_machine *)Calloc(1, dt_time_machine);
@@ -80,6 +82,19 @@ SEXP r_make_time_machine(SEXP obj) {
 		     REAL(VECTOR_ELT(spline_data, 0)),
 		     REAL(VECTOR_ELT(spline_data, 1)),
 		     INTEGER(VECTOR_ELT(spline_data, 2))[0]);
+
+  if ( q_info == R_NilValue ) {
+    ret->k = 0;
+  } else {
+    k = ret->k = INTEGER(getListElement(q_info, "k"))[0];
+    idx_q      = INTEGER(getListElement(q_info, "idx.q"))[0];
+    memcpy(ret->q_const,  INTEGER(getListElement(q_info, "q_const")),
+	   k * (k - 1)*sizeof(int));
+    memcpy(ret->q_target, INTEGER(getListElement(q_info, "q_target")),
+	   k * (k - 1)*sizeof(int));
+    ret->q_in  = ret->p_in  + idx_q;
+    ret->q_out = ret->p_out + idx_q;
+  }
 
   /* And, done */
   extPtr = R_MakeExternalPtr(ret, R_NilValue, R_NilValue);
@@ -126,7 +141,7 @@ void init_time_machine(dt_time_machine *obj, double *pars) {
   const int *types = obj->types, *start = obj->start,
     *nonnegative = obj->nonnegative;
   double *t_range = obj->t_range;
-  int i;
+  int i, k = obj->k;
 
   /* First, check negativity */
   for ( i = 0; i < nf; i++ ) {
@@ -158,7 +173,27 @@ void init_time_machine(dt_time_machine *obj, double *pars) {
   /* Then copy in all constant values */
   for ( i = 0; i < nf; i++ )
     if ( types[i] == T_CONSTANT )
-      p_out[i] = pars[start[i]];
+      p_out[target[i]] = pars[start[i]];
+
+  if ( k > 0 )
+    normalise_q(obj, 1);
+}
+
+void normalise_q(dt_time_machine *obj, int is_const) {
+  int k = obj->k;
+  double *q_out = obj->q_out;
+  double *qi_out, tmp;
+
+  for ( i = 0; i < k; i++ ) {
+    if ( obj->q_const[i] == is_const ) {
+      qi_out = q_out + i;
+      tmp = 0;
+      for ( j = 0; j < k; j++ )
+	if ( j != i )
+	  tmp += q_out[j];
+      qi_out[j] = tmp;
+    }
+  }
 }
 
 /* Compute values at a time 't' */

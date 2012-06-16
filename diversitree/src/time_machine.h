@@ -21,6 +21,14 @@ typedef struct {
 
   /* Time domain */
   double t_range[2];
+
+  /* Support for q */
+  int  idx_q;   /* index of the q matrix, negative if not present  */
+  int  k;       /* dimension of the q matrix                       */
+  int *q_const; /* array[k]; q_const[i] == 1 if row i all constant */
+  int *q_target;/* mapping...                                      */
+  double *q_out;/* pointer to q within p_in                       */
+  double *q_in; /* pointer to q within p_out                       */
   
   dt_spline *spline_data;
 

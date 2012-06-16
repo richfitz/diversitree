@@ -76,6 +76,76 @@ make.time.machine <- function(functions, t.range, np.out, nonnegative,
   ret
 }
 
+make.time.machine.q <- function(functions, t.range, nonnegative,
+                                spline.data=NULL, q.info=NULL) {
+  np.out <- length(functions)
+  info.t <- time.machine.types()
+  types <- match(functions, names(info.t))
+  if ( any(is.na(types)) )
+    stop("Unknown time-varying function")
+
+  if ( any(functions == "spline.t") )
+    spline.data <- check.spline.data(spline.data, t.range)
+  else
+    spline.data <- NULL
+
+  n <- sapply(info.t[types], length)
+  ## Get the starting position
+  start <- cumsum(n) - n + 1
+
+  argnames <- mapply(paste, names(functions), info.t[types],
+                     sep=".", SIMPLIFY=FALSE)
+  is.constant <- functions == "constant.t"
+  argnames[is.constant] <- names(functions)[is.constant]
+  argnames <- unlist(argnames)
+  names(argnames) <- NULL
+  if ( any(duplicated(argnames)) )
+    stop("Duplicate argument names: consider different prefixes?")
+
+  if ( is.null(nonnegative) )
+    nonnegative <- TRUE
+  else if ( !is.logical(nonnegative) )
+    stop("nonnegative must be NULL or logical")
+
+  ## Then check/expand the values:
+  if ( length(nonnegative) == 1 )
+    nonnegative <- rep(nonnegative, length(functions)) # CHANGED
+  else if ( length(nonnegative) != np.out )
+    stop("Invalid length for nonnegative")
+
+  np.in <- length(argnames)  
+  ret <- list(np.in=np.in,
+              np.out=as.integer(np.out),
+              types=types,
+              start=start,
+              argnames=argnames,
+              funnames=names(functions),
+              nonnegative=nonnegative,
+              t.range=t.range,
+              spline.data=spline.data)
+
+  if ( !is.null(q.info) )
+    ret$q.info <- check.q.info(ret, q.info)
+  
+}
+
+check.q.info <- function(obj, q.info) {
+  idx.q <- check.integer(q.info$idx.q)
+  k <- check.integer(q.info$k)
+
+  if ( obj$np.out - (k*(k-1)) + 1 != idx.q )
+    stop("Invalid idx.q")
+
+  idx.qmat <- cbind(rep(1:k, each=k - 1),
+                    unlist(lapply(1:k, function(i) (1:k)[-i])))
+  target <- matrix(seq_len(k*k) + 2*k, k, k)[idx.qmat]
+
+  functions.q <- matrix(functions[idx.q:length(functions)], k-1)
+  const.q <- apply(functions.q == "constant.t", 2, all)
+  list(idx.q=idx.q, k=k, target=target, const.q=const.q)
+}
+
+
 ## A special function will still be needed for cvodes and CVODES, as
 ## the normal branches function possibly won't work?
 make.all.branches.t2.dtlik <- function(cache, control,
