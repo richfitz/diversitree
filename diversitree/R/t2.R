@@ -85,17 +85,34 @@ make.all.branches.t2.dtlik <- function(cache, control,
   tm.ptr <- time.machine$ptr
 
   if ( control$backend == "CVODES" ) {
-    stop("CVODES not yet available for time-varying models") 
-  } else if ( control$backend == "cvodes" ) {
-    stop("cvodes not yet available for time-varying models")
+    setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)
+    dummy <- rep(0.0, cache$info$np)
+    all.branches <- make.all.branches.C(cache, control)
+    function(pars, intermediates, preset=NULL) {
+      time.machine$set(pars)
+      .Call(setfunc, tm.ptr)
+      all.branches(dummy, intermediates, preset)
+    }
   } else {
     branches <- make.branches.dtlik(cache$info, control)
     initial.conditions.t <-
       make.initial.conditions.t2(cache, initial.conditions)
-    function(pars, intermediates, preset=NULL) {
-      time.machine$set(pars)
-      all.branches.matrix(tm.ptr, cache, initial.conditions.t,
-                          branches, preset)
+
+    if ( control$backend == "deSolve" ) {
+      function(pars, intermediates, preset=NULL) {
+        time.machine$set(pars)
+        all.branches.matrix(tm.ptr, cache, initial.conditions.t,
+                            branches, preset)
+      }
+    } else { # cvodes
+      setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)
+      dummy <- rep(0.0, cache$info$np)
+      function(pars, intermediates, preset=NULL) {
+        time.machine$set(pars)
+        .Call(setfunc, tm.ptr)
+        all.branches.matrix(dummy, cache, initial.conditions.t,
+                            branches, preset)
+      }
     }
   }
 }
@@ -202,7 +219,7 @@ check.spline.data <- function(spline.data, t.range) {
 
 ## Hard coded for bd right now, but will generalise really soon.
 predict.bd.t2 <- function(object, p, t, nt=101, v=NULL,
-                          alpha=1/20, ...) {
+                          alpha=1/20, everything=FALSE, ...) {
   tm <- get.cache(object)$time.machine
   if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
     p <- coef(p)
@@ -213,22 +230,32 @@ predict.bd.t2 <- function(object, p, t, nt=101, v=NULL,
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
 
   if ( is.matrix ) {
-    ret <- lapply(match(v, tm$funnames), function(i)
-                  average.over.mcmc(p, tm$get1, t, i=i))
-    names(ret) <- v
+    if ( everything ) {
+      np <- if ( is.matrix ) nrow(p) else 1
+      ret <- lapply(t, function(ti)
+                    t(apply(p, 1, tm$get1, ti, i=match(v, tm$funnames))))
+      ret <- array(unlist(ret), c(np, length(v), length(t)))
+      tmp <- aperm(ret, c(2, 3, 1))
+      dimnames(tmp) <- list(v, NULL, NULL)
+      ret <- vector("list", length(v))
+      for ( i in v )
+        ret[[i]] <- tmp[i,,]
+    } else { 
+      ret <- lapply(match(v, tm$funnames), function(i)
+                    average.over.mcmc(p, tm$get1, t, i=i))
+      names(ret) <- v
+    }
   } else {
     tm$set(p)
     ret <- tm$getv(t)[,v,drop=FALSE]
   }
-  list(t=t, y=ret)
+  ret <- list(t=t, y=ret)
 }
 
-## plot.formula does not obey plot() argument names; can I get away
-## with it?
-plot.bd.t2 <- function(lik, p, xlab="Time", ylab="Parameter",
+plot.bd.t2 <- function(x, p, xlab="Time", ylab="Parameter",
                        lty=1, lwd=1, v=NULL, col=NULL,
                        nt=101, legend.pos=NULL, ...) {
-  xy <- predict(lik, p, v=v, nt=nt)
+  xy <- predict(x, p, v=v, nt=nt)
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
   xlim <- rev(range(xy$t))  
   if ( is.matrix ) {

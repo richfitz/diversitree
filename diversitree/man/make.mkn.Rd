@@ -1,7 +1,7 @@
 \name{make.mkn}
 \alias{make.mkn}
 \alias{make.mk2}
-\alias{make.meristic}
+\alias{make.mkn.meristic}
 
 \title{Mk2 and Mk-n Models of character evolution}
 

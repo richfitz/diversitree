@@ -18,8 +18,10 @@ make.cache.bd.nee <- function(tree=NULL, sampling.f=NULL,
   x <- c(NA, times)
   N <- length(x)
   n.node <- length(times) # == tree$Nnode
+  const <- lfactorial(N - 1)
 
-  list(N=N, x=x, f=sampling.f, unresolved=unresolved, n.node=n.node)
+  list(N=N, x=x, f=sampling.f, unresolved=unresolved, n.node=n.node,
+       const=const)
 }
 
 make.all.branches.bd.nee <- function(cache, control) {
@@ -29,7 +31,6 @@ make.all.branches.bd.nee <- function(cache, control) {
   unresolved <- cache$unresolved
 
   sum.x.3.N <- sum(x[3:N])
-  N.fact <- lfactorial(N - 1)
 
   function(pars, intermediates, preset=NULL) { # preset ignored 
     if ( pars[2] == pars[1] )
@@ -38,11 +39,11 @@ make.all.branches.bd.nee <- function(cache, control) {
     a <- pars[[2]] / pars[[1]]
 
     if ( f < 1 )
-      loglik <- N.fact +
+      loglik <-
         (N - 2) * log(f*abs(r)) + N * log(abs(1 - a)) + r * sum.x.3.N -
           2*sum(log(abs(f*exp(r * x[2:N]) - a + 1 - f)))
     else
-      loglik <- N.fact +
+      loglik <-
         (N - 2) * log(  abs(r)) + N * log(abs(1 - a)) + r * sum.x.3.N -
           2*sum(log(abs(  exp(r * x[2:N]) - a        )))
     if ( !is.null(unresolved) ) {
@@ -59,11 +60,11 @@ make.all.branches.bd.nee <- function(cache, control) {
 }
 
 rootfunc.bd.nee <- function(res, pars, condition.surv,
-                            intermediates) {
+                            intermediates, const) {
   if ( intermediates )
     stop('intermediates cannot be produced -- use method="ode"')
-  vals <- res$vals  
-  loglik <- vals[[1]]
+  vals <- res$vals
+  loglik <- vals[[1]] + const
   if ( !condition.surv ) # notice this is opposite to usual!
     loglik <- loglik + vals[[2]]
   loglik

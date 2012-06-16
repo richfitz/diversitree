@@ -5,11 +5,12 @@ make.bd.t <- function(tree, functions, sampling.f=NULL,
                                             initial.conditions.bd.ode)
   rootfunc <- make.rootfunc.t(cache, rootfunc.bd.ode)
   pars.t <- make.pars.t(cache$functions, cache)
+  const <- cache$const
 
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
     f.pars <- pars.t(pars)
     ans <- all.branches(f.pars, intermediates)
-    rootfunc(ans, f.pars, condition.surv, intermediates)
+    rootfunc(ans, f.pars, condition.surv, intermediates, const)
   }
   class(ll) <- c("bd.t", "bd", "dtlik", "function")
   ll

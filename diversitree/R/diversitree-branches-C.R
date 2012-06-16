@@ -1,5 +1,3 @@
-## make.all.branches.C <- function(cache, model, dll, neq, np, comp.idx,
-##                                 control) {
 make.all.branches.C <- function(cache, control) {
   check.cvodes(error=TRUE)
   info     <- check.info.ode(cache$info, control)

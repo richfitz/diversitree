@@ -154,7 +154,7 @@ make.prior.uniform <- function(lower, upper) {
 }
 
 coef.mcmcsamples <- function(object, ...) {
-  ret <- samples[-c(1, ncol(samples))]
+  ret <- object[-c(1, ncol(object))]
   class(ret) <- "data.frame"
   ret
 }
