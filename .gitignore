@@ -85,3 +85,6 @@ diversitree/src/sundials_sptfqmr.c
 
 ## I will often have a checking file here:
 diversitree.Rcheck
+
+## Development stuff
+bounded

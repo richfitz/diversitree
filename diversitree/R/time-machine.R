@@ -32,7 +32,9 @@ make.time.machine <- function(functions, t.range, nonnegative=TRUE,
     stop("Duplicate argument names: consider different prefixes?")
 
   ## Check and expand non-negative checks.
-  if ( !is.logical(nonnegative) )
+  if ( is.null(nonnegative) )
+    nonnegative <- rep(TRUE, length(functions))
+  else if ( !is.logical(nonnegative) )
     stop("nonnegative must be logical")
   else if ( length(nonnegative) == 1 )
     nonnegative <- rep(nonnegative, length(functions))

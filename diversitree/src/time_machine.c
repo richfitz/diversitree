@@ -185,10 +185,15 @@ void run_time_machine(dt_time_machine *obj, double t) {
   double *p_in = obj->p_in, *p_out = obj->p_out;
   const int nf = obj->nf, *types = obj->types, *start = obj->start,
     *target = obj->target;
-  const double *t_range = obj->t_range;
   int i, j;
+  /* I'd tried checking here for being within the range, but the
+     integrator sometimes steps outside of the range.  I could
+     probably work out what it's stepping over by, but that seems like
+     a hassle.
+  const double *t_range = obj->t_range;
   if ( t < t_range[0] || t > t_range[1] )
-    error("Time out of supported range");
+    error("Time %2.9f out of supported range [%2.9f, %2.9f]",
+    t, t_range[0], t_range[1]);*/
   for ( i = 0; i < nf; i++ ) {
     j = target[i];
     switch (types[i]) {

@@ -39,7 +39,7 @@ make.all.branches.t2.dtlik <- function(cache, control,
   }
 }
 
-update.cache.t2 <- function(cache, functions, spline.data) {
+update.cache.t2 <- function(cache, functions, spline.data, with.q=FALSE) {
   info <- cache$info
   n.args <- length(info$argnames)
 
@@ -52,9 +52,10 @@ update.cache.t2 <- function(cache, functions, spline.data) {
     names(functions) <- info$argnames
 
   t.range <- range(0, cache$depth[cache$root])
-  cache$time.machine <- make.time.machine(functions, t.range, n.args,
-                                          cache$nonnegative,
-                                          spline.data)
+  nonnegative <- cache$nonnegative
+  k <- if ( with.q ) cache$k else NULL
+  cache$time.machine <-
+    make.time.machine(functions, t.range, nonnegative, spline.data, k)
 
   info$time.varying <- TRUE
   info$argnames <- cache$functions.info$argnames
