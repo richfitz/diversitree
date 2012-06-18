@@ -10,14 +10,9 @@ make.bd.t2 <- function(tree, functions, sampling.f=NULL,
 
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
     ans <- all.branches(pars, intermediates)
-    ## TODO: Hack.
-    ## The all.branches.C() returns a scalar lq, but bd uses the
-    ## length of this to compute the constant.  This affects all
-    ## bd functions, though nobody should really use CVODES for
-    ## anything but this one.
     rootfunc(ans, pars, condition.surv, intermediates, const)
   }
-  class(ll) <- c("bd.t2", "bd", "dtlik", "function")
+  class(ll) <- c("bd.t2", "bd", "dtlik.t", "dtlik", "function")
   ll
 }
 

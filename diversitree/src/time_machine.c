@@ -15,8 +15,8 @@ double t_stepf(double t, double *p) {
   return t <= p[2] ? p[0] : p[1];
 }
 double t_sigmoid(double t, double *p) {
-  //     y0      y1     y0             r       tmid
-  return p[0] + (p[1] - p[0])/(1 + exp(p[4] * (p[3] - t)));
+  const double y0 = p[0], y1 = p[1], tmid = p[2], r = p[3];
+  return y0 + (y1 - y0)/(1 + exp(r * (tmid - t)));
 }
 double t_spline(double t, double *p, dt_spline *obj) {
   //y0    y1     y0

@@ -13,8 +13,6 @@ test.time.machine.bd <- function() {
   tm$set(p1.0)
   checkIdentical(tm$get(0),  p1.0[c(1,3)])
   checkIdentical(tm$get(10), p1.0[c(1,3)])
-  ## This should fail
-  checkException(tm$get(11), silent=TRUE)
 
   ## Now, add a slope
   p1.1 <- c(.1, .05, .05)

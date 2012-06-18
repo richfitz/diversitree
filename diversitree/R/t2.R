@@ -1,3 +1,6 @@
+## TODO: argnames
+## TODO: restructure file
+
 ## A special function will still be needed for cvodes and CVODES, as
 ## the normal branches function possibly won't work?
 make.all.branches.t2.dtlik <- function(cache, control,
@@ -47,18 +50,21 @@ update.cache.t2 <- function(cache, functions, spline.data, with.q=FALSE) {
   if ( !is.character(functions) )
     stop("'functions' must be characters [will relax soon]")
   if ( length(functions) == 1L )
-    functions <- rep(list(functions), n.args)
-  if ( is.null(names(functions)) && length(functions) == n.args )
+    functions <- rep(functions, n.args)
+  else if ( length(functions) != n.args )
+    stop(sprintf("Expected %d functions", n.args))
+  if ( is.null(names(functions)) )
     names(functions) <- info$argnames
+
 
   t.range <- range(0, cache$depth[cache$root])
   nonnegative <- cache$nonnegative
-  k <- if ( with.q ) cache$k else NULL
+  k <- if ( with.q ) cache$info$k else NULL
   cache$time.machine <-
     make.time.machine(functions, t.range, nonnegative, spline.data, k)
 
   info$time.varying <- TRUE
-  info$argnames <- cache$functions.info$argnames
+  info$argnames <- cache$time.machine$argnames
   info$name.ode <- sprintf("%s_t2", cache$info$name)
   info$name.pretty <- sprintf("%s (time-varying[v2])", info$name.pretty)
   info$name <- sprintf("%s.t2", cache$info$name)
@@ -85,9 +91,11 @@ make.rootfunc.t2 <- function(cache, rootfunc) {
     rootfunc(ans, pars.t(t.root), ...) # ...because tm version used.
 }
 
-## Hard coded for bd right now, but will generalise really soon.
-predict.bd.t2 <- function(object, p, t, nt=101, v=NULL,
-                          alpha=1/20, everything=FALSE, ...) {
+
+
+## Making the output useful.
+predict.dtlik.t <- function(object, p, t, nt=101, v=NULL,
+                            alpha=1/20, everything=FALSE, ...) {
   tm <- get.cache(object)$time.machine
   if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
     p <- coef(p)
@@ -120,9 +128,9 @@ predict.bd.t2 <- function(object, p, t, nt=101, v=NULL,
   ret <- list(t=t, y=ret)
 }
 
-plot.bd.t2 <- function(x, p, xlab="Time", ylab="Parameter",
-                       lty=1, lwd=1, v=NULL, col=NULL,
-                       nt=101, legend.pos=NULL, ...) {
+plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
+                         lty=1, lwd=1, v=NULL, col=NULL,
+                         nt=101, legend.pos=NULL, ...) {
   xy <- predict(x, p, v=v, nt=nt)
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
   xlim <- rev(range(xy$t))  

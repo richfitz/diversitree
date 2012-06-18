@@ -31,6 +31,20 @@ test.bisse.t <- function() {
   p3.t <- p2.t
   p3.t[2] <- p3.t[2] + .2
   checkEquals(lik.t(p3.t), -190.58110120320532)
+
+  ## Now, using the new interface:
+  lik.n <- make.bisse.t2(phy, phy$tip.state,
+                         rep(c("sigmoid.t", "constant.t"), c(2, 4)))
+  checkEquals(lik.n(p.t), lik.t(p.t))
+  checkEquals(lik.n(p2.t), lik.t(p2.t))
+  checkEquals(lik.n(p3.t), lik.t(p3.t))
+
+  lik.N <- make.bisse.t2(phy, phy$tip.state,
+                         rep(c("sigmoid.t", "constant.t"), c(2, 4)),
+                         control=list(backend="CVODES"))
+
+  checkEquals(lik.n(p2.t), lik.N(p2.t), tolerance=2e-7)
+  checkEquals(lik.n(p3.t), lik.N(p3.t), tolerance=2e-7)
 }
 
 test.bisse.td <- function() {

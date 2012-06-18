@@ -5,71 +5,6 @@
 ## be repetition.
 ## col.bar and col.lab: vectors along sort(unique(lab)) with colours
 ## for the bar and label.
-oldgroup.label.tip.rad <- function(obj, lab, col.bar, col.lab, lwd=1,
-                                offset.bar=0, offset.lab=0, cex=1,
-                                font=1, check=FALSE, quiet=FALSE,
-                                ...) {
-  n.taxa <- obj$n.taxa
-  n <- obj$n.spp
-  if ( is.null(n.taxa) )
-    dt <- 1/6 / n * 2 * pi
-  else
-    dt <- (n.taxa/2 - .5 + 1/6) / n * 2 * pi
-
-  theta <- obj$xy$theta[seq_len(obj$Ntip)]
-
-  t0 <- tapply(theta - dt, lab, min)
-  t1 <- tapply(theta + dt, lab, max)
-  str <- names(t0)
-
-  if ( check ) {
-    ## Sort these in order around the circle (breaks vector colour/fonts
-    ## though, which I think I used somewhere)
-    i <- order(t0)
-    t0 <- t0[i]
-    t1 <- t1[i]
-    str <- str[i]
-    
-    g <- integer(length(t0))
-    g[1] <- j <- 1
-    end <- t1[1]
-    for ( i in seq_along(g)[-1] ) {
-      if ( t0[i] > end ) {
-        j <- j + 1
-        end <- t1[i]
-      } else {
-        end <- max(end, t1[i])
-      }
-      g[i] <- j
-    }
-
-    tg <- table(g)
-    if ( any(tg > 1) ) {
-      if ( !quiet ) {
-        err <- sapply(which(tg != 1), function(x)
-                      paste(str[g == x], collapse=", "))
-        warn <- c("Collapsing non-monophyletic groups:",
-                  sprintf("\t%s", err))
-        warning(paste(warn, collapse="\n"))
-      }
-      t0 <- tapply(t0, g, min)
-      t1 <- tapply(t1, g, max)
-      str <- as.character(tapply(str, g, collapse))
-    }
-  }
-
-  tm <- (t0 + t1) / 2
-  
-  r.bar <- rep(max(obj$xx) + offset.bar, length(t0))
-  r.lab <- rep(max(obj$xx) + offset.lab, length(t0))
-
-  arcs(t0, t1, r.bar, col=col.bar, lwd=lwd)
-
-  if ( any(!is.na(col.lab)) )
-    radial.text(r.lab, tm, str,
-                col=col.lab, font=font, cex=cex, ...)
-}
-
 trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
                        class=NULL, type="f", w=1/50,
                        legend=length(cols) > 1, cex.lab=.5,
@@ -112,10 +47,10 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
   } else {
     plt <- plot2.phylo(tree, type="f", show.tip.label=FALSE,
                        label.offset=t*margin)
-    group.label.tip.rad(plt, class, "black", "black",
-                        offset.bar=w*4, offset.lab=w*5, lwd=1.5,
-                        cex=cex.lab, font=font.lab,
-                        check=check, quiet=quiet)
+    group.label.tip(plt, class, "black", "black", lwd=1.5,
+                    offset.bar=w*4, offset.lab=w*5,
+                    cex=cex.lab, font=font.lab,
+                    check=check, quiet=quiet)
   }
 
   xy <- plt$xy
