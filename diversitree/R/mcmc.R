@@ -92,7 +92,9 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
 
   hist <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
 
-  clean.hist(hist)
+  samples <- clean.hist(hist)
+  class(samples) <- c("mcmcsamples", "data.frame")
+  samples
 }
 
 mcmc.dtlik <- function(lik, x.init, nsteps, lower=-Inf, ...) {
@@ -149,4 +151,10 @@ make.prior.uniform <- function(lower, upper) {
     ret[x < lower | x > upper] <- -Inf
     ret
   }
+}
+
+coef.mcmcsamples <- function(object, ...) {
+  ret <- object[-c(1, ncol(object))]
+  class(ret) <- "data.frame"
+  ret
 }

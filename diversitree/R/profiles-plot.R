@@ -78,20 +78,6 @@ hdr <- function(z, p=0.95, lim=NULL) {
   ci
 }
 
-## hdr.uniroot <- function(z, p=0.95, lim=NULL) {
-##   xx <- sort(c(lim, seq(min(z), max(z), length.out=1024)))
-##   ez <- ecdf(z)
-##   f <- suppressWarnings(approxfun(ez(xx), xx))
-##   fit <- try(suppressWarnings(optimize(function(x) f(x + p) - f(x), c(0, 1-p))))
-##   if ( inherits(fit, "try-error") || is.na(fit$objective) ) {
-##     warning("HDR falling back on quantile-based intervals")
-##     ci <- as.numeric(quantile(z, c((1-p)/2, 1/2 + p/2)))
-##   } else {
-##     ci <- fit$min
-##     f(c(ci, ci+p))
-##   }
-## }
-
 add.alpha <- function(col, alpha=.5) {
   if ( length(alpha) > 1 && any(is.na(alpha)) ) {
     n <- max(length(col), length(alpha))
@@ -105,4 +91,23 @@ add.alpha <- function(col, alpha=.5) {
     tmp <- col2rgb(col)/255
     rgb(tmp[1,], tmp[2,], tmp[3,], alpha=alpha)
   }
+}
+
+hdr.new <- function(z, alpha=0.05, lim=NULL) {
+  spline.prep <- function(x, y) {
+    o <- sort.list(x, method="quick", na.last=NA)
+    x <- x[o]
+    y <- y[o]
+    nx <- length(x)
+    if (length(ux <- unique(x)) < nx) {
+      y <- as.vector(tapply(y, match(x, x), mean))
+      x <- ux
+    }
+    list(x=x, y=y)
+  }
+
+  ez <- ecdf(z)
+  sz <- environment(ez)$x
+  tmp <- spline.prep(ez(sz), sz)
+  .Call("hdr", tmp$x, tmp$y, alpha)
 }

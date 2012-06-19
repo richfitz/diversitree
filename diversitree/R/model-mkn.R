@@ -123,10 +123,14 @@ rootfunc.mkn <- function(res, pars, root, root.p, intermediates) {
 }
 
 make.all.branches.mkn <- function(cache, control) {
-  if ( control$method == "ode" )
-    make.all.branches.dtlik(cache, control, initial.conditions.mkn)
-  else
+  if ( control$method == "ode" ) {
+    if ( !is.null(control$backend) && control$backend == "expokit" )
+      make.all.branches.mkn.expokit(cache, control)
+    else
+      make.all.branches.dtlik(cache, control, initial.conditions.mkn)
+  } else {
     make.all.branches.mkn.exp(cache, control)
+  }
 }
 
 ######################################################################

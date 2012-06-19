@@ -77,21 +77,7 @@ trait.plot(phy, phy$tip.state,
            cols=list(A=c("pink", "red"), B=c("lightblue", "blue")))
 
 nodes <- c("nd5", "nd4", "nd7", "nd11", "nd10", "nd8")
-descendants <- function(node, phy) {
-  ans <- node <- match(node, phy$node.label) + length(phy$tip.label)
-  repeat {
-    node <- phy$edge[phy$edge[,1] \%in\% node,2]
-    if ( length(node) > 0 )
-      ans <- c(ans, node)
-    else
-      break
-  }
-
-  ans <- unlist(ans)
-  ans[ans <= length(phy$tip.label)]
-}
-
-grp <- lapply(nodes, descendants, phy)
+grp <- lapply(nodes, get.descendants, phy, tips.only=TRUE)
 class <- rep(NA, 100)
 for ( i in seq_along(grp) )
   class[grp[[i]]] <- paste("group", LETTERS[i])

@@ -17,6 +17,7 @@ make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
                     times=NULL, control=list()) {
   control <- check.control.bd(control, times)
   cache <- make.cache.bd(tree, sampling.f, unresolved, times, control)
+  const <- cache$const
 
   if ( control$method == "nee" ) {
     all.branches <- make.all.branches.bd.nee(cache, control)
@@ -30,7 +31,7 @@ make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
     check.pars.nonnegative(pars, 2)
     ans <- all.branches(pars, intermediates)
-    rootfunc(ans, pars, condition.surv, intermediates)
+    rootfunc(ans, pars, condition.surv, intermediates, const)
   }
   class(ll) <- c("bd", "dtlik", "function")
   ll

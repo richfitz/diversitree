@@ -125,9 +125,9 @@ get.descendants <- function(node, tree, tips.only=FALSE,
       stop(sprintf("Node '%s' not found in tree"), node)
   } else {
     node <- check.integer(node)
-    if ( node >= 1 && node < phy$Nnode ) # on 1..(n.node), probably
+    if ( node >= 1 && node < tree$Nnode ) # on 1..(n.node), probably
       node <- node + n.tip
-    else if ( !(node > n.tip && node <= n.tip + phy$Nnode) )
+    else if ( !(node > n.tip && node <= n.tip + tree$Nnode) )
       stop("Invalid node number")
   }
     
