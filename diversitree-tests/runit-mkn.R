@@ -31,6 +31,29 @@ test.mkn <- function() {
   fit.ode <- find.mle(lik.ode, p)
 
   checkEquals(fit.ode[-7], fit.mkn[-7], tolerance=1e-7)
+
+  ## Yay!  This works perfectly for 50, but not always.  I get error
+  ## -42, which apparently I must recover from.  FFS.  Not in the main
+  ## expokit code?  Is this one of mine?
+  ##
+  ## This is not much faster for k=50, but 10x faster for k=100.  Only
+  ## 20% of time in R code, so possibly not much speed up from a
+  ## CVODES style interface.
+  ##
+  ## meristic is about the same speed, so a Jacobian might be enough.
+  set.seed(3)
+  k <- 200
+  states <- sim.character(phy, c(k, 3, 3), model="meristic", x0=4)
+  lik.ode <- make.mkn(phy, states, k, strict=FALSE,
+                      control=list(method="ode"))
+  lik.meristic <- make.mkn.meristic(phy, states, k)
+  lik.expokit <- make.mkn(phy, states, k, strict=FALSE,
+                          control=list(method="ode", backend="expokit"))
+  pars <- diversitree:::mkn.meristic.Q(c(3, 3), k)
+  pars2 <- pars[row(pars) != col(pars)]
+  ll.o <- lik.ode(pars2)
+  ll.e <- lik.expokit(pars2)
+  checkEquals(ll.o, ll.e, tol=1e-7)
 }
 
 test.mkn.meristic <- function() {

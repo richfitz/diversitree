@@ -1,26 +1,12 @@
-*     I'm going to write a new backend for extremely large Mk problems
-*     (possibly also small ones) that uses expokit for the matrix
-*     exponentiation.  Basically, given Q, we'll compute
-*     .    D(t) = exp(Qt)D(0)
-*     Rather than solving this with the ODE approaches that I usually
-*     use.  Given that this is purely a linear system, this should give
-*     speedups on the order of 10x for very large sparse systems.  It's
-*     possible that a similar approach might be useful for small dense
-*     systems too.
-*
-*     Here, at least at first, I'm just going to write some wrapper code
-*     to work with an arbitrary matrix.
-*
-*     Later, I will need to modify this to allow checkpointing (multiple
-*     time steps) as this is used a bunch in tip calculations.
-*     
-*     The Q matrix is in COO format; ia and ja are the coordinates,
-*     while Q contains the values.  'n' is the order of the matrix, and
-*     nz is the number of non-zero elements (i.e., the length of ia and
-*     ja).  'qnorm' is some norm of Q (probably the infinite norm).
-*
+*     This is a simple wrapper to a couple of the expokit functions from
+*     within R.  The code here could easily have been written in C, and
+*     that is the approach taken by mkn-expokit.c
+
 *     I'll hard code in some upper bounds, I think.  Let nmax = 1024
 *     (2^10), and nzmax = 102400 (100 nonzero elements per state).
+*
+*     Note that there is really no reason to call this from within
+*     Fortran; this would be about as easy from C.
 *     **** Sparse
       subroutine DSEXPMV(Q, n, ia, ja, nz, qnorm, v, t, tol, out, iflag)
       implicit none
@@ -37,6 +23,11 @@
       double precision tol, anorm, wsp(lwsp), scal
 
       double precision out(n)
+
+      if ( n .gt. nmax .or. nz .gt. nzmax ) then
+         iflag = -1
+         return
+      endif
 
       itrace = 0
       iflag = 0
@@ -77,7 +68,7 @@
       end
 
 *     **** Full
-      subroutine DFEXPMV(Q, n, t, out, iflag)
+      subroutine DEXPMF(Q, n, t, out, iflag)
       implicit none
       integer n, iflag
       double precision t, Q(n,n), v(n), out(n*n)
@@ -110,7 +101,6 @@
       integer nmax, nzmax, mmax
       parameter( nmax=1024, nzmax=102400, mmax=30 )
       integer lwsp, liwsp
-*      parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax+2 )
       parameter(lwsp=nmax*(mmax+1)+nmax+5*(mmax+2)**2+7,liwsp=nmax+2)
 
       integer m, itrace, iflag, iwsp(liwsp)
