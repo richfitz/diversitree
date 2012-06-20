@@ -201,10 +201,8 @@ void do_derivs_musse_t2(int k, double t, double *y, double *ydot) {
   do_derivs_musse(k, tm_musse_t2->p_out, y, ydot);
 }
 
+/* This is a no-op, tm_musse_t2 is set through an explicit set. */
 void initmod_musse_t2(void (* odeparms)(int *, double *)) {
-  DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparms");
-  tm_musse_t2 = (dt_time_machine*)R_ExternalPtrAddr(get_deSolve_gparms());
 }
 
 void derivs_musse_t2(int *neq, double *t, double *y, double *ydot, 

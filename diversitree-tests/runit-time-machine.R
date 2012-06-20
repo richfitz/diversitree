@@ -38,9 +38,30 @@ test.time.machine.bd <- function() {
   tm$set(p2.1)
   tt <- seq(0, 10, length=101)
   tmp <- tm$getv(tt)
-  checkTrue(all(sapply(tmp[,2], identical, p2.1[3])))
+  checkTrue(all(sapply(tmp[,2], identical, p2.0[3])))
   checkEquals(tmp[,1],
               p2.1[1] + diff(p2.1[1:2])*(sin(tt/t.max*2*pi)+1)/2)
+
+  functions[1] <- "spline.linear.t"
+  tm <- make.time.machine(functions, c(0, t.max),
+                          spline.data=spline.data)
+  p2.0 <- c(.1, .1, 0, .05)
+  p2.1 <- c(.1, .2, .02, .05)
+  tm$set(p2.0)
+
+  tt <- seq(0, 10, length=101)
+  tmp <- tm$getv(tt)
+
+  checkIdentical(tm$get(0),  p2.0[c(1,4)])
+  checkIdentical(tm$get(10), p2.0[c(1,4)])
+
+  tm$set(p2.1)
+  tt <- seq(0, 10, length=101)
+  tmp <- tm$getv(tt)
+  checkTrue(all(sapply(tmp[,2], identical, p2.1[4])))
+  checkEquals(tmp[,1],
+              p2.1[1] + diff(p2.1[1:2])*(sin(tt/t.max*2*pi)+1)/2
+              + p2.1[3] * tt)
 }
 
 ## MuSSE is more complicated, as there are Q matrices to deal with:

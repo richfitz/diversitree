@@ -168,3 +168,13 @@ combine <- function(liks) {
   set.info(ret, info)
   ret
 }
+
+run.cached <- function(filename, expr, regenerate=FALSE) {
+  if ( file.exists(filename) && !regenerate ) {
+    readRDS(filename)
+  } else {
+    res <- eval.parent(substitute(expr))
+    saveRDS(res, file=filename)
+    res
+  }
+}

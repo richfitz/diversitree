@@ -1,44 +1,18 @@
-## TODO: argnames
-## TODO: restructure file
-
 ## A special function will still be needed for cvodes and CVODES, as
 ## the normal branches function possibly won't work?
 make.all.branches.t2.dtlik <- function(cache, control,
-                                       initial.conditions) {
+                                       initial.conditions.base) {
   control <- check.control.ode(control)
-  time.machine <- cache$time.machine
-  tm.ptr <- time.machine$ptr
 
   if ( control$backend == "CVODES" ) {
-    setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)
-    dummy <- rep(0.0, cache$info$np)
-    all.branches <- make.all.branches.C(cache, control)
-    function(pars, intermediates, preset=NULL) {
-      time.machine$set(pars)
-      .Call(setfunc, tm.ptr)
-      all.branches(dummy, intermediates, preset)
-    }
+    make.all.branches.C(cache, control)
   } else {
     branches <- make.branches.dtlik(cache$info, control)
-    initial.conditions.t <-
-      make.initial.conditions.t2(cache, initial.conditions)
-
-    if ( control$backend == "deSolve" ) {
-      function(pars, intermediates, preset=NULL) {
-        time.machine$set(pars)
-        all.branches.matrix(tm.ptr, cache, initial.conditions.t,
-                            branches, preset)
-      }
-    } else { # cvodes
-      setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)
-      dummy <- rep(0.0, cache$info$np)
-      function(pars, intermediates, preset=NULL) {
-        time.machine$set(pars)
-        .Call(setfunc, tm.ptr)
-        all.branches.matrix(dummy, cache, initial.conditions.t,
-                            branches, preset)
-      }
-    }
+    initial.conditions <-
+      make.initial.conditions.t2(cache, initial.conditions.base)
+    function(pars, intermediates, preset=NULL)
+      all.branches.matrix(pars, cache, initial.conditions,
+                          branches, preset)
   }
 }
 
@@ -55,7 +29,6 @@ update.cache.t2 <- function(cache, functions, spline.data, with.q=FALSE) {
     stop(sprintf("Expected %d functions", n.args))
   if ( is.null(names(functions)) )
     names(functions) <- info$argnames
-
 
   t.range <- range(0, cache$depth[cache$root])
   nonnegative <- cache$nonnegative
@@ -91,19 +64,42 @@ make.rootfunc.t2 <- function(cache, rootfunc) {
     rootfunc(ans, pars.t(t.root), ...) # ...because tm version used.
 }
 
+make.prep.all.branches.t2 <- function(cache, backend) {
+  time.machine <- cache$time.machine
+  tm.ptr <- time.machine$ptr
+  setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)
+  dummy <- rep(0.0, cache$info$np)
+  attr(dummy, "dummy") <- TRUE # for identical() to work.
 
+  function(pars) {
+    if ( !identical(pars, dummy) )
+      time.machine$set(pars)
+    else
+      message("Not setting parameters - must already be done?")
+    .Call(setfunc, tm.ptr)
+    dummy
+  }
+}
 
 ## Making the output useful.
 predict.dtlik.t <- function(object, p, t, nt=101, v=NULL,
                             alpha=1/20, everything=FALSE, ...) {
   tm <- get.cache(object)$time.machine
   if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
+    ## TODO: Improve the coef.mcmcsamples to allow full, here, then
+    ## use full.
     p <- coef(p)
   if ( missing(t) )
     t <- seq(tm$t.range[1], tm$t.range[2], length=nt)
   if ( is.null(v) )
     v <- tm$funnames
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
+  if ( inherits(object, "constrained") ) {
+    if ( is.matrix && ncol(p) == length(argnames(object)) )
+      p <- t(apply(p, 1, object, pars.only=TRUE))
+    else if ( !is.matrix && length(p) == length(argnames(object)) )
+      p <- object(p, pars.only=TRUE)
+  }
 
   if ( is.matrix ) {
     if ( everything ) {
@@ -122,10 +118,9 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL,
       names(ret) <- v
     }
   } else {
-    tm$set(p)
-    ret <- tm$getv(t)[,v,drop=FALSE]
+    ret <- tm$getv(t, p)[,v,drop=FALSE]
   }
-  ret <- list(t=t, y=ret)
+  list(t=t, y=ret)
 }
 
 plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
@@ -156,7 +151,7 @@ plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
             col=col, xlab=xlab, ylab=ylab, lwd=lwd, ...)
   }
   if ( !is.null(legend.pos) )
-    legend(legend.pos, v, col=col, lty=lty, lwd=lwd)
+    legend(legend.pos, v, col=col, lty=lty, lwd=lwd, bty="n")
   invisible(v)
 }
 

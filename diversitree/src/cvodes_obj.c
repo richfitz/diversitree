@@ -181,22 +181,22 @@ int cvodes_check_flag(void *flagvalue, char *funcname, int opt) {
 
   /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
   if (opt == 0 && flagvalue == NULL) {
-    Rprintf("\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
-	    funcname);
+    error("\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
+	  funcname);
     return(1); }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
     errflag = (int *) flagvalue;
     if (*errflag < 0) {
-      Rprintf("\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
+      error("\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
       return(1); }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
-    Rprintf("\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
-	    funcname);
+    error("\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
+	  funcname);
     return(1); }
 
   return(0);

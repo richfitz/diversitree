@@ -39,12 +39,20 @@ test.bisse.t <- function() {
   checkEquals(lik.n(p2.t), lik.t(p2.t))
   checkEquals(lik.n(p3.t), lik.t(p3.t))
 
+  lik.n2 <- make.bisse.t2(phy, phy$tip.state,
+                          rep(c("sigmoid.t", "constant.t"), c(2, 4)),
+                          control=list(backend="cvodes"))
+  checkEquals(lik.n2(p.t), lik.t(p.t), tolerance=2e-7)
+  checkEquals(lik.n2(p2.t), lik.t(p2.t), tolerance=2e-7)
+  checkEquals(lik.n2(p3.t), lik.t(p3.t), tolerance=2e-7)
+  
   lik.N <- make.bisse.t2(phy, phy$tip.state,
                          rep(c("sigmoid.t", "constant.t"), c(2, 4)),
                          control=list(backend="CVODES"))
 
-  checkEquals(lik.n(p2.t), lik.N(p2.t), tolerance=2e-7)
-  checkEquals(lik.n(p3.t), lik.N(p3.t), tolerance=2e-7)
+  checkEquals(lik.n2(p.t), lik.N(p.t), tolerance=2e-7)
+  checkEquals(lik.n2(p2.t), lik.N(p2.t), tolerance=2e-7)
+  checkEquals(lik.n2(p3.t), lik.N(p3.t), tolerance=2e-7)
 }
 
 test.bisse.td <- function() {

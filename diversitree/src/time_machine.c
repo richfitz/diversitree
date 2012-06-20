@@ -22,17 +22,21 @@ double t_spline(double t, double *p, dt_spline *obj) {
   //y0    y1     y0
   return p[0] + (p[1] - p[0]) * dt_spline_eval1(obj, t);
 }
+double t_spline_linear(double t, double *p, dt_spline *obj) {
+  return p[0] + (p[1] - p[0]) * dt_spline_eval1(obj, t) + p[2]*t;
+}
 
 /* A little helper function to order these in R so I don't have to
    rely on remembering */
 SEXP r_get_time_machine_types() {
   SEXP ret;
-  PROTECT(ret = allocVector(STRSXP, 5));
+  PROTECT(ret = allocVector(STRSXP, 6));
   SET_STRING_ELT(ret, T_CONSTANT, mkChar("constant.t"));
   SET_STRING_ELT(ret, T_LINEAR,   mkChar("linear.t"));
   SET_STRING_ELT(ret, T_STEPF,    mkChar("stepf.t"));
   SET_STRING_ELT(ret, T_SIGMOID,  mkChar("sigmoid.t"));
   SET_STRING_ELT(ret, T_SPLINE,   mkChar("spline.t"));
+  SET_STRING_ELT(ret, T_SPLINE_LINEAR, mkChar("spline.linear.t"));
   UNPROTECT(1);
   return ret;
 }
@@ -76,7 +80,7 @@ SEXP r_make_time_machine(SEXP obj) {
   memcpy(ret->t_range,     REAL(t_range),         2*sizeof(double));
 
   if ( spline_data != R_NilValue )
-    ret->spline_data = 
+    ret->spline_data =
       make_dt_spline(LENGTH(VECTOR_ELT(spline_data, 0)),
 		     REAL(VECTOR_ELT(spline_data, 0)),
 		     REAL(VECTOR_ELT(spline_data, 1)),
@@ -123,7 +127,7 @@ static void dt_time_machine_finalize(SEXP extPtr) {
 }
 
 /* When initialising a time machine, we set all constant arguments to
-   their current value 
+   their current value
    
    It's possible that we can actually do better here; where (say) the
    function is linear and the slope is exactly zero, we can skip this.
@@ -143,6 +147,7 @@ void init_time_machine(dt_time_machine *obj, double *pars) {
     *target = obj->target, *nonnegative = obj->nonnegative;
   double *t_range = obj->t_range;
   int i, k = obj->k;
+  double c;
 
   /* First, check negativity */
   for ( i = 0; i < nf; i++ ) {
@@ -162,7 +167,12 @@ void init_time_machine(dt_time_machine *obj, double *pars) {
       case T_SIGMOID: /* drops through */
       case T_SPLINE:
 	if ( pi[0] < 0 || pi[1] < 0 )
-	  error("Negative parameter in step/sigmoid/spline parameter");	
+	  error("Negative parameter in step/sigmoid/spline parameter");
+	break;
+      case T_SPLINE_LINEAR:
+	c = pi[0] < pi[1] ? pi[0] : pi[1];
+	if ( c + pi[2] * t_range[0] < 0 || c + pi[2] * t_range[1] < 0)
+	  error("Negative parameter in spline+linear function");
 	break;
       }
     }
@@ -197,7 +207,7 @@ void run_time_machine(dt_time_machine *obj, double t) {
   for ( i = 0; i < nf; i++ ) {
     j = target[i];
     switch (types[i]) {
-    case T_LINEAR: 
+    case T_LINEAR:
       p_out[j] = t_linear(t, p_in + start[i]);
       break;
     case T_STEPF:
@@ -208,6 +218,10 @@ void run_time_machine(dt_time_machine *obj, double t) {
       break;
     case T_SPLINE:
       p_out[j] = t_spline(t, p_in + start[i], obj->spline_data);
+      break;
+    case T_SPLINE_LINEAR:
+      p_out[j] = t_spline_linear(t, p_in + start[i],
+				 obj->spline_data);
       break;
     }
   }

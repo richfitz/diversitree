@@ -7,9 +7,14 @@ make.musse.t2 <- function(tree, states, k, functions, sampling.f=NULL,
                                              initial.conditions.musse)
   rootfunc <- make.rootfunc.t2(cache, rootfunc.musse)
 
+  ## TODO: This is currently uglier than necessary.
+  prep <-
+    make.prep.all.branches.t2(cache,
+                              environment(all.branches)$control$backend)
+
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    ans <- all.branches(pars, intermediates)
+    ans <- all.branches(prep(pars), intermediates)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("musse.t2", "musse", "dtlik.t", "dtlik", "function")

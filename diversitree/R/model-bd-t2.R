@@ -8,8 +8,13 @@ make.bd.t2 <- function(tree, functions, sampling.f=NULL,
   rootfunc <- make.rootfunc.t2(cache, rootfunc.bd.ode)
   const <- cache$const
 
+  ## TODO: This is currently uglier than necessary.  
+  prep <-
+    make.prep.all.branches.t2(cache,
+                              environment(all.branches)$control$backend)
+
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
-    ans <- all.branches(pars, intermediates)
+    ans <- all.branches(prep(pars), intermediates)
     rootfunc(ans, pars, condition.surv, intermediates, const)
   }
   class(ll) <- c("bd.t2", "bd", "dtlik.t", "dtlik", "function")

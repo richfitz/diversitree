@@ -33,6 +33,11 @@ be nice to combine for everyone's use.
 It would be nice to able to compute Hessian matrices after the fact,
 and/or just for certain parameters.
 
+** Nicities
+
+make.bisse, make.mkn, make.musse, etc should take a factor with the
+correct number of levels, and rewrite argnames appropriately.
+
 * Documentation
 ** Tutorial document
 Plot QuaSSE fits, as there has been some confusion about these.  A
