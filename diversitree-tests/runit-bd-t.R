@@ -16,12 +16,12 @@ test.bd.t2 <- function() {
   ll0 <- lik1(p0)
   ll1 <- lik1(p1)
 
-  lik2 <- make.bd.t(phy, constant.t)
+  lik2 <- make.bd.t.old(phy, constant.t)
   checkEquals(lik2(p0), ll0)
   checkEquals(lik2(p1), ll1)
 
   ## old version
-  lik3 <- make.bd.t(phy, list(linear.t, constant.t))
+  lik3 <- make.bd.t.old(phy, list(linear.t, constant.t))
   checkEquals(lik3(p0.t), ll0)
   checkEquals(lik3(p1.t), ll1)
   ll2 <- -20.332980072
@@ -47,7 +47,7 @@ test.bd.t2 <- function() {
   ## tree).
   sin.t <- function(t, y0, y1)
     y0 + (y1 - y0) * (sin(t/t.max*2*pi)+1)/2
-  lik6 <- make.bd.t(phy, list(sin.t, constant.t))
+  lik6 <- make.bd.t.old(phy, list(sin.t, constant.t))
 
   p3.t <- c(p0[1], p0[1], p0[2])
   p4.t <- c(p0[1], 2*p0[1], p0[2])

@@ -6,8 +6,8 @@ test.bisse.t <- function() {
   phy <- tree.bisse(pars, max.t=30, x0=0)
 
   lik.b <- make.bisse(phy, phy$tip.state)  
-  lik.t <- make.bisse.t(phy, phy$tip.state,
-                        rep(list(sigmoid.t, constant.t), c(2, 4)))
+  lik.t <- make.bisse.t.old(phy, phy$tip.state,
+                            rep(list(sigmoid.t, constant.t), c(2, 4)))
 
   ## First, evaluate the functions with no time effect and check that they
   ## are the same as the base BiSSE model
@@ -84,7 +84,7 @@ test.bisse.td <- function() {
   p3.td <- p2.td + runif(length(p2.td), 0, .2)
   checkEquals(lik.td(p3.td), -183.12543259220922)
 
-  lik.t <- make.bisse.t(phy, phy$tip.state, rep(list(stepf.t), 6))
+  lik.t <- make.bisse.t.old(phy, phy$tip.state, rep(list(stepf.t), 6))
   t <- p3.td[1]
   p <- matrix(p3.td[-1], ncol=2)
   p3.t <- c(p[1,], t,
@@ -112,8 +112,8 @@ test.musse.t <- function() {
   ## For comparison, make a plain MuSSE likelihood function
   lik.m <- make.musse(phy, phy$tip.state, 3)
 
-  lik.t <- make.musse.t(phy, phy$tip.state, 3,
-                        rep(list(sigmoid.t, constant.t), c(3, 9)))
+  lik.t <- make.musse.t.old(phy, phy$tip.state, 3,
+                            rep(list(sigmoid.t, constant.t), c(3, 9)))
 
   ## First, evaluate the functions with no time effect and check that they
   ## are the same as the base MuSSE model

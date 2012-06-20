@@ -50,8 +50,8 @@ test.musse.t <- function() {
   lik.T <- make.musse.t2(phy, states, 3,
                          rep(c("linear.t", "constant.t"), c(3, 9)),
                          control=list(backend="CVODES"))
-  lik.old <- make.musse.t(phy, states, 3,
-                          rep(c(linear.t, constant.t), c(3, 9)))
+  lik.old <- make.musse.t.old(phy, states, 3,
+                              rep(c(linear.t, constant.t), c(3, 9)))
 
   p <- starting.point.musse(phy, 3)
   p.t <- c(rbind(p[1:3], 0), p[-(1:3)])

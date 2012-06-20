@@ -1,20 +1,20 @@
-make.all.branches.t.dtlik <- function(cache, control,
+make.all.branches.t.old.dtlik <- function(cache, control,
                                       initial.conditions) {
   control <- check.control.ode(control)
 
   if ( control$backend == "CVODES" ) {
     stop("CVODES not yet available for time-varying models")
   } else {
-    branches.t <- make.branches.dtlik.t(cache$info, control)    
+    branches.t <- make.branches.dtlik.t.old(cache$info, control)    
     initial.conditions.t <-
-      make.initial.conditions.t(initial.conditions)
+      make.initial.conditions.t.old(initial.conditions)
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache, initial.conditions.t,
                           branches.t, preset)
   }
 }
 
-make.branches.dtlik.t <- function(info, control) {
+make.branches.dtlik.t.old <- function(info, control) {
   info <- check.info.ode(info, control)
   br <- make.branches.dtlik(info, control)
   dll <- info$dll
@@ -34,7 +34,7 @@ make.branches.dtlik.t <- function(info, control) {
   }
 }
 
-make.initial.conditions.t <- function(initial.conditions) {
+make.initial.conditions.t.old <- function(initial.conditions) {
   function(init, pars, t, idx)
     initial.conditions(init, pars(t), t, idx)
 }
@@ -44,14 +44,14 @@ make.initial.conditions.t <- function(initial.conditions) {
 ## models.  However, because this is used by different functions with
 ## different argument lists, that is hard to do.  But then, that check
 ## is duplicated in too many functions.  For now, I'm skipping this.
-make.rootfunc.t <- function(cache, rootfunc) {
+make.rootfunc.t.old <- function(cache, rootfunc) {
   t.root <- cache$depth[cache$root]
   function(ans, pars, ...)
     rootfunc(ans, pars(t.root), ...)
 }
 
 ## Compared with update.*.td, this is cache, not info...
-update.cache.t <- function(cache, functions) {
+update.cache.t.old <- function(cache, functions) {
   info <- cache$info
   n.args <- length(info$argnames)
 
@@ -59,7 +59,7 @@ update.cache.t <- function(cache, functions) {
     functions <- rep(list(functions), n.args)
   if ( is.null(names(functions)) && length(functions) == n.args )
     names(functions) <- info$argnames
-  cache$functions.info <- check.functions.t(functions) 
+  cache$functions.info <- check.functions.t.old(functions) 
   cache$functions <- functions
 
   info$time.varying <- TRUE
@@ -89,11 +89,11 @@ stepf.t <- function(t, y0, y1, tc)
 
 ######################################################################
 ## Parameter generator function:
-make.pars.t <- function(functions, cache=NULL,
-                        check.negative.const=TRUE,
-                        check.negative.var=TRUE) {
+make.pars.t.old <- function(functions, cache=NULL,
+                            check.negative.const=TRUE,
+                            check.negative.var=TRUE) {
   if ( is.null(cache) )
-    obj <- check.functions.t(functions)
+    obj <- check.functions.t.old(functions)
   else
     obj <- cache$functions.info
 
@@ -129,11 +129,11 @@ make.pars.t <- function(functions, cache=NULL,
 
 ######################################################################
 ## Checking
-check.functions.t <- function(functions) {
+check.functions.t.old <- function(functions) {
   if ( is.null(names(functions)) )
     stop("functions list must be named")
   
-  n <- sapply(functions, check.f.t)
+  n <- sapply(functions, check.f.t.old)
   idx <- split(seq_len(sum(n)), rep(seq_along(n), n))
   n.args <- sum(n)
   n.types <- length(idx)
@@ -158,7 +158,7 @@ check.functions.t <- function(functions) {
        is.constant.arg=rep(is.constant, n))
 }
 
-check.f.t <- function(f) {
+check.f.t.old <- function(f) {
   args <- names(formals(f))
   if ( args[1] != "t" )
     stop("First argument of time-dependent function must be t")

@@ -1,10 +1,11 @@
-make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
+make.musse.t.old <- function(tree, states, k, functions, sampling.f=NULL,
                          strict=TRUE, control=list()) {
-  cache <- make.cache.musse.t(tree, states, k, functions,
+  if (interactive()) warning("make.bisse.t.old is temporary only")  
+  cache <- make.cache.musse.t.old(tree, states, k, functions,
                               sampling.f, strict)
-  all.branches <- make.all.branches.t.dtlik(cache, control,
-                                            initial.conditions.musse)
-  rootfunc <- make.rootfunc.t(cache, rootfunc.musse)
+  all.branches <- make.all.branches.t.old.dtlik(cache, control,
+                                                initial.conditions.musse)
+  rootfunc <- make.rootfunc.t.old(cache, rootfunc.musse)
   f.pars <- make.pars.t.musse(cache$functions, cache)
   
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
@@ -17,10 +18,10 @@ make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
   ll
 }
 
-make.cache.musse.t <- function(tree, states, k, functions,
+make.cache.musse.t.old <- function(tree, states, k, functions,
                                sampling.f, strict) {
   cache <- make.cache.musse(tree, states, k, sampling.f, strict)
-  update.cache.t(cache, functions)  
+  update.cache.t.old(cache, functions)  
 }
 
 ## MuSSE/t is a bunch harder than the basic BiSSE/t or BD/t models, as
@@ -91,5 +92,5 @@ make.pars.t.musse <- function(functions, cache=NULL,
   }
 }
 
-make.branches.musse.t <- function(cache, control)
-  make.branches.dtlik.t(cache$info, control)
+make.branches.musse.t.old <- function(cache, control)
+  make.branches.dtlik.t.old(cache$info, control)

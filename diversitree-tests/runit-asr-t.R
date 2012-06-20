@@ -117,8 +117,8 @@ test.asr.t.musse <- function() {
   table(states)
 
   lik.m <- make.musse(phy, states, 3)
-  lik.t0 <- make.musse.t(phy, states, 3,
-                         rep(c(linear.t, constant.t), c(3, 9)))
+  lik.t0 <- make.musse.t.old(phy, states, 3,
+                             rep(c(linear.t, constant.t), c(3, 9)))
   lik.t1 <- make.musse.t2(phy, states, 3,
                           rep(c("linear.t", "constant.t"), c(3, 9)))
   lik.t2 <- make.musse.t2(phy, states, 3,
