@@ -69,7 +69,7 @@ void initial_conditions_bd(int neq, double *vars_l, double *vars_r,
 static SEXP tfunc_bd;
 static SEXP trho_bd;
 
-void set_tfunc_bd_t(SEXP r_tfunc, SEXP r_trho) {
+void set_tfunc_bd_t_old(SEXP r_tfunc, SEXP r_trho) {
   if ( !isFunction(r_tfunc) )
     error("tfunc is not a function");
   if ( !isEnvironment(r_trho) )
@@ -79,7 +79,7 @@ void set_tfunc_bd_t(SEXP r_tfunc, SEXP r_trho) {
   trho_bd  = r_trho;
 }
 
-void do_derivs_bd_t(double t, double *y, double *ydot) {
+void do_derivs_bd_t_old(double t, double *y, double *ydot) {
   SEXP R_fcall, r_pars;
   double *pars;
 
@@ -98,29 +98,29 @@ void do_derivs_bd_t(double t, double *y, double *ydot) {
 }
 
 /* deSolve / LSODA */
-void initmod_bd_t(void (* odeparms)(int *, double *)) {
+void initmod_bd_t_old(void (* odeparms)(int *, double *)) {
   DL_FUNC get_deSolve_gparms = 
     R_GetCCallable("deSolve", "get_deSolve_gparms");
   SEXP obj = get_deSolve_gparms();
-  set_tfunc_bd_t(VECTOR_ELT(obj, 0), VECTOR_ELT(obj, 1));
+  set_tfunc_bd_t_old(VECTOR_ELT(obj, 0), VECTOR_ELT(obj, 1));
 }
 
-void derivs_bd_t(int *neq, double *t, double *y, double *ydot, 
-		 double *yout, int *ip) {
-  do_derivs_bd_t(*t, y, ydot);
+void derivs_bd_t_old(int *neq, double *t, double *y, double *ydot, 
+		     double *yout, int *ip) {
+  do_derivs_bd_t_old(*t, y, ydot);
 }
 
 /* CVODES */
-SEXP r_set_tfunc_bd_t(SEXP r_tfunc, SEXP r_trho) {
-  set_tfunc_bd_t(r_tfunc, r_trho);
+SEXP r_set_tfunc_bd_t_old(SEXP r_tfunc, SEXP r_trho) {
+  set_tfunc_bd_t_old(r_tfunc, r_trho);
   return R_NilValue;
 }
 
-int derivs_bd_t_cvode(realtype t, N_Vector y, N_Vector ydot,
+int derivs_bd_t_old_cvode(realtype t, N_Vector y, N_Vector ydot,
 		      void *user_data) {
-  do_derivs_bd_t(t,
-		 NV_DATA_S(y),
-		 NV_DATA_S(ydot));
+  do_derivs_bd_t_old(t,
+		     NV_DATA_S(y),
+		     NV_DATA_S(ydot));
   return 0;
 }
 

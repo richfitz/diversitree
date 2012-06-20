@@ -64,9 +64,9 @@ update.cache.t.old <- function(cache, functions) {
 
   info$time.varying <- TRUE
   info$argnames <- cache$functions.info$argnames
-  info$name.ode <- sprintf("%s_t", cache$info$name)
+  info$name.ode <- sprintf("%s_t_old", cache$info$name)
   info$name.pretty <- sprintf("%s (time-varying)", info$name.pretty)
-  info$name <- sprintf("%s.t", cache$info$name)
+  info$name <- sprintf("%s.t.old", cache$info$name)
 
   cache$info <- info
   cache
