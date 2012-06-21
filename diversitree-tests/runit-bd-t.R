@@ -28,14 +28,14 @@ test.bd.t2 <- function() {
   checkEquals(lik3(p2.t), ll2)
 
   ## new version
-  lik4 <- make.bd.t2(phy, c("linear.t", "constant.t"))
+  lik4 <- make.bd.t(phy, c("linear.t", "constant.t"))
   checkEquals(lik4(p0.t), ll0)
   checkEquals(lik4(p1.t), ll1)
   checkEquals(lik4(p2.t), ll2)
 
   ## Also with CVODES:
-  lik5 <- make.bd.t2(phy, c("linear.t", "constant.t"),
-                     control=list(backend="CVODES"))
+  lik5 <- make.bd.t(phy, c("linear.t", "constant.t"),
+                    control=list(backend="CVODES"))
   checkEquals(lik5(p0.t), ll0, tol=2e-7)
   checkEquals(lik5(p1.t), ll1, tol=2e-7)
   checkEquals(lik5(p2.t), ll2, tol=2e-7)
@@ -61,8 +61,8 @@ test.bd.t2 <- function() {
   y <- sin(x/t.max*2*pi)
   spline.data <- list(t=x, y=y)
 
-  lik7 <- make.bd.t2(phy, c("spline.t", "constant.t"),
-                     spline.data=spline.data)
+  lik7 <- make.bd.t(phy, c("spline.t", "constant.t"),
+                    spline.data=spline.data)
   checkEquals(lik7(p3.t), ll0)
   checkEquals(lik7(p4.t), ll4)
 }

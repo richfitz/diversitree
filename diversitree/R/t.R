@@ -1,7 +1,7 @@
 ## A special function will still be needed for cvodes and CVODES, as
 ## the normal branches function possibly won't work?
-make.all.branches.t2.dtlik <- function(cache, control,
-                                       initial.conditions.base) {
+make.all.branches.t.dtlik <- function(cache, control,
+                                      initial.conditions.base) {
   control <- check.control.ode(control)
 
   if ( control$backend == "CVODES" ) {
@@ -9,18 +9,18 @@ make.all.branches.t2.dtlik <- function(cache, control,
   } else {
     branches <- make.branches.dtlik(cache$info, control)
     initial.conditions <-
-      make.initial.conditions.t2(cache, initial.conditions.base)
+      make.initial.conditions.t(cache, initial.conditions.base)
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache, initial.conditions,
                           branches, preset)
   }
 }
 
-update.cache.t2 <- function(cache, functions, spline.data, with.q=FALSE) {
+update.cache.t <- function(cache, functions, spline.data, with.q=FALSE) {
   info <- cache$info
   n.args <- length(info$argnames)
 
-  ## This could be check.functions.t2():
+  ## This could be check.functions.t():
   if ( !is.character(functions) )
     stop("'functions' must be characters [will relax soon]")
   if ( length(functions) == 1L )
@@ -38,15 +38,15 @@ update.cache.t2 <- function(cache, functions, spline.data, with.q=FALSE) {
 
   info$time.varying <- TRUE
   info$argnames <- cache$time.machine$argnames
-  info$name.ode <- sprintf("%s_t2", cache$info$name)
+  info$name.ode <- sprintf("%s_t", cache$info$name)
   info$name.pretty <- sprintf("%s (time-varying[v2])", info$name.pretty)
-  info$name <- sprintf("%s.t2", cache$info$name)
+  info$name <- sprintf("%s.t", cache$info$name)
 
   cache$info <- info
   cache
 }
 
-make.initial.conditions.t2 <- function(cache, initial.conditions) {
+make.initial.conditions.t <- function(cache, initial.conditions) {
   pars.t <- cache$time.machine$get
   function(init, pars, t, idx)
     initial.conditions(init, pars.t(t), t, idx)
@@ -57,14 +57,14 @@ make.initial.conditions.t2 <- function(cache, initial.conditions) {
 ## models.  However, because this is used by different functions with
 ## different argument lists, that is hard to do.  But then, that check
 ## is duplicated in too many functions.  For now, I'm skipping this.
-make.rootfunc.t2 <- function(cache, rootfunc) {
+make.rootfunc.t <- function(cache, rootfunc) {
   pars.t <- cache$time.machine$get
   t.root <- cache$depth[cache$root]
   function(ans, pars, ...)             # pars here is ignored...
     rootfunc(ans, pars.t(t.root), ...) # ...because tm version used.
 }
 
-make.prep.all.branches.t2 <- function(cache, backend) {
+make.prep.all.branches.t <- function(cache, backend) {
   time.machine <- cache$time.machine
   tm.ptr <- time.machine$ptr
   setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)

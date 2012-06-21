@@ -1,6 +1,7 @@
 \name{utilities}
 \alias{get.descendants}
 \alias{run.cached}
+\alias{expand.parameters}
 \title{Utility Functions}
 \description{
   These are utility functions that are used internally by diversitree,
@@ -15,6 +16,7 @@
 \usage{
 get.descendants(node, tree, tips.only=FALSE, edge.index=FALSE)
 run.cached(filename, expr, regenerate=FALSE)
+expand.parameters(p, lik.new, repl=0, target=argnames(lik.new))
 }
 
 \arguments{
@@ -35,6 +37,8 @@ run.cached(filename, expr, regenerate=FALSE)
 
   \item{regenerate}{Logical: force re-evaluation of expr and
     regeneration of filename?}
+
+  \item{p, lik.new, repl, target}{Undocumented currently}
 }
 
 \author{Richard G. FitzJohn}

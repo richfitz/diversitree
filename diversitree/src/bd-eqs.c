@@ -125,42 +125,42 @@ int derivs_bd_t_old_cvode(realtype t, N_Vector y, N_Vector ydot,
 }
 
 /* A second version of time-varying functions, but entirely C based */
-static dt_time_machine* tm_bd_t2;
+static dt_time_machine* tm_bd_t;
 
 /* Notice that this function does not use the parameters at all */
-void do_derivs_bd_t2(double t, double *y, double *ydot) {
-  run_time_machine(tm_bd_t2, t); /* <- ...compute parameters at t */
-  do_derivs_bd(tm_bd_t2->p_out, y, ydot);
+void do_derivs_bd_t(double t, double *y, double *ydot) {
+  run_time_machine(tm_bd_t, t); /* <- ...compute parameters at t */
+  do_derivs_bd(tm_bd_t->p_out, y, ydot);
 }
 
-/* This is a no-op, tm_bd_t2 is set through an explicit set. */
-void initmod_bd_t2(void (* odeparms)(int *, double *)) {
+/* This is a no-op, tm_bd_t is set through an explicit set. */
+void initmod_bd_t(void (* odeparms)(int *, double *)) {
 }
 
-void derivs_bd_t2(int *neq, double *t, double *y, double *ydot, 
+void derivs_bd_t(int *neq, double *t, double *y, double *ydot, 
 		 double *yout, int *ip) {
-  do_derivs_bd_t2(*t, y, ydot);
+  do_derivs_bd_t(*t, y, ydot);
 }
 
 /* CVODES */
-int derivs_bd_t2_cvode(realtype t, N_Vector y, N_Vector ydot,
-		       void *user_data) {
-  do_derivs_bd_t2(t,
-		  NV_DATA_S(y),
-		  NV_DATA_S(ydot));
+int derivs_bd_t_cvode(realtype t, N_Vector y, N_Vector ydot,
+		      void *user_data) {
+  do_derivs_bd_t(t,
+		 NV_DATA_S(y),
+		 NV_DATA_S(ydot));
   return 0;
 }
 
-void initial_conditions_bd_t2(int neq, double *vars_l, double *vars_r,
-			      double *pars, double t, 
-			      double *vars_out) {
-  run_time_machine(tm_bd_t2, t);
+void initial_conditions_bd_t(int neq, double *vars_l, double *vars_r,
+			     double *pars, double t, 
+			     double *vars_out) {
+  run_time_machine(tm_bd_t, t);
   vars_out[0] = vars_l[0];
-  vars_out[1] = vars_l[1] * vars_r[1] * tm_bd_t2->p_out[0];
+  vars_out[1] = vars_l[1] * vars_r[1] * tm_bd_t->p_out[0];
 }
 
-SEXP r_set_tm_bd_t2(SEXP extPtr) {
-  tm_bd_t2 = (dt_time_machine*)R_ExternalPtrAddr(extPtr);
+SEXP r_set_tm_bd_t(SEXP extPtr) {
+  tm_bd_t = (dt_time_machine*)R_ExternalPtrAddr(extPtr);
   return R_NilValue;
 }
 

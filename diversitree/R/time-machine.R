@@ -2,7 +2,7 @@
 ##   * accept functions, and roll back to compiled versions where
 ##     available.
 ##   * think about split functions (global variable screws with this,
-##     but shifting to reassigning the pointer at initmod_*_t2 would
+##     but shifting to reassigning the pointer at initmod_*_t would
 ##     get around this.
 
 ## I'm a little unhappy as to the amount of tedious book-keeping

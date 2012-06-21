@@ -4,7 +4,7 @@
 \alias{exponential.t}
 \alias{sigmoid.t}
 \alias{stepf.t}
-\alias{make.pars.t}
+\alias{make.pars.t.old}
 
 \title{Support Functions for Time-varying Models}
 
@@ -17,8 +17,8 @@ exponential.t(t, y0, y1, r)
 sigmoid.t(t, y0, y1, tmid, r)
 stepf.t(t, y0, y1, tc)
 
-make.pars.t(functions, cache=NULL, check.negative.const=TRUE,
-            check.negative.var=TRUE)
+make.pars.t.old(functions, cache=NULL, check.negative.const=TRUE,
+                check.negative.var=TRUE)
 }
 
 \arguments{

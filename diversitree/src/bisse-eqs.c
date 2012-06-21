@@ -189,42 +189,42 @@ int derivs_bisse_aux_cvode(realtype t, N_Vector y, N_Vector ydot,
 }
 
 /* A second version of time-varying functions, but entirely C based */
-static dt_time_machine* tm_bisse_t2;
+static dt_time_machine* tm_bisse_t;
 
 /* Notice that this function does not use the parameters at all */
-void do_derivs_bisse_t2(double t, double *y, double *ydot) {
-  run_time_machine(tm_bisse_t2, t); /* <- ...compute parameters at t */
-  do_derivs_bisse(tm_bisse_t2->p_out, y, ydot);
+void do_derivs_bisse_t(double t, double *y, double *ydot) {
+  run_time_machine(tm_bisse_t, t); /* <- ...compute parameters at t */
+  do_derivs_bisse(tm_bisse_t->p_out, y, ydot);
 }
 
-/* This is a no-op, tm_bisse_t2 is set through an explicit set. */
-void initmod_bisse_t2(void (* odeparms)(int *, double *)) {
+/* This is a no-op, tm_bisse_t is set through an explicit set. */
+void initmod_bisse_t(void (* odeparms)(int *, double *)) {
 }
 
-void derivs_bisse_t2(int *neq, double *t, double *y, double *ydot, 
-		     double *yout, int *ip) {
-  do_derivs_bisse_t2(*t, y, ydot);
+void derivs_bisse_t(int *neq, double *t, double *y, double *ydot, 
+		    double *yout, int *ip) {
+  do_derivs_bisse_t(*t, y, ydot);
 }
 
 /* CVODES */
-int derivs_bisse_t2_cvode(realtype t, N_Vector y, N_Vector ydot,
-			  void *user_data) {
-  do_derivs_bisse_t2(t,
-		     NV_DATA_S(y),
-		     NV_DATA_S(ydot));
+int derivs_bisse_t_cvode(realtype t, N_Vector y, N_Vector ydot,
+			 void *user_data) {
+  do_derivs_bisse_t(t,
+		    NV_DATA_S(y),
+		    NV_DATA_S(ydot));
   return 0;
 }
 
-void initial_conditions_bisse_t2(int neq, double *vars_l, double *vars_r,
-				 double *pars, double t, 
-				 double *vars_out) {
-  run_time_machine(tm_bisse_t2, t);
+void initial_conditions_bisse_t(int neq, double *vars_l, double *vars_r,
+				double *pars, double t, 
+				double *vars_out) {
+  run_time_machine(tm_bisse_t, t);
   initial_conditions_bisse(neq, vars_l, vars_r, 
-			   tm_bisse_t2->p_out, t, vars_out);
+			   tm_bisse_t->p_out, t, vars_out);
 }
 
-SEXP r_set_tm_bisse_t2(SEXP extPtr) {
-  tm_bisse_t2 = (dt_time_machine*)R_ExternalPtrAddr(extPtr);
+SEXP r_set_tm_bisse_t(SEXP extPtr) {
+  tm_bisse_t = (dt_time_machine*)R_ExternalPtrAddr(extPtr);
   return R_NilValue;
 }
 

@@ -39,7 +39,6 @@ typedef struct {
 /* These are the useful interface functions for other C bits */
 void init_time_machine(dt_time_machine *obj, double *pars);
 void run_time_machine(dt_time_machine *obj, double t);
-SEXP r_set_tm_bd_t2(SEXP extPtr);
 
 /* These are forward references */
 void normalise_q(dt_time_machine *obj, int is_const);

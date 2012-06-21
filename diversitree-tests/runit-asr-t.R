@@ -29,22 +29,22 @@ test.asr.t.bisse <- function() {
   st.m <- asr.marginal(lik.m, p.b)
   checkEquals(st.b, st.m)
 
-  lik.b.t <- make.bisse.t2(phy, phy$tip.state,
-                           rep(c("linear.t", "constant.t"), c(2, 4)))
-  lik.b.t2 <- make.bisse.t2(phy, phy$tip.state,
-                            rep(c("linear.t", "constant.t"), c(2, 4)),
-                            control=list(backend="cvodes"))
-  lik.b.t3 <- make.bisse.t2(phy, phy$tip.state,
-                            rep(c("linear.t", "constant.t"), c(2, 4)),
-                            control=list(backend="CVODES"))
-  lik.m.t <- make.musse.t2(phy, phy$tip.state+1, 2,
-                           rep(c("linear.t", "constant.t"), c(2, 4)))
-  lik.m.t2 <- make.musse.t2(phy, phy$tip.state+1, 2,
-                            rep(c("linear.t", "constant.t"), c(2, 4)),
-                            control=list(backend="cvodes"))
-  lik.m.t3 <- make.musse.t2(phy, phy$tip.state+1, 2,
-                            rep(c("linear.t", "constant.t"), c(2, 4)),
-                            control=list(backend="CVODES"))
+  lik.b.t <- make.bisse.t(phy, phy$tip.state,
+                          rep(c("linear.t", "constant.t"), c(2, 4)))
+  lik.b.t2 <- make.bisse.t(phy, phy$tip.state,
+                           rep(c("linear.t", "constant.t"), c(2, 4)),
+                           control=list(backend="cvodes"))
+  lik.b.t3 <- make.bisse.t(phy, phy$tip.state,
+                           rep(c("linear.t", "constant.t"), c(2, 4)),
+                           control=list(backend="CVODES"))
+  lik.m.t <- make.musse.t(phy, phy$tip.state+1, 2,
+                          rep(c("linear.t", "constant.t"), c(2, 4)))
+  lik.m.t2 <- make.musse.t(phy, phy$tip.state+1, 2,
+                           rep(c("linear.t", "constant.t"), c(2, 4)),
+                           control=list(backend="cvodes"))
+  lik.m.t3 <- make.musse.t(phy, phy$tip.state+1, 2,
+                           rep(c("linear.t", "constant.t"), c(2, 4)),
+                           control=list(backend="CVODES"))
 
   ## Time-independent parameters for time models
   p.b.t <- c(rbind(p.b[1:2], 0), p.b[-(1:2)])
@@ -119,14 +119,14 @@ test.asr.t.musse <- function() {
   lik.m <- make.musse(phy, states, 3)
   lik.t0 <- make.musse.t.old(phy, states, 3,
                              rep(c(linear.t, constant.t), c(3, 9)))
-  lik.t1 <- make.musse.t2(phy, states, 3,
-                          rep(c("linear.t", "constant.t"), c(3, 9)))
-  lik.t2 <- make.musse.t2(phy, states, 3,
-                          rep(c("linear.t", "constant.t"), c(3, 9)),
-                          control=list(backend="cvodes"))
-  lik.t3 <- make.musse.t2(phy, states, 3,
-                          rep(c("linear.t", "constant.t"), c(3, 9)),
-                          control=list(backend="CVODES"))
+  lik.t1 <- make.musse.t(phy, states, 3,
+                         rep(c("linear.t", "constant.t"), c(3, 9)))
+  lik.t2 <- make.musse.t(phy, states, 3,
+                         rep(c("linear.t", "constant.t"), c(3, 9)),
+                         control=list(backend="cvodes"))
+  lik.t3 <- make.musse.t(phy, states, 3,
+                         rep(c("linear.t", "constant.t"), c(3, 9)),
+                         control=list(backend="CVODES"))
 
   p <- starting.point.musse(phy, 3)
   p.t <- c(rbind(p[1:3], 0), p[-(1:3)])
