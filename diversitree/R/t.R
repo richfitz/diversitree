@@ -82,7 +82,7 @@ make.prep.all.branches.t <- function(cache, backend) {
 }
 
 ## Making the output useful.
-predict.dtlik.t <- function(object, p, t, nt=101, v=NULL,
+predict.dtlik.t <- function(object, p, t, nt=101, v=NULL, thin=10,
                             alpha=1/20, everything=FALSE, ...) {
   tm <- get.cache(object)$time.machine
   if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
@@ -94,6 +94,9 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL,
   if ( is.null(v) )
     v <- tm$funnames
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
+  ## Thin the chain to speed things up?
+  if ( is.matrix && thin > 1 )
+    p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
   if ( inherits(object, "constrained") ) {
     if ( is.matrix && ncol(p) == length(argnames(object)) )
       p <- t(apply(p, 1, object, pars.only=TRUE))
@@ -125,8 +128,8 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL,
 
 plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
                          lty=1, lwd=1, v=NULL, col=NULL,
-                         nt=101, legend.pos=NULL, ...) {
-  xy <- predict(x, p, v=v, nt=nt)
+                         nt=101, legend.pos=NULL, thin=10, ...) {
+  xy <- predict(x, p, v=v, nt=nt, thin=thin)
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
   xlim <- rev(range(xy$t))  
   if ( is.matrix ) {
