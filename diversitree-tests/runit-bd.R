@@ -65,7 +65,7 @@ test.bd.t <- function() {
   ## time-dependent functions are constant.t().
   lik.nee <- make.bd(phy)
   lik.ode <- make.bd(phy, control=list(method="ode"))
-  lik.t <- make.bd.t(phy, list(constant.t, constant.t))
+  lik.t <- make.bd.t.old(phy, list(constant.t, constant.t))
 
   checkEquals(lik.nee(pars), -22.50266563415211)
   
@@ -78,7 +78,7 @@ test.bd.t <- function() {
 
   ## Next, make a real case, where speciation is a linear function of
   ## time.
-  lik.t2 <- make.bd.t(phy, list(linear.t, constant.t))
+  lik.t2 <- make.bd.t.old(phy, list(linear.t, constant.t))
 
   ## Confirm that this agrees with the previous calculations when the
   ## slope is zero

@@ -1,5 +1,7 @@
 \name{utilities}
 \alias{get.descendants}
+\alias{run.cached}
+\alias{expand.parameters}
 \title{Utility Functions}
 \description{
   These are utility functions that are used internally by diversitree,
@@ -13,6 +15,8 @@
 
 \usage{
 get.descendants(node, tree, tips.only=FALSE, edge.index=FALSE)
+run.cached(filename, expr, regenerate=FALSE)
+expand.parameters(p, lik.new, repl=0, target=argnames(lik.new))
 }
 
 \arguments{
@@ -26,10 +30,17 @@ get.descendants(node, tree, tips.only=FALSE, edge.index=FALSE)
     species?}
 
   \item{edge.index}{Logical: return the row indices in the edge matrix?}
+
+  \item{filename}{Name of the file to store cached results}
+
+  \item{expr}{Expression to evaluate}
+
+  \item{regenerate}{Logical: force re-evaluation of expr and
+    regeneration of filename?}
+
+  \item{p, lik.new, repl, target}{Undocumented currently}
 }
 
 \author{Richard G. FitzJohn}
 
 \keyword{utilities}
-
-

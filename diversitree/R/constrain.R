@@ -246,3 +246,20 @@ constrain.i2 <- function(f, p, i.free) {
   ## class(ret) <- c("constrained.i", class(ret))
   ret
 }
+
+## This is a nice idea, but some AI around base parameters would be
+## nice.  In particular if there is some pattern '(X).(Y)' where X is
+## unique within p?
+expand.parameters <- function(p, lik.new, repl=0,
+                              target=argnames(lik.new)) {
+  if ( !all(names(p) %in% target) )
+    stop("Not all parameters in 'p' are present in lik.new()")
+  p.new <- p[target]
+  names(p.new) <- target
+  i <- setdiff(target, names(p.new))
+  if ( length(repl) > 1 )
+    if ( length(i) != length(repl) )
+      stop("Wrong number of replacement parameters")
+  p.new[setdiff(target, names(p))] <- repl
+  p.new
+}

@@ -1,3 +1,10 @@
+## TODO:
+##   * accept functions, and roll back to compiled versions where
+##     available.
+##   * think about split functions (global variable screws with this,
+##     but shifting to reassigning the pointer at initmod_*_t would
+##     get around this.
+
 ## I'm a little unhappy as to the amount of tedious book-keeping
 ## here.  The basic idea is very simple!  However, this is glue to
 ## some finicky C code, so perhaps it is unavoidable.
@@ -51,8 +58,10 @@ make.time.machine <- function(functions, t.range, nonnegative=TRUE,
               nonnegative=nonnegative,
               t.range=t.range)
 
-  if ( any(functions == "spline.t") )
+  if ( any(functions %in% c("spline.t", "spline.linear.t")) )
     ret$spline.data <- check.spline.data(ret, spline.data)
+  else if ( !is.null(spline.data) )
+    warning("Ignoring spline.data -- no spline function specified")
 
   ret <- check.q.info(ret, k)
 
@@ -72,11 +81,13 @@ make.time.machine <- function(functions, t.range, nonnegative=TRUE,
   ret$get <- function(t)
     .Call("r_run_time_machine", ptr, t, PACKAGE="diversitree")
 
+  q.info <- ret$q.info
   ret$getv <- function(t, pars=NULL) {
     if ( !is.null(pars) )
       ret$set(pars)
-    ## TODO: Tweaking for q.
     ret <- t(sapply(t, ret$get))
+    if ( !is.null(q.info) )
+      ret <- ret[,-q.info$drop,drop=FALSE]
     colnames(ret) <- names(functions)
     ret
   }
@@ -95,6 +106,9 @@ check.q.info <- function(obj, k) {
   } else {
     k <- check.integer(k)
 
+    ## Increase the number of output parameters by k:
+    obj$np.out <- obj$np.out + k
+
     idx.qmat <- cbind(rep(1:k, each=k - 1),
                       unlist(lapply(1:k, function(i) (1:k)[-i])))
     obj$target <- c(seq_len(2*k),
@@ -105,10 +119,8 @@ check.q.info <- function(obj, k) {
     i.q <- (length(functions) - k*(k-1) + 1):length(functions)
     const.q <- apply(matrix(functions[i.q], k-1) == "constant.t", 2, all)
 
-    obj$q.info <- list(k=k, const.q=const.q)
-
-    ## Increase the number of output parameters by k:
-    obj$np.out <- obj$np.out + k
+    drop <- as.integer(seq(obj$np.out-k^2 + 1, obj$np.out, by=k+1))
+    obj$q.info <- list(k=k, const.q=const.q, drop=drop)
   }
   obj
 }
@@ -169,7 +181,8 @@ time.machine.types <- function() {
                  linear.t=c("c", "m"),
                  stepf.t=c("y0", "y1", "tc"),
                  sigmoid.t=c("y0", "y1", "tmid", "r"),
-                 spline.t=c("y0", "y1"))
+                 spline.t=c("y0", "y1"),
+                 spline.linear.t=c("y0", "y1", "m"))
   info.t[.Call("r_get_time_machine_types", PACKAGE="diversitree")]
 }
 

@@ -74,7 +74,7 @@ do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
     anc.nd <- c(nd, anc[[nd]])
     anc.nd <- anc.nd[-length(anc.nd)]
     p <- rep(NA, length(states.idx))
-    
+
     for ( st in seq_along(states.idx) ) {
       lq <- res$lq
       branch.init <- res$init

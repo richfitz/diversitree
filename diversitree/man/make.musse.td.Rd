@@ -1,5 +1,6 @@
 \name{make.musse.td}
 \alias{make.musse.t}
+\alias{make.musse.t.old}
 \alias{make.musse.td}
 
 \title{Multiple State Speciation and Extinction Model: Time Dependent
@@ -12,8 +13,12 @@
 \usage{
 make.musse.td(tree, states, k, n.epoch, sampling.f=NULL,
               strict=TRUE, control=list())
+
 make.musse.t(tree, states, k, functions, sampling.f=NULL,
-              strict=TRUE, control=list())
+             strict=TRUE, control=list(), spline.data=NULL)
+
+make.musse.t.old(tree, states, k, functions, sampling.f=NULL,
+                 strict=TRUE, control=list())
 }
 
 \arguments{
@@ -50,6 +55,9 @@ make.musse.t(tree, states, k, functions, sampling.f=NULL,
 
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
+
+  \item{spline.data}{List of data for spline-based time functions.  See
+    details}.
 }
 
 \details{

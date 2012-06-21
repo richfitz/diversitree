@@ -312,7 +312,7 @@ root.p.calc <- function(vals, pars, root, root.p=NULL,
       stop("Invalid length for root.p")
     p <- root.p
   } else if ( root == ROOT.ALL ) {
-    p <- NULL
+    p <- rep(1, k)
   } else {
     stop("Invalid root mode")
   }

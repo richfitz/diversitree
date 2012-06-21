@@ -89,7 +89,7 @@ void initial_conditions_musse(int neq, double *vars_l, double *vars_r,
 static SEXP tfunc_musse;
 static SEXP trho_musse;
 
-void set_tfunc_musse_t(SEXP r_tfunc, SEXP r_trho) {
+void set_tfunc_musse_t_old(SEXP r_tfunc, SEXP r_trho) {
   if ( !isFunction(r_tfunc) )
     error("tfunc is not a function");
   if ( !isEnvironment(r_trho) )
@@ -99,7 +99,7 @@ void set_tfunc_musse_t(SEXP r_tfunc, SEXP r_trho) {
   trho_musse  = r_trho;
 }
 
-void do_derivs_musse_t(int k, double t, double *y, double *ydot) {
+void do_derivs_musse_t_old(int k, double t, double *y, double *ydot) {
   SEXP R_fcall, r_pars;
   double *pars;
   int i;
@@ -124,27 +124,27 @@ void do_derivs_musse_t(int k, double t, double *y, double *ydot) {
 }
 
 /* deSolve / LSODA */
-void initmod_musse_t(void (* odeparms)(int *, double *)) {
+void initmod_musse_t_old(void (* odeparms)(int *, double *)) {
   DL_FUNC get_deSolve_gparms = 
     R_GetCCallable("deSolve", "get_deSolve_gparms");
   SEXP obj = get_deSolve_gparms();
-  set_tfunc_musse_t(VECTOR_ELT(obj, 0), VECTOR_ELT(obj, 1));
+  set_tfunc_musse_t_old(VECTOR_ELT(obj, 0), VECTOR_ELT(obj, 1));
 }
 
-void derivs_musse_t(int *neq, double *t, double *y, double *ydot, 
+void derivs_musse_t_old(int *neq, double *t, double *y, double *ydot, 
 		 double *yout, int *ip) {
-  do_derivs_musse_t(*neq / 2, *t, y, ydot);
+  do_derivs_musse_t_old(*neq / 2, *t, y, ydot);
 }
 
 /* CVODES */
-SEXP r_set_tfunc_musse_t(SEXP r_tfunc, SEXP r_trho) {
-  set_tfunc_musse_t(r_tfunc, r_trho);
+SEXP r_set_tfunc_musse_t_old(SEXP r_tfunc, SEXP r_trho) {
+  set_tfunc_musse_t_old(r_tfunc, r_trho);
   return R_NilValue;
 }
 
-int derivs_musse_t_cvode(realtype t, N_Vector y, N_Vector ydot,
+int derivs_musse_t_old_cvode(realtype t, N_Vector y, N_Vector ydot,
 			 void *user_data) {
-  do_derivs_musse_t(((UserData*) user_data)->neq/2,
+  do_derivs_musse_t_old(((UserData*) user_data)->neq/2,
 		    t,
 		    NV_DATA_S(y),
 		    NV_DATA_S(ydot));
@@ -193,44 +193,42 @@ int derivs_musse_aux_cvode(realtype t, N_Vector y, N_Vector ydot,
 /* A second version of time-varying functions, but entirely C based */
 /* This would be more general if do_derivs_xxx was generic, then it
    might be possible to generate all the following functions */
-static dt_time_machine* tm_musse_t2;
+static dt_time_machine* tm_musse_t;
 
 /* Notice that this function does not use the parameters at all */
-void do_derivs_musse_t2(int k, double t, double *y, double *ydot) {
-  run_time_machine(tm_musse_t2, t); /* <- ...compute parameters at t */
-  do_derivs_musse(k, tm_musse_t2->p_out, y, ydot);
+void do_derivs_musse_t(int k, double t, double *y, double *ydot) {
+  run_time_machine(tm_musse_t, t); /* <- ...compute parameters at t */
+  do_derivs_musse(k, tm_musse_t->p_out, y, ydot);
 }
 
-void initmod_musse_t2(void (* odeparms)(int *, double *)) {
-  DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparms");
-  tm_musse_t2 = (dt_time_machine*)R_ExternalPtrAddr(get_deSolve_gparms());
+/* This is a no-op, tm_musse_t is set through an explicit set. */
+void initmod_musse_t(void (* odeparms)(int *, double *)) {
 }
 
-void derivs_musse_t2(int *neq, double *t, double *y, double *ydot, 
-		     double *yout, int *ip) {
-  do_derivs_musse_t2(*neq / 2, *t, y, ydot);
+void derivs_musse_t(int *neq, double *t, double *y, double *ydot, 
+		    double *yout, int *ip) {
+  do_derivs_musse_t(*neq / 2, *t, y, ydot);
 }
 
 /* CVODES */
-int derivs_musse_t2_cvode(realtype t, N_Vector y, N_Vector ydot,
-			  void *user_data) {
-  do_derivs_musse_t2(((UserData*) user_data)->neq/2,
-		     t,
-		     NV_DATA_S(y),
-		     NV_DATA_S(ydot));
+int derivs_musse_t_cvode(realtype t, N_Vector y, N_Vector ydot,
+			 void *user_data) {
+  do_derivs_musse_t(((UserData*) user_data)->neq/2,
+		    t,
+		    NV_DATA_S(y),
+		    NV_DATA_S(ydot));
   return 0;
 }
 
-void initial_conditions_musse_t2(int neq, double *vars_l, double *vars_r,
-				 double *pars, double t, 
-				 double *vars_out) {
-  run_time_machine(tm_musse_t2, t);
+void initial_conditions_musse_t(int neq, double *vars_l, double *vars_r,
+				double *pars, double t, 
+				double *vars_out) {
+  run_time_machine(tm_musse_t, t);
   initial_conditions_musse(neq, vars_l, vars_r, 
-			   tm_musse_t2->p_out, t, vars_out);
+			   tm_musse_t->p_out, t, vars_out);
 }
 
-SEXP r_set_tm_musse_t2(SEXP extPtr) {
-  tm_musse_t2 = (dt_time_machine*)R_ExternalPtrAddr(extPtr);
+SEXP r_set_tm_musse_t(SEXP extPtr) {
+  tm_musse_t = (dt_time_machine*)R_ExternalPtrAddr(extPtr);
   return R_NilValue;
 }

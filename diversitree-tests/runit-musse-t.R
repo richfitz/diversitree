@@ -10,10 +10,10 @@ test.musse.t <- function() {
   ## warning when creating the MuSSE function.
   lik.m <- make.musse(phy, phy$tip.state, 2)
 
-  lik.b <- make.bisse.t2(phy, phy$tip.state-1,
-                         rep(c("linear.t", "constant.t"), c(2, 4)))
-  lik.t <- make.musse.t2(phy, phy$tip.state, 2,
-                         rep(c("linear.t", "constant.t"), c(2, 4)))
+  lik.b <- make.bisse.t(phy, phy$tip.state-1,
+                        rep(c("linear.t", "constant.t"), c(2, 4)))
+  lik.t <- make.musse.t(phy, phy$tip.state, 2,
+                        rep(c("linear.t", "constant.t"), c(2, 4)))
 
   pars.t <- c(pars[1], 0, pars[2], 0, pars[-(1:2)])
 
@@ -45,13 +45,13 @@ test.musse.t <- function() {
   table(states)
 
   lik.m <- make.musse(phy, states, 3)
-  lik.t <- make.musse.t2(phy, states, 3,
-                         rep(c("linear.t", "constant.t"), c(3, 9)))
-  lik.T <- make.musse.t2(phy, states, 3,
-                         rep(c("linear.t", "constant.t"), c(3, 9)),
-                         control=list(backend="CVODES"))
-  lik.old <- make.musse.t(phy, states, 3,
-                          rep(c(linear.t, constant.t), c(3, 9)))
+  lik.t <- make.musse.t(phy, states, 3,
+                        rep(c("linear.t", "constant.t"), c(3, 9)))
+  lik.T <- make.musse.t(phy, states, 3,
+                        rep(c("linear.t", "constant.t"), c(3, 9)),
+                        control=list(backend="CVODES"))
+  lik.old <- make.musse.t.old(phy, states, 3,
+                              rep(c(linear.t, constant.t), c(3, 9)))
 
   p <- starting.point.musse(phy, 3)
   p.t <- c(rbind(p[1:3], 0), p[-(1:3)])
@@ -67,7 +67,7 @@ test.musse.t <- function() {
   checkEquals(lik.old(p.t2), -111.9320762)
 
   ## Next, all in with a variable model
-  lik.t2 <- make.musse.t2(phy, states, 3, "linear.t")
+  lik.t2 <- make.musse.t(phy, states, 3, "linear.t")
   p.t3 <- c(rbind(pars, 0))
   names(p.t3) <- argnames(lik.t2)
   checkEquals(lik.t2(p.t3), lik.m(pars))

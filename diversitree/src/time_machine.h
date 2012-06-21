@@ -39,14 +39,14 @@ typedef struct {
 /* These are the useful interface functions for other C bits */
 void init_time_machine(dt_time_machine *obj, double *pars);
 void run_time_machine(dt_time_machine *obj, double t);
-SEXP r_set_tm_bd_t2(SEXP extPtr);
 
 /* These are forward references */
 void normalise_q(dt_time_machine *obj, int is_const);
 
 /* 1. Here are possible types of functions, and their constants */
-#define T_CONSTANT 0
-#define T_LINEAR   1
-#define T_STEPF    2
-#define T_SIGMOID  3
-#define T_SPLINE   4
+#define T_CONSTANT      0
+#define T_LINEAR        1
+#define T_STEPF         2
+#define T_SIGMOID       3
+#define T_SPLINE        4
+#define T_SPLINE_LINEAR 5
