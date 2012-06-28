@@ -117,7 +117,7 @@ make.cache.bd <- function(tree, sampling.f, unresolved, times,
 ######################################################################
 ## Extra functions
 starting.point.bd <- function(tree, yule=FALSE) {
-  p.yule <- c(coef(find.mle(make.yule(tree), .1)), 0)
+  p.yule <- c(coef(suppressWarnings(find.mle(make.yule(tree), .1))), 0)
   names(p.yule) <- default.argnames.bd()
   if (yule)
     p.yule
