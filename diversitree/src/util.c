@@ -203,3 +203,10 @@ SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip) {
   return ret;
 }
 
+SEXP check_ptr_not_null(SEXP extPtr) {
+  if ( TYPEOF(extPtr) != EXTPTRSXP )
+    error("Recieved non-pointer");
+  if ( R_ExternalPtrAddr(extPtr) == NULL )
+    error("Recieved NULL pointer");
+  return ScalarLogical(1);
+}

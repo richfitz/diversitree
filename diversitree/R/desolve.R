@@ -74,6 +74,12 @@ make.ode.deSolve <- function(info, control) {
         stop("Need >= 2 times")
       storage.mode(vars) <- storage.mode(times) <- "numeric"
 
+      ## Strictly only need to do this at the likelihood function, but
+      ## that complicates things.  This is safer, anyway.  The cost is
+      ## on the order of 0.01s / 10000 evaluations, so even for large
+      ## trees this is trivial.
+      check.ptr(derivs)
+
       ret <- 
         .Call("call_lsoda", vars, times, derivs, pars,
               rtol, atol,
