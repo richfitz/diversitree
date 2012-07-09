@@ -5,21 +5,37 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
                           n.br=50, opacity=.5,
                           xlab="Parameter estimate",
                           ylab="Probability density",
-                          legend.pos=NULL, ...) {
+                          legend.pos=NULL,
+                          with.bar=TRUE,
+                          ...) {
   if ( missing(col.fill) )
-    col.fill <- add.alpha(col.line, 1-opacity)
-  if ( is.null(xlim) )
-    r <- range(unlist(y))
-  else
-    r <- xlim
-  br <- seq(r[1], r[2], length.out=n.br)
-  hh <- lapply(y, hist, br, plot=FALSE)
+    col.fill <- add.alpha(col.line, opacity)
+  if ( missing(xlim) )
+    xlim <- range(unlist(y))
+  x0 <- xlim[1]
+  dx <- diff(xlim) / (n.br - 1)
+
+  ## OK, so I need to do the histogram breaking better.  n.br is the
+  ## number of breaks that would fit into xlim.  There are guaranteed
+  ## to be breaks at seq(xlim[1], xlim[2], length.out=n.br).  However,
+  ## it should never span more than the range of the observed data.
+  f <- function(yi) {
+    n <- (range(yi) - xlim)/dx
+    n <- c(floor(n[1]), ceiling(n[2]))
+    ri <- xlim + n * dx
+    hist(yi, seq(ri[1], ri[2], by=dx), plot=FALSE)
+  }
+
+  hh <- lapply(y, f)
   ci <- lapply(y, hdr)
 
-  if ( is.null(xlim) ) xlim <- r
   if ( is.null(ymax) )
     ymax <- max(sapply(hh, function(x) max(x$density)))
-  ylim <- c(-0.075, 1.05) * ymax
+  ## Change this once bottom arrow is optional...
+  if ( with.bar )
+    ylim <- c(-0.075, 1.05) * ymax
+  else
+    ylim <- c(0, 1.05 * ymax) # increase a little?
   
   plot(NA, xlim=xlim, ylim=ylim, type="n", yaxs="i", xlab=xlab,
        ylab=ylab, ...)
@@ -28,10 +44,12 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
   for ( i in seq_along(y) )
     add.profile.outline(hh[[i]], col.line[i])
 
-  z <- seq(0, 1, length.out=length(y) + 2)[-1] * par("usr")[3]
-  for ( i in seq_along(y) )
-    arrows(ci[[i]][1], z[i], ci[[i]][2], z[i], code=3, angle=90,
-           length=0.02, col=col.line[i])
+  if ( with.bar ) {
+    z <- seq(0, 1, length.out=length(y) + 2)[-1] * par("usr")[3]
+    for ( i in seq_along(y) )
+      arrows(ci[[i]][1], z[i], ci[[i]][2], z[i], code=3, angle=90,
+             length=0.02, col=col.line[i])
+  }
 
   if ( !is.null(legend.pos) )
     legend(legend.pos, names(y), fill=col.fill, border=col.line, bty="n")
