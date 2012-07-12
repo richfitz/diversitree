@@ -62,10 +62,12 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     hist.pars <- matrix(NA, ncol=npar, nrow=nsteps)
     hist.prob <- rep(NA, nsteps)
   }
-  
+
   if ( is.null(names(x.init)) )
     try(colnames(hist.pars) <- names(x.init) <- argnames(lik),
         silent=TRUE)
+  else
+    colnames(hist.pars) <- names(x.init)
   
   if ( is.null(prior) )
     posterior <- protect(function(x) lik(x, ...),
