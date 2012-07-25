@@ -67,6 +67,41 @@ clades.from.polytomies <- function(tree) {
   make.clade.tree(tree2, clades.spp)
 }
 
+## Generate a sample using the algorithm in FitzJohn et al. 2009.
+clades.from.sample <- function(phy, p) {
+  n.taxa <- length(phy$tip.label)
+
+  desc <- lapply(seq_len(phy$Nnode) + n.taxa, get.descendants, phy, TRUE)
+  anc <- diversitree:::ancestors(phy)
+
+  f <- function(i) {
+    check <- rev(na.omit(anc[,i]))[-1] - n.taxa
+    for ( j in check ) {
+      n <- sum(keep[desc[[j]]])
+      if ( n == 1 )
+        return(desc[[j]][keep[desc[[j]]]])
+      else if ( n > 1 )
+        return(NA)
+    }
+  }
+  
+  keep <- runif(n.taxa) < p
+  repeat {
+    drop <- which(!keep)
+    tmp <- sapply(drop, f)
+    if ( any(is.na(tmp)) ) {
+      orphan <- drop[is.na(tmp)]
+      keep[orphan[runif(length(orphan)) < p]] <- TRUE
+    } else {
+      clades <- split(phy$tip.label[drop], phy$tip.label[tmp])
+      break
+    }
+  }
+
+  make.clade.tree(diversitree:::drop.tip.fixed(phy, drop), clades)
+}
+
+
 ## Renamed poorly because of a clash with util.R:ancestors
 ## TODO: I believe that this is actually descendents()
 ## It can be replaced by:
