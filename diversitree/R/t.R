@@ -87,7 +87,8 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL, thin=10,
   tm <- get.cache(object)$time.machine
   if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
     ## TODO: Improve the coef.mcmcsamples to allow full, here, then
-    ## use full.
+    ## use full.  Possibly add a 'lik' function in that can do the
+    ## resolution below?
     p <- coef(p)
   if ( missing(t) )
     t <- seq(tm$t.range[1], tm$t.range[2], length=nt)

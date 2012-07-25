@@ -12,7 +12,6 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
     col.fill <- add.alpha(col.line, opacity)
   if ( missing(xlim) )
     xlim <- range(unlist(y))
-  x0 <- xlim[1]
   dx <- diff(xlim) / (n.br - 1)
 
   ## OK, so I need to do the histogram breaking better.  n.br is the

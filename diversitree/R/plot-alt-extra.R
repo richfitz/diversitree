@@ -9,7 +9,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
                        class=NULL, type="f", w=1/50,
                        legend=length(cols) > 1, cex.lab=.5,
                        font.lab=3, cex.legend=.75, margin=1/4,
-                       check=TRUE, quiet=FALSE) {
+                       check=TRUE, quiet=FALSE, ...) {
   if ( type != "f" )
     stop("type != f not yet implemented")
   if ( !is.null(class) && length(class) != length(tree$tip.label) )
@@ -43,10 +43,10 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
   w <- w * t
   if ( is.null(class) ) {
     plt <- plot2.phylo(tree, type="f", show.tip.label=TRUE,
-                       label.offset=(n+2)*w, cex=cex.lab)
+                       label.offset=(n+2)*w, cex=cex.lab, ...)
   } else {
     plt <- plot2.phylo(tree, type="f", show.tip.label=FALSE,
-                       label.offset=t*margin)
+                       label.offset=t*margin, ...)
     group.label.tip(plt, class, "black", "black", lwd=1.5,
                     offset.bar=w*4, offset.lab=w*5,
                     cex=cex.lab, font=font.lab,
@@ -68,8 +68,9 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
     text(leg$rect$left, leg$text$y[1:n], sprintf("%s:", lab), adj=1,
          cex=cex.legend)
   }
+  invisible(plt)
 }
-environment(trait.plot) <- environment(make.bisse)
+
 
 collapse <- function(x) {
   if ( length(x) == 1 )
@@ -86,6 +87,9 @@ group.label.tip <- function(obj, lab, col.bar, col.lab, lwd=1,
                             offset.bar=0, offset.lab=0, cex=1,
                             font=1, check=FALSE, quiet=FALSE,
                             ...) {
+  op <- par(lend=1)
+  on.exit(par(op))
+  
   n.taxa <- obj$n.taxa
   n <- obj$n.spp
 
