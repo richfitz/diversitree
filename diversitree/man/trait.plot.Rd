@@ -11,7 +11,7 @@
 trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
            type="f", w=1/50, legend=length(cols) > 1, cex.lab=.5,
            font.lab=3, cex.legend=.75, margin=1/4,
-           check=TRUE, quiet=FALSE)
+           check=TRUE, quiet=FALSE, ...)
 }
 
 \arguments{
@@ -56,6 +56,9 @@ trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
 
   \item{quiet}{When TRUE (FALSE by default), this suppresses the warning
     caused by \code{check=TRUE}.}
+
+  \item{...}{Additional arguments passed through to phylogeny plotting
+    code (similar to \code{ape}'s \code{plot.phylo}).}
 }
 
 
