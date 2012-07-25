@@ -1,14 +1,19 @@
 \name{make.bisse.split}
 \alias{make.bisse.split}
+\alias{make.bisse.uneven}
 
 \title{Binary State Speciation and Extinction Model: Split Models}
 
 \description{Create a likelihood function for a BiSSE model where the
-  tree is partitioned into regions with different parameters.}
+  tree is partitioned into regions with different parameters.
+  Alternatively, \code{make.bisse.uneven} can be used where different
+  regions of the tree have different fractions of species known.}
 
 \usage{
 make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
                  sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())
+make.bisse.uneven(tree, states, nodes, split.t, unresolved=NULL,
+                  sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())
 }
 
 \arguments{
@@ -33,7 +38,13 @@ make.bisse.split(tree, states, nodes, split.t, unresolved=NULL,
     extant species in state 0 and 1 that are included in the phylogeny.
     A value of \code{c(0.5, 0.75)} means that half of species in state 0
     and three quarters of species in state 1 are included in the
-    phylogeny.  By default all species are assumed to be known.}
+    phylogeny.  By default all species are assumed to be known.
+    Alternatively, with split models this can be a list of length
+    \code{(length(nodes) + 1)}, each element of which is a vector of
+    length 2.  The first element is the sampling fraction for the
+    \dQuote{background} group, the second element corresponds to the
+    clade subtended by \code{nodes[1]}, and the \code{i}th element
+    corresponding to the clade subtended by \code{nodes[i+1]}.}
   
   \item{nt.extra}{The number of species modelled in unresolved clades
     (this is in addition to the largest observed clade).}

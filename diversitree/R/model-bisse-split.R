@@ -34,6 +34,31 @@ make.bisse.split <- function(tree, states, nodes, split.t=Inf,
   ll
 }
 
+make.bisse.uneven <- function(tree, states, nodes, split.t=Inf,
+                              unresolved=NULL, sampling.f=NULL,
+                              nt.extra=10, strict=TRUE,
+                              control=list()) {
+  cache <- make.cache.bisse.split(tree, states, nodes, split.t,
+                                  unresolved, sampling.f, nt.extra,
+                                  strict)
+  n.part <- cache$n.part
+  unresolved <- cache$unresolved
+
+  all.branches <- make.all.branches.split.dtlik(cache, control,
+                                                initial.conditions.bisse)
+  rootfunc <- make.rootfunc.split(cache, rootfunc.musse)
+
+  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
+                 root.p=NULL, intermediates=FALSE) {
+    pars <- rep(list(check.pars.bisse(pars)), n.part)
+    preset <- branches.unresolved.bisse.split(pars, unresolved)
+    ans <- all.branches(pars, intermediates, preset)
+    rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
+  }
+  class(ll) <- c("bisse.uneven", "bisse", "dtlik", "function")
+  ll
+}
+
 ## Make requires the usual functions:
 ## 2: make.cache (initial.tip, root)
 make.cache.bisse.split <- function(tree, states, nodes, split.t,
