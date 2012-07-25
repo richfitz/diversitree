@@ -7,7 +7,7 @@ Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE and
   Magnuson-Ford.
 Maintainer: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>
 Depends: R (>= 2.10), deSolve (>= 1.7), ape, subplex
-Suggests: numDeriv, tgp, multicore, minqa
+Suggests: numDeriv, tgp, multicore, minqa, lubridate
 SystemRequirements: fftw3 (>= 3.1.2)
 Description: Contains a number of comparative phylogenetic methods,
   mostly focussing on analysing diversification and character

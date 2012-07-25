@@ -10,13 +10,14 @@
 
 \usage{
 make.prior.exponential(r)
-make.prior.uniform(lower, upper)
+make.prior.uniform(lower, upper, log=TRUE)
 }
 
 \arguments{
   \item{r}{Scalar or vector of rate parameters}
   \item{lower}{Lower bound of the parameter}
   \item{upper}{Upper bound of the parameter}
+  \item{log}{Logical: should the prior be on a log basis?}
 }
 
 \details{The exponential prior probability distribution has probability

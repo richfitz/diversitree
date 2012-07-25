@@ -14,7 +14,8 @@ mcmc(lik, x.init, nsteps, ...)
 \method{mcmc}{default}(lik, x.init, nsteps, w, prior=NULL,
              sampler=sampler.slice, fail.value=-Inf, lower=-Inf,
              upper=Inf, print.every=1, control=list(),
-             save.every=0, save.file, ...)
+             save.file, save.every=0, save.every.dt=NULL,
+             previous=NULL, previous.tol=1e-4, ...)
 
 sampler.slice(lik, x.init, y.init, w, lower, upper, control)
 sampler.norm(lik, x.init, y.init, w, lower, upper, control)
@@ -63,13 +64,27 @@ sampler.norm(lik, x.init, y.init, w, lower, upper, control)
   \item{control}{List with additional control parameters for the
     sampler.  Not currently used.}
 
+  \item{save.file}{Name of csv or rds file to save temporary output in.
+    Contents will be rewritten at each save (rds is faster than csv, but
+    is R-specific).}
+  
   \item{save.every}{Number of steps to save progress into
     \code{save.file}.  By default this is 0, which prevents saving
     occuring.  Low nonzero values of this will slow things down, but
     may be useful during long runs.}
 
-  \item{save.file}{Name of csv file to save temporary output in.
-    Contents will be rewritten at each save.}
+  \item{save.every.dt}{Period of time to save after, as a
+    \code{lubridate} \code{Period} object (e.g., \code{minutes(10)}).}
+
+  \item{previous}{Output from a previous \code{mcmc} run, perhaps only
+    partly completed.  The sampler will continue from the end of this
+    chain until the total chain has \code{nsteps} points.}
+
+  \item{previous.tol}{Before continuing, the sampler re-evaluates the
+    last point and compares the posterior probability against the
+    posterior probability in the \code{previous} samples.  If the
+    difference is greater than \code{previous.tol} then \code{mcmc} will
+    not continue.}
   
   \item{...}{Arguments passed to the function \code{lik}}
 
@@ -146,10 +161,10 @@ samples <- mcmc(lik, c(0, 0), 10000, 1, print.every=1000)
 ## The marginal distribution of V1 (the first axis of the
 ## distribution) should be a normal distribution with mean 0 and
 ## variance 1:
-curve(dnorm, xlim=range(samples$V1), ylim=c(0, .5), col="red")
-hist(samples$V1, 30, add=TRUE, freq=FALSE)
+curve(dnorm, xlim=range(samples$X1), ylim=c(0, .5), col="red")
+hist(samples$X1, 30, add=TRUE, freq=FALSE)
 
-plot(V2 ~ V1, samples, pch=19, cex=.2, col="#00000055", asp=1)
+plot(X2 ~ X1, samples, pch=19, cex=.2, col="#00000055", asp=1)
 
 ## The estimated variance here matches nicely with the true VCV:
 var(samples[2:3])
