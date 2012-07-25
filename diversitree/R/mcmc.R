@@ -36,6 +36,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     save.fun <- switch(save.type,
                        rds=saveRDS,
                        csv=function(x) write.csv(x, row.names=FALSE))
+    save.file.bak <- paste(save.file, ".bak", sep="")
   }
 
   n.previous <- if ( is.null(previous) ) 0 else nrow(previous)
@@ -115,6 +116,9 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
                     y.init))
       if ( we.should.save() ) {
         j <- seq_len(i)
+        ## Back up the old version to avoid IO errors if the system
+        ## fails while saving.
+        ok <- file.rename(save.file, save.file.bak)
         ok <- try(save.fun(clean.hist(hist.pars[j,], hist.prob[j]),
                            save.file))
         if ( inherits(ok, "try-error") )
@@ -137,6 +141,10 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
   }
 
   samples <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
+
+  if ( save.every > 0 || !is.null(save.every.dt) )
+    if ( file.exists(save.file.bak) )
+      file.remove(save.file.bak)
 
   samples
 }
