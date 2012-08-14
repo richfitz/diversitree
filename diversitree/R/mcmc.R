@@ -206,7 +206,10 @@ make.prior.uniform <- function(lower, upper, log=TRUE) {
   function(x) {
     ret <- rep(p.in, length.out=length(x))
     ret[x < lower | x > upper] <- p.out
-    ret
+    if ( log )
+      sum(ret)
+    else
+      prod(ret)
   }
 }
 
