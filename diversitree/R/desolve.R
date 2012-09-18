@@ -29,7 +29,7 @@ make.ode.deSolve <- function(info, control) {
     else
       vers <- package_version(packageDescription("deSolve",
                                                  fields="Version"))
-    max.deSolve <- package_version("1.10-3")
+    max.deSolve <- package_version("1.10-4")
     if ( !unsafe && vers > max.deSolve ) {
       str <- paste("diversitree is not known to work with deSolve > ",
                    max.deSolve, "\n\tfalling back on slow version")
