@@ -8,6 +8,8 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
                           legend.pos=NULL,
                           with.bar=TRUE,
                           ...) {
+  if ( !is.data.frame(y) && is.matrix(y) )
+    y <- as.data.frame(y)
   if ( missing(col.fill) )
     col.fill <- add.alpha(col.line, opacity)
   if ( missing(xlim) )
