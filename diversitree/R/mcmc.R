@@ -118,7 +118,8 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
         j <- seq_len(i)
         ## Back up the old version to avoid IO errors if the system
         ## fails while saving.
-        ok <- file.rename(save.file, save.file.bak)
+        if ( file.exists(save.file) )
+          ok <- file.rename(save.file, save.file.bak)
         ok <- try(save.fun(clean.hist(hist.pars[j,], hist.prob[j]),
                            save.file))
         if ( inherits(ok, "try-error") )
@@ -143,7 +144,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
   samples <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
 
   if ( save.every > 0 || !is.null(save.every.dt) )
-    if ( file.exists(save.file.bak) )
+    if ( nrow(samples) == nsteps && file.exists(save.file.bak) )
       file.remove(save.file.bak)
 
   samples
