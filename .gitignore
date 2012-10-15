@@ -88,3 +88,6 @@ diversitree.Rcheck
 
 ## Development stuff
 bounded
+
+pub/bm/bm-timing.pdf
+pub/bm/timings*Rdata
