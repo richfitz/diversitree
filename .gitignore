@@ -96,3 +96,8 @@ pub/simulations/musse-multitrait-ci.pdf
 pub/simulations/musse-multitrait-power.pdf
 pub/simulations/output
 pub/simulations/trees
+
+pub/example/cache
+pub/example/data
+pub/example/primates.tex
+pub/example/primates-incl.tex

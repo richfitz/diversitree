@@ -1,0 +1,3 @@
+library(cacheSweave)
+setCacheDir('cache')
+Sweave(file='primates.Rnw', driver=cacheSweaveDriver)
