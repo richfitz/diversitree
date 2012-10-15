@@ -1,0 +1,1091 @@
+% Import manual changes:
+% 
+% * in this note -> in this chapter
+% * table and figure -> prettyref
+% * delete \phantom{NEWL}
+% * Delete sentence "The appendix describes" and copy derivation up
+% * Add space after depth= to force newline ("to allow this while")
+% * Delete numbering in abstract.
+
+% In thesis, type:
+%   git diff 031d918 -- ch4-diversitree.tex ch4-diversitree-appendix.tex
+
+% Update all XXX's/supporting information.
+
+% to generate changesets.  These can then be manually imported.
+% Some of these changes need to be pushed against the primates Rnw
+% file.
+
+\documentclass[12pt]{article}
+\usepackage{ms}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{natbib}
+\usepackage{tabularx}
+\usepackage{array}
+
+\pdfminorversion=3
+
+\newcommand{\ud}{\mathrm{d}}
+\newcommand{\DD}{\vec{D}_N(t)}
+\newcommand{\EE}{\vec{E}(t)}
+\newcommand{\QQ}{\ensuremath{\mathbf{Q}}}
+
+% Copied from Sweave.sty
+\usepackage{fancyvrb}
+\usepackage[T1]{fontenc}
+\usepackage{ae}
+
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{fontshape=sl,xleftmargin=1em,%
+frame=none}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=1em,%
+frame=none,baselinestretch=1}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{fontshape=sl}
+\newenvironment{Schunk}{}{}
+
+%\renewcommand{\vec}{\mathbf} # doesn't work with lambda
+
+\pagestyle{empty}
+
+\setcounter{secnumdepth}{0}
+
+\raggedright
+
+\newcommand\code\texttt
+
+\usepackage[garamond]{mathdesign}
+
+\title{Diversitree: Comparative Phylogenetic Analyses of
+  Diversification in R}
+\author{Richard G. FitzJohn}
+\date{}
+\affiliation{\noindent
+\textit{Department of Zoology \& Biodiversity Research Centre,\\University
+  of British Columbia, Vancouver, BC, V6T 1Z4, Canada.}\\
+Email: \email{fitzjohn@zoology.ubc.ca}\\
+Word count: 4663 (including 300 in appendix)}
+\runninghead{Diversitree}
+\keywords{birth-death process;
+comparative methods,
+extinction;
+macroevolution;
+speciation}
+
+\begin{document}
+
+\mstitlepage
+
+%%% THESIS BEGIN
+
+\begin{abstract}
+  \begin{enumerate}
+  \item The R package ``diversitree'' contains a number of classical
+    and contemporary comparative phylogenetic methods.  Key included
+    methods are BiSSE (Binary State Speciation and Extinction), MuSSE
+    (a multi-state extension of BiSSE), and QuaSSE (Quantitative State
+    Speciation and Extinction).
+    % TODO: Don't like.
+    Diversitree also includes includes methods for analysing trait
+    evolution and estimating speciation/extinction rates
+    independently.
+  \item In this note, I describe the features and demonstrate use of
+    the package, using a new method, MuSSE (Multi State Speciation and
+    Extinction), to examine the joint effects of two traits on
+    speciation.
+  \item Using simulations, I found that MuSSE could reliably detect
+    that a binary trait that affected speciation rates when
+    simultaneously accounting for additional thats that had no effect
+    on speciation rates.
+    %% Put something more above about the primates?
+  \item Diversitree is open source and available on \textsc{cran}.  A
+    tutorial and worked examples can be downloaded from
+    \url{http://www.zoology.ubc.ca/prog/diversitree}.
+  \end{enumerate}
+\end{abstract}
+
+%%% EXCLUDE BEGIN
+\vfill
+\paragraph{Keywords:} \thekeywords
+
+\clearpage
+\parindent=1.5em
+\addtolength{\parskip}{.3em}
+%%% EXCLUDE END
+
+\section{Introduction}
+
+The tree of life is remarkably uneven in both taxonomic and trait
+diversity; describing this unevenness and revealing its underlying
+causes are major focuses of evolutionary biology.
+%
+Comparative phylogenetic methods have been widely used to study
+patterns and rates of both trait evolution
+\citep{Felsenstein-1985-1,Pagel-1994-37} and diversification
+\citep{Nee-1994-305}.
+%
+A recently developed set of models unites both trait evolution and
+species diversification, avoiding biases that occur when the two are
+treated separately \citep{Maddison-2006-1743}.  This includes the
+``BiSSE'' method (Binary State Speciation and Extinction;
+\citealp{Maddison-2007-701}), as well as similar methods that
+generalise the approach to non-anagenetic trait evolution and to
+quantitative traits (see below).
+
+In this note, I describe the ``diversitree'' package for R \citep{R}.
+Diversitree implements several recently developed methods for
+analysing trait evolution, speciation, extinction, and their
+interactions.  Below, I describe the general approach of the package
+and the method that it contains.  I introduce a generalisation of the
+BiSSE method to multi-state characters or to combinations of binary
+traits (MuSSE: Multi State Speciation and Extinction).  Finally, I
+demonstrate the package, and MuSSE, with an example of social trait
+evolution in primates.
+
+\section{The methods}
+The diversitree package implements a series of methods for detecting
+associations between traits and rates of speciation and/or extinction
+given a phylogeny and trait data, including the BiSSE method
+\citep{Maddison-2007-701}.
+%
+Under BiSSE, speciation and extinction follow a birth-death process,
+where the rate of speciation and extinction may vary with a binary
+trait, itself evolving following a continuous-time Markov process.
+%
+BiSSE has been used to look at the associations between many different
+traits and speciation or extinction, including
+%
+migration in warblers \citep{Winger-2012-610}, %
+fruiting body morphology in fungi \citep{Wilson-2011-1305}, %
+and recombination in plants \citep{Johnson-2011-3230}.
+
+In its original formulation, BiSSE assumes that character change
+occurs only along branches (anagenetic change), using the same model
+of character evolution as used in the ``discrete''
+\citep{Pagel-1994-37} or ``Mk'' models \citep{Lewis-2001-913}.
+%
+This may not always be a reasonable assumption, and we might expect
+some characters to show considerable change during speciation
+(cladogenetic change).
+%
+One such example is geographic range; while geographic ranges are
+expected to change anagenetically, allopatric speciation should also
+alter range sizes.  The GeoSSE (Geographic SSE;
+\citealp{Goldberg-2011-451}) method allows speciation rates to vary
+depending on a species' presence in two different geographic regions,
+allowing within- and between-region speciation.  This has been used to
+examine diversification in plants endemic to serpentine regions
+\citep{Anacker-2010-365}.
+%
+More recently, the BiSSE-ness (BiSSE-Node Enhanced State Shift;
+\citealp{Magnuson-Ford-2012}) and ClaSSE (Cladogenetic SSE;
+\citealp{Goldberg-classe}) models have been developed to allow both
+anagenetic and cladogenetic character evolution, such as that expected
+for traits involved in ecological speciation
+\citep{Schluter-2009-737}.
+%
+Importantly, with extinction or incomplete taxonomic sampling not all
+speciation events will appear as nodes in a phylogeny; these missing
+nodes must be modelled to accurately estimate the rate of cladogenetic
+trait change (see \citealp{Nee-1994-305} and
+\citealp{Bokma-2008-2718}, and note that the placement of these
+missing nodes is nonlinear in time).
+
+Diversitree also includes methods for non-binary traits.  %
+QuaSSE (Quantitative SSE; \citealp{FitzJohn-2010-619}) allows
+speciation and extinction rates to be modelled as any user-supplied
+function of a continuously varying trait, which itself evolves under
+Brownian motion.  This has been used to test for associations between
+diversification rates and body size in snakes
+\citep{Burbrink-2012-465} and dispersal ability in birds
+\citep{Claramunt-2012-1567}.
+%
+Finally, MuSSE extends BiSSE to multi-state traits or combinations of
+binary traits.
+
+Diversitree includes variants that relax some of the original
+assumptions of the included methods.
+%
+Birth-death based speciation/extinction models will give biased
+parameter estimates unless all extant taxa in the focal clade are
+present in a phylogeny.  For cases where not all extant species are
+included in a phylogeny, diversitree includes methods
+%
+for where species are included randomly or where all species are
+represented in ``unresolved clades'' \citep{FitzJohn-2009-595}.
+%
+Rates of speciation, extinction or character change can be set to vary
+as any user-supplied function of time.  Similar approaches have been
+used elsewhere to model slowdowns in speciation or diversification
+over time \citep[e.g.,][]{Rabosky-2010-22178}.
+
+Rates of speciation, extinction, and character change may also be
+allowed to vary in different regions of a tree.
+%
+This is similar to \textsc{Medusa} (Modelling Evolutionary
+Diversification Under Stepwise AIC: \citealp{Alfaro-2009-13410}) for
+diversification and \textsc{Auteur} \citep{Eastman-2011-3578} for
+continuous character evolution.
+%
+Such methods can be used to test whether membership in a clade that
+has undergone a shift in diversification rates is misleading BiSSE or
+other methods.  For example, if particular trait values are
+concentrated in a highly diverse clade BiSSE may detect an association
+when none exists (see applications in \citealp{Johnson-2011-3230} and
+\citealp{FitzJohn-2010-619}, the diversitree tutorial for a worked
+example, and further discussion in \citealp{Read-1995-99}).
+
+In the above models, if speciation and extinction do not vary with
+character state, the models converge on classical models of character
+evolution \citep[e.g.,][]{Pagel-1994-37} and state-independent
+speciation and extinction \citep{Nee-1994-305}.  For completeness,
+these models are also included.
+%
+However, when comparing models to determine if traits are associated
+with speciation or extinction using likelihood ratio tests,
+comparisons must involve only nested models to be valid.  For example,
+BiSSE and Mk2 are not directly comparable, but BiSSE can be compared
+to a constrained version of BiSSE that disallows state-dependent
+diversification.
+%
+See Table \ref{tab:model-types} for a summary of included methods.
+
+In addition to the likelihood calculations, tree simulation routines
+are implemented for birth-death, BiSSE, MuSSE, and QuaSSE.
+% TODO: add! (mostly done; just needs testing)
+Simulating character evolution on a given tree is possible for
+discrete (binary or multi-state) characters and continuous characters
+under Brownian motion and Ornstein-Uhlenbeck processes.
+% TODO: Will SSE/SCM be ready?  Should this be noted?
+Ancestral state reconstruction \citep{Schluter-1997-1699} and
+stochastic character mapping \citep{Bollback-2006-88} are implemented
+for discrete characters.
+
+\begin{table}
+  \caption[Summary of model types available in diversitree]{Summary of
+    model types available in diversitree (as of version 1.0).}
+  \label{tab:model-types}
+
+  \vspace{12pt}
+  \begin{tabularx}{\textwidth}{lccc>{\raggedright\arraybackslash}X}\hline
+    % TODO: Have a look through some books to see how this is normally
+    % handled.  might be that vertical centre alignment would
+    % look nicer.
+    Name   & Trait$^a$& Missing & Extensions$^{c}$ &
+    Description and reference\\
+    &&taxa${^b}$\\\hline
+    \code {bd}     & ---  & Sk, Un & Sp, Tv
+    &Constant-rate birth-death \citep{Nee-1994-305}
+    \\
+    \code{mk2}, \code{mkn} & B,M   & ---    & Sp, Tv
+    &Markov discrete character evolution\phantom{NEWL} % force newline
+    \citep{Pagel-1994-37,Lewis-2001-913}
+    \\
+    \code{bisse}  & B    & Sk, Un & Sp, Tv
+    &Binary State Speciation and Extinction
+    \citep{Maddison-2007-701,FitzJohn-2009-595}
+    \\
+    \code{bisseness} & B    & Sk, Un     & ---
+    &BiSSE-ness
+    \citep{Magnuson-Ford-2012}
+    \\
+    \code{geosse} & T    & Sk     & ---
+    &Geographic State Speciation and Extinction \citep{Goldberg-2011-451}
+    \\
+    \code{musse}  & M    & Sk, Un & Sp, Tv
+    &Multi State Speciation and Extinction
+    \\
+    \code{classe} & M    & Sk     & ---
+    &Clade State Speciation and Extinction \citep{Goldberg-classe}
+    \\
+    \code{bm}     & Q    & ---    & ---
+    &Brownian motion
+    \\
+    \code{ou}     & Q    & ---    & ---
+    &Ornstein-Uhlenbeck
+    \\
+    \code{quasse} & Q    & Sk     & Sp
+    &Quantitative State Speciation and Extinction (FitzJohn 2011)
+    \\\hline
+  \end{tabularx}
+
+  \vspace{12pt}
+
+  \raggedright
+  a: Trait type key: B = Binary (0/1),
+  T = Ternary (three combinations of presence/ absence in two regions),
+  M = Multi-state (1, 2, 3, \ldots),
+  Q = Quantitative (real-valued).\\
+  b: Missing taxa support: Sk = ``Skeleton tree'' (random sampling)
+  correction, \\Un = ``Unresolved clade''.\\
+  c: Extensions: Sp = ``Split tree'' (allows \textsc{Medusa}-style
+  different rate classes in different areas of the tree), Tv =
+  Time-varying rates.
+\end{table}
+
+% All of the diversification methods require that the tree be
+% ultrametric.  This is because the analyses are explicitly in units of
+% time.  One consequece of this is that to compute the probability of
+% eventual extinction of a lineage, all regions of the tree must have
+% the same reference point of when the ``present'' is.
+
+\section{The approach}
+% All R packages must strike a balance between simplicity and
+% generality.  Many packages favour simplicity in that there are a
+% number of pre-designed analyses that will be carried out given a tree
+% and character states.  For example, to estimate rates of character
+% evolution using maximum likelihood in `ape' \citep{ape}, one only has
+% to evaluate
+% \begin{Sinput}
+% ace(tree, states)
+% \end{Sinput}
+% While easy to use, this approach may be limiting as analyses are only
+% possible if the package author has implemented it.  For example, it is
+% not straightforward to use the likelihood function from the above
+% calculation in a profile likelihood or Bayesian analysis.
+In diversitree the inference process is decoupled from the likelihood
+calculations, allowing users to take advantage of the programmatic
+flexibility of R.  Analyses therefore require at least two steps.
+First, the user creates a likelihood function from their tree and
+data, using a \code{make.xxx} function (where \code{xxx} is one of the
+model types available).
+%
+For example, to look at character evolution under a two-state Markov
+model \citep{Lewis-2001-913}, the user would enter:
+\begin{Sinput}
+lik <- make.mk2(tree, states)
+\end{Sinput}
+Secondly, we can find the maximum likelihood (ML) parameter vector for
+this function:
+\begin{Sinput}
+fit <- find.mle(lik, starting.parameters)
+\end{Sinput}
+or use it in a Bayesian analysis by running an \textsc{mcmc} (Markov
+chain Monte Carlo) chain (with an appropriate prior):
+\begin{Sinput}
+samples <- mcmc(lik, starting.parameters, nsteps, proposal.widths, prior)
+\end{Sinput}
+or in some other use (for example, integrating the function
+numerically to compute the ``integrated likelihood'' for Bayes
+factors, e.g., \citealp{Kass-1995-773}).
+% I wonder about adding something like:
+%
+% Because the approach is entirely decoupled, one can use any likelihood function (tree-based or not) in the first step and combine it with the latter operations (find.mle and mcmc).  This allows the user to take advantage of the built-in XXX.
+%
+% I say this because i have used diversitree a lot in other likelihood analyses that have nothing to do with trees because I like being able to use the upper and lower, prior, constraints, etc., that you've built in.
+
+Between these steps, the likelihood function can be constrained
+arbitrarily.  Diversitree's \code{constrain} function allows several
+natural constraints, such as setting one parameter equal to another,
+or to a specific numerical value.  For example, to constrain the
+forward and backward transition rates to be equal (reducing the Mk2
+model to the Jukes-Cantor model):
+\begin{Sinput}
+lik.jc <- constrain(lik, q01 ~ q10)
+\end{Sinput}
+We could then find the ML parameter by entering
+\begin{Sinput}
+fit.jc <- find.mle(lik.jc, starting.parameters)
+\end{Sinput}
+These nested models could then be compared using a likelihood ratio
+test.
+
+Most of the methods included in diversitree are computationally
+challenging, but there are a number of options for controlling how the
+calculations are performed.  Amongst these, the user can use different
+ODE solvers, and the accuracy of the calculations can be traded off
+against speed for most methods.
+%
+Algorithms that have proven to be reasonably robust (in my experience)
+are used by default.
+%
+For some models, such as Mk2, Brownian motion, and Ornstein-Uhlenbeck,
+diversitree provides alternative algorithms that perform better with
+large numbers of states or large trees.  The possible options and
+algorithms are discussed in Supporting Information section 1 and 2.
+
+Diversitree builds on much existing software; ape \citep{ape} is used
+for tree loading and manipulation, the deSolve package \citep{deSolve}
+and sundials library \citep{sundials} are used for solving the systems
+of differential equations for the discrete trait models, and
+\textsc{fftw} \citep{fftw} is used to solve the partial differential
+equations in QuaSSE.
+%
+In addition to the R interface, Wayne Maddison has developed a wrapper
+around some of diversitree's functionality to allow use from within
+Mesquite \citep{Mesquite}, using a user-friendly point-and-click
+interface.
+
+\section{The MuSSE model}
+MuSSE is a straightforward extension of BiSSE to discrete traits with
+more than two states.
+%
+Some characters are not naturally binary (e.g., mating systems, diets,
+or count data), and MuSSE allows these to be treated naturally.  This
+method has been used to examine the effect of diet (faunivore,
+folivore, frugivore) in primates \citep{Gomez-2012}.
+%
+Alternatively, MuSSE can be used to disentangle the relative
+importance of two or more traits to diversification (see below).
+
+Suppose that we have a trait that takes values $1, 2, \ldots, k$ that
+might influence speciation and/or extinction.  Using the notation and
+approach of \citet{Maddison-2007-701}, let lineages in state $i$
+speciate at rate $\lambda_i$, go extinct at rate $\mu_i$, and
+transition to state $j\neq i$ at rate $q_{ij}$.  For $k$ states, there
+are $k$ speciation rates, $k$ extinction rates, and $k(k-1)$
+transition rates.
+
+\subsection{Derivation}
+Let $D_{N,i}(t)$ be the probability of a lineage in state $i$ at time
+$t$ before the present ($t=0$) evolving into its descendant clade as
+observed, and let $E_i(t)$ be the probability that a lineage in state
+$i$ at time $t$, and all of its descendants, goes extinct by the
+present.
+%
+Under the same assumptions as \citet{Maddison-2007-701} and using the
+same approach, it is possible to derive a set of ordinary differential
+equations that describe the evolution of the $D$ and $E$ variables
+over time:
+\begin{subequations}
+  \label{eq:musse-1}
+  \begin{equation}
+    \frac{\ud E_i(t)}{\ud t} = \mu_i
+    -\left(\lambda_i + \mu_i + \sum_{j\neq i}q_{ij}\right) E_i(t) +
+    \lambda_i E_i(t)^2 + \sum_{j\neq i}q_{ij}E_j(t)
+  \end{equation}
+  \begin{equation}
+    \frac{\ud D_{N,i}(t)}{\ud t} =
+    -\left(\lambda_i + \mu_i + \sum_{j\neq i}q_{ij}\right) D_{N,i}(t) +
+    2\lambda_i E_i(t)D_{N,i}(t) + \sum_{j\neq i}q_{ij}D_{N,j}(t).
+  \end{equation}
+\end{subequations}
+For $k$ states, there are $2k$ equations.
+
+We can solve this system of equations numerically from the tip to base
+of a branch.  As with BiSSE the initial conditions for the $D$
+variables are $1$ when the trait combination is consistent with the
+data, and $0$ otherwise, while the initial conditions for all $E$
+variables is zero.
+%
+Missing trait data is allowed by setting all $D$ values to $1$ (any
+state is consistent with the observed data).
+%
+For the multi-trait case, if state information is available for some
+traits and not the others, the initial conditions are modified to
+allow any trait combination consistent with the observed data.  For
+example, if trait $A$ is in state $0$ and the state of trait $B$ is
+unknown, the $D$ variables will be $1$ for the combinations $(0,0)$
+and $(0,1)$ and zero for combinations $(1,0)$ and $(1,1)$.
+%
+When the phylogeny is incomplete, the initial conditions can be
+modified by assuming random sampling \citep[see][]{FitzJohn-2009-595}.
+
+At the node $N^\prime$ that joins lineages $N$ and $M$, we multiply
+the probabilities of both daughter lineages together with the rate of
+speciation
+\begin{equation}
+  D_{N^\prime,i}(t) = D_{N,i}(t) D_{M,i}(t) \lambda_i.
+\end{equation}
+The equations here assume no cladogenetic change, but this can be
+added following the approach in \citet{Magnuson-Ford-2012} or
+\citet{Goldberg-classe}.
+
+As the number of parameters in MuSSE grows quadratically with the
+number of states, care will often be required to prevent over-fitting
+and pathological behaviour associated with estimation of rate
+parameters involving states that are rarely observed.  
+%
+In particular, if some state $i$ is not observed, then the the
+likelihood surface never has a negative slope with increasing $q_{ij}$
+($j\neq i$) and $\mu_i$, causing ML values for these parameters to
+tend to infinity, in turn causing problems for both the maximisation
+and likelihood calculation routines.
+%
+For ordinal data, constraining the transition rates so that $q_{ij} =
+0$ for $|i-j| > 1$ may be useful.
+
+\subsection{Analysing multiple traits simultaneously}
+Alternatively, this method can be generalised to combinations of
+binary traits, following \citet{Pagel-1994-37}; in this scheme, a
+discrete state would represent the combination of different binary
+traits; for $n$ binary \textit{traits} there are $2^n$ possible
+\textit{states}.
+%
+For example, for a pair of binary traits there are four possible state
+combinations: $(0,0)$, $(0,1)$, $(1,0)$, $(1,1)$.  We can denote these
+$(1, 2, 3, 4)$, and use MuSSE directly.
+%
+However, in this ``multi-trait'' model, parameters may be unintuitive
+to interpret, particularly as the number of traits increases.
+Moreover, with multiple traits we may be explicitly interested in
+asking if combinations of traits affect speciation or extinction
+non-additively, and this is difficult to determine with this
+parametrisation.
+
+In diversitree, an alternative parametrisation is available to
+facilitate interpretation and model testing.  Let $\lambda_{i,j}$ be
+the speciation rate of a species with states $A=i$, $B=j$, for two
+binary traits $A$ and $B$.  We can use a linear modelling approach and
+write
+\begin{equation}
+  \label{eq:lambda}
+  \lambda_{i,j} = \lambda_0 + \lambda_A X_A  + \lambda_B X_B +
+  \lambda_{AB} X_A X_B,
+\end{equation}
+where $X_A$ and $X_B$ are indicator variables that are 1 when trait
+$A$ and $B$ are in the ``$1$'' state (respectively), $\lambda_0$ is
+the ``intercept'' speciation rate (if all traits are in state $0$),
+$\lambda_A$ and $\lambda_B$ are the ``main effects'' of traits $A$ and
+$B$, and $\lambda_{AB}$ is the interaction between these.  If a
+combination of $A$ and $B$ drives speciation, then a model with
+$\lambda_{AB}$ will fit better than a model with just the main
+effects.  Similarly, for the extinction rate, we write
+\begin{equation}
+  \label{eq:mu}
+  \mu_{i,j} = \mu_0 + \mu_A X_A  + \mu_B X_B  +
+  \mu_{AB} X_A X_B.
+\end{equation}
+
+The same approach can be used for the character transition rates.  If
+we follow \citet{Pagel-1994-37} and allow change in only a single
+trait during a single point in time, then for $n$ traits there are
+only $2n$ possible ``types'' of transitions (i.e., a $0\to1$ or
+$1\to0$ transition in one of the $n$ traits).  However, the rate at
+which these transitions happen may vary depending on the state of the
+other traits.  For example, with two traits, we can write the rate of
+transition in trait $A$ from $0$ to $1$, given that trait $B$ is in
+state $j$, as
+\begin{equation}
+  \label{eq:q}
+  q_{A01,  j} = q_{A01,0} + q_{A01,B} X_B.
+\end{equation}
+where $q_{A01,0}$ is the intercept term and $q_{A01,B}$ is the
+main effect of trait $B$.
+%
+In this scheme, if a model with $q_{A01,B}$ fits better than a
+model without, then the rates of $0\to1$ transition of trait $A$
+depends on the state of trait $B$.
+
+Similar schemes can be derived for more traits; for more than two
+states, interaction terms will appear in the equations.  For example,
+with three traits ($A$, $B$, and $C$)
+\begin{equation}
+  \label{eq:q3}
+  q_{A01, j, k} = q_{A01,0} + q_{A01,B} X_B +
+  q_{A01,C}X_C + q_{A01,BC}X_BX_C
+\end{equation}
+where $q_{A01,C}$ is the main effect of trait $C$ on the rate of
+character change of trait $A$ from $0$ to $1$, and $q_{A01,BC}$ is
+an interaction effect that specifies the level of non-additivity of the
+traits $B$ and $C$ on character change of trait $A$.
+%
+Of course, this parametrisation of transition rates is valid for
+studying character evolution in multiple binary traits without
+modelling its effect on diversification \citep[as
+in][]{Pagel-1994-37}, and this can be done with the
+\code{make.mkn.multitrait} function.
+
+\section{Simulation test assessing the power of MuSSE}
+\label{sec:musse-sim}
+
+There are a large number of distinct ways of modelling diversification
+with MuSSE, and I expect that the power of the model will depend
+strongly on the model specification.
+%
+For example, one might have an ordinal multi-state trait, where
+transitions can only occur between adjacent states, and be interested
+asking whether large or small values of that trait are associated with
+elevated rates of diversification.  For a given number of states ($>$
+2), such a model will have far fewer parameters (and greater power)
+than a model where the trait is purely categorical, such as diet, if
+all transitions are possible.
+%
+The power of MuSSE will strongly depend on the number of estimated
+parameters (especially the character transition parameters), and I
+expect that for any more than four states, careful consideration of
+constraints in the transition parameters will be needed.
+
+Here, I focus on a simple multi-trait case where there are some number
+of uncorrelated binary traits that evolve at the same rate, one of
+which influences the rate of speciation.  I investigate the ability of
+MuSSE to correctly identify the trait associated with elevated
+speciation and to rule out the association with other traits, as a
+function of clade size and number of possible traits.
+
+To simulate trees, I set the intercept speciation and extinction rates
+($\lambda_0$ and $\mu_0$) to $0.1$ and $0.03$ respectively, and
+character transition rates ($q_{X01}$, $q_{X10}$, for traits
+$X=A,B,\ldots$) to $0.01$.  I set $\lambda_A = 0.1$ so that when trait
+$A$ is in state $1$, the speciation rate is $0.2$.
+%
+When only a single trait is considered, these are the same parameters
+used by \citet{Maddison-2007-701} in their ``asymmetric speciation''
+case.
+%
+I simulated phylogenies and character state transitions under the
+multitrait MuSSE model, starting at the root in one of the ``low''
+speciation states (with $A$ in state~0), sampling randomly for the
+other traits.  Trees were simulated to contain 50, 100, 200, or 400
+species, with 1, 2, 3, or 4 traits, and with 100 replicate trees for
+each of the 16 combinations.
+
+For each tree, I ran a Markov chain Monte Carlo (\textsc{mcmc})
+analysis on a model where all speciation main effects were free to
+vary (but excluded interactions), fitting only intercepts for
+extinction and character change.  For example, with two traits this
+meant that the free parameters were $\lambda_0$, $\lambda_A$,
+$\lambda_B$, $\mu_0$, $q_{A01,0}$, $q_{A10,0}$, $q_{B01,0}$, and
+$q_{B10,0}$.  This model is very close to the true model, but allows
+for uncertainty in which trait is responsible for increased speciation
+(trait $A$ or $B$).
+%
+I used a exponential prior with a mean of twice the state-independent
+diversification rate for all the underlying rate parameters (see
+Supporting Information section 3).  I ran each chain for 10,000 steps,
+and discarded the first 500 steps as ``burn-in''.
+%
+Because the ``dummy'' traits $B$, $C$, and $D$ are equivalent where
+present, I report results primarily for trait $A$ (which increases
+speciation rates when in state~1) and trait $B$ (which does not affect
+speciation rates).
+
+As the size of the tree increased, the credibility intervals around
+the main effects on speciation decreased, and the mean estimated
+effect converged on the true values (see Figure \ref{fig:musse-ci}).
+The uncertainty around the dummy trait, $B$, was not strongly affected
+by the number of dummy traits that were included, and decreased
+slightly as more traits were included.
+%
+For small trees ($\le$ 100 species), MuSSE underestimated the effect
+of trait $A$ on speciation rates, especially as the number of traits
+increased.
+
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{simulations/musse-multitrait-ci}
+  \caption[Uncertainty around multitrait-MuSSE parameter estimates 
+  as a function of tree size and number of traits]{%
+    Uncertainty around multitrait MuSSE parameter estimates 
+    as a function of tree size and number of traits.
+    % 
+    The solid blue line and blue region represent the mean and 95\%
+    credibility interval (CI) over 100 trees for the estimated
+    speciation rate main effect of trait $A$, which increases speciation
+    rates (true value is
+    $0.1$, indicated by the grey dotted line).
+    % 
+    The solid green line and region represent the mean and 95\% CI for
+    the speciation rate main effect for trait $B$, which has no
+    effect on speciation rates (true value of zero indicated by dotted
+    grey line).
+    % 
+    Panel (a), with one trait, is equivalent to BiSSE.
+    % 
+  }
+  \label{fig:musse-ci}
+\end{figure}
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{simulations/musse-multitrait-power}
+  \caption[Power and error rates of multitrait MuSSE]{%
+    Power and error rates of multitrait MuSSE, as a function of tree
+    size.
+    %
+    The lines are the proportion of 100 simulated trees that have 95\%
+    credibility intervals of speciation main effects that do not
+    include zero (indicating significant state-dependent speciation).
+    The blue line represents trait $A$, which increases speciation
+    rates when in state $1$.
+    %
+    The solid green line represents a trait $B$ with no effect on
+    speciation.
+    % 
+    The dashed green line indicates the same trait $B$, but when trait
+    $A$ is omitted from the analysis.
+    %
+    The dotted orange line in panels (c) and (d) is the probability of
+    finding \emph{any} of the dummy traits ($B$, $C$, or, where
+    present $D$) significant in an analysis that omits trait $A$.
+    % 
+    The 5\% expected type I error rate is indicated by the dotted grey
+    line.
+    %
+    Panel (a), with one trait, and the dashed green line in panel (b)
+    are equivalent to BiSSE.}
+  \label{fig:musse-power}
+\end{figure}
+
+
+Significance showed similar patterns.  As tree size increased, power
+to correctly identify $A$ as the trait associated with increased
+speciation increased (Figure \ref{fig:musse-power}, blue lines), but
+for trees with 100 species or more this varied only weakly with the
+number of included traits.
+%
+The dummy trait $B$ was significant approximately 5\% of the time
+(based on 95\% credibility intervals): the rate expected due to type I
+error (Figure \ref{fig:musse-power}, solid green lines).
+
+To test how model misspecification would affect the results, I also
+reran the analyses with trait $A$ omitted so that none of the analysed
+traits were truly associated with state-dependent diversification.
+%
+The dummy trait $B$ was incorrectly associated with increased
+speciation in up to 27\% of trees (Figure \ref{fig:musse-power}).
+%
+While this effect was strongest when there were fewer dummy traits,
+the possibility of \emph{any} trait being falsely associated with
+diversification increased.  Indeed, where three dummy traits are
+included, the probability of associating any trait with increased
+speciation increased to 59\% for the 400 species tree
+(Figure \ref{fig:musse-power}, dotted orange lines).
+
+These results are simultaneously encouraging and sobering.  When a
+trait that is affects speciation is included in the model, it is
+easily detected, and this is robust to the number of additional traits
+included.  However, if no traits do affect speciation, as we add
+additional traits we risk false positives at an alarming rate.
+%
+However, the rates of false positives are perhaps not surprising.  The
+trees used do not conform well to the expectations of a constant rate
+birth-death tree (there is strong phylogenetically structured
+variation in speciation rates) and the model is using the only
+parameters it has to explain this deviation.
+%
+I expect that similar problems will affect other comparative analyses
+such as detecting correlated trait evolution with the Mk/discrete
+models.
+
+The code for this analysis is available on the diversitree github
+site (\url{http://github.com/richfitz/diversitree/tree/pub/simulations}).
+
+\subsection{Social evolution and speciation in primates}
+Here I give a worked example, using the trait data compiled by
+\citet{Redding-2010-1052} to look at social evolution in primates.
+Previously, \citet{Magnuson-Ford-2012} found that both monogamy and
+solitary behaviour in primates reduced speciation rates, though this
+was only marginally significant for solitariness.  However, if these
+characters are correlated, then it is possible that the decreased
+speciation rates could be truly associated with just one trait.  That
+is, the effect of one character might bias the estimated effects of
+the other when these are treated independently.  Alternatively, it
+could be that an elevated (or decreased) speciation rate occurs only
+with some combination of trait states (e.g., only social, polygamous
+taxa speciate more rapidly).
+
+Here, I illustrate the method with R input in italics (preceded by
+``\texttt{>}''), while output is upright.  The full version of this
+analysis is presented in Supporting Information 4.
+%
+The phylogeny is stored in NEXUS format \citep{Maddison-1997-590}, and
+loaded using the \code{read.nexus} function in ape as the object
+``\code{tree}''.
+%
+For multi-trait MuSSE, the data must be stored in a data frame with
+species names as row labels.  The two traits are ``M'' (\code{TRUE}
+for monogamous, \code{FALSE} otherwise) and ``S'' (\code{TRUE} for
+solitary, \code{FALSE} otherwise).
+\begin{Schunk}
+\begin{Sinput}
+> head(dat)
+\end{Sinput}
+\begin{Soutput}
+                                M     S
+Allenopithecus_nigroviridis    NA FALSE
+Allocebus_trichotis          TRUE  TRUE
+Alouatta_belzebul              NA FALSE
+Alouatta_caraya                NA FALSE
+Alouatta_coibensis          FALSE FALSE
+Alouatta_fusca                 NA FALSE
+\end{Soutput}
+\end{Schunk}
+Note that some of the species lack state information (i.e., have
+\code{NA} values).  These are accommodated using the method described
+above.
+
+The first step is to make a likelihood function with
+\code{make.musse.multitrait}.  
+%
+The ``\code{depth}'' argument controls the number of terms to include
+from equations (\ref{eq:lambda}), (\ref{eq:mu}), and (\ref{eq:q}); $0$
+includes only intercepts, $1$ also includes main effects, $2$ includes
+interactions between two parameters and so on.  If specified as a
+3-element vector, the elements apply to the $\lambda$, $\mu$, and $q$
+parameters; if a scalar is given, the same depth is used for all three
+parameter types.  To make a model with intercepts only:
+\begin{Schunk}
+\begin{Sinput}
+> lik.0 <- make.musse.multitrait(tree, dat, depth=0)
+\end{Sinput}
+\end{Schunk}
+This likelihood function takes a vector of parameters as its first
+argument.  To get the vector of names for the parameters, use the
+\code{argnames} function:
+\begin{Schunk}
+\begin{Sinput}
+> argnames(lik.0)
+\end{Sinput}
+\begin{Soutput}
+[1] "lambda0" "mu0"     "qM01.0"  "qM10.0"  "qS01.0"  "qS10.0"
+\end{Soutput}
+\end{Schunk}
+This shows the six parameters: the speciation rate (\code{lambda0}),
+extinction rate (\code{mu0}) and four transition rates (e.g.,
+\code{qM01.0} is the rate of transition of the breeding system from
+non-monogamous to monogamous, and this rate does not depend on the
+social state \code{S}).
+
+To find the maximum likelihood (ML) point, a sensible starting point
+must be supplied (discussed in Supporting Information section 3); with such a
+point, \code{p.0}, we can find the ML parameters using the
+\code{find.mle} function:
+\begin{Schunk}
+\begin{Sinput}
+> fit.0 <- find.mle(lik.0, p.0)
+\end{Sinput}
+\end{Schunk}
+%
+This returns an object (\code{fit.0}) that contains estimated
+parameters, likelihood values, and other information about the fit
+(see the help page \code{?find.mle} for more information).
+\begin{Schunk}
+\begin{Sinput}
+> round(coef(fit.0), 4)
+\end{Sinput}
+\begin{Soutput}
+lambda0     mu0  qM01.0  qM10.0  qS01.0  qS10.0 
+ 0.1912  0.1110  0.0251  0.0259  0.0009  0.0163 
+\end{Soutput}
+\begin{Sinput}
+> fit.0$lnLik
+\end{Sinput}
+%$ %-- for emacs
+\begin{Soutput}
+[1] -786.3427
+\end{Soutput}
+\end{Schunk}
+By default ``subplex'' \citep{subplex} is used for the optimisation.
+However, different optimisation algorithms can be selected through the
+``\code{method}'' argument to \code{find.mle}.
+
+To include state-dependent diversification, we construct a likelihood
+function that includes ``main effects'' of the two traits on
+speciation and extinction.
+%
+To allow this while retaining the independent model of character
+evolution, we change the \code{depth} argument:
+\begin{Schunk}
+\begin{Sinput}
+> lik.1 <- make.musse.multitrait(tree, dat, depth=c(1, 1, 0))
+> argnames(lik.1)
+\end{Sinput}
+\begin{Soutput}
+ [1] "lambda0" "lambdaM" "lambdaS" "mu0"     "muM"     "muS"
+ [7] "qM01.0"  "qM10.0"  "qS01.0"  "qS10.0"
+\end{Soutput}
+\end{Schunk}
+Running an ML search from a suitable point \code{p.1}:
+\begin{Schunk}
+\begin{Sinput}
+> fit.1 <- find.mle(lik.1, p.1)
+\end{Sinput}
+\end{Schunk}
+These models can be compared using a likelihood ratio tests using the
+\code{anova} function; the model with state-dependent speciation and
+extinction fits much better than the state-independent version
+($\chi^2_4=24.7$, $p<0.001$).
+\begin{Schunk}
+\begin{Sinput}
+> anova(fit.1, noSDD=fit.0)
+\end{Sinput}
+\begin{Soutput}
+      Df   lnLik    AIC  ChiSq Pr(>|Chi|)
+full  10 -773.97 1568.0                  
+noSDD  6 -786.34 1584.7 24.739  5.677e-05
+\end{Soutput}
+\end{Schunk}
+(The use of \code{anova} for general model comparison is a fairly
+widespread convention in R packages, and does not imply that an ANOVA
+was performed!)
+
+We can expand the model further to allow interactions between the two
+traits in speciation and extinction; is a combination of mating system
+and sociality associated with elevated speciation or extinction?
+Specifying \code{depth=c(2, 2, 0)} introduces the terms
+``\code{lambda.MS}'' and ``\code{mu.MS}'' (see equations
+\ref{eq:lambda} and \ref{eq:mu}) to model non-additive effects of
+these traits on speciation and extinction, and again leaves character
+transitions to occur independently for the two traits.
+\begin{Schunk}
+\begin{Sinput}
+> lik.2 <- make.musse.multitrait(tree, dat, depth=c(2, 2, 0))
+> fit.2 <- find.mle(lik.2, p.2)
+> anova(fit.2, noInteraction=fit.1)
+\end{Sinput}
+\begin{Soutput}
+              Df   lnLik    AIC   ChiSq Pr(>|Chi|)
+full          12 -773.73 1571.5                   
+noInteraction 10 -773.97 1568.0 0.49143     0.7821
+\end{Soutput}
+\end{Schunk}
+This time the improvement is not significant, implying that there is
+no evidence for an interaction between these traits on speciation and
+extinction rates.
+
+To test the significance of the each trait (solitariness and monogamy)
+in a maximum likelihood framework, we could fit models where the main
+effect of each trait was set to zero and compare these against the
+model \code{fit.1} using a likelihood ratio test.
+%
+This approach is explored in Supporting Information 4.
+%
+Alternatively, we might run an \textsc{mcmc} and examine the posterior
+distributions of the \code{lambdaM} and \code{lambdaS} values:
+%
+\begin{Schunk}
+\begin{Sinput}
+> samples <- mcmc(lik.1, p.1, nsteps=10000, w=0.5, prior=prior)
+\end{Sinput}
+\end{Schunk}
+%
+The prior distribution used here is exponential with respect to the
+underlying rates in the model (e.g., $\lambda_{i,j}$, not
+$\lambda_{AB}$: see equation (\ref{eq:lambda}) and Supporting
+Information section 3), but any prior function may be specified by the user
+(see the main diversitree tutorial).  The ``slice sampling''
+\textsc{mcmc} algorithm \citep{Neal-2003-705} is used by default and
+is fairly insensitive to tuning parameters.  In particular, specifying
+a too large or too small value for the width of the proposal step
+(\code{w}) just increases the mean number of function evaluations per
+step, rather than the rate of mixing of the chain.
+
+% TODO: "both the monogamy and sociality main effects": Say speciation
+% rates somewhere here.
+The marginal distributions of both the monogamy and sociality main
+effects on speciation rates are negative over the bulk of their
+distribution (Figure \ref{fig:primate-main-effects}).  However, in
+contrast with treating the traits separately using BiSSE (Figure
+\ref{fig:primate-main-effects}a), we find that the 95\% credibility
+intervals for both traits do not include zero (Figure
+\ref{fig:primate-main-effects}b).
+%
+Therefore these results support the conclusions of
+\citet{Magnuson-Ford-2012} that both monogamy and sociality are
+associated with decreased speciation rates in primates.  Surprisingly,
+simultaneously accounting for both traits increased our confidence
+levels, suggesting that incorporating additional traits can reduce
+noise caused by shifts in diversification due to other traits.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{example/cache/primates-profiles}
+  \caption[``Main effects'' of monogamy and solitariness on speciation
+  rate in primates]{Posterior probability distributions for the
+    effects of monogamy (dark grey) and solitariness (light grey) on
+    speciation rate.  Shaded areas and bars indicate the 95\%
+    credibility intervals for each parameter.
+    %
+    In the top panel, BiSSE was run on each character independently.
+    In the bottom panel, the \code{musse.multitrait} fit the effects
+    of both traits simultaneously.
+    %
+    In both cases, the \textsc{mcmc} chain was run for 10,000 steps,
+    and the first 500 points were dropped as burn-in.}
+  \label{fig:primate-main-effects}
+\end{figure}
+
+More comprehensive examples are included in a tutorial document on the
+diversitree website, \url{http://www.zoology.ubc.ca/prog/diversitree},
+as well as within the online help for the package.
+
+\section{Closing comments}
+% The diversitree package implements several methods for jointly
+% modelling character evolution and speciation.
+% %
+
+The diversitree package implements several methods for jointly
+modelling character evolution and speciation.
+%
+The package is open source and designed to be fairly straightforward
+to extend.  In particular, any model that can be expressed by moving
+down a tree (post-order traversal, or ``pruning'';
+\citealp{Felsenstein-1981-368}) can be implemented using only a modest
+number of lines of R code.  To facilitate the development of related
+methods, there is a ``Writing diversitree extensions'' manual
+available from the diversitree website.
+%
+Stable versions of diversitree are available on \textsc{cran} (the
+Comprehensive R Archive Network) and from the website above.
+%
+Development can be followed or joined on github
+(\url{http://github.com/richfitz/diversitree}).
+
+I hope that the package will enable users to test a wide variety of
+macroevolutionary questions.
+%
+However, I will close with a caution.  All included methods are
+correlative only \citep{Maddison-2007-701,Losos-2011-709}; they can
+merely show a statistical association between traits and speciation or
+extinction rates and cannot prove that the trait does affect
+speciation or extinction.  Any unconsidered trait that is correlated
+with the target trait could be causal \citep[and Figure
+\ref{fig:musse-power}]{Maddison-2007-701}.
+%
+Alternatively, the associations may be spurious, perhaps driven by
+departures from the assumed model of cladogenesis or character
+evolution.  There is currently no way of testing absolute
+goodness-of-fit with any method, and all conclusions should be
+recognised as being conditional on a particular model, and on that
+model being appropriate.
+
+%%% EXCLUDE BEGIN
+\section{Acknowledgements}
+Sally Otto provided extensive support, feedback, and comments on
+diversitree and on this manuscript.
+%
+For general comments and discussions around the development of
+diversitree, I thank Emma Goldberg, Wayne Maddison, Karen
+Magnuson-Ford, Itay Mayrose, Arne Mooers, Brian O'Meara, Dan Rabosky,
+Stacey Smith, and the users who have contacted me with comments,
+questions, and bug reports.
+%
+Karen Magnuson-Ford and Sally Otto contributed ``BiSSE-ness'', Emma
+Goldberg contributed ``GeoSSE'' and ``ClaSSE'', and Wayne Maddison
+developed the interface with Mesquite.  Emmanuel Paradis developed the
+ape package on which diversitree depends and uses.
+%
+I thank Luke Harmon, Carl Boettiger, Graham Slater, and an anonymous
+reviewer for suggestions that improved the manuscript.
+%
+This work was supported by a University Graduate Fellowship from the
+University of British Columbia and a Vanier Commonwealth Graduate
+Scholarship from NSERC to R.G.F., and an NSERC discovery grant to
+Sarah P.\ Otto.
+
+\bibliographystyle{jecol}
+\bibliography{refs}
+%%% EXCLUDE END
+
+%%% THESIS END
+
+\end{document}
+
+
+%%% Local Variables:
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End:
+
+% LocalWords:  classe ness ip mkn Tv bisse Un geosse bisseness musse bm ou pre
+% LocalWords:  Ornstein quasse lik mk mle mcmc jc Anacker ij dat Allenopithecus
+% LocalWords:  nigroviridis Allocebus trichotis Alouatta belzebul caraya fusca
+% LocalWords:  coibensis phy argnames qM qS signif coef lnLik subplex lambdaM
+% LocalWords:  lambdaS muM muS anova noSDD Df ChiSq noInteraction deSolve cccc
+% LocalWords:  Felsenstein Pagel Maddison Magnuson Schluter Bokma Claramunt bd
+% LocalWords:  Rabosky Alfaro Bollback lccc Sk NEWL Jukes diversitree's Redding
+% LocalWords:  faunivore folivore frugivore additivity multitrait Losos Itay
+% LocalWords:  Beaulieu Mayrose Mooers O'Meara Emanuael Paradis Vanier NSERC
+% LocalWords:  macroevolutionary cladogenesis
