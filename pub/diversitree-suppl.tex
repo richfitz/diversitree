@@ -1,0 +1,656 @@
+% Supplementary material for the diversitree paper.
+\documentclass[12pt,twoside]{article}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{natbib}
+\setlength{\bibsep}{.75ex}
+
+\usepackage[plain]{dtsweave}
+\usepackage{suppmat}
+
+% To get figures from the primates example:
+\graphicspath{{}{example/}}
+
+% For tuning:
+\usepackage{enumitem}
+\newenvironment{cdescription}{\begin{description}[font=\tt,leftmargin=4em,labelindent=2em,noitemsep]\addtolength{\parskip}{.75ex}}{\end{description}}
+\usepackage{MnSymbol}
+\usepackage[mathlf,minionint]{MinionPro}
+\RequirePackage{textcomp}
+\RequirePackage[toc,eqno,enum,bib]{tabfigures}
+\newcommand{\dnorm}[3]{%
+  \frac{1}{\sqrt{2\pi #3}} 
+  \exp\left(-\frac{(#1-#2)^2}{2#3}\right)
+}
+\newcommand{\ud}{\ensuremath{\mathrm{d}}}
+\newcommand{\dt}{\ensuremath{\Delta t}}
+
+% For MEE:
+\pdfminorversion=3
+
+\titleprefix{Supporting information}
+\runninghead{Diversitree}
+\title{Diversitree: Comparative
+  Phylogenetic Analyses of Diversification in R}
+\author{Richard G.\ FitzJohn}
+\address{Department of Zoology \& Biodiversity Research Centre,\\
+  University of British Columbia}
+\emailaddress{fitzjohn@zoology.ubc.ca}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Tuning diversitree}
+\label{sec:tuning}
+
+Many of the models included in diversitree are computationally
+expensive.  For example, all the state-dependent speciation and
+extinction models (abbreviated xxSSE) involve numerically solving
+systems of nonlinear differential equations for every branch in a tree
+(of which there are $2n-2$ for a tree with $n$ species).  This can
+lead to long computation times, but it is possible to tune the
+performance of diversitree by changing how these calculations are
+performed
+
+To control the way calculations are carried out, every ``\code{make}''
+function takes a \code{control} argument.  When specified, this is a
+list of one or more tag/value pairs, such as
+\begin{Schunk}
+\begin{Sinput}
+  control=list(tag1=value1, tag2=value2, ...)
+\end{Sinput}
+\end{Schunk}
+Below, for each class of models I list the possible tags and the
+values that they may take.  As diversitree handles discrete and
+continuous traits in quite different ways, I describe the tuning
+options separately.
+
+
+\subsection{Discrete traits}
+
+\begin{cdescription}
+\item[backend] This switches between different algorithms for solving
+  the system of differential equations, and takes values
+  \code{"deSolve"} (the default), \code{"cvodes"}, and \code{"CVODES"}
+  (quotes are required).  For example, passing the argument\\
+  \code{control=list(backend="CVODES")}\\to a \code{make} function
+  will use the \code{"CVODES"} backend.  Keys never require quotes,
+  while values do unless logical or numeric.
+
+  The \code{"deSolve"} backend uses the \textsc{lsoda} algorithm from
+  the R package \mbox{deSolve} \citep{deSolve} to solve the system of
+  differential equations.  This is a great general purpose ODE solver
+  and is available on all R platforms.  However, while the
+  calculations for each branch are done entirely using compiled code,
+  the calculations at nodes and substantial amounts of book-keeping
+  are done in R code, which can be a bottleneck.  See \code{safe}
+  below for the other disadvantage of this backend.
+  
+  The \code{"cvodes"} backend uses the \textsc{cvodes} algorithm
+  \citep{cvode} from the sundials library of solvers
+  \citep{sundials}\footnote{This actually uses the \textsc{cvode}
+    algorithm, not \textsc{cvodes}, as sensitivity calculations are
+    not yet supported.}.  Like the \code{deSolve} backend, only the
+  integration is done in compiled code, with node calculations and
+  book-keeping done in R.  The \code{"cvodes"} backend is about 20\%
+  slower than \code{"deSolve"} for BiSSE, and is not available on
+  Windows.
+
+  The \code{"CVODES"} backend also uses the \textsc{cvodes} algorithm.
+  However, \emph{all} calculations are carried out in compiled
+  code.
+  %
+  This option is not available for all model types.  In particular,
+  ClaSSE, BiSSE-ness, split models, and time-dependent models are not
+  yet implemented.
+  %
+  This backend is about 5 times faster than \code{"deSolve"} for
+  BiSSE, but is also not available on Windows.
+  
+\item[safe] When using the \code{"deSolve"} backend, diversitree uses
+  non-exported compiled functions within the deSolve
+  package\footnote{Specifically, we use the compiled \textsc{lsoda}
+    wrapper function \code{call\_lsoda} directly, rather than the R
+    function \code{lsoda}.}.  deSolve's function definitions may
+  change between package versions, and if called can cause R to crash.
+  To avoid this, if the installed deSolve version is not known to
+  work, diversitree will fall back on a ``safe'' version, in which
+  only exported deSolve functions are used.  This is about 5 times
+  slower than \code{safe=FALSE} for BiSSE\footnote{The reason for the
+    slowdown is due to looking up the memory address of the derivative
+    function every time it is used.  In diversitree, we create a
+    wrapper that remembers the address as it will not change during an
+    R session.}.  This approach can be forced by specifying
+  \code{safe=TRUE}, though there are few cases where this is desired.
+  %
+  This option has no effect for the \code{"cvodes"} and \code{"CVODES"}
+  backends.
+
+\item[unsafe] This is the opposite of \code{safe}.  When \code{TRUE},
+  even if the deSolve version is not known to work, the calculations
+  will proceed anyway.  This can crash R, or potentially produce
+  incorrect results (though the latter is unlikely and can be checked
+  by confirming with \code{safe=TRUE}).  However, this option may be
+  useful if the diversitree version lags behind the installed deSolve
+  version.  This is especially true for Windows users, for whom
+  compilation of diversitree is often tricky.
+  %
+  This option has no effect for the \code{"cvodes"} and \code{"CVODES"}
+  backends.
+  
+\item[tol] This controls the degree of accuracy of the integration of
+  each branch.  By default a value of \code{1e-8} is used
+  ($10^{-8}$).  Decreasing this value increases the accuracy of the
+  calculations, but increases the required running time.
+  %
+  Informally, the \textsc{lsoda} algorithm estimates errors, $e$, for
+  each variable $y$ and attempts to keep these errors smaller than
+  $\mathtt{tol} \times y + \mathtt{tol}$.
+  %
+  The \textsc{cvodes} algorithm uses a similar error target, $\sum_{i=1}^n
+  \frac{1}{n}(e_i/(\mathtt{tol} \times y_i + \mathtt{tol}))^2$, where
+  $e_i$ is the estimated error for the $i$th variable.
+  %
+  If the requested accuracy is not possible, the calculations will
+  fail with an error.  Values below \code{sqrt(.Machine\$double.eps)},
+  which is usually around \code{1e-8}, are optimistic.
+  %
+  Note that because of error propagation, the error for the entire
+  likelihood calculation will be substantially higher\footnote{The
+    form $\mathtt{tol} \times y + \mathtt{tol}$ in the above
+    expressions arises because the algorithm \textit{actually} uses
+    $\mathtt{rtol} \times y + \mathtt{atol}$ where \code{rtol} is a
+    relative tolerance and \code{atol} is an absolute tolerance.
+    However, these are not separately tunable in the current
+    diversitree version.}.
+
+\item[eps] At the end of each branch, diversitree checks the value of
+  all ``data'' variables (in BiSSE-type models, these are the $D$
+  variables).  If any of these are smaller than ``\code{eps}''
+  diversitree splits the branch in two and runs the calculations on
+  each half, repeating this until the desired accuracy is reached.
+  This is useful on very long branches where speciation and extinction
+  rates are similar, as negative $D$ values can be produced.  The
+  default is \code{eps=0}, which enforces positive values.  Specifying
+  \code{eps=-Inf} will disable this check.  In theory, small positive
+  numbers may help in some difficult-to-fit models (again, with
+  speciation rates close to extinction rates).  However, in models
+  with rapid character evolution, variables may never take values much
+  above zero, which means that this criterion may never be satisfied
+  for a given \code{eps} $>$ 0, and the calculations will fail.
+\end{cdescription}
+
+As an example, using a BiSSE likelihood function,
+\begin{Schunk}
+\begin{Sinput}
+make.bisse(tree, states, 
+           control=list(backend="CVODES", tol=1e-5, eps=-Inf))
+\end{Sinput}
+\end{Schunk}
+specifies that the \code{"CVODES"} backend will be used, error
+tolerances have increased to $0.00001$, and positive $D$ values are no
+longer being enforced.  This will run faster than the default options,
+but the answers will be less accurate.
+
+The elements of the \code{control} argument are checked to make sure
+that the values make sense, but misspellings of element names are not
+checked.  For example, specifying \code{control=list(back="CVODES")}
+will still use the the default deSolve algorithm \textsc{lsoda} solver
+for the calculations, with no warning given.
+
+\subsubsection{Mk2 \& Mkn}
+By default, likelihoods under these models are computed differently to
+the xxSSE models.  Because there are no $E$ variables to compute, it
+is feasible to generate a matrix $P_{ij}(\dt)$ that describes the
+probability of a transition from state $i$ to state $j$ over time
+$\dt$ simultaneously for all branches.  This is not possible in BiSSE
+and other xxSSE models as the starting and ending times matter (rather
+than simply the elapsed time) because of the influence of $E(t)$.
+%
+By default, diversitree computes this matrix for all branch lengths in
+the tree and then uses this matrix to quickly compute the likelihood.
+Almost all of these calculations are in compiled code and should be
+fairly quick.
+
+For \code{mk2}, the $P_{ij}(\dt)$ matrix can be computed exactly, and
+all of the above \code{control} options are ignored.
+%
+For \code{mkn}, the calculation of $P_{ij}(\dt)$ still requires
+numerical integration, and the options \code{backend}, \code{safe},
+\code{unsafe}, and \code{tol} in the previous section are available.
+However, neither \code{backend="CVODES"} or \code{eps} make sense in
+this case, and will cause an error (\code{backend="CVODES"}) or be
+silently ignored (\code{eps}).
+
+As the number of states increases, computing the transition
+probability matrix becomes expensive.  This is particularly the case
+for \code{make.mkn.multitrait} where the number of possible states
+grows exponentially in the number of traits; $n$ binary traits require
+$2^n$ possible states, which is $2^{2n}$ elements in $P_{ij}(\dt)$.
+%
+In such cases, there is a control option that changes the algorithm:
+\begin{cdescription}
+\item[method] Specifying \code{method="ode"} uses a branch-by-branch
+  approach that avoids computing the transition probability matrix.
+  When this is specified, the algorithm used is exactly the same as
+  for BiSSE-type models, and all the control parameters in the
+  previous section are available.  The default is \code{method="exp"}
+  (the name here derives from the approach used by ``ape'' to carry
+  out the same calculations through matrix exponentiation --- see
+  \citealp{Moler-2003-3}).
+\end{cdescription}
+
+\subsection{Continuous traits}
+
+\subsubsection{QuaSSE}
+The options for tuning QuaSSE are not shared with any other model.
+Unfortunately, no matter what control parameters are specified, QuaSSE
+will be fairly slow compared with other models in diversitree.
+
+\begin{cdescription}
+\item[method] One of \code{"fftC"} or \code{"fftR"} to switch between
+  C (relatively fast) and R (extremely slow) back-ends for the
+  integration.
+  %
+  Both use non-adaptive fast Fourier transform (\textsc{fft}) based
+  convolutions to solve the partial differential equations
+  \citep[see][]{FitzJohn-2010-619}.
+  %
+  Specifying \code{"fftC"} uses the ``Fastest Fourier Transforms in
+  the West'' library \citep{fftw}, while specifying \code{"fftR"}
+  method uses R's built-in \code{fft} function.
+  %
+  Specifying \code{"mol"} will use an experimental method-of-lines
+  approach.
+  
+\item[dt.max] Maximum time step to use for the integration.  By
+  default, this will be set to 1/1000 of the tree depth.  Smaller
+  values will slow down calculations, but improve accuracy.
+
+\item[nx] The number of bins into which the character space is divided
+  (the default is 1024).  Larger values will be slower and more
+  accurate.  For the \code{"fftC"} integration method, this must be an
+  integer power of 2 (512, 2048, etc).
+
+\item[r] Scaling factor that multiplies \code{nx} for a ``high
+  resolution'' section at the tips of the tree (the default is 4,
+  giving a high resolution character space divided into 4,096 bins).
+  This helps improve accuracy and makes it possible to allow for
+  narrow initial probability distributions, which flatten out as time
+  progresses towards the root.  Larger values will be slower and more
+  accurate.  For the \code{"fftC"} integration method, this must be a
+  small power of 2 (e.g., 2, 4, 8), so that \code{nx*r} is also a
+  power of 2.
+  
+\item[tc] This specifies when in the tree to switch the resolution
+  from the high resolution section specified by \code{r} to the lower
+  resolution. Zero corresponds to the present, larger numbers moving
+  towards the root.  By default, this happens at 10\% of the tree
+  depth (so the default is \code{0.1 * max(branching.times(tree))}).
+  Smaller values will be faster, but less accurate, and must be
+  specified in time units.
+\end{cdescription}
+
+\subsubsection{Brownian motion and Ornstein-Uhlenbeck}
+These models take two possible control parameters:
+
+\begin{cdescription}
+\item[method] This switches between two different algorithms for
+  computing likelihoods.  The default, \code{method="vcv"}, uses the
+  phylogenetic variance-covariance matrix, as implemented in the
+  geiger and ape packages \citep{ape,geiger}.  This is very fast for
+  small trees.
+  
+  For large trees (hundreds of species), the matrix calculations make
+  computing the likelihood very expensive.  In this case, specifying
+  \code{method="pruning"} uses an algorithm more like that used in
+  BiSSE and QuaSSE likelihood calculations, where each branch is
+  treated separately.
+  %
+  This algorithm is similar to that described in
+  \citet{Felsenstein-1973-471}; however, I have not seen this version
+  described elsewhere and so describe it in section \ref{sec:bm-ou}.
+
+\item[backend] When \code{method="pruning"} is selected, this controls
+  which of two methods of calculation is used; the default,
+  \code{backend="R"}, computes the likelihood entirely within R code,
+  which should be fairly robust.  Specifying \code{backend="C"} uses
+  the same algorithm, but entirely implemented in C, which will be
+  faster, but is less extensively tested.
+\end{cdescription}
+
+\subsection{``Split'' models}
+\enlargethispage{\baselineskip}
+All models that allow for different regions of the tree to have
+different rates (such as \code{make.bisse.split} and
+\code{make.quasse.split}) have one additional control parameter:
+\begin{cdescription}
+\item [caching.branches] When \code{TRUE}, this will try to minimise
+  recalculating the likelihood for regions of the tree where
+  parameters have not changed.
+  % 
+  Every function evaluation, the values at the beginning and end of
+  each branch, plus the parameters, are stored.  If in the next
+  evaluation both the parameters and initial conditions are unchanged,
+  the previous base values are returned.  Otherwise the branch is
+  calculated as usual.
+  % 
+  This is useful during \textsc{mcmc} updates, or with many ML search
+  algorithms, where only a fraction of parameters are changed at once.
+  In particular, the default \textsc{mcmc} algorithm (slice sampling;
+  \citealp{Neal-2003-705}) updates each parameter separately, so
+  without this set most calculation time is wasted.
+  %
+  For computationally intensive models, such as QuaSSE, this can make
+  \textsc{mcmc} analyses with split models take the same time to take
+  one step (updating all parameters) as non-split models, despite the
+  increase in the dimensionality of parameter space.  For less
+  intensive models, such as BiSSE, the overhead of the caching process
+  can erase some of the time savings.
+\end{cdescription}
+
+\clearpage
+\section{A faster algorithm for BM \& OU likelihood calculations}
+\label{sec:bm-ou}
+
+Here, I describe an algorithm for computing likelihoods under Brownian
+motion and Ornstein-Uhlenbeck that can be considerably faster than
+conventional approaches.
+%
+The algorithm here uses the pruning algorithm of
+\citet{Felsenstein-1981-368}, and is closely related to the algorithm
+presented in \citet{Felsenstein-1973-471}.  It differs mostly in
+presentation, using the same approach as the xxSSE models.
+%
+The conventional algorithm, as implemented in \code{fitContinuous} in
+the geiger package \citep{geiger} and the \textsc{reml} algorithm in
+\code{ace} in the ape package \citep{ape} uses the phylogenetic
+variance-covariance matrix to compute the likelihood of a rate of
+diffusion by estimating the probability of the observed trait data
+under a multivariate-normal distribution.  In what follows, I will
+refer to this as the ``\textsc{vcv}'' algorithm due the central role
+of the phylogenetic variance-covariance matrix.
+
+\subsection{Brownian motion}
+
+Using the notation of QuaSSE \citep{FitzJohn-2010-619}, let $D_N(x,t)$
+be the probability of the observed trait distribution for some lineage
+$N$, given that it is in state $x$ at time $t$.  Unlike QuaSSE, this
+does not account for the distribution of branching times, which are
+assumed to be unaffected by the trait state.  Assuming that $D$ will
+always be Gaussian, it can be characterised by a vector of three
+elements: a mean $\mu_N$, variance $V_N$, and a normalising factor
+$1/z_N$, such that
+\begin{equation}
+  \label{eq:Gaussian}
+  D_N(x,t) = \frac{1}{z_N}\dnorm{x}{\mu_N}{V_N}.
+\end{equation}
+For example, the initial distribution at a tip, $D_N(x,0)$, will be
+have $\mu_N$ as the mean extant trait value.  If the trait value is
+known without error, then $V_N=0$ and $D_N(x,0)$ is a delta function
+at $\mu_N$.  Alternatively, $V_N$ can be set greater than zero to
+capture measurement error or uncertainty in the mean $\mu_N$.  The
+normalising factor, $1/z_N$, will be 1 so that $\int D_N(x,0)\ud x =
+1$.
+
+Consider a branch that has a tip at time $t$ and a base at time
+$t+\dt$ (further back in time than $t$), so that the branch of has
+length $\dt$.  Brownian motion has a normal transition probability
+density function; given a rate of diffusion of $\sigma^2$, the
+probability density of state $y$ at a branch tip (time $t$) given a
+state of $x$ at the branch base (time $t+\dt$) is:
+\begin{equation}
+  \label{eq:xpdf-bm}
+  g(y,t|x, t + \dt) = 
+  \dnorm{x}{y}{\dt \sigma^2}.
+\end{equation}
+%
+Given $D_N(x,t)$ at the tip of the branch, we can compute
+$D_N(x,t+\dt)$ at the base of that branch as
+\begin{equation}
+  \label{eq:convolve}
+  D_N(x,t+\dt) = 
+  \int_{-\infty}^{\infty}
+  g(y,t|x,t+\dt)
+  D_N(y,t)\ud y,
+\end{equation}
+which is the probability that we move from $x$ to $y$ multiplied by
+the probability of the data at $y$, integrated over possible values of
+$y$ (this is the convolution of $D_N$ and $g$).
+%
+This has the solution
+\begin{equation}
+  \label{eq:convolve-bm-sol}
+  D_N(x,t+\dt) = 
+  \frac{1}{z_N}
+  \dnorm{x}{\mu_N}{(V_N + \sigma^2\dt)},
+\end{equation}
+which is a Gaussian with a mean $\mu_N$, variance $V_N + \sigma^2\dt$, and
+normalising factor $1/z_N$.  Note that only the variance is changed by
+this calculation, and it is always increased.
+
+At the node $N^\prime$ that is the parent of the lineages leading to
+nodes $N$ and $M$, we have two Gaussian functions with means $\mu_N$
+and $\mu_M$, variances $V_N$ and $V_M$, and normalising factors
+$1/z_N$ and $1/z_M$.  Both daughter lineages share the same state as
+their parent immediately following speciation.  Therefore, at the node
+the probability density of the data given that we are in some state
+$x$ is
+\begin{equation}
+  D_{N^\prime}(x,t) = D_N(x,t) D_M(x,t),
+\end{equation}
+or
+\begin{equation}
+  \label{eq:ic}
+  D_{N^\prime}(x,t) = \frac{1}{z_Nz_M}
+  \frac{\exp\left(-\frac{(\mu_N-\mu_M)^2}{2(V_N + V_M)}\right)}%
+  {\sqrt{2\pi(V_N+V_M)}}
+  \dnorm{x}{\frac{\mu_N V_M + m_M V_N}{V_N + V_M}}%
+  {\frac{V_N  V_M}{V_N + V_M}},
+\end{equation}
+which is Gaussian with mean $\frac{\mu_N V_M + m_M V_N}{V_N + V_M}$,
+variance $\frac{V_N V_M}{V_N + V_M}$, and normalising factor
+$\frac{1}{z_Nz_M} \times \frac{\exp\left(-\frac{(\mu_N-\mu_M)^2}{2(V_N
+      + V_M)}\right)}%
+{\sqrt{2\pi(V_N+V_M)}}$.  See also equations (7)--(15) in
+\citet{Felsenstein-1973-471}, which involve similar terms.
+
+With these two operations (moving down a branch and combining at
+nodes) we can move to the root of the tree, where we have a
+distribution $D_R(x,t_R)$, which is Gaussian with mean $\mu_R$,
+variance $V_R$, and normalising factor $z_R$.  Diversitree implements
+four possible root treatments.  First, following \citet{Pagel-1994-37}
+we can specify a flat prior on the root state, computing the
+likelihood as
+\begin{equation}
+  \label{eq:root-flat}
+  \int_{-\infty}^{\infty}D_R(x,t_R)\ud x = \frac{1}{z_R}.
+\end{equation}
+Second, following \citet{FitzJohn-2010-619}, we can weight the $D$
+function by the probability of observing the data:
+\begin{equation}
+  \label{eq:root-obs}
+  \int_{-\infty}^{\infty}D_R(x,t_R)
+  \frac{D_R(x,t_R)}{\int_{-\infty}^{\infty}D_R(y,t_R)\ud y}\ud x
+  = \frac{1}{z_R} \frac{1}{2\sqrt{\pi V_R}},
+\end{equation}
+where the second fraction on the right hand side comes from
+integrating the product of two Gaussians.  Third, we can evaluate
+$D_R(x,t)$ at its ML value.  This is $x=\mu_R$, giving
+\begin{equation}
+  \label{eq:root-ml}
+  \mathrm{max}_x[D_R(x,t_R)] = \frac{1}{z_R}\frac{1}{\sqrt{2\pi V_R}}.
+\end{equation}
+Finally, the user can supply a character state at the root $x_R$ at
+which $D_R(x,t_R)$ will be evaluated.  At present this is assumed to
+be known without error, but in principle a distribution could be used
+here.
+
+When the ML approach is used (equation \ref{eq:root-ml}), this
+algorithm produces identical likelihoods to the \textsc{vcv}
+algorithm.  I have proven this statement for a three-species tree and
+confirmed it numerically for some larger trees.
+
+\subsection{Ornstein-Uhlenbeck}
+For an Ornstein-Uhlenbeck process (OU), the above algorithm can again
+be used after altering the along-branch calculations (i.e., equations
+\ref{eq:xpdf-bm} and \ref{eq:convolve-bm-sol}).
+%
+In addition to the diffusion parameter, $\sigma^2$, let $\theta$ be
+the ``optimum'' character state, towards which traits are pulled and
+let $\alpha$ be the strength of restoring force bringing traits back
+to $\theta$.
+%
+The transition probability density function for OU (probability
+density of state $y$ at time $t$ given we were in state $x$ at time
+$t+\dt$ is normal with mean $e^{-\alpha t}(x - \theta) + \theta$, %
+variance $\frac{\sigma^2}{2\alpha}(1-e^{-2\alpha t})$, such that
+\begin{equation}
+  \label{eq:xpdf-ou}
+  g(y,t|x,t+\dt) =
+  \frac{1}{\sqrt{\pi\frac{\sigma^2}{\alpha}(1-e^{-2\alpha \dt})}}
+  \exp\left(-\frac{e^{-\alpha \dt}(x - \theta) + \theta - y}%
+    {\frac{\sigma^2}{\alpha}(1-e^{-2\alpha \dt})}
+  \right)
+\end{equation}
+\citep{Karlin-Taylor}.  The solution to the convolution
+(\ref{eq:convolve}) using equation (\ref{eq:xpdf-ou}) as the
+transition probability density function gives a Gaussian with %
+mean $e^{\alpha \dt} (\mu_N - \theta) + \theta$, %
+variance $\frac{(e^{2\alpha\dt} - 1) \sigma^2}{2\alpha} +
+e^{2\alpha\dt} V_N$, %
+and normalising factor $e^{\dt\alpha}/z_N$.
+
+The same treatment at nodes applies (equation \ref{eq:ic}), and the
+root calculations in equations
+(\ref{eq:root-flat})--(\ref{eq:root-ml}) can be used.  However, the
+``flat prior'' root treatment (equation \ref{eq:root-flat}) appears to
+give likelihoods that are not directly comparable to BM in a
+likelihood ratio test, with a hugely inflated type I error.
+
+\subsection{Performance}
+The above calculations can often be much faster than the
+\textsc{vcv}-based calculations.
+%
+I generated random Yule trees using diversitree's \code{tree.yule}
+function with a speciation rate of $0.1$ up to 16, 32, 64, \ldots,
+4096 species.  For each tree, I simulated traits under Brownian motion
+using diversitree's \code{sim.character} function with a diffusion
+parameter, $\sigma^2$, of $0.1$.
+% 
+Note that both the rate of speciation and diffusion rate of character
+state evolution are arbitrary, as rescaling the edge lengths or trait
+distributions is equivalent to changing the parameters.
+%
+To measure the time taken to compute likelihoods, for each tree I then
+computed the likelihood of the true diffusion parameter repeatedly
+until the total evaluation time exceeded 0.5\,s (this ranged from a
+single evaluation to several thousand evaluations).  I repeated this
+on 10 different simulated trees and traits.
+
+I tested three algorithms; first the \textsc{vcv} algorithm that is
+based on the code in the geiger package.  I modified this algorithm
+slightly to avoid inverting the phylogenetic covariance matrix and
+other matrix calculations for every likelihood calculation in the case
+where ``measurement error'' is assumed to be zero.  This is the
+default algorithm used by \code{make.bm}, corresponding to passing in
+\code{control=list(method="vcv")}.
+%
+Second, I used the pruning algorithm above, entirely coded in R.  This
+is the algorithm selected by passing
+\code{control=list(method="pruning", backend="R")} to \code{make.bm}.
+Third, I used the pruning algorithm, coded in C.  This is selected by
+specifying \code{backend="C"} rather than \code{"R"} in the control
+list above.  This third algorithm should be most directly comparable
+to the \textsc{vcv} algorithm in terms of speed, as both involve
+primarily compiled code.
+%
+To avoid the optimisation I made in the \textsc{vcv} algorithm, and to
+measure performance when measurement error is included, I repeated the
+above, but included very small measurement errors ($10^{-7}$).
+%
+Timings were carried out on a 2008 Mac Pro (2.8 GHz Intel Xeon
+processor).
+
+Where measurement error is zero, the \textsc{vcv} algorithm
+outperformed the pruning/R algorithm for all but the largest trees
+(4,096 species).  However, the required computational time of the
+\textsc{vcv} grew very quickly at this point (Figure
+\ref{fig:bm-performance}, solid lines).
+%
+Including ``measurement errors'' (initial $V_N > 0$), the \textsc{vcv}
+algorithm requires significant extra time to run.  As a result,
+pruning/R (which was unaffected by the addition of errors),
+outperformed the \textsc{vcv} beyond around 128 species (Figure
+\ref{fig:bm-performance}, dashed lines).
+%
+The pruning/C algorithm was the fastest in all cases, and was only
+marginally affected by the addition of measurement errors.
+%
+For very large trees (4,096) species, the difference in running times
+was very large; comparing \textsc{vcv} with pruning/C, there was a
+700-fold difference without measurement errors and over 150,000-fold
+difference including measurement errors.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=.8\textwidth]{bm/bm-timing}
+  \caption[Performance of Brownian motion likelihood algorithms]{Mean
+    running times for each likelihood function evaluation under the
+    three algorithms.  Solid lines assume that species traits are
+    known without error, while dashed lines include ``measurement
+    error''.  Note the logarithmic scale of both axes.}
+  \label{fig:bm-performance}
+\end{figure}
+
+The required running time in the number of species $n$, for the three
+algorithms at 4,096 species grows as approximately $O(n^3)$ and
+$O(n^{2.3})$ for \textsc{vcv} with and without measurement errors
+respectively, $O(n)$ for pruning/R, and $O(n^{0.9})$ for pruning/C.
+The sub-linear growth of the pruning/C algorithm is due to the impact
+of fixed computational costs\footnote{Simply checking that the
+  diffusion parameter is non-negative takes 12\% of the calculation
+  time for a 256 species tree.}, and should approach $O(n)$ for larger
+trees.
+%
+These performance timings do not include the time to compute and
+invert the phylogenetic variance-covariance matrix for the
+\textsc{vcv} algorithm, which would currently represent a large
+fraction of the time in carrying out an ML search.  For example, on a
+4,096 species tree creating a likelihood function (including creating
+and inverting the phylogenetic covariance matrix, and computing the
+determinant of the inverse) takes 124\,s with the \textsc{vcv}
+algorithm compared with 0.23\,s with the pruning algorithm.
+
+The tree sizes used here are large, and the performance differences on
+modest sized tree should be fairly small (Figure
+\ref{fig:bm-performance}).  However, trees larger than the largest
+size used here have increasingly become available
+\citep[e.g.,][]{Bininda-Emonds-2007-507,Smith-2008-86}, and which
+exceed the ability of the \textsc{vcv} algorithm to run.  Extending
+this pruning algorithm approach to relax the model may also be easier
+than within the conventional \textsc{vcv} framework.
+
+The code for the timing tests is available on the diversitree github
+site\footnote{\url{http://github.com/richfitz/diversitree/tree/pub/bm}}.
+
+\clearpage
+\section{MuSSE \& multitrait diversification in primates}
+\label{sec:primates}
+\input{example/primates-incl}
+
+\clearpage
+\bibliographystyle{jecol}
+\bibliography{refs}
+
+\end{document}
+
+%%% Local Variables:
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End:
