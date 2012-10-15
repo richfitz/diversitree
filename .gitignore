@@ -91,3 +91,8 @@ bounded
 
 pub/bm/bm-timing.pdf
 pub/bm/timings*Rdata
+
+pub/simulations/musse-multitrait-ci.pdf
+pub/simulations/musse-multitrait-power.pdf
+pub/simulations/output
+pub/simulations/trees
