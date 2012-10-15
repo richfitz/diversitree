@@ -1,0 +1,9 @@
+%% Sweave modification and set up:
+\definecolor{darkblue}{rgb}{.2,.2,.4}
+\definecolor{lgray}{rgb}{.33,.33,.33}
+\newcommand{\showfile}[1]{\VerbatimInput[frame=single,framerule=1px,xleftmargin=1.5em,fontsize=\relsize{-1}]{#1}}
+\fvset{listparameters={\setlength{\topsep}{0pt}}} 
+\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}} 
+\DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em,fontshape=sl,frame=leftline,framerule=1.5px,gobble=2,framesep=1.5em,rulecolor=\color{lgray}}
+\DefineVerbatimEnvironment{Soutput}{Verbatim} {xleftmargin=2em,formatcom=\color{darkblue},frame=leftline,framerule=1.5px,framesep=1.5em}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{xleftmargin=2em}
