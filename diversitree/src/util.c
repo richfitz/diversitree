@@ -1,6 +1,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
+#include <gsl/gsl_errno.h>
 
 /* Simplified matrix multiplication, assuming straightforward sizes
    and zeroing the input.  GEMM does:
@@ -209,4 +210,17 @@ SEXP check_ptr_not_null(SEXP extPtr) {
   if ( R_ExternalPtrAddr(extPtr) == NULL )
     error("Recieved NULL pointer");
   return ScalarLogical(1);
+}
+
+void handler_pass_to_R(const char *reason,
+                       const char *file,
+                       int line,
+                       int gsl_errno) {
+  Rf_error("GSLERROR: %s: %s:%d [%d]", reason, file, line, gsl_errno);
+}
+
+/* Pass GSL errors back to R -- don't just quit */
+SEXP set_sane_gsl_error_handling() {
+  gsl_set_error_handler(&handler_pass_to_R);
+  return R_NilValue;
 }
