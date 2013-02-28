@@ -13,7 +13,7 @@
 #include <user_data.h>
 
 /* This is the core function that actually evaluates the deriative */
-void do_derivs_bisse(double *pars, double *y, double *ydot) {
+void do_derivs_bisse(double *pars, const double *y, double *ydot) {
   double E0 = y[0], E1 = y[1], D0 = y[2], D1 = y[3];
   double la0 = pars[0], la1 = pars[1], mu0 = pars[2], mu1=pars[3],
     q01 = pars[4], q10 = pars[5];
@@ -54,6 +54,12 @@ void initial_conditions_bisse(int neq, double *vars_l, double *vars_r,
   vars_out[1] = vars_l[1];
   vars_out[2] = vars_l[2] * vars_r[2] * pars[0];
   vars_out[3] = vars_l[3] * vars_r[3] * pars[1];
+}
+
+/* gslode */
+void derivs_bisse_gslode(int neqs, double t, double *pars, 
+			 const double *y, double *dydt) {
+  do_derivs_bisse(pars, y, dydt);
 }
 
 /* Not used, but this is the BiSSE Jacobian */

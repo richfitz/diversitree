@@ -86,8 +86,7 @@ make.pij.mkn <- function(info, control) {
   k <- info$k
   info <- list(name="mkn_pij",
                ny=k*k, np=k*k, idx.d=integer(0))
-  info <- check.info.ode(info, control)
-  pij.ode <- make.ode.deSolve(info, control)
+  pij.ode <- make.ode(info, control)
 
   yi <- diag(k) # initial conditions always same.
 

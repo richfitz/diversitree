@@ -198,10 +198,12 @@ check.scalar <- function(x) {
 
 check.control.ode <- function(control=list()) {
   defaults <- list(safe=FALSE, tol=1e-8, eps=0, backend="deSolve",
-                   unsafe=FALSE)
+                   unsafe=FALSE,      # deSolve specific
+                   gsl.stepper="rkck" # gslode specific
+                   )
   control <- modifyList(defaults, control)
 
-  backends <- c("deSolve", "cvodes", "CVODES")
+  backends <- c("deSolve", "cvodes", "CVODES", "gslode")
   if ( length(control$backend) != 1 )
     stop("'backend' must be a single element")
   control$backend <- backends[pmatch(control$backend, backends)]

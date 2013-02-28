@@ -1,5 +1,12 @@
 ## Known to work on 1.3-1.6
 make.ode.deSolve <- function(info, control) {
+  if ( is.function(info$derivs) )
+    make.ode.deSolve.R(info, control)
+  else
+    make.ode.deSolve.C(info, control)
+}
+
+make.ode.deSolve.C <- function(info, control) {
   model  <- info$name.ode
   np     <- info$np  
   ny     <- info$ny
@@ -115,7 +122,7 @@ make.ode.deSolve <- function(info, control) {
 
 ## For testing new models.  Selected by make.ode() when info$derivs is
 ## a function
-make.ode.R <- function(info, control) {
+make.ode.deSolve.R <- function(info, control) {
   derivs <- info$derivs
   rtol <- atol <- control$tol
   if ( !is.function(derivs) )

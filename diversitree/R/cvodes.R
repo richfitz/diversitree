@@ -6,7 +6,7 @@ make.ode.cvodes <- function(info, control) {
   n.par <- info$np
   dll   <- info$dll
   atol  <- rtol <- as.numeric(control$tol)
-  
+
   derivs <- sprintf("derivs_%s_cvode", model)
   derivs <- getNativeSymbolInfo(derivs, PACKAGE=dll)$address
 
