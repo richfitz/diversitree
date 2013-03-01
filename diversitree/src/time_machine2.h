@@ -46,12 +46,17 @@ public:
   TimeMachine(std::vector<std::string> names,
 	      std::vector<std::string> funcs,
 	      std::vector<bool> nonnegative,
-	      std::vector<bool> truncate);
+	      std::vector<bool> truncate,
+	      int k);
 
   void set(std::vector<double> pars);
   std::vector<double> get(double t);
+  std::vector<double> getv(double t);
 
 private:
+  void setup_q(int k);
+  void normalise_q(bool is_const);
+
   // Number of high level (hyper) parameters (in).
   int np_in;
   // Number of underlying model parameters (out)
@@ -68,6 +73,13 @@ private:
   // the index within p_in for the first parameter of the ith
   // function).
   std::vector<int> idx;
+  // target is the mapping from function to parameters in the vector.
+  // So f[i] codes for the parameter that goes into p_out[target[i]]
+  std::vector<int> target;
+
+  // Used in the Q matrix only:
+  int idx_q_f, idx_q_out, k;
+  std::vector<bool> const_q;
 };
 
 

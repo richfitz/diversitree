@@ -5,9 +5,11 @@
 TimeMachine::TimeMachine(std::vector<std::string> names,
 			 std::vector<std::string> funcs,
 			 std::vector<bool> nonnegative,
-			 std::vector<bool> truncate) {
+			 std::vector<bool> truncate,
+			 int k) {
   nf = funcs.size();
   idx.resize(nf);
+  target.resize(nf);
   np_in = 0;
 
   // For now -- will change when dealing with Q
@@ -16,12 +18,16 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 
   for ( int i = 0; i < nf; i++ ) {
     idx[i] = np_in;
+    target[i] = i;
     TimeMachineFunction f = TimeMachineFunction(names[i], funcs[i], 
 						nonnegative[i],
 						truncate[i]);
     functions.push_back(f); // causes splines to be copied...
     np_in += f.np;
   }
+
+  
+  setup_q(k);
 }
 
 void TimeMachine::set(std::vector<double> pars) {
@@ -33,9 +39,11 @@ void TimeMachine::set(std::vector<double> pars) {
   for ( int i = 0; i < nf; i++ ) {
     f->set(p_iter + idx[i]);
     if ( f->is_constant )
-      p_out[i] = f->get(0); // any time would work here.
+      p_out[target[i]] = f->get(0); // any time would work here.
     f++;
   }
+  if ( k > 0 )
+    normalise_q(true);
 }
 
 // Probably also offer an iterator filling version for use within
@@ -46,39 +54,91 @@ std::vector<double> TimeMachine::get(double t) {
   std::vector<TimeMachineFunction>::iterator f = functions.begin();
   for ( int i = 0; i < nf; i++ ) {
     if ( !f->is_constant )
-      p_out[i] = f->get(t);
+      p_out[target[i]] = f->get(t);
     f++;
   }
+  if ( k > 0 )
+    normalise_q(false);
 
   return p_out;
 }
 
-// void normalise_q(dt_time_machine *obj, int is_const) {
-//   for ( int i = 0; i < k; i++ ) {
-//     if ( obj->const_q[i] == is_const ) {
-//       int offset = idx_q + i;
-//       double tmp = 0;
-//       for ( int j = 0; j < k; j++ )
-// 	if ( j != i )
-// 	  tmp += p_out[offset + j*k];
-//       p_out[offset + i*k] = -tmp;
-//     }
-//   }
-// }
+// This is not actually done - we need this to work on a vector of
+// time, returning a matrix...
+std::vector<double> TimeMachine::getv(double t) {
+  std::vector<double> p = get(t);
+  if ( k > 0 ) {
+    std::vector<double> ret;
+    std::vector<double>::iterator pi = p.begin();
 
+    // Copy non q values;
+    for ( int i = 0; i < idx_q_out; i++ )
+      ret.push_back(*pi++);
+    for ( int i = 0; i < k; i++ )
+      for ( int j = 0; j < k; k++ )
+	if ( i != j )
+	  ret.push_back(*pi++);
+	else
+	  pi++;
+    p = ret;
+
+    // Or, less efficient, but considerably shorter and easier to
+    // understand.
+    // std::vector<double>::iterator pi = p.end();
+    // for ( int i = 0; i < k; i++ ) {
+    //   p = p.erase(pi);
+    //   advance(p, -k);
+    // }
+  }
+  return p;
+}
+
+void TimeMachine::setup_q(int k_) {
+  k = k_;
+  if ( k > 0 ) {
+    // More space in the output vector
+    np_out += k;
+    p_out.resize(np_out);
+
+    // Index of start of Q matrix in output parameters
+    idx_q_out = np_out - k*k;
+    idx_q_f   = nf     - k*(k-1);
+
+    // Space to indicate when rows/columns(?) of Q are constant
+    const_q.resize(k, true);
+    std::vector<TimeMachineFunction>::iterator f = functions.begin();
+    advance(f, idx_q_f);
+    for ( int i = 0; i < k; i++ ) {
+      for ( int j = 0; j < k - 1; j++ ) {
+	const_q[i] = const_q[i] && f->is_constant;
+	f++;
+      }
+    }
+      
+    // Work out what the actual place things belong (recomputing the
+    // target mapping) given the input Q matrix is transposed relative
+    // to true Q matrix, and lacks diagonals.  This is pretty opaque
+    // :(
+    for ( int i = 0, l = idx_q_f; i < k; i++ )
+      for ( int j = 0; j < k; j++ )
+	if ( i != j )
+	  target[l++] = i + j * k + idx_q_f;
+  }
+}
 
 void TimeMachine::normalise_q(bool is_const) {
   for ( int i = 0; i < k; i++ ) {
     if ( const_q[i] == is_const ) {
-      qi_out = q_out + i;
+      int offset = idx_q_out + i;
       double tmp = 0.0;
       for ( int j = 0; j < k; j++ )
 	if ( j != i )
-	  tmp += qi_out[j*k];
-      qi_out[i*k] = -tmp;
+	  tmp += p_out[offset + j*k];
+      p_out[offset + i*k] = -tmp;
     }
   }
 }
+
 
 //////////////////////////////////////////////////////////////////////
 

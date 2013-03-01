@@ -200,7 +200,7 @@ check.time.machine.functions <- function(functions) {
 }
 
 make.time.machine2 <- function(functions, t.range, nonnegative=TRUE,
-                               truncate=FALSE) {
+                               truncate=FALSE, k=0) {
   ## argnames <- time.machine.argnames(functions)
 
   n <- length(functions)
@@ -208,7 +208,7 @@ make.time.machine2 <- function(functions, t.range, nonnegative=TRUE,
   truncate    <- check.par.length(truncate,    n)
 
   new(TimeMachine, names(functions), functions, nonnegative,
-      truncate)
+      truncate, k)
 }
 
 time.machine.argnames <- function(functions) {

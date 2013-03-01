@@ -38,8 +38,10 @@ RCPP_MODULE(diversitree) {
     .constructor< std::vector<std::string>,
 		  std::vector<std::string>,
 		  std::vector<bool>,
-		  std::vector<bool> >()
-    .method("set", &TimeMachine::set)
-    .method("get", &TimeMachine::get)
+		  std::vector<bool>,
+		  int>()
+    .method("set",  &TimeMachine::set)
+    .method("get",  &TimeMachine::get)
+    .method("getv", &TimeMachine::getv)
     ;
 }
