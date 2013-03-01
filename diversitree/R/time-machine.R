@@ -198,3 +198,40 @@ check.time.machine.functions <- function(functions) {
     stop("Unknown time-varying function")
   types
 }
+
+make.time.machine2 <- function(functions, t.range, nonnegative=TRUE,
+                               truncate=FALSE) {
+  ## argnames <- time.machine.argnames(functions)
+
+  n <- length(functions)
+  nonnegative <- check.par.length(nonnegative, n)
+  truncate    <- check.par.length(truncate,    n)
+
+  new(TimeMachine, names(functions), functions, nonnegative,
+      truncate)
+}
+
+time.machine.argnames <- function(functions) {
+  if ( is.null(names(functions)) ) # already true?
+    stop("functions must be named")
+  
+  ## Build up argument names:
+  ## Ideally we'd actually get these back from the C side too...
+  info.t <- list(constant.t="c",
+                 linear.t=c("c", "m"),
+                 stepf.t=c("y0", "y1", "tc"),
+                 sigmoid.t=c("y0", "y1", "tmid", "r"),
+                 spline.t=c("y0", "y1"))
+  if ( !all(functions %in% names(info.t)) )
+    stop("Unknown functions")
+
+  argnames <- mapply(paste, names(functions), unname(functions),
+                     sep=".", SIMPLIFY=FALSE)
+  is.constant <- functions == "constant.t"  
+  argnames[is.constant] <- names(functions)[is.constant]
+  argnames <- unlist(argnames)
+  names(argnames) <- NULL
+  if ( any(duplicated(argnames)) )
+    stop("Duplicate argument names: consider different prefixes?")
+  argnames
+}

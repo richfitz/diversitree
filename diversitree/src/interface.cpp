@@ -5,10 +5,12 @@
 #include "GslOdeR.h"
 #include "GslOdeCompiled.h"
 
+#include "time_machine2.h"
+
 // Need to do this.
 RCPP_EXPOSED_CLASS(GslOdeBase)
 
-RCPP_MODULE(GslOde) {
+RCPP_MODULE(diversitree) {
   using namespace Rcpp;
 
   class_<GslOdeBase>("GslOdeBase")
@@ -26,5 +28,18 @@ RCPP_MODULE(GslOde) {
   class_<GslOdeCompiled>("GslOdeCompiled")
     .constructor<SEXP, int>()
     .derives<GslOdeBase>("GslOdeBase")
+    ;
+
+  // Or with typedefs
+  // typedef vec_str  = std::vector<std::string>;
+  // typedef vec_bool = std::vector<bool>;
+  // .constructor<vec_str, vec_str, vec_bool, vec_bool>()
+  class_<TimeMachine>("TimeMachine")
+    .constructor< std::vector<std::string>,
+		  std::vector<std::string>,
+		  std::vector<bool>,
+		  std::vector<bool> >()
+    .method("set", &TimeMachine::set)
+    .method("get", &TimeMachine::get)
     ;
 }
