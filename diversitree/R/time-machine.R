@@ -202,8 +202,6 @@ check.time.machine.functions <- function(functions) {
 make.time.machine2 <- function(functions, t.range, nonnegative=TRUE,
                                truncate=FALSE, k=0,
                                spline.data=NULL) {
-  ## argnames <- time.machine.argnames(functions)
-
   n <- length(functions)
   nonnegative <- check.par.length(nonnegative, n)
   truncate    <- check.par.length(truncate,    n)
@@ -221,8 +219,10 @@ make.time.machine2 <- function(functions, t.range, nonnegative=TRUE,
     spline.data <- list(t=numeric(0), y=numeric(0))
   }
 
-  new(TimeMachine, names(functions), functions, nonnegative,
-      truncate, k, spline.data$t, spline.data$y)
+  tm <- new(TimeMachine, names(functions), functions, nonnegative,
+            truncate, k, spline.data$t, spline.data$y)
+  attr(tm, "argnames") <- time.machine.argnames(functions)
+  tm
 }
 
 time.machine.argnames <- function(functions) {
@@ -239,9 +239,10 @@ time.machine.argnames <- function(functions) {
   if ( !all(functions %in% names(info.t)) )
     stop("Unknown functions")
 
-  argnames <- mapply(paste, names(functions), unname(functions),
+  argnames <- mapply(paste, names(functions),
+                     unname(info.t[functions]),
                      sep=".", SIMPLIFY=FALSE)
-  is.constant <- functions == "constant.t"  
+  is.constant <- functions == "constant.t"
   argnames[is.constant] <- names(functions)[is.constant]
   argnames <- unlist(argnames)
   names(argnames) <- NULL

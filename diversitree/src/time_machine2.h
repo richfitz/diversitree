@@ -55,6 +55,7 @@ public:
   void set(std::vector<double> pars);
   std::vector<double> get(double t);
   std::vector<double> getv(double t);
+  int size() { return np_in; }
 
 private:
   void setup_q(int k);

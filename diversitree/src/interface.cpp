@@ -4,11 +4,12 @@
 
 #include "GslOdeR.h"
 #include "GslOdeCompiled.h"
+#include "GslOdeTime.h"
 
 #include "time_machine2.h"
 
 // Need to do this.
-RCPP_EXPOSED_CLASS(GslOdeBase)
+RCPP_EXPOSED_CLASS(TimeMachine)
 
 RCPP_MODULE(diversitree) {
   using namespace Rcpp;
@@ -30,6 +31,11 @@ RCPP_MODULE(diversitree) {
     .derives<GslOdeBase>("GslOdeBase")
     ;
 
+  class_<GslOdeTime>("GslOdeTime")
+    .constructor<SEXP, int, TimeMachine>()
+    .derives<GslOdeBase>("GslOdeBase")
+    ;
+
   // Or with typedefs
   // typedef vec_str  = std::vector<std::string>;
   // typedef vec_bool = std::vector<bool>;
@@ -42,8 +48,9 @@ RCPP_MODULE(diversitree) {
 		  int,
 		  std::vector<double>,
 		  std::vector<double> >()
-    .method("set",  &TimeMachine::set)
-    .method("get",  &TimeMachine::get)
-    .method("getv", &TimeMachine::getv)
+    .property("size", &TimeMachine::size)
+    .method("set",    &TimeMachine::set)
+    .method("get",    &TimeMachine::get)
+    .method("getv",   &TimeMachine::getv)
     ;
 }

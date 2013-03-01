@@ -80,3 +80,19 @@ ode.gslode.C <- make.ode(info.gslode, control.gslode)
 res.gslode.C <- ode.gslode.C(y, tt, pars)
 expect_that(res.ref[,-1,drop=FALSE], equals(res.gslode.C))
 
+## Now, try a time dependent model.
+functions <- rep(c("linear.t", "constant.t"), c(2, 4))
+names(functions) <- info$argnames
+
+## Really, need to sort out doing the time machine augmenting
+## somewhere else...
+
+## Drop t.range from this?
+info$tm <- diversitree:::make.time.machine2(functions, c(0, 10))
+info$time.varying <- TRUE
+info$argnames <- attr(info$tm, "argnames")
+info$np <- length(info$argnames)
+
+## This never made the move across to time varying -- something is
+## getting dropped on the way through the functions.  Sort this next.
+ode.gslode.t <- make.ode(info.gslode, control.gslode)
