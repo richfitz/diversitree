@@ -6,27 +6,31 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 			 std::vector<std::string> funcs,
 			 std::vector<bool> nonnegative,
 			 std::vector<bool> truncate,
-			 int k) {
+			 int k,
+			 std::vector<double> spline_t,
+			 std::vector<double> spline_y) {
   nf = funcs.size();
   idx.resize(nf);
   target.resize(nf);
   np_in = 0;
 
-  // For now -- will change when dealing with Q
   np_out = nf;
   p_out.resize(nf);
+
+  if ( (int)spline_t.size() > 0 )
+    spline.init(spline_t, spline_y);
 
   for ( int i = 0; i < nf; i++ ) {
     idx[i] = np_in;
     target[i] = i;
     TimeMachineFunction f = TimeMachineFunction(names[i], funcs[i], 
 						nonnegative[i],
-						truncate[i]);
-    functions.push_back(f); // causes splines to be copied...
+						truncate[i],
+						&spline);
+    functions.push_back(f);
     np_in += f.np;
   }
 
-  
   setup_q(k);
 }
 
@@ -145,13 +149,11 @@ void TimeMachine::normalise_q(bool is_const) {
 TimeMachineFunction::TimeMachineFunction(std::string name_,
 					 std::string func_,
 					 bool nonnegative_,
-					 bool truncate_):
+					 bool truncate_,
+					 Spline *spline_):
   variable_name(name_), func_name(func_),
-  nonnegative(nonnegative_), truncate(truncate_) {
-
-  // Splines disabled for now
-  spline = NULL;
-
+  nonnegative(nonnegative_), truncate(truncate_),
+  spline(spline_) {
   is_constant = func_name == "constant.t";
 
   if ( func_name == "constant.t" ) {
@@ -169,6 +171,8 @@ TimeMachineFunction::TimeMachineFunction(std::string name_,
   } else if ( func_name == "spline.t" ) {
     f = &tm_fun_spline;
     np = 2;
+    if ( spline == NULL )
+      error("Should not be able to get here!");
   } else {
     error("Unknown function type %s", func_name.c_str());
   }

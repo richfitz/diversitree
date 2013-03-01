@@ -17,7 +17,8 @@
 class TimeMachineFunction {
 public:
   TimeMachineFunction(std::string name_, std::string func_,
-		      bool nonnegative_, bool truncate_);
+		      bool nonnegative_, bool truncate_,
+		      Spline *spline);
   void set(std::vector<double>::iterator p);
   double get(double t);
   bool is_constant;
@@ -47,7 +48,9 @@ public:
 	      std::vector<std::string> funcs,
 	      std::vector<bool> nonnegative,
 	      std::vector<bool> truncate,
-	      int k);
+	      int k,
+	      std::vector<double> spline_t,
+	      std::vector<double> spline_y);
 
   void set(std::vector<double> pars);
   std::vector<double> get(double t);
@@ -80,6 +83,9 @@ private:
   // Used in the Q matrix only:
   int idx_q_f, idx_q_out, k;
   std::vector<bool> const_q;
+
+  // Used for splines (obviously)
+  Spline spline;
 };
 
 

@@ -200,15 +200,29 @@ check.time.machine.functions <- function(functions) {
 }
 
 make.time.machine2 <- function(functions, t.range, nonnegative=TRUE,
-                               truncate=FALSE, k=0) {
+                               truncate=FALSE, k=0,
+                               spline.data=NULL) {
   ## argnames <- time.machine.argnames(functions)
 
   n <- length(functions)
   nonnegative <- check.par.length(nonnegative, n)
   truncate    <- check.par.length(truncate,    n)
 
+  ## This is pretty ugly, but should do for now.  Once we trim the old
+  ## time machine code, this can be cleaned up.
+  if ( "spline.t" %in% functions ) {
+    if ( is.null(spline.data) )
+      stop("spline data must be provided if spline.t used as a function")
+    spline.data <- check.spline.data(list(t.range=t.range),
+                                     spline.data)
+  } else {
+    if ( !is.null(spline.data) )
+      warning("Ignoring spline.data -- no spline function specified")
+    spline.data <- list(t=numeric(0), y=numeric(0))
+  }
+
   new(TimeMachine, names(functions), functions, nonnegative,
-      truncate, k)
+      truncate, k, spline.data$t, spline.data$y)
 }
 
 time.machine.argnames <- function(functions) {

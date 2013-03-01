@@ -35,6 +35,41 @@ expect_that(tm2$get(0),  is_identical_to(p1.1[c(1,3)]))
 expect_that(tm2$get(10), is_identical_to(c(p1.1[1] + p1.1[2]*10, p1.1[3])))
 
 ## Here I should consider splines...
+functions <- c(lambda="spline.t", mu="constant.t")
+x <- seq(0, t.max, length.out=101)
+y <- sin(x/t.max*2*pi)
+spline.data <- list(t=x, y=sin(x/t.max*2*pi))
+
+tm <- make.time.machine(functions, c(0, t.max),
+                        spline.data=spline.data)
+tm2 <- diversitree:::make.time.machine2(functions, c(0, t.max),
+                                        spline.data=spline.data)
+
+p2.0 <- c(.1, .1, .05)
+p2.1 <- c(.1, .2, .05)
+tm$set(p2.0)
+tm2$set(p2.0)
+
+expect_that(tm$get(0),  is_identical_to(p2.0[c(1,3)]))
+expect_that(tm$get(10), is_identical_to(p2.0[c(1,3)]))
+
+expect_that(tm2$get(0),  is_identical_to(p2.0[c(1,3)]))
+expect_that(tm2$get(10), is_identical_to(p2.0[c(1,3)]))
+
+tm$set(p2.1)
+tm2$set(p2.1)
+
+tt <- seq(0, 10, length=101)
+tmp <- tm$getv(tt)
+expect_that(all(sapply(tmp[,2], identical, p2.0[3])), is_true())
+expect_that(tmp[,1],
+            equals(p2.1[1] + diff(p2.1[1:2])*(sin(tt/t.max*2*pi)+1)/2))
+
+tmp2 <- t(sapply(tt, tm2$get))
+expect_that(all(sapply(tmp2[,2], identical, p2.0[3])), is_true())
+expect_that(tmp2[,1],
+            equals(p2.1[1] + diff(p2.1[1:2])*(sin(tt/t.max*2*pi)+1)/2))
+
 
 ## MuSSE.
 t.max <- 10  
