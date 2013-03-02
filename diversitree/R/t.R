@@ -176,6 +176,8 @@ average.over.mcmc <- function(p, f, xx, ..., alpha=1/20) {
 }
 
 make.derivs.t <- function(derivs, tm) {
-  function(t, y, pars)
-    derivs(t, y, tm(pars))
+  ret <- function(t, y, pars)
+    derivs(t, y, tm$get(t))
+  attr(ret, "set") <- function(pars) tm$set(pars)
+  ret
 }
