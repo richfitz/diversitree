@@ -9,13 +9,6 @@ GslOdeTime::GslOdeTime(SEXP extPtr, int size, TimeMachine tm_) :
 }
 
 void GslOdeTime::set_pars(SEXP pars_) {
-  // Implicit short lifespan, as we don't copy (probably we
-  // should...), but these are passed as read only elsewhere.
-  // Declaring parameters as 
-  //   double const * pars
-  // should give us a mutable pointer to a constant vector (so that
-  // pars can be reassigned, but the contents cannot be).  This
-  // *should* work well here.
   tm.set(Rcpp::as<std::vector<double> >(pars_));
 }
 
