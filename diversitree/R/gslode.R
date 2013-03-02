@@ -26,11 +26,13 @@ make.ode.gslode <- function(info, control) {
       ode <- new(GslOdeCompiled, derivs, n.var)
 
   } else {
-    ode <- new(GslOdeR, info$derivs, environment(derivs), n.var)
+    derivs <- info$derivs
+    ode   <- new(GslOdeR,        derivs, environment(derivs), n.var)
   }
 
   ## Control parameters (will get tweaked.
-  ode$set_control(list(atol=atol, rtol=rtol, algorithm=stepper))
+  ode$set_control(list(atol=atol, rtol=rtol, algorithm=stepper,
+                       hini=1e-4))
 
   do.set.tm <- time.varying && !control$compiled
   

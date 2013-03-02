@@ -26,3 +26,4 @@ Description: Contains a number of comparative phylogenetic methods,
   extinction.
 License: GPL (>=2)
 URL: http://www.zoology.ubc.ca/prog/diversitree
+ByteCompile: FALSE

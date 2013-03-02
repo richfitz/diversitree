@@ -43,6 +43,8 @@ make.info.bisse <- function(phy) {
        k=2L,      # number of states (NA if continuous)
        idx.e=1:2, # index of 'E' variables, for xxsse models
        idx.d=3:4, # index of 'D' variables, for xxsse and mk models
+       ## R version of derivative function:
+       derivs=derivs.bisse,
        ## Phylogeny:
        phy=phy,   # here to help with printing, possibly plotting
        ## Inference:
