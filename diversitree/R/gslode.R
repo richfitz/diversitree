@@ -21,10 +21,8 @@ make.ode.gslode <- function(info, control) {
     derivs <- sprintf("derivs_%s_gslode", model)
     derivs <- getNativeSymbolInfo(derivs, PACKAGE=dll)$address
 
-    browser()
-
     if ( isTRUE(info$time.varying) ) {
-      ode <- new(GslOdeTime, derivs, n.var, tm)
+      ode <- new(GslOdeTime, derivs, n.var, info$tm)
     } else {
       ode <- new(GslOdeCompiled, derivs, n.var)
     }
