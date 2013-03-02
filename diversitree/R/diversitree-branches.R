@@ -356,13 +356,11 @@ make.branches.comp <- function(branches, comp.idx, eps=0) {
 make.ode <- function(info, control) {
   info <- check.info.ode(info, control)
   backend  <- control$backend
-  if ( backend == "deSolve" )
-    ode <- make.ode.deSolve(info, control)
-  else if ( backend == "cvodes" )
-    ode <- make.ode.cvodes(info, control)
-  else if ( backend == "gslode" )
+  if ( backend == "gslode" )
     ode <- make.ode.gslode(info, control)
-  else
+  else if ( backend == "deSolve" )
+    ode <- make.ode.deSolve(info, control)
+  else # should have been prevented by now
     stop("Invalid backend", backend)
   ode
 }
