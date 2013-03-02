@@ -174,3 +174,8 @@ average.over.mcmc <- function(p, f, xx, ..., alpha=1/20) {
   colnames(ret) <- c("mean", "lower", "upper")
   ret
 }
+
+make.derivs.t <- function(derivs, tm) {
+  function(t, y, pars)
+    derivs(t, y, tm(pars))
+}
