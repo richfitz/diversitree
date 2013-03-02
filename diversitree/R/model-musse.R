@@ -41,6 +41,8 @@ make.info.musse <- function(k, phy) {
        k=as.integer(k),               # number of states
        idx.e=as.integer(1:k),         # index of 'E' variables
        idx.d=as.integer((k+1):(2*k)), # index of 'D' variables
+       ## R version of derivative function
+       derivs=derivs.musse,       
        ## Phylogeny:
        phy=phy,   # here to help with printing, possibly plotting
        ## Inference:
@@ -169,3 +171,44 @@ musse.Q <- function(pars, k) {
 
 check.pars.musse <- function(pars, k)
   check.pars.nonnegative(pars, k*(k+1))
+
+derivs.musse <- function(t, y, pars) {
+  k <- length(y)/2L
+  i1 <- seq_len(k)
+  i2 <- i1 + k
+  i3 <- (2*k+1L):(k*(k+2L))
+
+  E <- y[i1]
+  D <- y[i2]
+  lambda <- pars[i1]
+  mu     <- pars[i2]
+  Q      <- matrix(pars[i3], k, k)
+
+  c(mu - (lambda + mu) * E +     lambda * E * E + Q %*% E,
+       - (lambda + mu) * D + 2 * lambda * E * D + Q %*% D)
+}
+
+## Version from 9c44a294a5fd4fb55853c618d91f95eb04c79f94:
+## make.musse.eqs.R <- function(k) {
+##   qmat <- matrix(0, k, k)
+##   idx.qmat <- cbind(rep(1:k, each=k-1),
+##                unlist(lapply(1:k, function(i) (1:k)[-i])))
+##   idx.e <- 1:k
+##   idx.d <- (k+1):(2*k)
+##   idx.l <- 1:k
+##   idx.m <- (k+1):(2*k)
+##   idx.q <- (2*k+1):(k*(1+k))
+
+##   function(t, y, parms, ...) {
+##     e <- y[idx.e]
+##     d <- y[idx.d]
+##     lambda <- parms[idx.l]
+##     mu     <- parms[idx.m]
+    
+##     qmat[idx.qmat] <- parms[idx.q]  
+##     diag(qmat) <- -rowSums(qmat)
+
+##     list(c(mu - (lambda + mu) * e + lambda * e * e + qmat %*% e,
+##            -(lambda + mu) * d + 2 * lambda * d * e + qmat %*% d))
+##   }
+## }

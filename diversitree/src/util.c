@@ -20,8 +20,8 @@ void do_gemm(double *x, int nrx, int ncx,
                   x, &nrx, y, &nry, &beta, z, &nrx);
 }
 
-void do_gemm2(double *x, int nrx, int ncx,
-	      double *y, int nry, int ncy,
+void do_gemm2(const double *x, int nrx, int ncx,
+	      const double *y, int nry, int ncy,
 	      double *z) {
   const char *trans = "N";
   double alpha = 1.0, beta = 1.0;

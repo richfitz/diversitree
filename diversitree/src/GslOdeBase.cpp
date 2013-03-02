@@ -18,6 +18,7 @@ GslOdeBase::GslOdeBase(int size) : neq(size) {
   rtol = 1e-6;
   hini = 1e-6;
   hmax = 1.0;
+  hmin = 1e-10; // Arbitrary for now...
 
   // Runge-Kutta Cash-Karp as default step type (?)
   step_fun = gsl_odeiv2_step_rkck;
@@ -165,8 +166,9 @@ void GslOdeBase::advance(double tmax) {
   must_be_initialised();
 
   // TODO: should check that tmax is finite and greater than t.
-  while ( t < tmax )
+  while ( t < tmax ) {
     step(tmax);
+  }
 }
 
 void GslOdeBase::step(double tmax) {
@@ -177,6 +179,8 @@ void GslOdeBase::step(double tmax) {
     Rf_error("GSL failure, return value = %d", status);
   if ( step_size > hmax ) // assuming positive sign step size here.
     step_size = hmax;
+  else if ( step_size < hmin )
+    Rf_error("Step size too small");
 }
 
 // Gsl control:

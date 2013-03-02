@@ -107,7 +107,7 @@ private:
   bool is_initialised;
 
   // Integrator control:
-  double hini, hmax, atol, rtol;
+  double hini, hmax, hmin, atol, rtol;
 
   // Suggested size of the next step, same as the actual size of the
   // last step once a step has been taken.

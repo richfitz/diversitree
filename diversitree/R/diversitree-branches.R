@@ -354,6 +354,7 @@ make.branches.comp <- function(branches, comp.idx, eps=0) {
 }
 
 make.ode <- function(info, control) {
+  control <- check.control.ode(control)
   info <- check.info.ode(info, control)
   backend  <- control$backend
   if ( backend == "gslode" )
