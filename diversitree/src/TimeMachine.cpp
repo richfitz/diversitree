@@ -37,6 +37,11 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 void TimeMachine::set(std::vector<double> pars) {
   if ( (int)pars.size() != np_in )
     error("Expected %d parameters, recieved %d", np_in, pars.size());
+  // Only go through the extra effort below if the parameters differ.
+  if ( pars == p_in )
+    return;
+
+  p_in = pars;
 
   std::vector<TimeMachineFunction>::iterator f = functions.begin();
   std::vector<double>::iterator p_iter = pars.begin();

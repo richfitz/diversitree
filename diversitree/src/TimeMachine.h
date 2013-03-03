@@ -63,6 +63,7 @@ private:
 
   // Number of high level (hyper) parameters (in).
   int np_in;
+  std::vector<double> p_in;
   // Number of underlying model parameters (out)
   int np_out;
   std::vector<double> p_out;

@@ -10,9 +10,11 @@ make.all.branches.t.dtlik <- function(cache, control,
 }
 
 make.initial.conditions.t <- function(info, initial.conditions) {
-  pars.t <- info$tm$get
-  function(init, pars, t, idx)
-    initial.conditions(init, pars.t(t), t, idx)
+  tm <- info$tm
+  function(init, pars, t, idx) {
+    tm$set(pars)
+    initial.conditions(init, tm$get(t), t, idx)
+  }
 }
 
 ## TODO: Still cannnot prevent ROOT.EQUI being used here.
