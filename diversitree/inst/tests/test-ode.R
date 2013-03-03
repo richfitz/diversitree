@@ -65,7 +65,7 @@ functions <- rep(c("linear.t", "constant.t"), c(2, 4))
 names(functions) <- info$argnames
 
 ## I should expose this, I think (both?)
-make.time.machine <- diversitree:::make.time.machine2
+make.time.machine <- diversitree:::make.time.machine
 make.derivs.t <- diversitree:::make.derivs.t
 
 ## TODO: the time range basically serves no purpose now.
@@ -85,17 +85,13 @@ res.t.ref <- lsoda(y, tt, derivs.for.deSolve(derivs.t), pars,
                    atol=control.deSolve$tol, rtol=control.deSolve$tol)
 res.t.ref <- unname(t(res.t.ref[-1,-1,drop=FALSE]))
 
-## Quick check that everything OK, as the time-variation was basically
-## disabled there.
+## Quick check that this agrees with the original reference set, as
+## these parameters don't cause any actual time variation.
 expect_that(res.t.ref, is_identical_to(res.ref))
 
-## Then build different versions of these.  This will get tidied
-## soon.
-info.t <- modifyList(info, list(time.varying=TRUE,
-                                tm=tm,
-                                derivs=derivs.t,
-                                argnames=attr(tm, "argnames"),
-                                np=length(attr(tm, "argnames"))))
+## Then build time-varying functions through the usual make.ode
+## interface.
+info.t <- diversitree:::update.info.t(info, functions, range(tt))
 
 ode.t.deSolve   <- make.ode(info.t, control.deSolve)
 ode.t.gslode.R  <- make.ode(info.t, control.gslode.R)

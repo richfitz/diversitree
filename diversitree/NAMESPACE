@@ -8,7 +8,6 @@ export(make.bd.t.old)
 export(make.bd.t)
 export(make.bisse)
 export(make.bisse.split)
-export(make.bisse.t.old)
 export(make.bisse.t)
 export(make.bisse.td)
 export(make.bisse.uneven)
@@ -25,7 +24,6 @@ export(make.mkn.meristic)
 export(make.musse)
 export(make.musse.multitrait)
 export(make.musse.split)
-export(make.musse.t.old)
 export(make.musse.t)
 export(make.musse.td)
 export(make.ou)
@@ -119,16 +117,6 @@ export(prune)
 export(get.descendants)
 
 export(run.cached)
-
-
-
-## Support for time-dependent models
-export(constant.t)
-export(exponential.t)
-export(linear.t)
-export(sigmoid.t)
-export(stepf.t)
-export(make.pars.t.old)
 
 ## Support for QuaSSE models.
 export(constant.x)

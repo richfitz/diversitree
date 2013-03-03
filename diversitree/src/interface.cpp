@@ -6,7 +6,7 @@
 #include "GslOdeCompiled.h"
 #include "GslOdeTime.h"
 
-#include "time_machine2.h"
+#include "TimeMachine.h"
 
 // Need to do this.
 RCPP_EXPOSED_CLASS(TimeMachine)

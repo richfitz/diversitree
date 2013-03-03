@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#include "time_machine2.h"
+#include "TimeMachine.h"
 #include "GslOdeBase.h"
 
 // There is some overlap here with GslOdeCompiled, which is

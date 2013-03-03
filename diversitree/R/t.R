@@ -1,84 +1,67 @@
-## A special function will still be needed for cvodes and CVODES, as
-## the normal branches function possibly won't work?
 make.all.branches.t.dtlik <- function(cache, control,
                                       initial.conditions.base) {
   control <- check.control.ode(control)
-
-  if ( control$backend == "CVODES" ) {
-    make.all.branches.C(cache, control)
-  } else {
-    branches <- make.branches.dtlik(cache$info, control)
-    initial.conditions <-
-      make.initial.conditions.t(cache, initial.conditions.base)
-    function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache, initial.conditions,
+  branches <- make.branches.dtlik(cache$info, control)
+  initial.conditions <-
+    make.initial.conditions.t(cache$info, initial.conditions.base)
+  function(pars, intermediates, preset=NULL)
+    all.branches.matrix(pars, cache, initial.conditions,
                           branches, preset)
-  }
 }
 
-update.cache.t <- function(cache, functions, spline.data, with.q=FALSE) {
-  info <- cache$info
-  n.args <- length(info$argnames)
-
-  ## This could be check.functions.t():
-  if ( !is.character(functions) )
-    stop("'functions' must be characters [will relax soon]")
-  if ( length(functions) == 1L )
-    functions <- rep(functions, n.args)
-  else if ( length(functions) != n.args )
-    stop(sprintf("Expected %d functions", n.args))
-  if ( is.null(names(functions)) )
-    names(functions) <- info$argnames
-
-  t.range <- range(0, cache$depth[cache$root])
-  nonnegative <- cache$nonnegative
-  k <- if ( with.q ) cache$info$k else NULL
-  cache$time.machine <-
-    make.time.machine(functions, t.range, nonnegative, spline.data, k)
-
-  info$time.varying <- TRUE
-  info$argnames <- cache$time.machine$argnames
-  info$name.ode <- sprintf("%s_t", cache$info$name)
-  info$name.pretty <- sprintf("%s (time-varying[v2])", info$name.pretty)
-  info$name <- sprintf("%s.t", cache$info$name)
-
-  cache$info <- info
-  cache
-}
-
-make.initial.conditions.t <- function(cache, initial.conditions) {
-  pars.t <- cache$time.machine$get
+make.initial.conditions.t <- function(info, initial.conditions) {
+  pars.t <- info$tm$get
   function(init, pars, t, idx)
     initial.conditions(init, pars.t(t), t, idx)
 }
 
-## TODO/NEW This is somewhat tedious, as we really should check for
-## 'root' not being ROOT.EQUI, as that can't be done in time-dependent
-## models.  However, because this is used by different functions with
-## different argument lists, that is hard to do.  But then, that check
-## is duplicated in too many functions.  For now, I'm skipping this.
+## TODO: Still cannnot prevent ROOT.EQUI being used here.
 make.rootfunc.t <- function(cache, rootfunc) {
-  pars.t <- cache$time.machine$get
+  pars.t <- cache$info$tm$get
   t.root <- cache$depth[cache$root]
   function(ans, pars, ...)             # pars here is ignored...
     rootfunc(ans, pars.t(t.root), ...) # ...because tm version used.
 }
 
-make.prep.all.branches.t <- function(cache, backend) {
-  time.machine <- cache$time.machine
-  tm.ptr <- time.machine$ptr
-  setfunc <- sprintf("r_set_tm_%s", cache$info$name.ode)
-  dummy <- rep(0.0, cache$info$np)
-  attr(dummy, "dummy") <- TRUE # for identical() to work.
+## TODO: We could lose the t.range argument here (and in time machine)
+## if we did not test that the spline data was OK.  That seems risky,
+## but it's a pain of a thing to carry around, especially if the
+## splines already bail nicely if we're out of range.
+update.info.t <- function(info,
+                          functions, t.range, nonnegative=TRUE,
+                          truncate=FALSE, with.q=FALSE,
+                          spline.data=NULL) {
+  k.for.tm <- if ( with.q ) info$k else 0
+  if ( is.null(names(functions)) )
+    names(functions) <- info$argnames
+  tm <- make.time.machine(functions, t.range,
+                          nonnegative, truncate, k.for.tm,
+                          spline.data)
+  info$time.varying <- TRUE
+  info$tm <- tm
+  info$derivs.base <- info$derivs
+  info$derivs <- make.derivs.t(info$derivs.base, tm)
+  info$argnames <- attr(tm, "argnames")
+  info$name.pretty <- sprintf("%s (time-varying)", info$name.pretty)
+  info$np <- length(attr(tm, "argnames"))
+  info
+}
 
-  function(pars) {
-    if ( !identical(pars, dummy) )
-      time.machine$set(pars)
-    else
-      message("Not setting parameters - must already be done?")
-    .Call(setfunc, tm.ptr)
-    dummy
-  }
+update.cache.t <- function(cache,
+                           functions, nonnegative=TRUE, truncate=FALSE,
+                           with.q=FALSE, spline.data=NULL) {
+  t.range <- range(0, cache$depth[cache$root])
+  cache$info <- update.info.t(cache$info,
+                              functions, t.range, nonnegative,
+                              truncate, with.q, spline.data)
+  cache
+}
+
+make.derivs.t <- function(derivs, tm) {
+  ret <- function(t, y, pars)
+    derivs(t, y, tm$get(t))
+  attr(ret, "set") <- function(pars) tm$set(pars)
+  ret
 }
 
 ## Making the output useful.
@@ -172,12 +155,5 @@ average.over.mcmc <- function(p, f, xx, ..., alpha=1/20) {
     p <- as.matrix(p)
   ret <- t(sapply(xx, g))
   colnames(ret) <- c("mean", "lower", "upper")
-  ret
-}
-
-make.derivs.t <- function(derivs, tm) {
-  ret <- function(t, y, pars)
-    derivs(t, y, tm$get(t))
-  attr(ret, "set") <- function(pars) tm$set(pars)
   ret
 }

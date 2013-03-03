@@ -1,6 +1,6 @@
 #include <R.h>
 
-#include "time_machine2.h"
+#include "TimeMachine.h"
 
 TimeMachine::TimeMachine(std::vector<std::string> names,
 			 std::vector<std::string> funcs,
