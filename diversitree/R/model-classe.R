@@ -57,6 +57,8 @@ make.info.classe <- function(k, phy) {
        k=as.integer(k),
        idx.e=as.integer(1:k),
        idx.d=as.integer((k+1):(2*k)),
+       ## R version of derivatives function
+       derivs=derivs.classe,
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -330,3 +332,8 @@ inflate.pars.classe <- function(pars, k) {
 
 check.pars.classe <- function(pars, k)
   check.pars.nonnegative(pars, (k+3)*k*k/2)
+
+derivs.classe <- function(t, y, pars) {
+  ## TODO: Need to write this (Emma: Do you have a copy somewhere?)
+  stop("Not yet possible")
+}

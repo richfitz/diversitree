@@ -4,25 +4,18 @@
  */
 
 #include <R.h>
-#include <Rinternals.h>
-#include <R_ext/BLAS.h>
-#include <R_ext/Rdynload.h>
 #include "util.h"
-
-/* For CVODES */
-#include <nvector/nvector_serial.h>
-#include <user_data.h>
 
 /* Maximum size */
 #define MAXSIZE 500
 
 /* This is the core function that actually evaluates the deriative */
-void do_derivs_classe(int n, double *pars, double *y, double *ydot, 
+void do_derivs_classe(int n, double *pars, const double *y, double *ydot, 
                       int jk_array[][2]) {
   /* note: n = num states is called k elsewhere, but k is used as 
    * an index here */
 
-  double *E = y, *D = y + n;
+  const double *E = y, *D = y + n;
   double *dEdt = ydot, *dDdt = ydot + n;
   int len_lam_i = n * (n + 1) / 2;
   int len_lam = n * len_lam_i;
@@ -51,22 +44,8 @@ void do_derivs_classe(int n, double *pars, double *y, double *ydot,
     }
   }
 
-  /* transitions (complete ydot by adding Q y to it) */
-  /* RGF TODO: Replace with mult_mv() from util-matrix.c */
-  /* mult_mv(k, Q, y, 1.0, ydot); */
   do_gemm2(Q, n, n, y, n, 2, ydot);
 }
-
-/* Plain ClaSSE */
-/* deSolve / LSODA */
-static double *parms_classe;
-
-void initmod_classe(void (* odeparms)(int *, double *)) {
-  /* parameter length checking will be done in R */
-  DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparms");
-  parms_classe = REAL(get_deSolve_gparms());
-} 
 
 /* compute indices for the lambda's */
 void fill_jk_array(int jk_array[][2], int n) {
@@ -83,9 +62,9 @@ void fill_jk_array(int jk_array[][2], int n) {
   }
 }
 
-void derivs_classe(int *neq, double *t, double *y, double *ydot,
-                     double *yout, int *ip) {
-  int n = *neq / 2;
+void derivs_classe_gslode(int neqs, double t, double *pars, 
+			 const double *y, double *dydt) {
+  int n = neqs / 2;
 
   /* saves a little time to pre-compute indices outside of do_derivs_classe;
    * but do it outside of here, too? */
@@ -93,25 +72,7 @@ void derivs_classe(int *neq, double *t, double *y, double *ydot,
   int jk_array[MAXSIZE][2]; /* was: int jk_array[len_lam_i][2]; */
   fill_jk_array(jk_array, n);
 
-  do_derivs_classe(n, parms_classe, y, ydot, jk_array);
-}
-
-/* CVODES */
-int derivs_classe_cvode(realtype t, N_Vector y, N_Vector ydot,
-                        void *user_data) {
-  const UserData *data = (UserData*) user_data;
-
-  int n = data->neq/2;
-
-  /*int len_lam_i = n * (n + 1) / 2;*/
-  int jk_array[MAXSIZE][2]; /* was: int jk_array[len_lam_i][2]; */
-  fill_jk_array(jk_array, n);
-
-  do_derivs_classe(data->neq/2,
-                   data->p,
-                   NV_DATA_S(y),
-                   NV_DATA_S(ydot), jk_array);
-  return 0;
+  do_derivs_classe(n, pars, y, dydt, jk_array);
 }
 
 void initial_conditions_classe(int neq, double *vars_l, double *vars_r,
@@ -143,6 +104,5 @@ void initial_conditions_classe(int neq, double *vars_l, double *vars_r,
     }
   }
 }
-
 
 /* no time-dependence yet */
