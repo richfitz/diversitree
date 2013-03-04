@@ -2,17 +2,9 @@
   Constant rate Birth-death functions
  */
 #include <R.h>
-#include <Rinternals.h>
-#include <R_ext/Rdynload.h>
-
-#include "util-splines.h"
-
-/* For CVODES */
-#include <nvector/nvector_serial.h>
-#include <user_data.h>
 
 /* This is the core function that actually evaluates the deriative */
-void do_derivs_bd(double *pars, double *y, double *ydot) {
+void do_derivs_bd(double *pars, const double *y, double *ydot) {
   double E = y[0], D = y[1];
   double lambda = pars[0], mu = pars[1];
 
@@ -20,27 +12,9 @@ void do_derivs_bd(double *pars, double *y, double *ydot) {
   ydot[1] =    - (mu + lambda)*D + 2*lambda*D*E;
 }
 
-/* Plain BD */
-/* deSolve / LSODA */
-static double parms_bd[2];
-
-void initmod_bd(void (* odeparms)(int *, double *)) {
-  int N = 2;
-  odeparms(&N, parms_bd);
-}
-
-void derivs_bd(int *neq, double *t, double *y, double *ydot, 
-	       double *yout, int *ip) {
-  do_derivs_bd(parms_bd, y, ydot);
-}
-
-/* CVODES */
-int derivs_bd_cvode(realtype t, N_Vector y, N_Vector ydot,
-		    void *user_data) {
-  do_derivs_bd(((UserData*) user_data)->p,
-	       NV_DATA_S(y),
-	       NV_DATA_S(ydot));
-  return 0;
+void derivs_bd_gslode(int neqs, double t, double *pars, 
+		      const double *y, double *dydt) {
+  do_derivs_bd(pars, y, dydt);
 }
 
 void initial_conditions_bd(int neq, double *vars_l, double *vars_r,
