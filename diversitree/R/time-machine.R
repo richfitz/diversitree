@@ -7,6 +7,9 @@
 make.time.machine <- function(functions, t.range, nonnegative=TRUE,
                               truncate=FALSE, k=0,
                               spline.data=NULL) {
+  ## TODO: Relax this later...
+  if ( !is.character(functions) )
+    stop("Functions must be a character vector")
   n <- length(functions)
   nonnegative <- check.par.length(nonnegative, n)
   truncate    <- check.par.length(truncate,    n)

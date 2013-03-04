@@ -41,49 +41,6 @@ test.bisse.td <- function() {
   checkEquals(lik.t(p3.t), -183.12543259220922)
 }
 
-test.musse.t <- function() {
-  library(diversitree)
-  library(RUnit)
-  pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3
-            .03, .045, .06, # mu 1, 2, 3
-            .05, 0,         # q12, q13
-            .05, .05,       # q21, q23
-            0,   .05)       # q31, q32
-  set.seed(2)
-  phy <- tree.musse(pars, 30, x0=1)
-
-  ## For comparison, make a plain MuSSE likelihood function
-  lik.m <- make.musse(phy, phy$tip.state, 3)
-
-  lik.t <- make.musse.t.old(phy, phy$tip.state, 3,
-                            rep(list(sigmoid.t, constant.t), c(3, 9)))
-
-  ## First, evaluate the functions with no time effect and check that they
-  ## are the same as the base MuSSE model
-  t <- max(branching.times(phy))/2
-  p.t <- c(pars[1], pars[1], t, .5,
-           pars[2], pars[2], t, .5,
-           pars[3], pars[3], t, .5,
-           pars[4:12])
-
-  checkEquals(lik.m(pars), -110.836439594910701)
-  checkEquals(lik.m(pars), lik.t(p.t))
-
-  set.seed(1)
-  pars2 <- pars + runif(length(pars), 0, .2)
-  p2.t <- c(pars2[1], pars2[1], t, .5,
-            pars2[2], pars2[2], t, .5,
-            pars2[3], pars2[3], t, .5,
-            pars2[4:12])
-  
-  checkEquals(lik.m(pars2), -118.952878440689986)
-  checkEquals(lik.m(pars2), lik.t(p2.t))
-
-  p3.t <- p2.t
-  p3.t[2] <- p3.t[2] + .2
-  checkEquals(lik.t(p3.t), -118.752042795013892)
-}
-
 test.musse.td <- function() {
   library(diversitree)
   library(RUnit)
