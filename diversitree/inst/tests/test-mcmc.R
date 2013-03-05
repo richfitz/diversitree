@@ -21,19 +21,19 @@ make.mvn <- function(mean, vcv) {
 vcv <- matrix(c(1, .25, .25, .75), 2, 2)
 lik <- make.mvn(c(0, 0), vcv)
 set.seed(1)
-samples1 <- mcmc(lik, c(0, 0), 100, 1, print.every=10)
+samples1 <- mcmc(lik, c(0, 0), 100, 1, print.every=0)
 
-samples2 <- mcmc(lik, NULL, 200, 1, print.every=10,
+samples2 <- mcmc(lik, NULL, 200, 1, print.every=0,
                  previous=samples1)
 
 ## samples2 <- mcmc(lik, NULL, 200, 1, print.every=10,
 ##                  previous=samples1)
 
 set.seed(1)
-samples3 <- mcmc(lik, c(0, 0), 200, 1, print.every=10)
+samples3 <- mcmc(lik, c(0, 0), 200, 1, print.every=0)
 
 set.seed(1)
-samples3 <- mcmc(lik, c(0, 0), 200, 1, print.every=10)
+samples3 <- mcmc(lik, c(0, 0), 200, 1, print.every=0)
 
 identical(samples2, samples3)
 

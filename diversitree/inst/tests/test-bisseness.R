@@ -7,6 +7,8 @@ library(testthat)
 equals7 <- function(...)
   equals(..., tolerance=1e-7)
 
+context("BiSSE-ness")
+
 ## First we simulat a 50 species tree, assuming cladogenetic shifts in 
 ## the trait (i.e., the trait only changes at speciation).
 ## Red is state '1', black is state '0', and we let red lineages
