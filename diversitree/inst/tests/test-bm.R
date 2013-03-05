@@ -1,7 +1,6 @@
 library(diversitree)
 library(testthat)
-
-library(geiger)
+suppressMessages(library(geiger))
 
 no.stdout <- function(expr) {
   sink(tempfile())

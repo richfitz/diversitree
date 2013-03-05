@@ -1,5 +1,6 @@
 library(diversitree)
 library(testthat)
+suppressMessages(library(geiger))
 
 no.stdout <- function(expr) {
   sink(tempfile())
@@ -34,7 +35,6 @@ expect_that(fit1, equals(fit2))
 expect_that(fit1$lnLik, equals(fit3$lnLik))
 expect_that(coef(fit1)[1:2], equals(coef(fit3)[1:2]))
 
-library(geiger)
 fit4 <- no.stdout(fitContinuous(bird.orders, x, model="OU"))
 expect_that(fit4$Trait1$lnl, equals(fit1$lnLik))
 ## These are quite different, but the likelihood there suggests a

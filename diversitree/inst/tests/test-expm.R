@@ -1,6 +1,8 @@
 library(diversitree)
 library(testthat)
-library(expm) # slow
+suppressMessages(library(expm))
+
+context("Matrix exponentials")
 
 set.seed(1)
 n <- 64L
