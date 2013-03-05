@@ -14,7 +14,7 @@ expmv.expokit.dense <- function(Q, t, v) {
     }
   } else {
     res <- .Fortran("ddexpmv", Q, n, v, t, out=numeric(n),
-                    iflag=numeric(1), DUP=FALSE)
+                    iflag=numeric(1), DUP=FALSE, PACKAGE="diversitree")
     if ( res$iflag != 0 )
       stop("Expokit failed with code ", res$iflag)
     ret <- res$out
@@ -35,7 +35,7 @@ expmv.expokit.sparse <- function(Q.sparse, t, v, tol=1e-8) {
 
   res <- .Fortran("dsexpmvi", Q, n, iq, jq, length(iq),
                   qnorm, v, t, lt, tol, out=numeric(n*lt),
-                  iflag=integer(1))
+                  iflag=integer(1), PACKAGE="diversitree")
   if ( res$iflag != 0 )
     stop("Expokit failed with code ", res$iflag)
 
@@ -49,4 +49,22 @@ expm.expokit.sparse.pars <- function(Q) {
   nz <- as.integer(nrow(idx))
   qq <- Q[idx]
   list(Q=qq, iq=idx[,1], jq=idx[,2], nz=nrow(idx), qnorm=max(abs(qq)))
+}
+
+expm.dense <- function(Q, t) {
+  if ( !is.matrix(Q) )
+    stop("Q must be a matrix")
+  n <- as.integer(nrow(Q))
+  if ( n != ncol(Q) )
+    stop("Q must be a square matrix")
+  if ( n < 1 )
+    stop("Q must have positive dimensions")
+  t <- as.numeric(t)
+  if ( length(t) != 1 )
+    stop("t must be a scalar")
+  if ( !is.finite(t) )
+    stop("t must be finite")
+  
+  matrix(.Fortran("dexpmf", Q, n, t, out=numeric(n*n),
+                  iflag=numeric(1), PACKAGE="diversitree")$out, n, n)
 }
