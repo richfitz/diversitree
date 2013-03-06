@@ -27,18 +27,18 @@ lik.s <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x,
 lik.q <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x,
                      control.C.1)
 ll.q <- lik.q(pars)
-test_that(ll.q, equals(-62.06409424693976))
+expect_that(ll.q, equals(-62.06409424693976))
 
 pars.s <- rep(pars, 2)
 names(pars.s) <- argnames(lik.s)
-test_that(lik.s(pars.s), equals(ll.q))
+expect_that(lik.s(pars.s), equals(ll.q))
 
 set.seed(1)
 pars2 <- pars + runif(length(pars), 0, .05)
 pars2.s <- rep(pars2, 2)
 ll.q <- lik.q(pars2)
-test_that(ll.q, equals(-55.67237675384200))
-test_that(lik.s(pars2.s), equals(ll.q))
+expect_that(ll.q, equals(-55.67237675384200))
+expect_that(lik.s(pars2.s), equals(ll.q))
 
 pars3.s <- pars + runif(length(pars.s), 0, .05)
-test_that(lik.s(pars3.s), equals(-54.47383577050427))
+expect_that(lik.s(pars3.s), equals(-54.47383577050427))
