@@ -34,6 +34,10 @@ update.info.t <- function(info,
                           truncate=FALSE, with.q=FALSE,
                           spline.data=NULL) {
   k.for.tm <- if ( with.q ) info$k else 0
+  ## TODO: This is converging on the function testing I already have.
+  ## Remove the duplication at some point.
+  if ( length(functions) == 1 )
+    functions <- rep(functions, info$np)
   if ( is.null(names(functions)) )
     names(functions) <- info$argnames
   tm <- make.time.machine(functions, t.range,
