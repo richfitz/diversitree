@@ -11,8 +11,8 @@
      beta = 0, this gives a fresh calculation of X Y, and with 
      beta = 1, this updates Z to give Z = Z + X Y
 */
-void do_gemm(double *x, int nrx, int ncx,
-             double *y, int nry, int ncy,
+void do_gemm(const double *x, int nrx, int ncx,
+             const double *y, int nry, int ncy,
              double *z) {
   const char *trans = "N";
   double alpha = 1.0, beta = 0.0;

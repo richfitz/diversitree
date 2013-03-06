@@ -11,7 +11,8 @@
 #include "cvodes_obj.h"
 #include "cvodes_all_branches.h"
 
-#include "mkn.h"
+/* For asr_normalise */
+#include "mkn-pij.h"
 
 void asr_marginal_1(dt_obj *obj, double *pars, int node, 
 		    int *parent);

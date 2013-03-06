@@ -1,7 +1,4 @@
-## TODO: This is somewhat misleading, as I don't actually use matrix
-## exponentiation; I'm computing Pij = exp(Qt) through integrating a
-## series of k^2 ODEs.
-make.all.branches.mkn.exp <- function(cache, control) {
+make.all.branches.mkn.pij <- function(cache, control) {
   k <- cache$info$k
   
   f.pij <- make.pij.mkn(cache$info, control)
@@ -61,7 +58,7 @@ make.all.branches.mkn.exp <- function(cache, control) {
 ######################################################################
 ## Mkn-special stuff.
 ## The calculations here are quite different to the rest of the
-## package, so thre is a lot below.
+## package.
 
 ## Compute Pij matrices:
 pij.mk2 <- function(len, pars) {
@@ -75,21 +72,34 @@ pij.mk2 <- function(len, pars) {
         (1 - x)*q01,
         (x*q10 + q01)) / (q01 + q10)
 }
+
 make.pij.mkn <- function(info, control) {
   if ( control$method == "mk2" )
     return(pij.mk2)
   control <- check.control.ode(control)
-  ## TODO/NEW: cvodes should be easy too.
-  if ( control$backend != "deSolve" )
-    stop("Only deSolve backend available")
 
   k <- info$k
-  info <- list(name="mkn_pij",
-               ny=k*k, np=k*k, idx.d=integer(0))
-  pij.ode <- make.ode(info, control)
 
+  ## Make a brand new info list here (a bit ugly)
+  info <- list(name="mknpij",
+               ny=k*k, np=k*k,
+               idx.d=integer(0),
+               derivs=make.derivs.mkn.pij(k))
+  pij.ode <- make.ode(info, control)
+  
   yi <- diag(k) # initial conditions always same.
 
   function(len, pars)
     pij.ode(yi, c(0, len), pars)
+}
+
+make.derivs.mkn.pij <- function(k) {
+  force(k)
+  function(t, y, pars) {
+    Q <- matrix(pars, k, k)
+    y <- matrix(y, k, k)
+    ret <- Q %*% y
+    dim(ret) <- NULL
+    ret
+  }
 }

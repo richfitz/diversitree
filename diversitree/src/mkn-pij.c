@@ -1,42 +1,26 @@
 /* Mkn - Markov k-state n-parameter character model */
 #include <R.h>
-#include <Rinternals.h>
-#include <R_ext/BLAS.h>
-#include <R_ext/Rdynload.h>
 #include "util.h"
-#include "mkn.h"
-
-static double *parms_mkn;
-void initmod_mkn(void (* odeparms)(int *, double *)) {
-  DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparms");
-  parms_mkn = REAL(get_deSolve_gparms());
-} 
-
-void initmod_mkn_pij(void (* odeparms)(int *, double *)) {
-  DL_FUNC get_deSolve_gparms = 
-    R_GetCCallable("deSolve", "get_deSolve_gparms");
-  parms_mkn = REAL(get_deSolve_gparms());
-} 
+#include "mkn-pij.h"
 
 /* Simplified matrix multiplication, assuming straightforward sizes
    and zeroing the input.  GEMM does:
      Z = alpha X Y + beta Z
 */
-void derivs_mkn(int *neq, double *t, double *y, double *ydot,
-		double *yout, int *ip) {
-  const int k = *neq;
-  do_gemm(parms_mkn, k, k, y, k, 1, ydot);
+void do_derivs_mknpij(int k, double *pars, const double *y, double *ydot) {
+  double *Q = pars;
+  do_gemm(Q, k, k, y, k, k, ydot);
 }
 
-void derivs_mkn_pij(int *neq, double *t, double *y, double *ydot,
-		    double *yout, int *ip) {
-  const int k = (int)sqrt(*neq);
-  do_gemm(parms_mkn, k, k, y, k, k, ydot);
+void derivs_mknpij_gslode(int neqs, double t, double *pars, 
+			  const double *y, double *dydt) {
+  const int k = (int)sqrt(neqs);
+  do_derivs_mknpij(k, pars, y, dydt);
 }
 
-void initial_conditions_mkn(int k, double *x_l, double *x_r, 
-			    double *x_out) {
+/* TODO: Duplication within mkn-ode.c */
+void initial_conditions_mknpij(int k, double *x_l, double *x_r, 
+			       double *x_out) {
   int i;
   for ( i = 0; i < k; i++ )
     x_out[i] = x_l[i] * x_r[i];
@@ -57,10 +41,10 @@ void mkn_core(int k, int n, int *order, int *children, double *pij,
     y_in = branch_init + idx_k;
     y_out = branch_base + idx_k;
 
-    initial_conditions_mkn(k, 
-			   branch_base + k*children[idx*2],
-			   branch_base + k*children[idx*2 + 1], 
-			   y_in);
+    initial_conditions_mknpij(k, 
+			      branch_base + k*children[idx*2],
+			      branch_base + k*children[idx*2 + 1], 
+			      y_in);
 
     do_gemm(pij + idx_k*k, k, k, y_in, k, 1, y_out);
 
@@ -77,10 +61,10 @@ void mkn_core(int k, int n, int *order, int *children, double *pij,
   idx = order[n];
   idx_k = idx * k;
   y_in = branch_init + idx_k;
-  initial_conditions_mkn(k, 
-			 branch_base + k*children[idx*2],
-			 branch_base + k*children[idx*2 + 1], 
-			 y_in);
+  initial_conditions_mknpij(k, 
+			    branch_base + k*children[idx*2],
+			    branch_base + k*children[idx*2 + 1], 
+			    y_in);
 }
 
 
@@ -210,9 +194,9 @@ void asr_marginal_mkn_1(int k, int node, int root,
     y_in = branch_init + idx_k;
     y_out = branch_base + idx_k;
     kids = children + idx * 2;
-    initial_conditions_mkn(neq, 
-			   branch_base + neq*kids[0], 
-			   branch_base + neq*kids[1], y_in);
+    initial_conditions_mknpij(neq, 
+			      branch_base + neq*kids[0], 
+			      branch_base + neq*kids[1], y_in);
   }
 }
 
