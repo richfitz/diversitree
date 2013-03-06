@@ -38,7 +38,7 @@ void derivs_bisse_gslode(int neqs, double t, double *pars,
   do_derivs_bisse(pars, y, dydt);
 }
 
-void derivs_bisse_gslode_aux(int neqs, double t, double *pars, 
+void derivs_bisse_aux_gslode(int neqs, double t, double *pars, 
 			     const double *y, double *dydt) {
   do_derivs_bisse_aux(pars, y, dydt);
 }

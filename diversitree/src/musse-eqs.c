@@ -51,7 +51,7 @@ void derivs_musse_gslode(int neqs, double t, double *pars,
 
 void derivs_musse_aux_gslode(int neqs, double t, double *pars, 
 			     const double *y, double *dydt) {
-  do_derivs_musse_aux(neqs/2, pars, y, dydt);
+  do_derivs_musse_aux(neqs, pars, y, dydt);
 }
 
 void initial_conditions_musse(int neq, double *vars_l, double *vars_r,
