@@ -378,15 +378,10 @@ make.branches.dtlik <- function(info, control) {
 
 make.all.branches.dtlik <- function(cache, control,
                                     initial.conditions) {
-  control <- check.control.ode(control)
-  if ( control$backend == "CVODES" ) {
-    make.all.branches.C(cache, control)
-  } else { # deSolve and cvodes:
-    branches <- make.branches.dtlik(cache$info, control)
-    function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache, initial.conditions,
-                          branches, preset)
-  }
+  branches <- make.branches.dtlik(cache$info, control)
+  function(pars, intermediates, preset=NULL)
+    all.branches.matrix(pars, cache, initial.conditions,
+                        branches, preset)
 }
 
 ## Utility functions for organising initial conditions.

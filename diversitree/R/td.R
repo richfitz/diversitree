@@ -4,16 +4,12 @@ make.all.branches.td.dtlik <- function(cache, control,
                                        initial.conditions) {
   control <- check.control.ode(control)
 
-  if ( control$backend == "CVODES" ) {
-    stop("CVODES not yet available for time-varying models")
-  } else {
-    branches.td <- make.branches.td.dtlik(cache$info, control)
-    initial.conditions.td <-
-      make.initial.conditions.td(initial.conditions)
-    function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache, initial.conditions.td,
-                          branches.td, preset)
-  }
+  branches.td <- make.branches.td.dtlik(cache$info, control)
+  initial.conditions.td <-
+    make.initial.conditions.td(initial.conditions)
+  function(pars, intermediates, preset=NULL)
+    all.branches.matrix(pars, cache, initial.conditions.td,
+                        branches.td, preset)
 }
 
 make.branches.td.dtlik <- function(info, control)

@@ -201,4 +201,3 @@ export(ROOT.ALL)
 
 ## Check capabilities of package
 export(check.fftC)
-export(check.cvodes)

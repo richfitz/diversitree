@@ -114,8 +114,7 @@ make.mkn.meristic(tree, states, k, control=list())
     \item \code{method="ode"}: Uses an ODE-based approach to compute
     only the \eqn{k} variables over time, rather than the \eqn{k^2}
     transition probabilities in the \code{exp} approach.  This will be
-    much more efficient when \code{k} is large.  The \code{CVODES}
-    backend is also available here.
+    much more efficient when \code{k} is large.
   }
 }
 

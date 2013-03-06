@@ -108,41 +108,16 @@ do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
 make.do.asr.marginal <- function(all.branches, rootfunc) {
   eb <- environment(all.branches)
 
-  if ( eb$control$backend == "CVODES" ) {
-    cache.C <- eb$cache.C
-    ptr <- eb$ptr
-    env <- new.env()
-    states.idx.C <- cache.C$comp.idx
-    parent.C <- cache.C$parent
-    
-    function(pars, nodes, preset, ...) {
-      if ( !is.null(preset) )
-        stop("Cannot yet do CVODES calculations with preset data")
-      root.f <- function(pars, vals, lq)
-        rootfunc(list(vals=vals, lq=lq), pars, ...)
-      if ( is.null(nodes) )
-        nodes.C <- as.integer(cache.C$root:max(cache.C$order))
-      else
-        nodes.C <- toC.int(nodes + cache.C$n.tip)
-
-      ## Run through to set up the internal data structures (never
-      ## used on R side; calling for side effects only).
-      ignore <- all.branches(pars, TRUE, preset)
-      .Call("r_asr_marginal", ptr, pars, nodes.C, states.idx.C,
-            parent.C, root.f, env, PACKAGE="diversitree")
-    }
-  } else {
-    cache <- eb$cache
-    states.idx <- cache$info$idx.d
-    branches <- eb$branches
-    initial.conditions <- eb$initial.conditions
-    function(pars, nodes, preset, ...) {
-      root.f <- function(res, pars)
-        rootfunc(res, pars, ...)
-      res <- all.branches(pars, TRUE, preset)
-      do.asr.marginal.R(pars, cache, res, nodes, states.idx,
-                        initial.conditions, branches, root.f)
-    }
+  cache <- eb$cache
+  states.idx <- cache$info$idx.d
+  branches <- eb$branches
+  initial.conditions <- eb$initial.conditions
+  function(pars, nodes, preset, ...) {
+    root.f <- function(res, pars)
+      rootfunc(res, pars, ...)
+    res <- all.branches(pars, TRUE, preset)
+    do.asr.marginal.R(pars, cache, res, nodes, states.idx,
+                      initial.conditions, branches, root.f)
   }
 }
 
