@@ -1,6 +1,5 @@
 \name{make.bd.t}
 \alias{make.bd.t}
-\alias{make.bd.t.old}
 
 \title{Time-varing Birth-Death Models}
 
@@ -9,10 +8,7 @@
 
 \usage{
 make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL,
-          control=list(), spline.data=NULL)
-
-make.bd.t.old(tree, functions, sampling.f=NULL, unresolved=NULL,
-              control=list())
+          control=list(), truncate=FALSE, spline.data=NULL)
 }
 
 \arguments{
@@ -31,22 +27,12 @@ make.bd.t.old(tree, functions, sampling.f=NULL, unresolved=NULL,
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
 
+  \item{truncate}{Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 2).}
+
   \item{spline.data}{List of data for spline-based time functions.  See
     details}.
-}
-
-\details{
-
-  [this section applies only to the \code{.old} function]
-  There is significant overhead in using this function, compared with
-  the plain birth-death (\code{\link{make.bd}}) models.  Usually, all of
-  the calculations are done directly, or in C for the ODE based models.
-  However, because of the generality here -- parameters may be
-  \strong{any} function of time -- we must call back to R many times
-  during the integration process.  The overhead is something like a
-  factor of 10 compared with the ODE-based constant rate birth death
-  model, and a factor of 40 compared with the direct-calculation
-  constant rate birth death model.
 }
 
 \examples{
