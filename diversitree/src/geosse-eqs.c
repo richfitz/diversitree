@@ -85,7 +85,7 @@ void initial_conditions_geosse(int neq, double *vars_l, double *vars_r,
 /*** For split ***/
 
 /* Auxilliary (just compute E) */
-void do_derivs_geosse_aux(double *pars, double *y, double *ydot)
+void do_derivs_geosse_aux(double *pars, const double *y, double *ydot)
 {
   double E_1 = y[0];
   double E_2 = y[1];
