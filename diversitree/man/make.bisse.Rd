@@ -165,10 +165,6 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 	  \code{deSolve} package.  This is quite a bit slower at the
 	  moment.}
     }}
-
-    \item{safe}{(logical) Use a safer, slower, integrator when using the
-      deSolve integrator?  Leave this alone (this will be automatically
-      selected when appropriate).}
   }
 
   \code{deSolve} is the only supported backend on Windows.
