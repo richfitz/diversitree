@@ -20,6 +20,7 @@ public:
 		      bool nonnegative_, bool truncate_,
 		      Spline *spline);
   void set(std::vector<double>::iterator p);
+  std::string name() const {return variable_name;}
   double get(double t);
   bool is_constant;
   int np;
@@ -56,6 +57,7 @@ public:
   std::vector<double> get(double t);
   std::vector<double> getv(double t);
   int size() { return np_in; }
+  std::vector<std::string> names() const;
 
 private:
   void setup_q(int k);

@@ -73,16 +73,18 @@ make.derivs.t <- function(derivs, tm) {
 ## Making the output useful.
 predict.dtlik.t <- function(object, p, t, nt=101, v=NULL, thin=10,
                             alpha=1/20, everything=FALSE, ...) {
-  tm <- get.cache(object)$time.machine
+  cache <- get.cache(object)
+  tm <- cache$info$tm
+  
   if ( inherits(p, "fit.mle") || inherits(p, "mcmcsamples") )
     ## TODO: Improve the coef.mcmcsamples to allow full, here, then
     ## use full.  Possibly add a 'lik' function in that can do the
     ## resolution below?
     p <- coef(p)
   if ( missing(t) )
-    t <- seq(tm$t.range[1], tm$t.range[2], length=nt)
+    t <- seq(min(cache$depth), max(cache$depth), length.out=nt)
   if ( is.null(v) )
-    v <- tm$funnames
+    v <- tm$names
   is.matrix <- !is.null(dim(p)) && nrow(p) > 1
   ## Thin the chain to speed things up?
   if ( is.matrix && thin > 1 )
@@ -111,7 +113,11 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL, thin=10,
       names(ret) <- v
     }
   } else {
-    ret <- tm$getv(t, p)[,v,drop=FALSE]
+    tm$set(p)
+    ret <- t(sapply(t, tm$getv))
+    if ( length(v) != ncol(ret) )
+      stop("I am genuinely surprised")
+    colnames(ret) <- v
   }
   list(t=t, y=ret)
 }

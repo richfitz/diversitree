@@ -80,26 +80,23 @@ std::vector<double> TimeMachine::getv(double t) {
     std::vector<double> ret;
     std::vector<double>::iterator pi = p.begin();
 
-    // Copy non q values;
     for ( int i = 0; i < idx_q_out; i++ )
       ret.push_back(*pi++);
     for ( int i = 0; i < k; i++ )
-      for ( int j = 0; j < k; k++ )
+      for ( int j = 0; j < k; j++, pi++ )
 	if ( i != j )
-	  ret.push_back(*pi++);
-	else
-	  pi++;
+	  ret.push_back(*pi);
     p = ret;
-
-    // Or, less efficient, but considerably shorter and easier to
-    // understand.
-    // std::vector<double>::iterator pi = p.end();
-    // for ( int i = 0; i < k; i++ ) {
-    //   p = p.erase(pi);
-    //   advance(p, -k);
-    // }
   }
   return p;
+}
+
+std::vector<std::string> TimeMachine::names() const {
+  std::vector<std::string> ret;
+  std::vector<TimeMachineFunction>::const_iterator f;
+  for ( f = functions.begin(); f != functions.end(); f++ )
+    ret.push_back(f->name());
+  return ret;
 }
 
 void TimeMachine::setup_q(int k_) {
