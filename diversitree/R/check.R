@@ -197,19 +197,25 @@ check.scalar <- function(x) {
 }
 
 check.control.ode <- function(control=list()) {
-  defaults <- list(safe=FALSE, tol=1e-8, eps=0, backend="deSolve",
-                   unsafe=FALSE)
+  defaults <- list(tol=1e-8, backend="gslode",
+                   eps=0,                  # branch calculations
+                   gsl.stepper="rkck",     # gslode specific
+                   safe=TRUE, unsafe=FALSE # deSolve specific
+                   )
   control <- modifyList(defaults, control)
 
-  backends <- c("deSolve", "cvodes", "CVODES")
+  if ( !("compiled" %in% names(control)) )
+    control$compiled <- control$backend == "gslode"
+
+  backends <- c("deSolve", "gslode")
   if ( length(control$backend) != 1 )
     stop("'backend' must be a single element")
   control$backend <- backends[pmatch(control$backend, backends)]
   if ( is.na(control$backend) )
     stop("Invalid backend selected")
 
-  if ( tolower(control$backend) == "cvodes" )
-    check.cvodes(error=TRUE)
+  if ( control$compiled && control$backend != "gslode" )
+    stop("Compiled derivatives (control: compiled=TRUE) only with gslode")
 
   control$tol <- check.scalar(control$tol)
   control$eps <- check.scalar(control$eps)
@@ -235,7 +241,10 @@ check.loaded.symbol <- function(symbol, dll="") {
   TRUE
 }
 
-check.info.ode <- function(info, control=NULL) {
+check.info.ode <- function(info, control) {
+  ## Might be doubling up here, but good to check.
+  control <- check.control.ode(control)
+  
   model <- if (is.null(info$name.ode)) info$name else info$name.ode
   if ( !(is.character(model) && length(model) == 1) )
     stop("'model' must be a single string")
@@ -250,26 +259,14 @@ check.info.ode <- function(info, control=NULL) {
     stop("dll must be a single string")
   dll <- info$dll
 
-  if ( is.null(info$banded) )
-    info$banded <- FALSE
-  else if ( length(info$banded) != 1 || !is.logical(info$banded) )
-    stop("Invalid value for banded")
-
-  if ( !is.null(control) ) {
-    backend <- control$backend
-    if ( is.function(info$derivs) ) {
-      backend <- "R" # no effect.
-    } else if ( backend == "deSolve" ) {
-      check.loaded.symbol(sprintf("initmod_%s", model), dll)
-      check.loaded.symbol(sprintf("derivs_%s", model),  dll)
-    } else if ( backend == "cvodes" ) {
-      check.loaded.symbol(sprintf("derivs_%s_cvode", model), dll)
-    } else if ( backend == "CVODES" ) {
-      check.loaded.symbol(sprintf("derivs_%s_cvode", model),       dll)
-      check.loaded.symbol(sprintf("initial_conditions_%s", model), dll)
-    }
+  if ( control$compiled ) {
+    if ( control$backend != "gslode" )
+      stop("Only gslode backend supported with compiled code")
+    check.loaded.symbol(sprintf("derivs_%s_gslode", model), dll)
+  } else {
+    if ( !is.function(info$derivs) )
+      stop("info$derivs must be a function")
   }
-
   
   info
 }

@@ -5,11 +5,7 @@
 
 #include <R.h>
 
-/* For CVODES */
-#include <nvector/nvector_serial.h>
-#include <user_data.h>
-
-void do_derivs_geosse(double *pars, double *y, double *ydot) {
+void do_derivs_geosse(double *pars, const double *y, double *ydot) {
   /* states:
    * 1 = in both regions
    * 2 = region A endemic
@@ -61,26 +57,9 @@ void do_derivs_geosse(double *pars, double *y, double *ydot) {
             + dB * D_N1 + 2 * sB * D_N3 * E_3;
 }
 
-/* deSolve / LSODA */
-static double parms_geosse[7];
-
-void initmod_geosse(void (* odeparms)(int *, double *))
-{
-  int N = 7;
-  odeparms(&N, parms_geosse);
-}
-
-void derivs_geosse(int *neq, double *t, double *y, double *ydot, 
-		   double *yout, int *ip) {
-  do_derivs_geosse(parms_geosse, y, ydot);
-}
-
-/* CVODES */
-int derivs_geosse_cvode(realtype t, N_Vector y, N_Vector ydot,
-			void *user_data) {
-  do_derivs_geosse(((UserData*) user_data)->p,
-		   NV_DATA_S(y), NV_DATA_S(ydot));
-  return 0;
+void derivs_geosse_gslode(int neqs, double t, double *pars, 
+			 const double *y, double *dydt) {
+  do_derivs_geosse(pars, y, dydt);
 }
 
 void initial_conditions_geosse(int neq, double *vars_l, double *vars_r,
@@ -106,14 +85,7 @@ void initial_conditions_geosse(int neq, double *vars_l, double *vars_r,
 /*** For split ***/
 
 /* Auxilliary (just compute E) */
-
-void initmod_geosse_aux(void (* odeparms)(int *, double *))
-{
-  int N = 7;
-  odeparms(&N, parms_geosse);
-}
-
-void do_derivs_geosse_aux(double *pars, double *y, double *ydot)
+void do_derivs_geosse_aux(double *pars, const double *y, double *ydot)
 {
   double E_1 = y[0];
   double E_2 = y[1];
@@ -136,16 +108,7 @@ void do_derivs_geosse_aux(double *pars, double *y, double *ydot)
             + xB + dB * E_1 + sB * E_3 * E_3;
 }
 
-/* deSolve */
-void derivs_geosse_aux(int *neq, double *t, double *y, double *ydot, 
-                       double *yout, int *ip) {
-  do_derivs_geosse_aux(parms_geosse, y, ydot);
-}
-
-/* CVODES */
-int derivs_geosse_aux_cvode(realtype t, N_Vector y, N_Vector ydot,
-                           void *user_data) {
-  do_derivs_geosse_aux(((UserData*) user_data)->p,
-                      NV_DATA_S(y), NV_DATA_S(ydot));
-  return 0;
+void derivs_geosse_aux_gslode(int neqs, double t, double *pars, 
+			     const double *y, double *dydt) {
+  do_derivs_geosse_aux(pars, y, dydt);
 }

@@ -9,10 +9,13 @@ initial.tip.mkn.ode <- function(cache) {
   dt.tips.grouped(y, y.i, cache)
 }
 
-###########################################################################
-## Additional functions
-## For historical and debugging purposes, not used directly in the
-## calculations, but branches function is generated this way
-## internally.
-make.branches.mkn <- function(cache, control)
+make.branches.mkn.ode <- function(cache, control)
   make.branches.dtlik(cache$info, control)
+
+derivs.mkn.ode <- function(t, y, pars) {
+  k <- length(y)
+  Q <- matrix(pars, k, k)
+  ret <- Q %*% y
+  dim(ret) <- NULL
+  ret
+}

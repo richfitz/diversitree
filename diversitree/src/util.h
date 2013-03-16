@@ -1,8 +1,9 @@
-void do_gemm(double *x, int nrx, int ncx,
-             double *y, int nry, int ncy,
+#include <Rinternals.h>
+void do_gemm(const double *x, int nrx, int ncx,
+             const double *y, int nry, int ncy,
              double *z);
-void do_gemm2(double *x, int nrx, int ncx,
-	      double *y, int nry, int ncy,
+void do_gemm2(const double *x, int nrx, int ncx,
+	      const double *y, int nry, int ncy,
 	      double *z);
 void do_gemm3(double *x, int nrx, int ncx,
 	      double *y, int nry, int ncy,

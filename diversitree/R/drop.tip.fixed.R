@@ -20,10 +20,7 @@ drop.tip.fixed <- function(phy, tip, trim.internal = TRUE, subtree =
   if (subtree) {
     trim.internal <- TRUE
     tr <- reorder(phy, "pruningwise")
-    N <- .C("node_depth", as.integer(Ntip), as.integer(Nnode), 
-            as.integer(tr$edge[, 1]), as.integer(tr$edge[, 2]), 
-            as.integer(Nedge), double(Ntip + Nnode), DUP = FALSE, 
-            PACKAGE = "ape")[[6]]
+    N <- node.depth(phy)
   }
   wbl <- !is.null(phy$edge.length)
   edge1 <- phy$edge[, 1]

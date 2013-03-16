@@ -1,11 +1,9 @@
-/* The DtIcFun is duplicated from cvodes_all_branches, and DtBrFun is
-   new */
+/* The DtIcFun is duplicated from elsewhere, and DtBrFun is new */
 typedef int (*DtIcFun)(int neq, double *vars_l, double *vars_r,
 		       double *pars, double t, double *vars_out);
 typedef double (*DtBrFun)(double *vars_in, double len, double *pars, 
 			  double t0, int idx, double *vars_out);
 
-/* This is very similar to the cvodes_all_branches one */
 typedef struct {
   int neq;
   int np;

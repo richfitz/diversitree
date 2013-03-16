@@ -65,6 +65,8 @@ make.info.bd <- function(phy) {
        k=1L,
        idx.e=1L,
        idx.d=2L,
+       ## R version of the derivatives function
+       derivs=derivs.bd,
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -97,22 +99,6 @@ make.cache.bd <- function(tree, sampling.f, unresolved, times,
   cache$info <- make.info.bd(tree)
   cache
 }
-
-## 4: find.mle
-## find.mle.bd <- function(func, x.init, method, fail.value=NA, ...) {
-##   if ( missing(x.init) ) {
-##     warning("Guessing initial parameters - may do badly")
-##     x.init <- structure(c(.2, .1), names=argnames(func))
-##   }
-##   NextMethod("find.mle", x.init=x.init)
-## }
-
-## TODO: it would be nice to get the analytic version here?
-## find.mle.yule <- function(func, x.init, method, fail.value=NA, ...) {
-##   if ( missing(x.init) )
-##     x.init <- structure(.2, names=argnames(func))
-##   NextMethod("find.mle", x.init=x.init)
-## }
 
 ######################################################################
 ## Extra functions

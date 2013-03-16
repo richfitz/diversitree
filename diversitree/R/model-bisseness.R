@@ -104,6 +104,8 @@ make.info.bisseness <- function(phy) {
        k=2L,
        idx.e=1:2,
        idx.d=3:4,
+       ## R version of derivative function:
+       derivs=derivs.bisseness,
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -260,4 +262,40 @@ check.pars.bisseness <- function(pars) {
   if ( any(pars[7:10] > 1) ) # Already checked "< 0" above.
     stop("Probability parameters must lie between 0 and 1.")
   TRUE
+}
+
+derivs.bisseness <- function(t, y, pars) {
+  E0 <- y[1]
+  E1 <- y[2]
+  D0 <- y[3]
+  D1 <- y[4]
+
+  la0 <- pars[1]
+  la1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+  p0c <- pars[7]
+  p0a <- pars[8]
+  p1c <- pars[9]
+  p1a <- pars[10]
+
+  c(-(mu0 + q01 + la0) * E0 + 
+    la0 * E0 * E0 * (1 - p0c) + mu0 + q01 * E1 + 
+    la0 * E0 * E1 * p0c * p0a + la0 * E1 * E1 * p0c * (1 - p0a),
+    ##
+    -(mu1 + q10 + la1) * E1 + 
+    la1 * E1 * E1 * (1 - p1c) + mu1 + q10 * E0 + 
+    la1 * E0 * E1 * p1c * p1a + la1 * E0 * E0 * p1c * (1 - p1a),
+    ##
+    -(mu0 + q01 + la0) * D0 + 
+    2 * la0 * E0 * D0 * (1 - p0c) + q01 * D1 + 
+    (E0 * D1 + E1 * D0) * la0 * p0c * p0a + 
+    2 * la0 * E1 * D1 * p0c * (1 - p0a),
+    ##
+    -(mu1 + q10 + la1) * D1 + 
+    2 * la1 * E1 * D1 * (1 - p1c) + q10 * D0 + 
+    (E1 * D0 + E0 * D1) * la1 * p1c * p1a + 
+    2 * la1 * E0 * D0 * p1c * (1 - p1a))
 }

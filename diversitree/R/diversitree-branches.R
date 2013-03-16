@@ -354,14 +354,14 @@ make.branches.comp <- function(branches, comp.idx, eps=0) {
 }
 
 make.ode <- function(info, control) {
+  control <- check.control.ode(control)
+  info <- check.info.ode(info, control)
   backend  <- control$backend
-  if ( is.function(info$derivs) )
-    ode <- make.ode.R(info, control)
+  if ( backend == "gslode" )
+    ode <- make.ode.gslode(info, control)
   else if ( backend == "deSolve" )
     ode <- make.ode.deSolve(info, control)
-  else if ( backend == "cvodes" )
-    ode <- make.ode.cvodes(info, control)
-  else
+  else # should have been prevented by now
     stop("Invalid backend", backend)
   ode
 }
@@ -378,15 +378,10 @@ make.branches.dtlik <- function(info, control) {
 
 make.all.branches.dtlik <- function(cache, control,
                                     initial.conditions) {
-  control <- check.control.ode(control)
-  if ( control$backend == "CVODES" ) {
-    make.all.branches.C(cache, control)
-  } else { # deSolve and cvodes:
-    branches <- make.branches.dtlik(cache$info, control)
-    function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache, initial.conditions,
-                          branches, preset)
-  }
+  branches <- make.branches.dtlik(cache$info, control)
+  function(pars, intermediates, preset=NULL)
+    all.branches.matrix(pars, cache, initial.conditions,
+                        branches, preset)
 }
 
 ## Utility functions for organising initial conditions.

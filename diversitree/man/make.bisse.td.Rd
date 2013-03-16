@@ -1,6 +1,5 @@
 \name{make.bisse.td}
 \alias{make.bisse.t}
-\alias{make.bisse.t.old}
 \alias{make.bisse.td}
 
 \title{Binary State Speciation and Extinction Model: Time Dependant
@@ -15,10 +14,7 @@ make.bisse.td(tree, states, n.epoch, unresolved=NULL, sampling.f=NULL,
               nt.extra=10, strict=TRUE, control=list())
 
 make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
-             strict=TRUE, control=list(), spline.data=NULL)
-
-make.bisse.t.old(tree, states, functions, unresolved=NULL, sampling.f=NULL,
-                 nt.extra=10, strict=TRUE, control=list())
+             strict=TRUE, control=list(), truncate=FALSE, spline.data=NULL)
 }
 
 \arguments{
@@ -55,6 +51,10 @@ make.bisse.t.old(tree, states, functions, unresolved=NULL, sampling.f=NULL,
   
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
+
+  \item{truncate}{Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 6).}
 
   \item{spline.data}{List of data for spline-based time functions.  See
     details}.

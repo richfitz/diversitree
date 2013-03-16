@@ -43,6 +43,8 @@ make.info.geosse <- function(phy) {
        k=3L,
        idx.e=1:3,
        idx.d=4:6,
+       ## R version of derivative function:
+       derivs=derivs.geosse,
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -165,3 +167,52 @@ starting.point.geosse <- function(tree, eps=0.5) {
 ## internally.
 make.branches.geosse <- function(cache, control)
   make.branches.dtlik(cache$info, control)
+
+derivs.geosse <- function(t, y, pars) {
+  E_1 <- y[1]
+  E_2 <- y[2]
+  E_3 <- y[3]
+  D_N1 <- y[4]
+  D_N2 <- y[5]
+  D_N3 <- y[6]
+
+  sA  <- pars[1]
+  sB  <- pars[2]
+  sAB <- pars[3]
+  xA  <- pars[4]
+  xB  <- pars[5]
+  dA  <- pars[6]
+  dB  <- pars[7]
+
+  ydot <- numeric(6)
+
+  ## dE_1 / dt
+  ydot[1] <- (-(sA + sB + xA + xB + sAB) * E_1 
+              + xA * E_3 + xB * E_2 
+              + sA * E_1 * E_2 + sB * E_1 * E_3 + sAB * E_2 * E_3)
+
+  ## dE_2 / dt
+  ydot[2] <- (-(sA + dA + xA) * E_2 
+              + xA + dA * E_1 + sA * E_2 * E_2)
+
+  ## E_3 / dt
+  ydot[3] <- (-(sB + dB + xB) * E_3 
+              + xB + dB * E_1 + sB * E_3 * E_3)
+
+  ## dD_N1 / dt
+  ydot[4] <- (-(sA + sB + sAB + xA + xB) * D_N1 
+              + xA * D_N3 + xB * D_N2 
+              + sA * (E_2 * D_N1 + E_1 * D_N2) 
+              + sB * (E_3 * D_N1 + E_1 * D_N3)
+              + sAB * (E_2 * D_N3 + E_3 * D_N2))
+
+  ## dD_N2 / dt
+  ydot[5] <- (-(sA + dA + xA) * D_N2 
+              + dA * D_N1 + 2 * sA * D_N2 * E_2)
+
+  ## dD_N3 / dt
+  ydot[6] <- (-(sB + dB + xB) * D_N3 
+              + dB * D_N1 + 2 * sB * D_N3 * E_3)
+
+  ydot
+}

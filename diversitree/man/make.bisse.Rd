@@ -136,9 +136,9 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
 \section{ODE solver control}{
-  The differential equations that define the BiSSE model are solved
-  numerically using deSolve's LSODA ODE solver or the CVODES solver from
-  the SUNDIALS suite of solvers.  The \code{control} argument to
+  The differential equations that define the
+  BiSSE model are solved numerically using ODE solvers from the GSL
+  library or deSolve's LSODA.  The \code{control} argument to
   \code{make.bisse} controls the behaviour of the integrator.  This is a
   list that may contain elements:
   
@@ -159,16 +159,12 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 
     \item{\code{backend}: Select the solver.  The three options here are
       \itemize{
-	\item{\code{deSolve}: (the default for now).  Use the LSODA
-	  solver from the \code{deSolve} package.}
-	\item{\code{cvodes}: Use the CVODES solver from the SUNDIALS
-	  suite.}
-	\item{\code{CVODES}: Use the CVODES solver, but also use an
-	  experimental, faster, function for the tree traversal.}}}
-
-    \item{safe}{(logical) Use a safer, slower, integrator when using the
-      deSolve integrator?  Leave this alone (this will be automatically
-      selected when appropriate).}
+	\item{\code{gslode}: (the default).  Use the GSL solvers, by
+	  default a Runge Kutta Kash Carp stepper.}
+	\item{\code{deSolve}: Use the LSODA solver from the
+	  \code{deSolve} package.  This is quite a bit slower at the
+	  moment.}
+    }}
   }
 
   \code{deSolve} is the only supported backend on Windows.
@@ -295,34 +291,6 @@ lik.bd3 <- make.bd(phy, unresolved=unresolved.bd)
 ## Difference of -167.1523
 lik.bisse3.bd(pars) - lik.bd3(pars)
 lik.bisse3.bd(pars*2) - lik.bd3(pars*2)
-
-\dontrun{
-## This only works when diversitree was built with CVODES support
-## (currently not on Windows).  This support is still experimental.
-
-## Different backends:
-lik.1 <- make.bisse(phy, phy$tip.state, control=list(backend="deSolve"))
-lik.2 <- make.bisse(phy, phy$tip.state, control=list(backend="cvodes"))
-lik.3 <- make.bisse(phy, phy$tip.state, control=list(backend="CVODES"))
-
-## All the calculations are very similar
-pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
-(ll.1 <- lik.1(pars))
-(ll.2 <- lik.2(pars))
-(ll.3 <- lik.3(pars))
-diff(range(c(ll.1, ll.2, ll.3)))
-
-## However, the CVODES version is quite a bit faster than the other two
-## (cvodes is often a bit slower than deSolve).
-
-## Timings are on a 2008 Mac Pro
-system.time(fit.1 <- find.mle(lik.1, pars)) # 4.5s
-system.time(fit.2 <- find.mle(lik.2, pars)) # 6.0s
-system.time(fit.3 <- find.mle(lik.3, pars)) # 1.6s
-
-## All found the same ML point:
-diff(range(fit.1$lnLik, fit.2$lnLik, fit.3$lnLik))
-}
 }
 
 \references{

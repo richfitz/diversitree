@@ -1,6 +1,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
+#include <gsl/gsl_errno.h>
 
 /* Simplified matrix multiplication, assuming straightforward sizes
    and zeroing the input.  GEMM does:
@@ -10,8 +11,8 @@
      beta = 0, this gives a fresh calculation of X Y, and with 
      beta = 1, this updates Z to give Z = Z + X Y
 */
-void do_gemm(double *x, int nrx, int ncx,
-             double *y, int nry, int ncy,
+void do_gemm(const double *x, int nrx, int ncx,
+             const double *y, int nry, int ncy,
              double *z) {
   const char *trans = "N";
   double alpha = 1.0, beta = 0.0;
@@ -19,8 +20,8 @@ void do_gemm(double *x, int nrx, int ncx,
                   x, &nrx, y, &nry, &beta, z, &nrx);
 }
 
-void do_gemm2(double *x, int nrx, int ncx,
-	      double *y, int nry, int ncy,
+void do_gemm2(const double *x, int nrx, int ncx,
+	      const double *y, int nry, int ncy,
 	      double *z) {
   const char *trans = "N";
   double alpha = 1.0, beta = 1.0;
@@ -209,4 +210,17 @@ SEXP check_ptr_not_null(SEXP extPtr) {
   if ( R_ExternalPtrAddr(extPtr) == NULL )
     error("Recieved NULL pointer");
   return ScalarLogical(1);
+}
+
+void handler_pass_to_R(const char *reason,
+                       const char *file,
+                       int line,
+                       int gsl_errno) {
+  Rf_error("GSLERROR: %s: %s:%d [%d]", reason, file, line, gsl_errno);
+}
+
+/* Pass GSL errors back to R -- don't just quit */
+SEXP set_sane_gsl_error_handling() {
+  gsl_set_error_handler(&handler_pass_to_R);
+  return R_NilValue;
 }

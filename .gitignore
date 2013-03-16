@@ -57,31 +57,6 @@ diversitree/configure
 diversitree/src/Makevars
 diversitree/src/config.h
 diversitree/src/config.h.in
-diversitree/src/cvodea.c
-diversitree/src/cvodea_io.c
-diversitree/src/cvodes.c
-diversitree/src/cvodes_band.c
-diversitree/src/cvodes_bandpre.c
-diversitree/src/cvodes_bbdpre.c
-diversitree/src/cvodes_dense.c
-diversitree/src/cvodes_diag.c
-diversitree/src/cvodes_direct.c
-diversitree/src/cvodes_io.c
-diversitree/src/cvodes_lapack.c
-diversitree/src/cvodes_spbcgs.c
-diversitree/src/cvodes_spgmr.c
-diversitree/src/cvodes_spils.c
-diversitree/src/cvodes_sptfqmr.c
-diversitree/src/nvector_serial.c
-diversitree/src/sundials_band.c
-diversitree/src/sundials_dense.c
-diversitree/src/sundials_direct.c
-diversitree/src/sundials_iterative.c
-diversitree/src/sundials_math.c
-diversitree/src/sundials_nvector.c
-diversitree/src/sundials_spbcgs.c
-diversitree/src/sundials_spgmr.c
-diversitree/src/sundials_sptfqmr.c
 
 ## I will often have a checking file here:
 diversitree.Rcheck
@@ -107,3 +82,4 @@ pub/example/primates.pdf
 pub/diversitree-suppl.pdf
 pub/diversitree.pdf
 
+ideas.org

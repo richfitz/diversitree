@@ -1,130 +1,29 @@
-## Known to work on 1.3-1.6
-make.ode.deSolve <- function(info, control) {
-  model  <- info$name.ode
-  np     <- info$np  
-  ny     <- info$ny
-  dll    <- info$dll
-  banded <- info$banded
-
-  safe   <- control$safe
-  unsafe <- control$unsafe
-  atol   <- rtol <- as.numeric(control$tol)
-
-  initfunc <- sprintf("initmod_%s", model)
-  derivs <- sprintf("derivs_%s", model)
-
-  if ( safe ) {
-    function(vars, times, pars) {
-      ret <- t(lsoda(vars, times, pars, rtol=rtol, atol=atol,
-                     initfunc=initfunc, func=derivs,
-                     dllname=dll)[-1,-1,drop=FALSE])
-      dimnames(ret) <- NULL
-      ret
-    }
-  } else {
-    ## Temporary fix so that I can work on the cluster.  This will be
-    ## removed and DESCRIPTION updated to require R 2.12.0 or greater.
-    if ( getRversion() >= package_version("2.12.0") )
-      vers <-  packageVersion("deSolve")
-    else
-      vers <- package_version(packageDescription("deSolve",
-                                                 fields="Version"))
-    max.deSolve <- package_version("1.10-4")
-    if ( !unsafe && vers > max.deSolve ) {
-      str <- paste("diversitree is not known to work with deSolve > ",
-                   max.deSolve, "\n\tfalling back on slow version")
-      warning(str)
-      control$safe <- TRUE
-      return(make.ode.deSolve(info, control))
-    }
-    
-    initfunc  <- getNativeSymbolInfo(initfunc, PACKAGE=dll)$address
-    derivs    <- getNativeSymbolInfo(derivs,   PACKAGE=dll)$address
-    jacfunc <- NULL
-    ## Magic numbers from deSolve:lsoda.R
-    jactype <- if ( banded ) 5L else 2L
-
-    maxordn <- 12
-    maxords <- 5
-    lrw <- as.integer(max(20 + ny * (maxordn + 1) + 3 * ny,
-                          20 + ny * (maxords + 1) + 3 * ny + ny^2 + 2))
-    liw <- as.integer(20 + ny)
-
-    iwork <- vector("integer", 20)
-    iwork[1] <- as.integer(1)    # banddown
-    iwork[2] <- as.integer(1)    # bandup
-    iwork[6] <- as.integer(5000) # maxsteps
-
-    rwork <- vector("double", 20)
-    rwork[5] <- 0                     # hini
-    rwork[6] <- 10                    # hmax (consider 0)
-    rwork[7] <- 0                     # hmin
-
-    INTZERO <- 0L
-    INTONE <- 1L
-    INTTWO <- 2L
-
-    flist <- list(fmat=0, tmat=0, imat=0, ModelForc=NULL)
-    elag <- list(islag=0L)
-
-    sol <- function(vars, times, pars) {
-      if ( length(vars) != ny )
-        stop("Incorrect variable length")
-      if ( length(times) <= 1 )
-        stop("Need >= 2 times")
-      storage.mode(vars) <- storage.mode(times) <- "numeric"
-
-      ## Strictly only need to do this at the likelihood function, but
-      ## that complicates things.  This is safer, anyway.  The cost is
-      ## on the order of 0.01s / 10000 evaluations, so even for large
-      ## trees this is trivial.
-      check.ptr(derivs)
-
-      ret <- 
-        .Call("call_lsoda", vars, times, derivs, pars,
-              rtol, atol,
-              NULL,      # rho: environment
-              NULL,      # tcrit: critical times
-              jacfunc, 
-              initfunc,
-              NULL,      # eventfunc [New in 1.6]
-              INTZERO,   # verbose (false)
-              INTONE,    # itask
-              rwork,
-              iwork,
-              jactype,   # Jacobian type (2=full, 5=banded [1 up and down])
-              INTZERO,   # nOut (no global variables)
-              lrw,       # size of workspace (real)
-              liw,       # size of workspace (int)
-              INTONE,    # Solver
-              NULL,      # rootfunc
-              INTZERO,   # nRoot
-              0,         # rpar: no extra real parameters
-              INTZERO,   # ipar: no extra integer parameters
-              INTZERO,   # Type
-              flist,     # [New in 1.5]
-              list(),    # elist [New in 1.6]
-              elag,      # [New in 1.7]
-              PACKAGE="deSolve")
-      if ( max(abs(ret[1,] - times)) > 1e-6 )
-        stop("Integration error: integration stopped prematurely")
-      ret[-1,-1,drop=FALSE]
-    }
-  }
+lsoda.trim <- function(...) {
+  ret <- t(lsoda(...)[-1,-1,drop=FALSE])
+  dimnames(ret) <- NULL
+  ret
 }
 
-## For testing new models.  Selected by make.ode() when info$derivs is
-## a function
-make.ode.R <- function(info, control) {
-  derivs <- info$derivs
-  rtol <- atol <- control$tol
-  if ( !is.function(derivs) )
-    stop("info$derivs must be a function")
+## This sets things up the way that deSolve likes them
+derivs.for.deSolve <- function(f)
+  function(...) list(f(...))
 
-  function(vars, times, pars) {
-    ret <- t(lsoda(vars, times, derivs, pars,
-                   rtol=rtol, atol=atol)[-1,-1,drop=FALSE])
-    dimnames(ret) <- NULL
-    ret
+make.ode.deSolve <- function(info, control) {
+  if ( !is.function(info$derivs) )
+    stop("info$derivs must be a function")
+  derivs <- derivs.for.deSolve(info$derivs)
+
+  rtol <- atol <- control$tol
+
+  if ( isTRUE(info$time.varying) ) {
+    tm <- info$tm
+    function(vars, times, pars) {
+      tm$set(pars)
+      lsoda.trim(vars, times, derivs, pars, rtol=rtol, atol=atol)
+    }
+  } else {
+    function(vars, times, pars) {
+      lsoda.trim(vars, times, derivs, pars, rtol=rtol, atol=atol)
+    }
   }
 }

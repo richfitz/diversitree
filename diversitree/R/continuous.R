@@ -35,9 +35,6 @@ make.all.branches.continuous <- function(cache, control) {
   ptr <- .Call("r_make_dt_obj_cont", cache.C, ic, br,
                PACKAGE="diversitree")
   
-  ## This is basically identical to the version in
-  ## diversitree-branches-C for working with CVODES models, but with
-  ## names postfixed with _cont.
   function(pars, intermediates=FALSE, preset=NULL) {
     if ( !is.null(preset) )
       stop("Don't know how to deal with preset values yet")

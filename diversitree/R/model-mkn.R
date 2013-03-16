@@ -40,6 +40,9 @@ make.info.mkn <- function(k, phy) {
        k=as.integer(k),
        idx.e=integer(0),
        idx.d=seq_len(k),
+       ## R version of the derivatives function (only applicable to
+       ## ode version, so added there)
+       ## derivs=derivs.mkn,
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -80,10 +83,14 @@ make.cache.mkn <- function(tree, states, k, strict, control) {
     cache$info <- make.info.mk2(tree)
   else
     cache$info <- make.info.mkn(k, tree)
+
   cache$states  <- states
   if ( method == "ode" ) {
+    cache$info$derivs <- derivs.mkn.ode
     cache$y <- initial.tip.mkn.ode(cache)
     cache$info$name.ode <- "mknode"
+  } else if ( method == "" ) {
+    cache$info$name.ode <- "mknpij"
   }
 
   cache
@@ -128,8 +135,8 @@ make.all.branches.mkn <- function(cache, control) {
       make.all.branches.mkn.expokit(cache, control)
     else
       make.all.branches.dtlik(cache, control, initial.conditions.mkn)
-  } else {
-    make.all.branches.mkn.exp(cache, control)
+  } else { # method == "pij"
+    make.all.branches.mkn.pij(cache, control)
   }
 }
 
@@ -176,10 +183,10 @@ mkn.Q <- function(pars, k) {
 
 ## Checking:
 check.control.mkn <- function(control, k) {
-  control <- modifyList(list(method="exp"), control)
+  control <- modifyList(list(method="pij"), control)
   if ( control$method == "mk2" && k != 2 )
     stop("Method 'mk2' only valid when k=2")
-  methods <- c("exp", "mk2", "ode")
+  methods <- c("pij", "mk2", "ode")
   if ( !(control$method %in% methods) )
     stop(sprintf("control$method must be in %s",
                  paste(methods, collapse=", ")))

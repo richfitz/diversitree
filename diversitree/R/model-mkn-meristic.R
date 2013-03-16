@@ -38,6 +38,8 @@ make.info.mkn.meristic <- function(k, phy) {
        k=as.integer(k),
        idx.e=integer(0),
        idx.d=seq_len(k),
+       ## R version of derivatives
+       derivs=make.derivs.mkn.meristic(k),
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -83,4 +85,18 @@ mkn.meristic.Q <- function(pars, k) {
   q[i[,2:1]] <- pars[2]
   diag(q) <- -rowSums(q)
   q
+}
+
+make.derivs.mkn.meristic <- function(k) {
+  i <- seq(2, k-1)
+  dydt <- numeric(k)
+  function(t, y, pars) {
+    d <- pars[1]
+    u <- pars[2]
+    ud <- d + u
+    dydt[1] <- -u * y[1] + u * y[2]
+    dydt[i] <- -ud * y[i] + d * y[i-1] + u * y[i+1]
+    dydt[k] <- -d * y[k] + d * y[k-1]
+    dydt
+  }
 }

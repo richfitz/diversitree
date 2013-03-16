@@ -36,19 +36,6 @@ else
    PKG_LIBS="${PKG_LIBS} -lfftw3"
 fi
 
-AC_ARG_ENABLE([cvodes],
-	AS_HELP_STRING([--enable-cvodes],
-		[enable the cvodes integrator]),
-	[cvodes=$enableval])
-if [ test x"$cvodes" = xno ]; then
-	echo "Disabling cvodes integrator"
-else
-	echo "Enabling cvodes integrator"
-	echo "Copying CVODES files into package src directory"
-	cp -fp src/cvodes/*.c src
-	AC_DEFINE(WITH_CVODES, 1, Define to enable CVODES)
-fi
-
 AC_ARG_ENABLE([gcc-strict],
 	AS_HELP_STRING([--enable-gcc-strict],
 		[use strict gcc error checking]),
