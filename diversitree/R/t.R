@@ -97,19 +97,24 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL, thin=10,
   }
 
   if ( is.matrix ) {
+    get1 <- function(p, t, i) {
+      tm$set(p)
+      tm$get(t)[i]
+    }
     if ( everything ) {
       np <- if ( is.matrix ) nrow(p) else 1
       ret <- lapply(t, function(ti)
-                    t(apply(p, 1, tm$get1, ti, i=match(v, tm$funnames))))
-      ret <- array(unlist(ret), c(np, length(v), length(t)))
-      tmp <- aperm(ret, c(2, 3, 1))
+                    t(apply(p, 1, get1, ti, i=match(v, tm$names))))
+      tmp <- array(unlist(ret), c(np, length(v), length(t)))
+      tmp <- aperm(tmp, c(2, 3, 1))
       dimnames(tmp) <- list(v, NULL, NULL)
       ret <- vector("list", length(v))
+      names(ret) <- v
       for ( i in v )
         ret[[i]] <- tmp[i,,]
-    } else { 
-      ret <- lapply(match(v, tm$funnames), function(i)
-                    average.over.mcmc(p, tm$get1, t, i=i))
+    } else {
+      ret <- lapply(match(v, tm$names), function(i)
+                    average.over.mcmc(p, get1, t, i=i))
       names(ret) <- v
     }
   } else {
@@ -161,7 +166,7 @@ plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
 average.over.mcmc <- function(p, f, xx, ..., alpha=1/20) {
   g <- function(xi) {
     y <- apply(p, 1, f, xi, ...)
-    c(mean(y), hdr.new(y, alpha))
+    c(mean(y), hdr(y, 1-alpha))
   }
   if ( is.data.frame(p) )
     p <- as.matrix(p)

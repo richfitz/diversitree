@@ -88,15 +88,6 @@ hdr.uniroot <- function(z, p=0.95, lim=NULL) {
   f(c(ci, ci+p))
 }
 
-hdr <- function(z, p=0.95, lim=NULL) {
-  ci <- try(hdr.uniroot(z, p, lim), silent=TRUE)
-  if ( inherits(ci, "try-error") ) {
-    warning("HDR falling back on quantile-based intervals")
-    ci <- as.numeric(quantile(z, c((1-p)/2, 1/2 + p/2)))
-  }
-  ci
-}
-
 add.alpha <- function(col, alpha=.5) {
   if ( length(alpha) > 1 && any(is.na(alpha)) ) {
     n <- max(length(col), length(alpha))
@@ -110,6 +101,16 @@ add.alpha <- function(col, alpha=.5) {
     tmp <- col2rgb(col)/255
     rgb(tmp[1,], tmp[2,], tmp[3,], alpha=alpha)
   }
+}
+
+hdr <- function(z, p=0.95, lim=NULL) {
+  ## ci <- try(hdr.uniroot(z, p, lim), silent=TRUE)
+  ci <- try(hdr.new(z, 1-p, lim), silent=TRUE)
+  if ( inherits(ci, "try-error") ) {
+    warning("HDR falling back on quantile-based intervals")
+    ci <- as.numeric(quantile(z, c((1-p)/2, 1/2 + p/2)))
+  }
+  ci
 }
 
 hdr.new <- function(z, alpha=0.05, lim=NULL) {
