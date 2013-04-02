@@ -42,6 +42,8 @@ class GslOdeBase {
   // along.
   
 public:
+  // TODO: Should have (or prevent) copy constructor and assignment
+  // (Rule of Three).
   GslOdeBase(int size);
   // Destructor should be declared virtual -- see:
   // http://stackoverflow.com/questions/461203/when-to-use-virtual-destructors

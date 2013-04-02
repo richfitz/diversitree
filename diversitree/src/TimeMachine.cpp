@@ -9,7 +9,7 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 			 int k,
 			 std::vector<double> spline_t,
 			 std::vector<double> spline_y) {
-  nf = funcs.size();
+  nf = (int)funcs.size();
   idx.resize(nf);
   target.resize(nf);
   np_in = 0;

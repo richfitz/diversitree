@@ -31,10 +31,10 @@ private:
   typedef double tm_fun(double, 
 			std::vector<double>::const_iterator,
 			Spline *);
+  std::string variable_name;
+  std::string func_name;
   bool nonnegative;
   bool truncate;
-  std::string func_name;
-  std::string variable_name;
   Spline *spline;
   tm_fun *f;
   std::vector<double> p_in;
