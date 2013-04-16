@@ -183,7 +183,7 @@ all.branches.list <- function(pars, cache, initial.conditions,
     for ( i in seq_along(tip.t) ) {
       idx <- tip.target[i]
       ans <- branches(tip.y[[i]], tip.t[i], pars, 0, idx)
-      lq[idx] <- ans[1]
+      lq[idx] <- ans[[1]]
       branch.base[[idx]] <- ans[-1]
     }
   }
@@ -191,11 +191,13 @@ all.branches.list <- function(pars, cache, initial.conditions,
   for ( i in order ) {
     y.in <- initial.conditions(branch.base[children[i,]], pars,
                                depth[i], i)
-    if ( !all(is.finite(y.in)) )
+    ## TODO: This is temporary to acomodate BBM.  Will change
+    ## shortly.
+    if ( !is.list(y.in) && !all(is.finite(y.in)) )
       stop("Bad initial conditions: calculation failure along branches?")
     branch.init[[i]] <- y.in
     ans <- branches(y.in, len[i], pars, depth[i], i)
-    lq[i] <- ans[1]
+    lq[i] <- ans[[1]]
     branch.base[[i]] <- ans[-1]
   }
 

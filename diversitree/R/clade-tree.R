@@ -98,7 +98,7 @@ clades.from.sample <- function(phy, p) {
     }
   }
 
-  make.clade.tree(diversitree:::drop.tip.fixed(phy, drop), clades)
+  make.clade.tree(drop.tip.fixed(phy, drop), clades)
 }
 
 

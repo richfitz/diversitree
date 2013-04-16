@@ -54,8 +54,7 @@ make.info.quasse <- function(lambda, mu, phy) {
        mcmc.lowerzero=FALSE, # not for many models.
        ## These are optional
        doc=NULL,
-       reference=c(
-         "FitzJohn (2010) doi:10.1093/sysbio/syq053"),
+       reference=c("FitzJohn (2010) doi:10.1093/sysbio/syq053"),
        ## These are special to QuaSSE:
        lambda=lambda,
        mu=mu)
