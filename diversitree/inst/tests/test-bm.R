@@ -37,8 +37,8 @@ expect_that(fit1, equals(fit3))
 library(geiger)
 fit4 <- no.stdout(fitContinuous(bird.orders, x))
 
-expect_that(fit1$lnLik, equals(fit4$Trait1$lnl))
-expect_that(fit1$par, equals(fit4$Trait1$beta, tolerance=1e-4,
+expect_that(fit1$lnLik, equals(fit4$opt$lnL))
+expect_that(fit1$par, equals(fit4$opt$sigsq, tolerance=1e-4,
                              check.attributes=FALSE))
 
 ## Now, with standard errors:
@@ -70,16 +70,16 @@ fit.P.2 <- find.mle(lik.P.2, .1)
 x <- states
 attr(x, "node.state") <- NULL
 fit.g.1 <- no.stdout(fitContinuous(phy, x))
-fit.g.2 <- no.stdout(fitContinuous(phy, x, meserr=se))
+fit.g.2 <- no.stdout(fitContinuous(phy, x, SE=se))
 
 ## All agree -- nice.
 expect_that(unname(coef(fit.v.1)), equals(3.3765625000))
 expect_that(coef(fit.p.1), equals(coef(fit.v.1)))
 expect_that(coef(fit.P.1), equals(coef(fit.v.1)))
-expect_that(lik.v.1(fit.g.1$Trait1$beta), equals(fit.g.1$Trait1$lnl))
+expect_that(lik.v.1(fit.g.1$opt$sigsq), equals(fit.g.1$opt$lnL))
 
 expect_that(unname(coef(fit.v.2)), equals(0.1237304688))
 expect_that(coef(fit.p.2), equals(coef(fit.v.2)))
 expect_that(coef(fit.P.2), equals(coef(fit.v.2)))
-expect_that(lik.v.2(fit.g.2$Trait1$beta), equals(fit.g.2$Trait1$lnl))
+expect_that(lik.v.2(fit.g.2$opt$sigsq), equals(fit.g.2$opt$lnL))
 

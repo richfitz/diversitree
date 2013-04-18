@@ -36,8 +36,8 @@ expect_that(fit1$lnLik, equals(fit3$lnLik))
 expect_that(coef(fit1)[1:2], equals(coef(fit3)[1:2]))
 
 fit4 <- no.stdout(fitContinuous(bird.orders, x, model="OU"))
-expect_that(fit4$Trait1$lnl, equals(fit1$lnLik))
+expect_that(fit4$opt$lnL, equals(fit1$lnLik))
 ## These are quite different, but the likelihood there suggests a
 ## ridge...
-## expect_that(c(fit4$Trait1$beta,fit4$Trait1$alpha),
+## expect_that(c(fit4$opt$sigsq,fit4$opt$alpha),
 ##             equals(fit1$par[1:2], check.attributes=FALSE))
