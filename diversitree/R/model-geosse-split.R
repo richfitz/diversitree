@@ -34,7 +34,7 @@ make.geosse.uneven <- function(tree, states, nodes, split.t=Inf,
                              control=list()) {
  cache <- make.cache.geosse.split(tree, states, nodes, split.t,
                                  sampling.f, strict)
- cache$info <- update.info.uneven(cache$info, make.info.geosse(phy))
+ cache$info <- update.info.uneven(cache$info, make.info.geosse(tree))
  n.part <- cache$n.part
 
  all.branches <- make.all.branches.split.dtlik(cache, control,

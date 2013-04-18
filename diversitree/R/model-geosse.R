@@ -23,7 +23,7 @@ make.geosse <- function(tree, states, sampling.f=NULL, strict=TRUE,
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    check.pars.nonnegative(pars, 7)
+    check.pars.geosse(pars)
     ans <- all.branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
@@ -161,6 +161,9 @@ starting.point.geosse <- function(tree, eps=0.5) {
   names(p) <- default.argnames.geosse()
   p
 }
+
+check.pars.geosse <- function(pars)
+  check.pars.nonnegative(pars, 7)
 
 ## For historical and debugging purposes, not used directly in the
 ## calculations, but branches function is generated this way
