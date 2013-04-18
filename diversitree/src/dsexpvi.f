@@ -8,7 +8,7 @@
       integer ia(nzmax), ja(nzmax)
 *     TODO: the change from w(n) to w(lt * n) avoids bounds violation,
 *     but untested as I cannot trigger this on Mac (see v3 R-exts).
-      double precision t(lt), tol, anorm, v(n), w(lt * nn), wsp(lwsp), 
+      double precision t(lt), tol, anorm, v(n), w(lt * n), wsp(lwsp), 
      .     a(nzmax), ww(n), scal
 
 *-----Purpose----------------------------------------------------------|
