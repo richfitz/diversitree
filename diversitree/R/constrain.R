@@ -39,7 +39,11 @@ constrain <- function(f, ..., formulae=NULL, names=argnames(f),
   for ( formula in formulae ) {
     res <- constrain.parse(formula, names.lhs, names.rhs, extra)
     if ( attr(res, "lhs.is.target") ) {
-      i <- which(sapply(rels, function(x) identical(x, res[[1]])))
+      i <- try(which(sapply(rels, function(x) identical(x, res[[1]]))),
+               silent=TRUE)
+      if ( inherits(i, "try-error") )
+        stop(sprintf("Error parsing constraint with %s on lhs",
+                     as.character(res[[1]])))
       rels[i] <- res[[2]]
 
       ## This will not work with *expressions* involving the LHS; that
