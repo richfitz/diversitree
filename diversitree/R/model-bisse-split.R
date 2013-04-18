@@ -41,6 +41,8 @@ make.bisse.uneven <- function(tree, states, nodes, split.t=Inf,
   cache <- make.cache.bisse.split(tree, states, nodes, split.t,
                                   unresolved, sampling.f, nt.extra,
                                   strict)
+  cache$info <- update.info.uneven(cache$info, make.info.bisse(phy))
+    
   n.part <- cache$n.part
   unresolved <- cache$unresolved
 

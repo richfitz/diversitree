@@ -182,12 +182,20 @@ update.info.split <- function(info, nodes) {
   info$partitioned <- TRUE
   info$argnames <- argnames.twopart(info$argnames, n.part)
   info$name.ode <- info$name
-  info$name.pretty <- sprintf("%s (time-chunks)", info$name.pretty)
+  info$name.pretty <- sprintf("%s (split tree)", info$name.pretty)
   info$name <- sprintf("%s.split", info$name)
 
   info$n.part <- n.part
   info$nodes <- nodes
 
+  info
+}
+
+update.info.uneven <- function(info, info.single) {
+  info$name <- sprintf("%s.uneven", info.single$name)
+  info$name.pretty <- sprintf("%s (uneven sampling tree)",
+                              info.single$name.pretty)
+  info$argnames <- info.single$argnames
   info
 }
 
