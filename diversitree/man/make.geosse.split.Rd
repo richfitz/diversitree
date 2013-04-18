@@ -1,5 +1,6 @@
 \name{make.geosse.split}
 \alias{make.geosse.split}
+\alias{make.geosse.uneven}
 
 \title{Geographic State Speciation and Extinction Model: Split Models}
 
