@@ -171,12 +171,15 @@ t <- branching.times(phy)
 tryq <- 1/2 * startp[["q01"]] * sum(t)/length(t)
 p <- c(startp[1:4], startp[5:6]/2, p0c=tryq, p0a=0.5, p1c=tryq, p1a=0.5)
 
-## Start an ML search from this point.  This takes some time (~12s)
+## Start an ML search from this point.  This takes some time (~12s), so
+## is not run by default.
+\dontrun{
 fit <- find.mle(lik, p, method="subplex")
 logLik(fit) # -174.0104
 
 ## Compare the fit to a constrained model that only allows the trait
-## to change along a lineage (anagenesis).  This takes some time (~12s)
+## to change along a lineage (anagenesis).  This also takes some time
+## (~12s)
 lik.no.clado <- constrain(lik, p0c ~ 0, p1c ~ 0)
 fit.no.clado <- find.mle(lik.no.clado,p[argnames(lik.no.clado)])
 logLik(fit.no.clado) # -174.0577
@@ -194,7 +197,6 @@ anova(fit, no.clado=fit.no.clado)
 ## If the above is repeated with max.taxa=250, BiSSE-ness rejects the
 ## constrained model in favor of one that allows cladogenetic change.
 
-\dontrun{
 ## MCMC run: We use the ML estimate from the full model
 ## as a starting point.
 ##

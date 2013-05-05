@@ -131,9 +131,9 @@ coef(fit.nosurv) # higher lambda than before
 ## Look at the marginal likelihoods, computed through MCMC (see
 ## \link{mcmc} for details, and increase nsteps for smoother
 ## plots [takes longer]).
-samples <- mcmc(lik, fit$par, nsteps=2000,
+samples <- mcmc(lik, fit$par, nsteps=500,
                 lower=c(-Inf, -Inf), upper=c(Inf, Inf), w=c(.1, .1),
-                fail.value=-Inf, print.every=200)
+                fail.value=-Inf, print.every=100)
 samples$r <- with(samples, lambda - mu)
 
 ## Plot the profiles (see \link{profiles.plot}).
@@ -156,8 +156,6 @@ fit2 <- find.mle(lik2, c(.1, .03))
 ## about 55x slower.
 lik.ode <- make.bd(phy, control=list(method="ode"))
 all.equal(lik.ode(coef(fit)), lik(coef(fit)), tolerance=2e-7)
-
-%% TODO: Example of unresolved clades
 }
 
 \references{

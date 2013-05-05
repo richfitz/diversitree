@@ -223,6 +223,9 @@ argnames(lik.m)
 lik0 <- make.musse.multitrait(phy, states, depth=0)
 argnames(lik0)
 
+## This can be used in analyses as usual.  However, this can take a
+## while to run, so is not run by default.
+\dontrun{
 p <- starting.point.musse.multitrait(phy, lik0)
 fit0 <- find.mle(lik0, p)
 
@@ -267,6 +270,7 @@ p <- starting.point.musse.multitrait(phy, lik1c)
 p[names(coef(fit0))] <- coef(fit0)
 fit1c <- find.mle(lik1c, p)
 anova(fit1c, fit0)
+}
 }
 
 \author{Richard G. FitzJohn}

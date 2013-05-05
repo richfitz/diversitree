@@ -154,9 +154,9 @@ make.mvn <- function(mean, vcv) {
 vcv <- matrix(c(1, .25, .25, .75), 2, 2)
 lik <- make.mvn(c(0, 0), vcv)
 
-## Sample 10,000 points from the distribution, starting at c(0, 0).
+## Sample 500 points from the distribution, starting at c(0, 0).
 set.seed(1)
-samples <- mcmc(lik, c(0, 0), 10000, 1, print.every=1000)
+samples <- mcmc(lik, c(0, 0), 500, 1, print.every=100)
 
 ## The marginal distribution of V1 (the first axis of the
 ## distribution) should be a normal distribution with mean 0 and
@@ -166,14 +166,16 @@ hist(samples$X1, 30, add=TRUE, freq=FALSE)
 
 plot(X2 ~ X1, samples, pch=19, cex=.2, col="#00000055", asp=1)
 
-## The estimated variance here matches nicely with the true VCV:
+## The estimated variance here matches nicely with the true VCV: (These
+## all look much better if you increase the number of sampled points,
+## say to 10,000)
 var(samples[2:3])
 
 ## The above uses slice sampling.  We can use simple Gaussian updates
 ## instead.  This performs updates with standard deviation '1' in each
 ## direction.  Unlike slice sampling, the 'w' parameter here will
 ## matter a great deal in determining how fast the chain will mix.
-samples.norm <- mcmc(lik, c(0, 0), 10000, 1, print.every=1000,
+samples.norm <- mcmc(lik, c(0, 0), 500, 1, print.every=100,
                      sampler=sampler.norm)
 
 ## This *appears* to run much faster than the slice sampling based
