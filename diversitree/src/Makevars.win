@@ -1,9 +1,9 @@
 # -*-makefile-*-
-PKG_CPPFLAGS=-I.
-PKG_CFLAGS=
-PKG_LIBS=${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS} -lfftw3
 
-## On my windows machine:
-# PKG_CPPFLAGS=-I. -Ic:/fftw
-# PKG_CFLAGS=
-# PKG_LIBS=${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS} -Lc:/fftw -lfftw3-3
+# GSL configuration based on package 'gsl'
+GSL_CFLAGS = -I$(LIB_GSL)/include
+GSL_LIBS   = -L$(LIB_GSL)/lib -lgsl -lgslcblas
+
+PKG_CPPFLAGS=-I. ${GSL_CFLAGS}
+PKG_CFLAGS=
+PKG_LIBS=${GSL_LIBS} ${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS} -lfftw3
