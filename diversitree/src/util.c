@@ -2,6 +2,7 @@
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
 #include <gsl/gsl_errno.h>
+#include "util.h"
 
 /* Simplified matrix multiplication, assuming straightforward sizes
    and zeroing the input.  GEMM does:
@@ -223,4 +224,18 @@ void handler_pass_to_R(const char *reason,
 SEXP set_sane_gsl_error_handling() {
   gsl_set_error_handler(&handler_pass_to_R);
   return R_NilValue;
+}
+
+/*
+   This generates a warning that we may live with according to BDR:
+   https://stat.ethz.ch/pipermail/r-devel/2004-September/030792.html
+
+   Update: 2013/06/13: Ignoring this warning is perhaps permissible
+   currently in C (though who knows for how long), but not in C++
+   (though this distinction is not made in the forum posting).  So
+   until I work around this in a more sane way, this utility is an
+   attempt to keep the package meeting requirements.
+*/
+deriv_func* get_deriv_func_from_ptr(SEXP extPtr) {
+  return (deriv_func *) R_ExternalPtrAddr(extPtr);
 }

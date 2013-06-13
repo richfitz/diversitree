@@ -10,3 +10,14 @@ void do_gemm3(double *x, int nrx, int ncx,
 	      double *z, double beta);
 SEXP getListElement(SEXP list, const char *str);
 SEXP getListElementIfThere(SEXP list, const char *str);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef void deriv_func(int, double, double *, const double *, double *);
+deriv_func* get_deriv_func_from_ptr(SEXP extPtr);
+
+#ifdef __cplusplus
+}
+#endif

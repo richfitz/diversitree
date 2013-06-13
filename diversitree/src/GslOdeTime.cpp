@@ -1,11 +1,10 @@
 #include "GslOdeTime.h"
 #include <R.h>
+#include "util.h"
 
 GslOdeTime::GslOdeTime(SEXP extPtr, size_t size, TimeMachine tm_) :
   GslOdeBase(size), tm(tm_) {
-  // This generates a warning that we may live with according to BDR:
-  // https://stat.ethz.ch/pipermail/r-devel/2004-September/030792.html
-  derivs_f = (deriv_func *) R_ExternalPtrAddr(extPtr);
+  derivs_f = get_deriv_func_from_ptr(extPtr);
 }
 
 void GslOdeTime::set_pars(SEXP pars_) {

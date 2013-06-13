@@ -1,11 +1,10 @@
 #include "GslOdeCompiled.h"
 #include <R.h>
+#include "util.h"
 
 GslOdeCompiled::GslOdeCompiled(SEXP extPtr, size_t size) :
   GslOdeBase(size) {
-  // This generates a warning that we may live with according to BDR:
-  // https://stat.ethz.ch/pipermail/r-devel/2004-September/030792.html
-  derivs_f = (deriv_func *) R_ExternalPtrAddr(extPtr);
+  derivs_f = get_deriv_func_from_ptr(extPtr);
 }
 
 void GslOdeCompiled::set_pars(SEXP pars_) {

@@ -4,7 +4,6 @@
 #define __GSLODECOMPILED_H_
 
 #include <vector>
-
 #include "GslOdeBase.h"
 
 class GslOdeCompiled : public GslOdeBase {
