@@ -23,7 +23,7 @@ public:
   std::string name() const {return variable_name;}
   double get(double t);
   bool is_constant;
-  int np;
+  size_t np;
 
 private:
   double check_ok(double x);
@@ -49,29 +49,32 @@ public:
 	      std::vector<std::string> funcs,
 	      std::vector<bool> nonnegative,
 	      std::vector<bool> truncate,
-	      int k,
+	      size_t k,
 	      std::vector<double> spline_t,
 	      std::vector<double> spline_y);
 
   void set(std::vector<double> pars);
   std::vector<double> get(double t);
   std::vector<double> getv(double t);
-  int size() { return np_in; }
+  size_t size() const { return np_in; }
+  // This is because CRAN won't allow Rcpp to wrap size_t on Windows
+  // http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2012-July/004016.html
+  int r_size() const { return static_cast<int>(size()); }
   std::vector<std::string> names() const;
 
 private:
-  void setup_q(int k);
+  void setup_q(size_t k);
   void normalise_q(bool is_const);
 
   // Number of high level (hyper) parameters (in).
-  int np_in;
+  size_t np_in;
   std::vector<double> p_in;
   // Number of underlying model parameters (out)
-  int np_out;
+  size_t np_out;
   std::vector<double> p_out;
   // Number of functions.  Often equal to np_out, except for the case
   // of Q matrices.
-  int nf;
+  size_t nf;
 
   // Actual "functions":
   std::vector<TimeMachineFunction> functions;
@@ -79,13 +82,13 @@ private:
   // Index of the starting parameter position in p_in (i.e., idx[i] is
   // the index within p_in for the first parameter of the ith
   // function).
-  std::vector<int> idx;
+  std::vector<size_t> idx;
   // target is the mapping from function to parameters in the vector.
   // So f[i] codes for the parameter that goes into p_out[target[i]]
-  std::vector<int> target;
+  std::vector<size_t> target;
 
   // Used in the Q matrix only:
-  int idx_q_f, idx_q_out, k;
+  size_t idx_q_f, idx_q_out, k;
   std::vector<bool> const_q;
 
   // Used for splines (obviously)

@@ -1,7 +1,7 @@
 #include "GslOdeCompiled.h"
 #include <R.h>
 
-GslOdeCompiled::GslOdeCompiled(SEXP extPtr, int size) :
+GslOdeCompiled::GslOdeCompiled(SEXP extPtr, size_t size) :
   GslOdeBase(size) {
   // This generates a warning that we may live with according to BDR:
   // https://stat.ethz.ch/pipermail/r-devel/2004-September/030792.html
@@ -25,6 +25,6 @@ void GslOdeCompiled::clear_pars() {
 
 void GslOdeCompiled::derivs(double t, const double y[], 
 			    double dydt[]) {
-  derivs_f(size(), t, pars, y, dydt);
+  derivs_f(static_cast<int>(size()), t, pars, y, dydt);
 }
 

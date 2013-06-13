@@ -15,7 +15,7 @@ RCPP_MODULE(diversitree) {
   using namespace Rcpp;
 
   class_<GslOdeBase>("GslOdeBase")
-    .property("size",      &GslOdeBase::size)
+    .property("size",      &GslOdeBase::r_size)
     .method("derivs",      &GslOdeBase::r_derivs)
     .method("run",         &GslOdeBase::r_run)
     .method("set_control", &GslOdeBase::r_set_control)
@@ -48,7 +48,7 @@ RCPP_MODULE(diversitree) {
 		  int,
 		  std::vector<double>,
 		  std::vector<double> >()
-    .property("size",  &TimeMachine::size)
+    .property("size",  &TimeMachine::r_size)
     .property("names", &TimeMachine::names)
     .method("set",     &TimeMachine::set)
     .method("get",     &TimeMachine::get)

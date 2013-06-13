@@ -6,7 +6,7 @@
 
 class GslOdeR : public GslOdeBase {
 public:
-  GslOdeR(SEXP fun_, SEXP env_, int size);
+  GslOdeR(SEXP fun_, SEXP env_, size_t size);
 
   // Our obligations:
   void derivs(double t, const double y[], double dydt[]);

@@ -44,7 +44,7 @@ class GslOdeBase {
 public:
   // TODO: Should have (or prevent) copy constructor and assignment
   // (Rule of Three).
-  GslOdeBase(int size);
+  GslOdeBase(size_t size);
   // Destructor should be declared virtual -- see:
   // http://stackoverflow.com/questions/461203/when-to-use-virtual-destructors
   // http://www.gotw.ca/publications/mill18.htm
@@ -52,14 +52,17 @@ public:
 
   // Dimension of the problem.
   // TODO: Because readonly, reference size directly, not via getter?
-  const unsigned int size() const { return neq; }
+  size_t size() const { return neq; }
+  // This is because CRAN won't allow Rcpp to wrap size_t on Windows
+  // http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2012-July/004016.html
+  int r_size() const { return static_cast<int>(size()); }
 
   // For GSL; expected name and arguments for computing derivatives.
   virtual void derivs(double t, const double y[], double dydt[]) = 0;
 
   // [R] Given a set of parameters, time, and parameters, compute
   // derivatives.  For testing, not for speed.
-  SEXP r_derivs(double t, std::vector<double> y, SEXP pars_);
+  std::vector<double> r_derivs(double t, std::vector<double> y, SEXP pars_);
 
   // [R] Run the system given initial conditions 'y', returning values
   // at all times in 'times'.  The first value in times is taken as
@@ -100,7 +103,7 @@ private:
   void reset_gsl();
 
   // Problem dimension (number of equations)
-  const unsigned int neq;
+  size_t neq;
 
   // Variables (length neq)
   std::vector<double> y;

@@ -1,6 +1,6 @@
 #include "GslOdeR.h"
 
-GslOdeR::GslOdeR(SEXP fun_, SEXP env_, int size) : 
+GslOdeR::GslOdeR(SEXP fun_, SEXP env_, size_t size) : 
   GslOdeBase(size), fun(fun_), env(env_), pars(R_NilValue) {
   // TODO: check that fun is a function and that env is an
   // environment.  Could probably use Rcpp types here to help?
@@ -30,7 +30,7 @@ void GslOdeR::derivs(double t, const double y[], double dydt[]) {
 
   // 1. Create R vector from C array:
   SEXP y_r;
-  PROTECT(y_r = Rf_allocVector(REALSXP, size()));
+  PROTECT(y_r = Rf_allocVector(REALSXP, static_cast<int>(size())));
   std::copy(y, y + size(), REAL(y_r));
 
   // 2. Slot for output

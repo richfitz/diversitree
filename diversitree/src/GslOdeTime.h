@@ -12,7 +12,7 @@
 // undesirable.
 class GslOdeTime : public GslOdeBase {
 public:
-  GslOdeTime(SEXP extPtr, int size, TimeMachine tm_);
+  GslOdeTime(SEXP extPtr, size_t size, TimeMachine tm_);
   
   // Our obligations:
   void derivs(double t, const double y[], double dydt[]);

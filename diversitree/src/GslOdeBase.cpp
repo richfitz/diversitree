@@ -2,7 +2,7 @@
 
 #include "GslOdeBase.h"
 
-GslOdeBase::GslOdeBase(int size) : neq(size) {
+GslOdeBase::GslOdeBase(size_t size) : neq(size) {
   if ( size == 0 )
     Rf_error("Cannot create zero-sized problem");
   is_initialised = false;
@@ -39,20 +39,19 @@ GslOdeBase::~GslOdeBase() {
 // set_pars() / clear_pars() functions are also defined by the
 // subclasses, and are constrained only in that they take R objects
 // (SEXPs).
-SEXP GslOdeBase::r_derivs(double t, std::vector<double> y, SEXP pars_) {
+std::vector<double>
+GslOdeBase::r_derivs(double t, std::vector<double> y, SEXP pars_) {
   // TODO: The call to derivs() should be wrapped in a try (or
   // equivalent) so that pars are reset if the R call fails.
-  if ( y.size() != size() )
+  if (y.size() != size())
     Rf_error("Incorrect input length (expected %d, got %d)",
 	     size(), y.size());
   set_pars(pars_);
 
-  SEXP ret;
-  PROTECT(ret = Rf_allocVector(REALSXP, size()));
-  derivs(t, &y[0], REAL(ret));
-
+  std::vector<double> ret(size());
+  derivs(t, &y[0], &ret[0]);
   clear_pars();
-  UNPROTECT(1);
+
   return ret;
 }
 
@@ -66,7 +65,8 @@ Rcpp::NumericMatrix GslOdeBase::r_run(std::vector<double> times,
 				      SEXP pars_) {
   set_pars(pars_);
 
-  Rcpp::NumericMatrix ret(size(), times.size()-1);
+  Rcpp::NumericMatrix ret(static_cast<int>(size()), 
+			  static_cast<int>(times.size()-1));
   Rcpp::NumericMatrix::iterator out = ret.begin();
 
   std::vector<double>::iterator t = times.begin();
@@ -85,8 +85,8 @@ Rcpp::NumericMatrix GslOdeBase::r_run(std::vector<double> times,
 
 void GslOdeBase::r_set_control(Rcpp::List control) {
   std::vector<std::string> names = control.names();
-  for ( int i = 0; i < control.size(); i++ )
-    set_control1(names[i], control[i]);
+  for (size_t i = 0; i < static_cast<size_t>(control.size()); i++)
+    set_control1(names[i], control[static_cast<int>(i)]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

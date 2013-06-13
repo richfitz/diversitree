@@ -17,10 +17,9 @@ public:
   void init(std::vector<double> x_, std::vector<double> y_);
   double eval(double u) const;
   void add_point(double xi, double yi);
-  int size() const;
+  size_t size() const;
 
 protected:
-  // int n;
   std::vector<double> x, y;
 
   // Specific to GSL splines.

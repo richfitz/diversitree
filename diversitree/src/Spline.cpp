@@ -13,7 +13,7 @@ Spline::~Spline() {
 Spline::Spline(const Spline& obj) : x(obj.x), y(obj.y) {
   acc = NULL;
   spline = NULL;
-  if ( x.size() > 0 )
+  if (size() > 0)
     init_self();
 }
 
@@ -33,7 +33,7 @@ void Spline::gsl_free_acc() {
 
 void Spline::do_gsl_alloc_spline(std::vector<double> x,
 				 std::vector<double> y) {
-  const int n = (int)x.size();
+  const size_t n = size();
   gsl_free_spline();
   gsl_free_acc();
   acc    = gsl_interp_accel_alloc();
@@ -63,13 +63,13 @@ void Spline::add_point(double xi, double yi) {
 }
 
 void Spline::init_self() {
-  const int n = (int)x.size();
+  const size_t n = size();
   gsl_free_spline();
   gsl_free_acc();
   spline = gsl_spline_alloc(gsl_interp_cspline, n);
   gsl_spline_init(spline, &x.front(), &y.front(), n);  
 }
 
-int Spline::size() const {
-  return (int)x.size();
+size_t Spline::size() const {
+  return x.size();
 }

@@ -9,7 +9,7 @@
 
 class GslOdeCompiled : public GslOdeBase {
 public:
-  GslOdeCompiled(SEXP extPtr, int size);
+  GslOdeCompiled(SEXP extPtr, size_t size);
 
   // Our obligations:
   void derivs(double t, const double y[], double dydt[]);

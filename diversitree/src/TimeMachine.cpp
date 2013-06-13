@@ -6,10 +6,10 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 			 std::vector<std::string> funcs,
 			 std::vector<bool> nonnegative,
 			 std::vector<bool> truncate,
-			 int k,
+			 size_t k,
 			 std::vector<double> spline_t,
 			 std::vector<double> spline_y) {
-  nf = (int)funcs.size();
+  nf = funcs.size();
   idx.resize(nf);
   target.resize(nf);
   np_in = 0;
@@ -17,10 +17,10 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
   np_out = nf;
   p_out.resize(nf);
 
-  if ( (int)spline_t.size() > 0 )
+  if ( spline_t.size() > 0 )
     spline.init(spline_t, spline_y);
 
-  for ( int i = 0; i < nf; i++ ) {
+  for (size_t i = 0; i < nf; i++) {
     idx[i] = np_in;
     target[i] = i;
     TimeMachineFunction f = TimeMachineFunction(names[i], funcs[i], 
@@ -35,7 +35,7 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 }
 
 void TimeMachine::set(std::vector<double> pars) {
-  if ( (int)pars.size() != np_in )
+  if (pars.size() != np_in)
     error("Expected %d parameters, recieved %d", np_in, pars.size());
   // Only go through the extra effort below if the parameters differ.
   if ( pars == p_in )
@@ -45,8 +45,9 @@ void TimeMachine::set(std::vector<double> pars) {
 
   std::vector<TimeMachineFunction>::iterator f = functions.begin();
   std::vector<double>::iterator p_iter = pars.begin();
-  for ( int i = 0; i < nf; i++ ) {
-    f->set(p_iter + idx[i]);
+  for (size_t i = 0; i < nf; i++) {
+    // TODO: Cast error here
+    f->set(p_iter + static_cast<int>(idx[i]));
     if ( f->is_constant )
       p_out[target[i]] = f->get(0); // any time would work here.
     f++;
@@ -61,7 +62,7 @@ void TimeMachine::set(std::vector<double> pars) {
 // Make the iterator version of this an operator?  Not sure.
 std::vector<double> TimeMachine::get(double t) {
   std::vector<TimeMachineFunction>::iterator f = functions.begin();
-  for ( int i = 0; i < nf; i++ ) {
+  for (size_t i = 0; i < nf; i++) {
     if ( !f->is_constant )
       p_out[target[i]] = f->get(t);
     f++;
@@ -80,10 +81,10 @@ std::vector<double> TimeMachine::getv(double t) {
     std::vector<double> ret;
     std::vector<double>::iterator pi = p.begin();
 
-    for ( int i = 0; i < idx_q_out; i++ )
+    for (size_t i = 0; i < idx_q_out; i++)
       ret.push_back(*pi++);
-    for ( int i = 0; i < k; i++ )
-      for ( int j = 0; j < k; j++, pi++ )
+    for (size_t i = 0; i < k; i++)
+      for (size_t j = 0; j < k; j++, pi++)
 	if ( i != j )
 	  ret.push_back(*pi);
     p = ret;
@@ -99,7 +100,7 @@ std::vector<std::string> TimeMachine::names() const {
   return ret;
 }
 
-void TimeMachine::setup_q(int k_) {
+void TimeMachine::setup_q(size_t k_) {
   k = k_;
   if ( k > 0 ) {
     // More space in the output vector
@@ -114,8 +115,8 @@ void TimeMachine::setup_q(int k_) {
     const_q.resize(k, true);
     std::vector<TimeMachineFunction>::iterator f = functions.begin();
     advance(f, idx_q_f);
-    for ( int i = 0; i < k; i++ ) {
-      for ( int j = 0; j < k - 1; j++ ) {
+    for (size_t i = 0; i < k; i++) {
+      for (size_t j = 0; j < k - 1; j++) {
 	const_q[i] = const_q[i] && f->is_constant;
 	f++;
       }
@@ -125,19 +126,19 @@ void TimeMachine::setup_q(int k_) {
     // target mapping) given the input Q matrix is transposed relative
     // to true Q matrix, and lacks diagonals.  This is pretty opaque
     // :(
-    for ( int i = 0, l = idx_q_f; i < k; i++ )
-      for ( int j = 0; j < k; j++ )
-	if ( i != j )
+    for (size_t i = 0, l = idx_q_f; i < k; i++)
+      for (size_t j = 0; j < k; j++)
+	if (i != j)
 	  target[l++] = i + j * k + idx_q_f;
   }
 }
 
 void TimeMachine::normalise_q(bool is_const) {
-  for ( int i = 0; i < k; i++ ) {
-    if ( const_q[i] == is_const ) {
-      int offset = idx_q_out + i;
+  for (size_t i = 0; i < k; i++) {
+    if ( const_q[i] == is_const) {
+      size_t offset = idx_q_out + i;
       double tmp = 0.0;
-      for ( int j = 0; j < k; j++ )
+      for (size_t j = 0; j < k; j++)
 	if ( j != i )
 	  tmp += p_out[offset + j*k];
       p_out[offset + i*k] = -tmp;
@@ -183,7 +184,8 @@ TimeMachineFunction::TimeMachineFunction(std::string name_,
 }
 
 void TimeMachineFunction::set(std::vector<double>::iterator p) {
-  std::copy(p, p+np, p_in.begin());
+  // TODO: Cast error here
+  std::copy(p, p+static_cast<int>(np), p_in.begin());
 }
 
 double TimeMachineFunction::get(double t) {
