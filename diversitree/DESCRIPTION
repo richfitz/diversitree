@@ -7,7 +7,7 @@ Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE and
   Magnuson-Ford.
 Maintainer: Richard G. FitzJohn <rich.fitzjohn@gmail.com>
 Depends: R (>= 2.10), deSolve (>= 1.7), ape, subplex, methods, Rcpp (>= 0.10.0)
-Suggests: numDeriv, tgp, multicore, minqa, lubridate
+Suggests: numDeriv, minqa, lubridate
 LinkingTo: Rcpp
 RcppModules: diversitree
 SystemRequirements: fftw3 (>= 3.1.2), gsl (>= 1.12)
