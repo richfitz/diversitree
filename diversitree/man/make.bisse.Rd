@@ -208,6 +208,7 @@ rbind(real=pars,
 
 ## Test a constrained model where the speciation rates are set equal
 ## (takes ~4s).
+\dontrun{
 lik.l <- constrain(lik, lambda1 ~ lambda0)
 fit.l <- find.mle(lik.l, p[-1], method="subplex")
 logLik(fit.l) # -158.7357
@@ -215,6 +216,7 @@ logLik(fit.l) # -158.7357
 ## Despite the difference in the estimated parameters, there is no
 ## statistical support for this difference:
 anova(fit, equal.lambda=fit.l)
+}
 
 ## Run an MCMC.  Because we are fitting six parameters to a tree with
 ## only 50 species, priors will be needed.  I will use an exponential

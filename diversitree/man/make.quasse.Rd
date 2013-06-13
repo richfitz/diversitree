@@ -143,11 +143,11 @@ lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.
 ## slow...
 lik.R.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.R.1)
 (ll.R.1 <- lik.R.1(pars)) # -62.06409
-}
 
 lik.s.C.1 <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x, constant.x,
                                nodes, split.t, control.C.1)
 (ll.s.C.1 <- lik.s.C.1(pars4)) # -62.06409
+}
 }
 
 \author{Richard G. FitzJohn}
