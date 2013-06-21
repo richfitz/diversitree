@@ -43,6 +43,8 @@ make.info.bisse <- function(phy) {
        k=2L,      # number of states (NA if continuous)
        idx.e=1:2, # index of 'E' variables, for xxsse models
        idx.d=3:4, # index of 'D' variables, for xxsse and mk models
+       ## R version of derivative function:
+       derivs=derivs.bisse,
        ## Phylogeny:
        phy=phy,   # here to help with printing, possibly plotting
        ## Inference:
@@ -265,3 +267,22 @@ all.models.bisse <- function(f, p, ...) {
 
 check.pars.bisse <- function(pars)
   check.pars.nonnegative(pars, 6)
+
+derivs.bisse <- function(t, y, pars) {
+  E0 <- y[1]
+  E1 <- y[2]
+  D0 <- y[3]
+  D1 <- y[4]
+
+  lambda0 <- pars[1]
+  lambda1 <- pars[2]
+  mu0 <- pars[3]
+  mu1 <- pars[4]
+  q01 <- pars[5]
+  q10 <- pars[6]
+
+  c(-(mu0 + q01 + lambda0) * E0 + lambda0 * E0 * E0 + mu0 + q01 * E1,
+    -(mu1 + q10 + lambda1) * E1 + lambda1 * E1 * E1 + mu1 + q10 * E0,
+    -(mu0 + q01 + lambda0) * D0 + 2 * lambda0 * E0 * D0 + q01 * D1,
+    -(mu1 + q10 + lambda1) * D1 + 2 * lambda1 * E1 * D1 + q10 * D0)
+}

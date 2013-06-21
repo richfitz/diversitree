@@ -12,13 +12,15 @@ make.mkn.multitrait <- function(tree, states, depth=NULL,
   cache <- make.cache.mkn.multitrait(tree, states, depth,
                                      allow.multistep, strict,
                                      control)
-  lik.mkn <- make.mkn(tree, cache$states.mkn, cache$info$k, FALSE,
-                      cache$control.mkn)
+  lik.mkn <- make.mkn(tree, cache$states.mkn, cache$info$k,
+                      strict=FALSE, control=cache$control.mkn)
   f.pars <- make.pars.mkn.multitrait(cache)
 
   ll <- function(pars, root=ROOT.OBS, root.p=NULL,
-                 intermediates=FALSE) {
+                 intermediates=FALSE, pars.only=FALSE) {
     pars2 <- f.pars(pars)
+    if ( pars.only )
+      return(pars2)
     lik.mkn(pars2, root, root.p, intermediates)
   }
   class(ll) <- c("mkn.multitrait", class(lik.mkn))
@@ -44,7 +46,7 @@ make.cache.mkn.multitrait <- function(tree, states, depth,
   k <- 2^n.trait
   
   if ( is.null(control$method) )
-    control$method <- if (n.trait > 3) "ode" else "mkn"
+    control$method <- if (n.trait > 3) "ode" else "exp"
 
   states <- check.states.musse.multitrait(tree, states, strict=strict,
                                           strict.vals=0:1)
@@ -52,6 +54,8 @@ make.cache.mkn.multitrait <- function(tree, states, depth,
   ## The main issue is getting ode and exp to agree.
   if ( any(is.na(states)) )
     stop("Missing data not yet allowed")
+
+  cache <- list()
 
   ## #### Make new states
   ## TODO/NEW:
@@ -70,7 +74,7 @@ make.cache.mkn.multitrait <- function(tree, states, depth,
   key <- apply(do.call(expand.grid, rep(list(0:1), n.trait)),
                1, paste, collapse="")
 
-  states.mkn <- match(code, types)
+  states.mkn <- match(code, key)
   names(states.mkn) <- rownames(states)
   cache$states.mkn <- states.mkn
   ## #### End
@@ -108,11 +112,10 @@ make.pars.mkn.multitrait <- function(cache) {
   npar <- ncol(tr)
   f.pars <- make.pars.mkn(k)
 
-  function(pars) {
+  function(pars, pars.only=FALSE) {
     if ( length(pars) != npar )
       stop(sprintf("Invalid length parameters (expected %d)", 
                    npar))
-    pars.mkn <- drop(tr %*% pars)
-    f.pars(pars.mkn)
+    drop(tr %*% pars)
   }
 }

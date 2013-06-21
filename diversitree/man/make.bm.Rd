@@ -16,7 +16,8 @@ make.ou(tree, states, states.sd=0, control=list())
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{A bifurcating phylogenetic tree, in \code{ape}
+    \dQuote{phylo} format.}
   
   \item{states}{A vector of continuous valued character states.  This
     vector must be named with the tip labels of \code{tree}.}
@@ -31,18 +32,34 @@ make.ou(tree, states, states.sd=0, control=list())
 
 \details{The \code{control} argument is a named list of options.
 
-  Currently the only option is \code{method}.  Specifying
+  The main option is \code{method}.  Specifying
   \code{control=list(method="vcv")} uses a variance-covariance matrix
   based approach to compute the likelihood.  This is similar to the
   approach used by geiger, and is the default for \code{make.bm} (but is
   not available for \code{make.ou}).  The alternative is to specify
-  \code{control=list(method="direct")} which uses the transition density
+  \code{control=list(method="pruning")} which uses the transition density
   function for brownian motion along each branch, similar to how most
   methods in diversitree are computed.  This second approach is much
   faster for very large trees.
 
+  When \code{method="vcv"} is specified, \code{backend="R"} or
+  \code{backend="C"} may also be provided, which switch between a slow
+  (and stable) R calculator and a fast (but less extensively tested) C
+  calculator.  \code{backend="R"} is currently the default.
+
   The VCV-based \code{make.bm} function is heavily based on
   \code{fitContinuous} in the \code{geiger} package.
+
+  For non-ultrametric trees with OU models, computed likelihoods will
+  differ because of the different root treatments.
+
+  % TODO: Describe root treatments!
+}
+
+\seealso{
+  See
+  \url{http://www.zoology.ubc.ca/prog/diversitree/examples/ou-nonultrametric/}
+  for a discussion about calculations on non-ultrametric trees.
 }
 
 % TODO: Add example section and show equivalence to geiger?
@@ -56,9 +73,9 @@ x <- structure(rnorm(length(bird.orders$tip.label)),
 ## With the VCV approach
 fit1 <- find.mle(make.bm(bird.orders, x), .1)
 
-## With the direct calculations
-lik.direct <- make.bm(bird.orders, x, control=list(method="direct"))
-fit2 <- find.mle(lik.direct, .1)
+## With the pruning calculations
+lik.pruning <- make.bm(bird.orders, x, control=list(method="pruning"))
+fit2 <- find.mle(lik.pruning, .1)
 
 ## All the same (need to drop the function from this though)
 all.equal(fit1[-7], fit2[-7])

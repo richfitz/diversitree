@@ -101,6 +101,7 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
   }
 }
 
+## This appears totally broken at present, but it's not exported.
 summarise.histories.mk2 <- function(x, phy) {
   summarise.branch <- function(x) {
     n <- length(x)
@@ -121,6 +122,7 @@ summarise.histories.mk2 <- function(x, phy) {
   node.state <- rowMeans(matrix(unlist(lapply(x, "[[", "node.state")),
                                 nn/2, nx))
   names(node.state) <- names(x[[1]]$node.state)
-  states <- x[[1]]$states
+
+  states <- x[[1]]$tip.state
   make.history(phy, states, node.state, h, FALSE, 0:1)
 }

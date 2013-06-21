@@ -37,7 +37,8 @@ starting.point.musse.multitrait(tree, lik, q.div=5, yule=FALSE)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
 
   \item{states}{A \code{data.frame} of character states, each column of
     which represents a different binary state (with values 0 or 1), and
@@ -194,7 +195,7 @@ pars2 <- drop(solve(t(tr) \%*\% tr) \%*\% t(tr) \%*\% pars)
 ## Going from our new basis to the original MuSSE parameters is always
 ## straightforward.  This is done automatically in the likelihood
 ## function.
-all.equal(tr \%*\% pars2, pars, check.attributes=FALSE)
+all.equal(drop(tr \%*\% pars2), pars, check.attributes=FALSE)
 
 ## This shows that the two traits act additively on speciation rate
 ## (lambdaAB is zero), that there is no effect of any trait on
@@ -222,6 +223,9 @@ argnames(lik.m)
 lik0 <- make.musse.multitrait(phy, states, depth=0)
 argnames(lik0)
 
+## This can be used in analyses as usual.  However, this can take a
+## while to run, so is not run by default.
+\dontrun{
 p <- starting.point.musse.multitrait(phy, lik0)
 fit0 <- find.mle(lik0, p)
 
@@ -266,6 +270,7 @@ p <- starting.point.musse.multitrait(phy, lik1c)
 p[names(coef(fit0))] <- coef(fit0)
 fit1c <- find.mle(lik1c, p)
 anova(fit1c, fit0)
+}
 }
 
 \author{Richard G. FitzJohn}

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?><!-- -*-nxml-*- -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>diversitree: Worked Examples</title>
+    <link rel="Stylesheet" type="text/css" href="../stylesheet.css"
+	  media="all" />
+    <link href='http://fonts.googleapis.com/css?family=Oswald|Vollkorn:400italic,400' rel='stylesheet' type='text/css'/>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22401624-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>diversitree: Worked Examples</h1>
+
+      <p>
+	Here some worked code examples.  Each is compiled from a
+	script file using <a
+	href="http://www.github.com/richfitz/sowsear"><code>sowsear</code></a>,
+	which produces a <a href="http://yihui.name/knitr">knitr</a>
+	file, which is compiled into <a
+	href="http://daringfireball.net/projects/markdown">markdown</a>
+	and converted into HTML using <a
+	href="http://johnmacfarlane.net/pandoc/">pandoc</a>. 
+      </p>
+      <p>
+	The version of diversitree they were compiled with is
+	indicated at the bottom of the file (note that this may be a
+	prerelease version).
+      </p>
+      <p>
+	These are smaller examples than in the main <a
+	href="../doc/diversitree-tutorial.pdf">tutorial</a>, and cover a
+	specific problem.
+      </p>
+
+      <ul>
+	<li><a href="unreplicated">Unreplicated correlated
+	evolution</a><br/>  Unlike phylogenetic independent contrasts,
+	Markov trait evolution methods (such as Pagel 1994) and
+	BiSSE-type methods can be mislead where there is no
+	phylogenetic replication.  This demonstrates the problem on a
+	simulated tree. (created 9 May 2012)</li>
+      </ul>
+
+      <ul>
+	<li><a href="ou-nonultrametric">Ornstein-Uhlenbeck
+	calculations on non-ultrametric trees</a>, under two
+	algorithms.  The OU calculations in diversitree differ from
+	those in other packages (e.g., <a
+	href="http://www.webpages.uidaho.edu/~lukeh/software.html">geiger</a>)
+	by avoiding working with the phylogenetic variance-covariance
+	matrix.  While the different approaches agree exactly on
+	ultrametric trees, the calculations differ on non-ultrametric
+	trees.  (created 10 May 2012)</li>
+      </ul>
+    </div>
+
+    <ul class="footer">
+      <li>© 2012 <a href="http://www.zoology.ubc.ca/~fitzjohn">Rich
+      FitzJohn</a></li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../studies.html">Studies</a></li>
+      <li><a href="../changes.html">Changes</a></li>
+      <li><a href=".">Examples</a></li>
+      <li><a href="../faq.html">FAQ</a></li>
+      <li><a href="http://cran.r-project.org/web/packages/diversitree">CRAN</a></li>
+    </ul>
+  </body>
+</html>

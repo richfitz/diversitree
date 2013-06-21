@@ -9,12 +9,13 @@
   \code{interval} is specified)}
 
 \usage{
-big.brother(f, interval=1)
+  big.brother(f, interval=1, file="")
 }
 
 \arguments{
   \item{f}{A function}
   \item{interval}{Interval between printed evaluations}
+  \item{file}{(Optional) file to log to.  By default, logs to the console.}
 }
 
 \section{Warning}{

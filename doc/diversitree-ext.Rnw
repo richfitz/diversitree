@@ -1,35 +1,28 @@
 \documentclass[11pt]{article}
 \usepackage{fullpage}
-\usepackage{relsize}
 \usepackage{natbib}
 \usepackage{amsmath}
-\usepackage{xcolor}
 
+\usepackage{relsize}
+
+\usepackage{xcolor}
 \definecolor{navy}{rgb}{0,0,0.4}
 \usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
 
-\newcommand{\code}{\texttt}
 \newcommand{\ud}{\mathrm{d}}
 
-\usepackage{Sweave}
 \usepackage{dtsweave}
+% Needed or Sweave adds it in:
+% \usepackage{Sweave}
 \SweaveOpts{keep.source=TRUE,eps=FALSE}
 \SweaveOpts{prefix.string=cache/diversitree-ext}
 
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
-## Remove stars, as they don't look nice when typeset.  Also set the
-## prompt to be two spaces, which we later gobble.
+## Remove stars, as they don't look nice when typeset
 if ( !interactive() )
   options(show.signif.stars=FALSE, continue="  ")
 @ 
-
-% I like Garamond (who doesn't?).  However, it's not included in most
-% TeX distributions due to licence restrictions.  Either use
-% getfontsnonfree to install it, remove this line to get computer
-% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
-% Palatino, which is also quite nice.
-\usepackage[garamond]{mathdesign}
 
 %\VignetteIndexEntry{Extending diversitree}
 %\VignettePackage{diversitree}

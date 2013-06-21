@@ -14,15 +14,15 @@
 
 ## 1: make
 make.ou <- function(tree, states, states.sd=0, control=list()) {
-  control <- check.control.ou(control)
+  control <- check.control.continuous(control)
   cache <- make.cache.ou(tree, states, states.sd, control)
 
   if ( control$method == "vcv" ) {
     all.branches <- make.all.branches.ou.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else {
-    all.branches <- make.all.branches.ou.direct(cache, control)
-    rootfunc <- rootfunc.bm.direct
+    all.branches <- make.all.branches.ou.pruning(cache, control)
+    rootfunc <- rootfunc.bm.pruning
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
@@ -75,10 +75,4 @@ check.pars.ou <- function(pars) {
     stop("Incorrect parameter length")
   check.nonnegative(pars[1:2])
   TRUE
-}
-
-check.control.ou <- function(control) {
-  control <- modifyList(list(method="direct"), control)
-  check.control.continuous(control)
-  control
 }

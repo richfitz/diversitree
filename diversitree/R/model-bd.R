@@ -17,6 +17,7 @@ make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
                     times=NULL, control=list()) {
   control <- check.control.bd(control, times)
   cache <- make.cache.bd(tree, sampling.f, unresolved, times, control)
+  const <- cache$const
 
   if ( control$method == "nee" ) {
     all.branches <- make.all.branches.bd.nee(cache, control)
@@ -30,7 +31,7 @@ make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
     check.pars.nonnegative(pars, 2)
     ans <- all.branches(pars, intermediates)
-    rootfunc(ans, pars, condition.surv, intermediates)
+    rootfunc(ans, pars, condition.surv, intermediates, const)
   }
   class(ll) <- c("bd", "dtlik", "function")
   ll
@@ -64,6 +65,8 @@ make.info.bd <- function(phy) {
        k=1L,
        idx.e=1L,
        idx.d=2L,
+       ## R version of the derivatives function
+       derivs=derivs.bd,
        ## Phylogeny:
        phy=phy,
        ## Inference:
@@ -97,26 +100,10 @@ make.cache.bd <- function(tree, sampling.f, unresolved, times,
   cache
 }
 
-## 4: find.mle
-## find.mle.bd <- function(func, x.init, method, fail.value=NA, ...) {
-##   if ( missing(x.init) ) {
-##     warning("Guessing initial parameters - may do badly")
-##     x.init <- structure(c(.2, .1), names=argnames(func))
-##   }
-##   NextMethod("find.mle", x.init=x.init)
-## }
-
-## TODO: it would be nice to get the analytic version here?
-## find.mle.yule <- function(func, x.init, method, fail.value=NA, ...) {
-##   if ( missing(x.init) )
-##     x.init <- structure(.2, names=argnames(func))
-##   NextMethod("find.mle", x.init=x.init)
-## }
-
 ######################################################################
 ## Extra functions
 starting.point.bd <- function(tree, yule=FALSE) {
-  p.yule <- c(coef(find.mle(make.yule(tree), .1)), 0)
+  p.yule <- c(coef(suppressWarnings(find.mle(make.yule(tree), .1))), 0)
   names(p.yule) <- default.argnames.bd()
   if (yule)
     p.yule

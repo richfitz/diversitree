@@ -12,7 +12,8 @@ make.musse.split(tree, states, k, nodes, split.t,
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be an
     integer between 1 and \code{k}.  This vector must have names that

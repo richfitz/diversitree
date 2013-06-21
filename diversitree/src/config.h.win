@@ -1,5 +1,2 @@
 /* -*-c-*- */
 #define HAVE_FFTW3_H 1
-
-/* CVODES is disabled on windows */
-/* #undef WITH_CVODES */

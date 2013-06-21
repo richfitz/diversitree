@@ -12,12 +12,14 @@
 \usage{
 make.bisse.td(tree, states, n.epoch, unresolved=NULL, sampling.f=NULL,
               nt.extra=10, strict=TRUE, control=list())
+
 make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
-             nt.extra=10, strict=TRUE, control=list())
+             strict=TRUE, control=list(), truncate=FALSE, spline.data=NULL)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be 0 or
     1, or \code{NA} if the state is unknown.  This vector must have
@@ -28,7 +30,8 @@ make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
   \item{n.epoch}{Number of epochs.  1 corresponds to plain BiSSE, so
     this will generally be an integer at least 2.}
 
-  \item{functions}{A named list of functions of time.  See details.}  
+  \item{functions}{A named character vector of functions of time.  See
+    details.}
   
   \item{unresolved}{Unresolved clade information: see
     \code{\link{make.bisse}}. (Currently this is not supported.)}
@@ -48,6 +51,13 @@ make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
   
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
+
+  \item{truncate}{Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 6).}
+
+  \item{spline.data}{List of data for spline-based time functions.  See
+    details}.
 }
 
 \details{
@@ -64,17 +74,17 @@ make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
   first epoch (closest to the present), elements \code{(n+7):(n+13)} are
   for the second epoch, and so on.
   
-  For \code{make.bisse.t}, the \code{funtions} is a list of functions
-  of time.  For example, to have speciation rates be linear functions of
+  For \code{make.bisse.t}, the \code{funtions} is a vector of names of
+  functions of time.
+  For example, to have speciation rates be linear functions of
   time, while the extinction and character change rates be constant with
   respect to time, one can do
-  \preformatted{functions=rep(list(linear.t, constant.t), c(2, 4))}
+  \preformatted{functions=rep(c("linear.t", "constant.t"), c(2, 4))}
   The functions here must have \code{t} as their first argument,
-  interpreted as time back from the present.  See
-  \code{\link{make.pars.t}} for more information, and for some
-  potentially useful time functions.
+  interpreted as time back from the present.  Other possible functions
+  are "sigmoid.t", "stepf.t", "spline.t", and "spline.linear.t".
+  Unfortunately, documentation is still pending.
 }
-
 
 \examples{
 set.seed(4)
@@ -135,7 +145,7 @@ lik.td2 <- constrain(lik.td, t.1 ~ 5,
                      q01.2 ~ q01.1, q10.2 ~ q10.1)
 
 lik.t <- make.bisse.t(phy, phy$tip.state,
-                        rep(list(stepf.t, constant.t), c(2, 4)))
+                      rep(c("stepf.t", "constant.t"), c(2, 4)))
 lik.t2 <- constrain(lik.t, lambda0.tc ~ 5, lambda1.tc ~ 5)
 
 ## Note that the argument names for these functions are different from
@@ -177,11 +187,13 @@ lik.t2(p.t2)
 ## basically the same.
 lik.td2(p.td2) - lik.t2(p.t2)
 
-## There is a time cost to both time-dependent methods, but it is more
-## heavily paid for the time-varying case:
+## There is a small time cost to both time-dependent methods, 
+## heavily paid for the time-chunk case:
 system.time(lik.b(pars))
-system.time(lik.td2(p.td)) # 1.9x slower than plain BiSSE
-system.time(lik.t2(p.t))   # 10x  slower than plain BiSSE
+system.time(lik.td2(p.td))  # 1.9x slower than plain BiSSE
+system.time(lik.td2(p.td2)) # 1.9x slower than plain BiSSE
+system.time(lik.t2(p.t))    # about the same speed
+system.time(lik.t2(p.t2))   # about the same speed
 }
 
 \author{Richard G. FitzJohn}

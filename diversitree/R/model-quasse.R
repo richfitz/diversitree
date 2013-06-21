@@ -51,11 +51,10 @@ make.info.quasse <- function(lambda, mu, phy) {
        phy=phy,
        ## Inference:
        ml.default="subplex",
-       mcmc.lowerzero=TRUE,
+       mcmc.lowerzero=FALSE, # not for many models.
        ## These are optional
        doc=NULL,
-       reference=c(
-         "FitzJohn (2010) doi:10.1093/sysbio/syq053"),
+       reference=c("FitzJohn (2010) doi:10.1093/sysbio/syq053"),
        ## These are special to QuaSSE:
        lambda=lambda,
        mu=mu)
@@ -265,3 +264,50 @@ check.pars.quasse <- function(lambda.x, mu.x, drift, diffusion) {
   if ( !any(lambda.x > 0) )
     stop("No positive lambda; cannot compute likelihood")
 }
+
+
+## Huge chunks of this are shared with predict.dtlik.t, but it's not
+## clear yet where the similarities lie.
+## predict.quasse <- function(object, p, x, nx=101, v=NULL,
+##                            thin=10, alpha=1/20, ...) {
+##   cache <- get.cache(object)
+
+##   if ( inherits(p, "fit.mle") )
+##     p <- coef(p, full=TRUE)
+##   else if ( inherits(p, "mcmcsamples") )
+##     p <- coef(p, lik=object, full=TRUE, thin=thin)
+##   ## The other case to deal with here would be constrained functions
+##   ## where parameters still need expanding...
+  
+##   if ( missing(x) ) {
+##     r <- range(cache$states, na.rm=TRUE)
+##     x <- seq(r[1], r[2], length=nx)
+##   }
+##   if ( is.null(v) )
+##     v <- c("lambda", "mu")
+
+##   f <- function(i) {
+##     g <- function(x, p, ...)
+##       do.call(cache$info[[i]], as.list(x=x, p))
+##     average.over.mcmc(p[,cache$args[[i]]], g,
+##                       x, alpha=alpha)
+##   }
+
+##   for ( i in v ) {
+    
+##   }
+
+##   stop()
+##   ## average.over.mcmc(p, 
+
+##   f <- function(x) {
+##     y <- sort(linear(x, samples$l.c, samples$l.m))
+##     c(mean(y),                            # mean
+##       quantile(y, c(alpha/2, 1-alpha/2))) # range
+##   }
+##   list(x=xx, y=do.call(rbind, lapply(xx, f)))
+## }
+
+## predict.quasse.split <- function(object, p, x, nx, ...) {
+##   stop()
+## }

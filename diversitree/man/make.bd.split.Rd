@@ -11,7 +11,9 @@ make.bd.split(tree, nodes, split.t, sampling.f=NULL, unresolved=NULL)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
+
   \item{nodes}{Vector of nodes that will be split (see Details).}
   \item{split.t}{Vector of split times, same length as \code{nodes} (see
     Details).}

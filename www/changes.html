@@ -25,6 +25,49 @@
       <h1>diversitree: Changes and releases</h1>
 
       <ul class="changes">
+	<li><b>7 May 2012 [<a
+	href="archive/diversitree_0.9-3.tar.gz">0.9-3</a>]</b> Mostly
+	a bug fix release, but includes features:
+	<ul>
+	  <li>
+	    A much faster BM/OU likelihood calculator
+	    <code>method="pruning", backend="C"</code>, and
+	    optimisations for the <code>method="vcv"</code> BM
+	    calculator (also note that the "direct" backend is renamed
+	    "pruning").
+	  </li>
+	  <li>
+	    GeoSSE tree simuator now included
+	    (<code>tree.geosse</code> and via <code>trees</code>))
+	  </li>
+	  <li>
+	    <code>sim.character</code> now faster.
+	  </li>
+	  <li>
+	    BiSSE, MuSSE/multitrait and Mkn/multitrait allow logical
+	    trait values, in addition to binary (0=FALSE, 1=TRUE).
+	  </li>
+	  <li>
+	    <code>trait.plot</code> automatically collapses
+	    non-monophyletic groups.
+	  </li>
+	</ul>
+	Notable bug fixes:
+	<ul>
+	  <li>
+	    <code>make.musse.multitrait()</code> renamed traits when
+	    called with single trait.
+	  </li>
+	  <li>
+	    <code>make.prior.uniform</code> used wrong value for
+	    out-of-bounds parameters.
+	  </li>
+	  <li>
+	    BM and OU were mislabelled in <code>sim.character</code>.
+	  </li>
+	</ul>
+	</li>
+	
 	<li><b>25 March 2012 [<a
 	href="archive/diversitree_0.9-2.tar.gz">0.9-2</a>]</b>
 	New models and extensions to models: 
@@ -375,6 +418,8 @@
       FitzJohn</a></li>
       <li><a href="index.html">Home</a></li>
       <li><a href="studies.html">Studies</a></li>
+      <li><a href="changes.html">Changes</a></li>
+      <li><a href="examples.html">Examples</a></li>
       <li><a href="faq.html">FAQ</a></li>
       <li><a href="http://cran.r-project.org/web/packages/diversitree">CRAN</a></li>
     </ul>

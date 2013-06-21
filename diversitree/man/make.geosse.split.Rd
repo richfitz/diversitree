@@ -1,5 +1,6 @@
 \name{make.geosse.split}
 \alias{make.geosse.split}
+\alias{make.geosse.uneven}
 
 \title{Geographic State Speciation and Extinction Model: Split Models}
 
@@ -9,10 +10,13 @@
 \usage{
 make.geosse.split(tree, states, nodes, split.t,
                   sampling.f=NULL, strict=TRUE, control=list())
+make.geosse.uneven(tree, states, nodes, split.t,
+                   sampling.f=NULL, strict=TRUE, control=list())
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{states}{A vector of character states, each of which must be an
     integer between 0 and 2: see \code{\link{make.geosse}}.  This vector

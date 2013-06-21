@@ -1,4 +1,8 @@
 ## NAMESPACE
+
+## Import Rcpp so that .onLoad can load the modules.
+import(Rcpp)
+
 useDynLib(diversitree)
 
 ## 1. make
@@ -9,15 +13,17 @@ export(make.bisse)
 export(make.bisse.split)
 export(make.bisse.t)
 export(make.bisse.td)
+export(make.bisse.uneven)
 export(make.bisseness)
 export(make.bm)
 export(make.classe)
 export(make.geosse)
 export(make.geosse.split)
+export(make.geosse.uneven)
 export(make.mk2)
 export(make.mkn)
-## export(make.mkn.deriv) # not working right now
 export(make.mkn.multitrait)
+export(make.mkn.meristic)
 export(make.musse)
 export(make.musse.multitrait)
 export(make.musse.split)
@@ -54,6 +60,11 @@ S3method(coef, fit.mle)
 S3method(extractAIC, fit.mle)
 S3method(logLik, fit.mle)
 
+## Changes coming soon.
+S3method(predict, dtlik.t)
+S3method(plot, dtlik.t)
+S3method(coef, mcmcsamples)
+
 ## Starting points:
 export(starting.point.bisse)
 export(starting.point.bd)
@@ -75,12 +86,16 @@ export(sampler.norm)
 export(constrain)
 export(constrain.i)
 
+export(expand.parameters)
+
 ## Tree evolution code
 export(trees)
 
 export(tree.bd)
 export(tree.bisse)
 export(tree.bisseness)
+export(tree.classe)
+export(tree.geosse)
 export(tree.musse)
 export(tree.musse.multitrait)
 export(tree.quasse)
@@ -94,19 +109,17 @@ export(invert)
 export(big.brother)
 export(set.defaults)
 export(combine)
+
 export(profiles.plot)
 export(trait.plot)
+
 export(make.prior.exponential)
 export(make.prior.uniform)
-export(prune)
 
-## Support for time-dependent models
-export(constant.t)
-export(exponential.t)
-export(linear.t)
-export(sigmoid.t)
-export(stepf.t)
-export(make.pars.t)
+export(prune)
+export(get.descendants)
+
+export(run.cached)
 
 ## Support for QuaSSE models.
 export(constant.x)
@@ -148,6 +161,8 @@ S3method(make.asr.stoch, mkn)
 ## ASR/xxSSE
 S3method(make.asr.marginal, bisse)
 S3method(make.asr.marginal, musse)
+S3method(make.asr.marginal, bisse.t)
+S3method(make.asr.marginal, musse.t)
 
 ## TODO: This means that the time-dependent ones won't dispatch?
 
@@ -190,4 +205,3 @@ export(ROOT.ALL)
 
 ## Check capabilities of package
 export(check.fftC)
-export(check.cvodes)

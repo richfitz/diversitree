@@ -1,19 +1,17 @@
 \name{check}
 \alias{check.fftC}
-\alias{check.cvodes}
 
 \title{Check Capabilities of the Diversitree Install}
 
-\description{These check to see if FFTW or CVODES support was included
-  in diversitree.  They rarely need to be called directly.}
+\description{These check to see if FFTW support was included in
+  diversitree.  They rarely need to be called directly.}
 
 \usage{
 check.fftC(error=TRUE)
-check.cvodes(error=TRUE)
 }
 
 \arguments{
-  \item{error}{Logical: causes an error if the FFTW or CVODES are not
+  \item{error}{Logical: causes an error if FFTW is not
     available if \code{TRUE}}
 }
 

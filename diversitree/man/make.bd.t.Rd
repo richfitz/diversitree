@@ -8,11 +8,12 @@
 
 \usage{
 make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL,
-          control=list())
+          control=list(), truncate=FALSE, spline.data=NULL)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
 
   \item{functions}{A named list of functions of time.  See details.}
 
@@ -25,18 +26,13 @@ make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL,
   
   \item{control}{List of control parameters for the ODE solver.  See
     details in \code{\link{make.bisse}}.}
-}
 
-\details{
-  There is significant overhead in using this function, compared with
-  the plain birth-death (\code{\link{make.bd}}) models.  Usually, all of
-  the calculations are done directly, or in C for the ODE based models.
-  However, because of the generality here -- parameters may be
-  \strong{any} function of time -- we must call back to R many times
-  during the integration process.  The overhead is something like a
-  factor of 10 compared with the ODE-based constant rate birth death
-  model, and a factor of 40 compared with the direct-calculation
-  constant rate birth death model.
+  \item{truncate}{Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 2).}
+
+  \item{spline.data}{List of data for spline-based time functions.  See
+    details}.
 }
 
 \examples{
@@ -56,7 +52,7 @@ phy <- trees(pars, "bd", max.taxa=25)[[1]]
 ## time-dependent functions are constant.t().
 lik.direct <- make.bd(phy)
 lik.ode <- make.bd(phy, control=list(method="ode"))
-lik.t <- make.bd.t(phy, list(constant.t, constant.t))
+lik.t <- make.bd.t(phy, c("constant.t", "constant.t"))
 
 lik.direct(pars) # -22.50267
 
@@ -69,18 +65,19 @@ lik.ode(pars) - lik.t(pars)
 
 ## Next, make a real case, where speciation is a linear function of
 ## time.
-lik.t2 <- make.bd.t(phy, list(linear.t, constant.t))
+lik.t2 <- make.bd.t(phy, c("linear.t", "constant.t"))
 
 ## Confirm that this agrees with the previous calculations when the
 ## slope is zero
 pars2 <- c(pars[1], 0, pars[2])
 lik.t2(pars2) - lik.t(pars)
 
-## However, notice that this is much slower than the previous versions:
-system.time(lik.direct(pars)) # ~ 0.001
-system.time(lik.ode(pars))    # ~ 0.004
-system.time(lik.t(pars))      # ~ 0.020
-system.time(lik.t2(pars2))    # ~ 0.040
+## The time penalty comes from moving to the ODE-based solution, not
+## from the time dependence.
+system.time(lik.direct(pars)) # ~ 0.000
+system.time(lik.ode(pars))    # ~ 0.003
+system.time(lik.t(pars))      # ~ 0.003
+system.time(lik.t2(pars2))    # ~ 0.003
 
 fit <- find.mle(lik.direct, pars)
 fit.t2 <- find.mle(lik.t2, pars2)

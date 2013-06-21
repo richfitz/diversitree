@@ -16,17 +16,59 @@ mcmc <- function(lik, x.init, nsteps, ...) {
   UseMethod("mcmc")
 }
 
+## This function is starting to get quite unwieldly; I'll probably
+## split it into a preparation and main section at some point.
 mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
                          sampler=sampler.slice, fail.value=-Inf,
                          lower=-Inf, upper=Inf, print.every=1,
                          control=list(),
-                         save.every=0, save.file, ...) {
-  if ( save.every > 0 && missing(save.file) )
-    stop("save.file must be given if save.every > 0")
+                         save.file, save.every=0, save.every.dt=NULL,
+                         previous=NULL, previous.tol=1e-4,
+                         ...) {
+  if ( is.null(sampler) )
+    sampler <- sampler.slice
+  
+  if ( save.every > 0 || !is.null(save.every.dt) ) {
+    if ( missing(save.file) )
+      stop("save.file must be given if save.every > 0")
+    save.type <- tools::file_ext(save.file)
+    save.type <- match.arg(tolower(save.type), c("csv", "rds"))
+    save.fun <- switch(save.type,
+                       rds=saveRDS,
+                       csv=function(x) write.csv(x, row.names=FALSE))
+    save.file.bak <- paste(save.file, ".bak", sep="")
+  }
+
+  n.previous <- if ( is.null(previous) ) 0 else nrow(previous)
+  if ( !is.null(previous) ) {
+    if ( !inherits(previous, "mcmcsamples") )
+      stop("Currently only mcmcsamples objects can be continued")
+    if ( n.previous >= nsteps ) {
+      warning("Chain already complete")
+      return(previous)
+    }
+    if ( !is.null(x.init) )
+      stop("x.init must be NULL if continuing")
+    npar <- ncol(coef(previous)) # tons of repetition here.
+    hist.pars <- matrix(NA, ncol=npar, nrow=nsteps)
+    hist.prob <- rep(NA, nsteps)
     
-  npar <- length(x.init)
+    hist.pars[seq_len(n.previous),] <- coef(previous)
+    hist.prob[seq_len(n.previous)]  <- previous$p
+
+    x.init <- hist.pars[n.previous,]
+    y.prev <- hist.prob[n.previous]
+  } else {
+    npar <- length(x.init)
+    hist.pars <- matrix(NA, ncol=npar, nrow=nsteps)
+    hist.prob <- rep(NA, nsteps)
+  }
+
   if ( is.null(names(x.init)) )
-    try(names(x.init) <- argnames(lik), silent=TRUE)
+    try(colnames(hist.pars) <- names(x.init) <- argnames(lik),
+        silent=TRUE)
+  else
+    colnames(hist.pars) <- names(x.init)
   
   if ( is.null(prior) )
     posterior <- protect(function(x) lik(x, ...),
@@ -35,64 +77,77 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     posterior <- protect(function(x) lik(x, ...) + prior(x),
                          fail.value.default=fail.value)
 
-  y.init <- posterior(x.init, fail.value=NULL)
-
-  if ( !is.finite(y.init) ||
-      (!is.null(fail.value) && y.init == fail.value) )
-    stop("Starting point must have finite probability")
-
   lower <- check.par.length(lower, npar)
   upper <- check.par.length(upper, npar)
   w     <- check.par.length(w,     npar)
 
   check.bounds(lower, upper, x.init)
 
-  hist <- vector("list", nsteps)
+  y.init <- posterior(x.init, fail.value=NULL)
+  if ( !is.finite(y.init) ||
+      (!is.null(fail.value) && y.init == fail.value) )
+    stop("Starting point must have finite probability")
+  if ( n.previous > 0 && abs(y.prev - y.init) > previous.tol ) {
+    msg <- paste("Cannot continue the chain:\n",
+                 sprintf("\texpected posterior = %2.7, got %2.7f",
+                         previous$p[n.previous], y.init))
+    stop(msg)
+  }
 
-  if ( is.null(sampler) )
-    sampler <- sampler.slice
-
-  clean.hist <- function(hist) {
-    out <- cbind(i=seq_along(hist),
-                  as.data.frame(t(sapply(hist, unlist))))
-    names(out)[ncol(out)] <- "p"
+  clean.hist <- function(pars, p) {
+    out <- data.frame(i=seq_along(p), pars, p)
+    class(out) <- c("mcmcsamples", "data.frame")
     out
   }
 
+  we.should.print <- make.every.so.often(print.every)
+  we.should.save <- make.every.so.often(save.every, save.every.dt)
+
   mcmc.loop <- function() {
-    for ( i in seq_len(nsteps) ) {
-      hist[[i]] <<- tmp <- sampler(posterior, x.init, y.init, w,
-                                   lower, upper, control)
-      x.init <- tmp[[1]]
-      y.init <- tmp[[2]]
-      if ( print.every > 0 && i %% print.every == 0 )
+    for ( i in seq(n.previous+1, nsteps, by=1) ) {
+      tmp <- sampler(posterior, x.init, y.init, w,
+                     lower, upper, control)
+      x.init <- hist.pars[i,] <<- tmp[[1]]
+      y.init <- hist.prob[i]  <<- tmp[[2]]
+
+      if ( we.should.print() )
         cat(sprintf("%d: {%s} -> %2.5f\n", i,
-                    paste(sprintf("%2.4f", tmp[[1]]), collapse=", "),
-                    tmp[[2]]))
-      if ( save.every > 0 && i %% save.every == 0 ) {
-        ok <- try(write.csv(clean.hist(hist[seq_len(i)]),
-                            save.file, row.names=FALSE))
+                    paste(sprintf("%2.4f", x.init), collapse=", "),
+                    y.init))
+      if ( we.should.save() ) {
+        j <- seq_len(i)
+        ## Back up the old version to avoid IO errors if the system
+        ## fails while saving.
+        if ( file.exists(save.file) )
+          ok <- file.rename(save.file, save.file.bak)
+        ok <- try(save.fun(clean.hist(hist.pars[j,], hist.prob[j]),
+                           save.file))
         if ( inherits(ok, "try-error") )
           warning("Error while writing progress file (continuing)",
                   immediate.=TRUE)
       }
     }
-    hist
+    clean.hist(hist.pars, hist.prob)
   }
 
   mcmc.recover <- function(...) {
-    hist <- hist[!sapply(hist, is.null)]
-    if ( length(hist) == 0 )
+    j <- !is.na(hist.prob)
+    if ( !any(j) )
       stop("MCMC was stopped before any samples taken")
-    warning("MCMC was stopped prematurely: ", length(hist), "/", nsteps,
+    hist <- clean.hist(hist.pars[j,], hist.prob[j])
+    warning("MCMC was stopped prematurely: ", nrow(hist), "/", nsteps,
             " steps completed.  Truncated chain is being returned.",
             immediate.=TRUE)
     hist
   }
 
-  hist <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
+  samples <- tryCatch(mcmc.loop(), interrupt=mcmc.recover)
 
-  clean.hist(hist)
+  if ( save.every > 0 || !is.null(save.every.dt) )
+    if ( nrow(samples) == nsteps && file.exists(save.file.bak) )
+      file.remove(save.file.bak)
+
+  samples
 }
 
 mcmc.dtlik <- function(lik, x.init, nsteps, lower=-Inf, ...) {
@@ -114,7 +169,7 @@ make.unipar <- function(f, x, i) {
 
 make.prior.exponential <- function(r) {
   function(pars)
-    sum(log(r) - pars * r)
+    sum(dexp(pars, r, log=TRUE))
 }
 
 ## This is still experimental, and will not work nicely unless
@@ -135,7 +190,7 @@ make.prior.ExpBeta <- function(r, beta) {
 }
 
 ## TODO: Allow vector lower and upper here...
-make.prior.uniform <- function(lower, upper) {
+make.prior.uniform <- function(lower, upper, log=TRUE) {
   if ( length(lower) == 2 && missing(upper) ) {
     upper <- lower[2]
     lower <- lower[1]
@@ -143,10 +198,74 @@ make.prior.uniform <- function(lower, upper) {
   n <- length(lower)
   if ( length(upper) != n )
     stop("'lower' and 'upper' both be the same length")
-  p <- log(1/(upper - lower))
+  p.in <- 1/(upper - lower)
+  p.out <- 0
+  if ( log ) {
+    p.in <- log(p.in)
+    p.out <- -Inf
+  }
   function(x) {
-    ret <- rep(p, length.out=length(x))
-    ret[x < lower | x > upper] <- 0
-    ret
+    ret <- rep(p.in, length.out=length(x))
+    ret[x < lower | x > upper] <- p.out
+    if ( log )
+      sum(ret)
+    else
+      prod(ret)
   }
 }
+
+coef.mcmcsamples <- function(object, thin=1, full=FALSE, lik=NULL,
+                             ...) {
+  p <- as.matrix(object[-c(1, ncol(object))])
+  if ( thin > 1 )
+    p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
+  if ( full ) {
+    if ( is.null(lik) )
+      stop("'lik' must be provided if full=TRUE")
+    else if ( inherits(lik, "constrained") ) {
+      if ( ncol(p) != length(argnames(object)) )
+        stop("Dimensions of parameters are not correct for this function")
+      p <- t(apply(p, 1, object, pars.only=TRUE))
+    }
+  }
+    
+  p
+}
+
+as.mcmcsamples <- function(x, ...) {
+  if ( !identical(colnames(x)[c(1, ncol(x))], c("i", "p")) )
+    stop("Nope")
+  x <- as.data.frame(x)
+    class(x) <- c("mcmcsamples", "data.frame")
+  x
+}
+
+## This is a bit 
+make.every.so.often <- function(iterations=1, dt=NULL) {
+  i <- 0 # counter, will be updated
+  
+  if ( !is.null(dt) ) {
+    require(lubridate)
+    if ( !inherits(dt, "Period") )
+      stop("dt must be a Period object")
+    t.next <- now() + dt
+    ## Note use of 'or' here, not 'and'.
+    check <- function() {
+      i <<- i + 1
+      ok <- (iterations > 0 && i %% iterations == 0) || now() > t.next
+      if ( ok )
+        t.next <<- now() + dt
+      ok
+    }
+  } else if ( iterations > 0 ) {
+    check <- function() {
+      i <<- i + 1
+      i %% iterations == 0
+    }
+  } else {
+    check <- function()
+      FALSE
+  }
+  check
+}
+

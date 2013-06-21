@@ -1,7 +1,11 @@
 get.info <- function(x)
   get.cache(x)$info
-get.cache <- function(x)
-  environment(if (is.constrained(x)) attr(x, "func") else x)$cache
+get.cache <- function(x) {
+  if ( inherits(x, "big.brother") || is.constrained(x) )
+    get.cache(attr(x, "func"))
+  else
+    environment(x)$cache
+}
 set.info <- function(x, value)
   environment(x)$cache$info <- value
 

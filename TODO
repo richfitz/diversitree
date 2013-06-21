@@ -2,9 +2,6 @@
 There are a great many things left to do.
 
 * Arising from the cleanup
-** Speed up Mk2
-Much of the time in Mk2 is wasted.  This could be heaps faster purely
-in C I think (speedup of up to 4x)
 
 ** Simulation code
 This is a complete mess.  When I merge in the SCM code, some time
@@ -36,55 +33,17 @@ be nice to combine for everyone's use.
 It would be nice to able to compute Hessian matrices after the fact,
 and/or just for certain parameters.
 
+** Nicities
+
+make.bisse, make.mkn, make.musse, etc should take a factor with the
+correct number of levels, and rewrite argnames appropriately.
+
 * Documentation
 ** Tutorial document
-Most methods still need documentation and demonstration.  In most
-cases this can come from the online manual, I think.
-
-I would like to include some real-world cases.  There are a few trees
-and data sets kicking around that might be distributable by now.
-
-* Minor things
-** DONE "strict" needs adding to bisse, mk2, mkn, etc.
-** DONE A common mechanism for 2-part argnames (split, td models)
-** find.mle could return a stats4 mle object?
-TODO: consider making stats4 mle objects, rather than those below:
-new("mle", call = call, coef = coef, fullcoef = unlist(fullcoef), 
-vcov = vcov, min = min, details = oout, minuslogl = minuslogl, 
-method = method)
+Plot QuaSSE fits, as there has been some confusion about these.  A
+"plot" method might be useful, even.
 
 * Misc old bits:
-** DONE Give a more informative message if running BiSSE on a NULL tree:
-Peter Midford, 21/5/2009: 2:46pm
-  library(diversitree)
-  pars <- c(0.1, 0.1, 0.03, 0.03, 0.01, 0.01)
-  set.seed(1)
-  phy <- tree.bisse(pars, max.taxa=50, x0=0)
-  f <- make.bisse(phy, phy$tip.state)
-
-** DONE Log compensation
-I have moved to normalising against the sum of the two states, as this
-is almost always possible and will hedge against both very large and
-very small numbers.  The recursive function that I have been using
-should be abstracted away so that I don't have to do this for every
-different case.
-
-** DONE Marginal ASR
-This is basically done for a fairly general case in
-  ~/Documents/Projects/stochastic/model-marginal.R
-I should be able to tweak that easily.
-
-** Generic 'asr' object and methods
-This is partly done to some degree.  In general, the object might have
-slots:
-  tip.state
-  node.state
-and some instances would have
-  history
-This would be simple enough to augment with information on unobserved
-speciation events (for example).  Linking this to a phylogeny would
-make plotting much easier, too.
-
 ** Summarise stochastic asr data
 For example, which branches have transitions and where?
 ** Mk2/Mkn simulation conditional on a tree

@@ -20,6 +20,7 @@ make.cache.bd.ode <- function(tree, sampling.f, unresolved) {
   cache$sampling.f <- sampling.f
   cache$y <- initial.tip.bd.ode(cache)
   cache$info <- make.info.bd(tree)
+  cache$const <- lfactorial((length(cache$len) + 1)/2 - 1)
   cache
 }
 initial.tip.bd.ode <- function(cache) {
@@ -32,23 +33,25 @@ initial.tip.bd.ode <- function(cache) {
 ## 4: initial.conditions
 ## Note that we ignore both 't' and 'idx'.
 initial.conditions.bd.ode <- function(init, pars, t, idx)
-  c(init[1,1], init[2,1] * init[2,2] * pars[1])
+  c(init[1,1],
+    init[2,1] * init[2,2] * pars[1])
 
 rootfunc.bd.ode <- function(res, pars, condition.surv,
-                            intermediates) {
+                            intermediates, const) {
   vals <- res$vals
   lq <- res$lq
   d.root <- vals[2]
 
   ## Compute N! for comparability with the non-ode method
-  const <- lfactorial((length(lq) + 1)/2 - 1)
+  ## const <- lfactorial((length(lq) + 1)/2 - 1)
   
   if ( condition.surv ) {
-    e.root <- vals[1]
-    lambda <- pars[1]
+    e.root <- vals[[1]]
+    lambda <- pars[[1]]
     d.root <- d.root/(lambda * (1 - e.root)^2)
   }
   loglik <- log(d.root) + sum(lq) + const
+  names(loglik) <- NULL
 
   if ( intermediates ) {
     attr(loglik, "intermediates") <- res
@@ -62,3 +65,12 @@ rootfunc.bd.ode <- function(res, pars, condition.surv,
 ## Additional functions:
 make.branches.bd.ode <- function(cache, control)
   make.branches.dtlik(cache$info, control)  
+
+derivs.bd <- function(t, y, pars) {
+  E <- y[1]
+  D <- y[2]
+  lambda <- pars[1]
+  mu <- pars[2]
+  c(mu - (mu + lambda)*E +   lambda*E*E,
+    - (mu + lambda)*D + 2*lambda*D*E)
+}

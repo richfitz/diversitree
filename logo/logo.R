@@ -3,6 +3,13 @@ logo <- function(cleanup=FALSE) {
   require(diversitree)
   require(gridBase)
   require(grImport)
+  cols <- rev(c("#7f1d80",
+                "#005083",
+                "#007eb9",
+                "#93c13a",
+                "#f8d50a",
+                "#ed7624",
+                "#ca171d"))
   
   if ( !file.exists("beetles.eps") )
     download.file("http://www.zoology.ubc.ca/prog/diversitree/beetles.eps",
@@ -17,7 +24,7 @@ logo <- function(cleanup=FALSE) {
     on.exit(file.remove(c("beetles.eps", "beetles.eps.xml")))
   
   set.seed(23)
-  phy <- tree.bd(c(.1, 0), max.taxa=17)
+  phy <- ladderize(tree.bd(c(.1, 0), max.taxa=17), FALSE)
   phy$edge.length <- phy$edge.length / max(branching.times(phy)) * .8
 
   xy <- diversitree:::pp.node.coords(phy)
@@ -48,7 +55,8 @@ logo <- function(cleanup=FALSE) {
                    y=unit(r * sin(theta), "native"),
                    angle=(theta - pi/2) / (2 * pi) * 360)
     pushViewport(vp)
-    grid.picture(beetles[[i]], x=unit(.5, "npc"), y=unit(.5, "npc"),
+    grid.picture(colour.picture(beetles[[i]], cols[i]),
+                 x=unit(.5, "npc"), y=unit(.5, "npc"),
                  just=c("centre", "centre"), width=w[i])
     popViewport()
   }
@@ -71,6 +79,12 @@ logo.hardcopy <- function(filename, type="pdf") {
   dev(filename, width=w, height=w*r)
   on.exit(dev.off())
   logo()
+}
+
+colour.picture <- function(picture, col) {
+  for ( j in seq_along(picture@paths) )
+    picture@paths[[j]]@rgb <- col
+  picture
 }
 
 if ( !interactive() ) {

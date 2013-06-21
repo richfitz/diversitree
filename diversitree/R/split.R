@@ -3,23 +3,20 @@ make.all.branches.split.dtlik <- function(cache, control,
   control <- check.control.ode(control)
   control <- check.control.split(control)
   caching.branches <- control$caching.branches
-  if ( control$backend == "CVODES" ) {
-    stop("CVODES not yet available for split models")
-  } else {
-    branches.main <- make.branches.dtlik(cache$info, control)
-    branches.aux <- make.branches.aux.dtlik(cache, control)
-    branches.split <- make.branches.split(cache, branches.main,
-                                          branches.aux, control)
-    initial.conditions.split <-
-      make.initial.conditions.split(cache, initial.conditions)
-    function(pars, intermediates, preset=NULL) {
-      if ( caching.branches )
-        caching.branches.set.pars(pars, branches.split)
-      all.branches.matrix(pars, cache,
-                          initial.conditions.split,
-                          branches.split, preset)
-    }    
-  }
+
+  branches.main <- make.branches.dtlik(cache$info, control)
+  branches.aux <- make.branches.aux.dtlik(cache, control)
+  branches.split <- make.branches.split(cache, branches.main,
+                                        branches.aux, control)
+  initial.conditions.split <-
+    make.initial.conditions.split(cache, initial.conditions)
+  function(pars, intermediates, preset=NULL) {
+    if ( caching.branches )
+      caching.branches.set.pars(pars, branches.split)
+    all.branches.matrix(pars, cache,
+                        initial.conditions.split,
+                        branches.split, preset)
+  }    
 }
 
 ## Convert a branches function into one that automatically accounts
@@ -118,6 +115,7 @@ make.branches.aux.dtlik <- function(cache, control) {
   info.aux$name.ode <- sprintf("%s_aux", info.aux$name.ode)
   info.aux$ny       <- info.aux$k
   info.aux$idx.d    <- integer(0)
+  info.aux$derivs   <- make.derivs.aux(info.aux$derivs, cache$aux.i, info.aux$k)
   branches <- make.branches.dtlik(info.aux, control)
 
   y <- lapply(cache$sampling.f, function(x) 1-x)
@@ -184,12 +182,20 @@ update.info.split <- function(info, nodes) {
   info$partitioned <- TRUE
   info$argnames <- argnames.twopart(info$argnames, n.part)
   info$name.ode <- info$name
-  info$name.pretty <- sprintf("%s (time-chunks)", info$name.pretty)
+  info$name.pretty <- sprintf("%s (split tree)", info$name.pretty)
   info$name <- sprintf("%s.split", info$name)
 
   info$n.part <- n.part
   info$nodes <- nodes
 
+  info
+}
+
+update.info.uneven <- function(info, info.single) {
+  info$name <- sprintf("%s.uneven", info.single$name)
+  info$name.pretty <- sprintf("%s (uneven sampling tree)",
+                              info.single$name.pretty)
+  info$argnames <- info.single$argnames
   info
 }
 
@@ -369,6 +375,13 @@ make.caching.branches.aux <- function(cache, branches.aux) {
   }
 
   branches.aux.caching
+}
+
+make.derivs.aux <- function(derivs, idx, k) {
+  force(derivs)
+  y.extra <- rep(0, k)
+  function(t, y, pars)
+    derivs(t, c(y, y.extra), pars)[idx]
 }
 
 ######################################################################

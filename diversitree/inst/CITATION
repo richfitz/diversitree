@@ -1,0 +1,10 @@
+citHeader("To cite diversitree in a publication, please use:")
+
+citEntry(entry="Article",
+        title = "Diversitree: Comparative Phylogenetic Analyses of Diversification in R",
+        author = personList(as.person("R. G. FitzJohn")),
+        journal = "Methods in Ecology and Evolution",
+        year = "2012",
+        volume = "in press",
+	doi = "10.1111/j.2041-210X.2012.00234.x",
+        textVersion = "FitzJohn, R.G. 2012. Diversitree: Comparative Phylogenetic Analyses of Diversification in R.  Methods in Ecology and Evolution (in press) doi:10.1111/j.2041-210X.2012.00234.x")

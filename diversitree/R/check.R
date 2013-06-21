@@ -82,6 +82,10 @@ check.states <- function(tree, states, allow.unnamed=FALSE,
   ## TODO: When multistate characters are present, this may fail even
   ## for cases where it should not.
   if ( !is.null(strict.vals) ) {
+    if ( isTRUE(all.equal(strict.vals, 0:1)) )
+      if ( is.logical(states) )
+        states[] <- as.integer(states)
+    
     if ( strict ) {
       if ( !isTRUE(all.equal(sort(strict.vals),
                              sort(unique(na.omit(states))))) )
@@ -178,6 +182,8 @@ check.integer <- function(x) {
   if ( is.null(x) )
     stop("NULL argument for ", deparse(substitute(x)))
   nna <- !is.na(x)
+  if ( length(x) > 0 && !any(nna) )
+    stop("No non-NA values for ", deparse(substitute(x)))
   if ( length(x) && max(abs(x[nna] - round(x[nna]))) > 1e-8 )
     stop("Non-integer argument for ", deparse(substitute(x)))
   storage.mode(x) <- "integer"
@@ -191,19 +197,25 @@ check.scalar <- function(x) {
 }
 
 check.control.ode <- function(control=list()) {
-  defaults <- list(safe=FALSE, tol=1e-8, eps=0, backend="deSolve",
-                   unsafe=FALSE)
+  defaults <- list(tol=1e-8, backend="gslode",
+                   eps=0,                  # branch calculations
+                   gsl.stepper="rkck",     # gslode specific
+                   safe=TRUE, unsafe=FALSE # deSolve specific
+                   )
   control <- modifyList(defaults, control)
 
-  backends <- c("deSolve", "cvodes", "CVODES")
+  if ( !("compiled" %in% names(control)) )
+    control$compiled <- control$backend == "gslode"
+
+  backends <- c("deSolve", "gslode")
   if ( length(control$backend) != 1 )
     stop("'backend' must be a single element")
   control$backend <- backends[pmatch(control$backend, backends)]
   if ( is.na(control$backend) )
     stop("Invalid backend selected")
 
-  if ( tolower(control$backend) == "cvodes" )
-    check.cvodes(error=TRUE)
+  if ( control$compiled && control$backend != "gslode" )
+    stop("Compiled derivatives (control: compiled=TRUE) only with gslode")
 
   control$tol <- check.scalar(control$tol)
   control$eps <- check.scalar(control$eps)
@@ -229,7 +241,10 @@ check.loaded.symbol <- function(symbol, dll="") {
   TRUE
 }
 
-check.info.ode <- function(info, control=NULL) {
+check.info.ode <- function(info, control) {
+  ## Might be doubling up here, but good to check.
+  control <- check.control.ode(control)
+  
   model <- if (is.null(info$name.ode)) info$name else info$name.ode
   if ( !(is.character(model) && length(model) == 1) )
     stop("'model' must be a single string")
@@ -237,42 +252,24 @@ check.info.ode <- function(info, control=NULL) {
   info$ny    <- check.integer(check.scalar(info$ny))
   info$np    <- check.integer(check.scalar(info$np))
   info$idx.d <- check.integer(info$idx.d)
+
   if ( is.null(info$dll) )
     info$dll <- "diversitree"
   else if ( !(is.character(info$dll) && length(info$dll)) == 1 )
     stop("dll must be a single string")
   dll <- info$dll
 
-  if ( !is.null(control) ) {
-    backend <- control$backend
-    if ( is.function(info$derivs) ) {
-      backend <- "R" # no effect.
-    } else if ( backend == "deSolve" ) {
-      check.loaded.symbol(sprintf("initmod_%s", model), dll)
-      check.loaded.symbol(sprintf("derivs_%s", model),  dll)
-    } else if ( backend == "cvodes" ) {
-      check.loaded.symbol(sprintf("derivs_%s_cvode", model), dll)
-    } else if ( backend == "CVODES" ) {
-      check.loaded.symbol(sprintf("derivs_%s_cvode", model),       dll)
-      check.loaded.symbol(sprintf("initial_conditions_%s", model), dll)
-    }
+  if ( control$compiled ) {
+    if ( control$backend != "gslode" )
+      stop("Only gslode backend supported with compiled code")
+    check.loaded.symbol(sprintf("derivs_%s_gslode", model), dll)
+  } else {
+    if ( !is.function(info$derivs) )
+      stop("info$derivs must be a function")
   }
   
   info
 }
-
-check.control.continuous <- function(control) {
-  defaults <- list(method="vcv")
-  control <- modifyList(defaults, control)
-  if ( length(control$method) != 1 )
-    stop("control$method must be a scalar")
-  methods <- c("vcv", "direct")
-  if ( !(control$method %in% methods) )
-    stop(sprintf("control$method must be in %s",
-                 paste(methods, collapse=", ")))
-  control
-}
-
 
 ## For almost all models, there there must be a certain number of
 ## finite non-negative parameters.
@@ -294,3 +291,7 @@ check.nonnegative <- function(x, msg=NULL) {
     stop(msg)
   x
 }
+
+## Check that a pointer is not NULL.
+check.ptr <- function(ptr)
+  .Call("check_ptr_not_null", ptr)

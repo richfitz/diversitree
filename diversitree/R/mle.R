@@ -23,7 +23,7 @@ do.mle.search <- function(func, x.init, method, fail.value=-Inf,
                           control=list(), lower=-Inf, upper=Inf,
                           hessian=FALSE, verbose=0, ...) {
   method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm",
-                                "minqa", "tgp", "optimize", "int1d",
+                                "minqa", "optimize", "int1d",
                                 "mixed", "subplexR"))
 
   control$y.init <- y.init <- func(x.init, ...)
@@ -35,13 +35,13 @@ do.mle.search <- function(func, x.init, method, fail.value=-Inf,
   if ( is.null(control$fail.penalty) )
     control$fail.penalty <- 1000
 
-  ## Can handle -Inf: subplex, nlminb, int1d, mixed, tgp
+  ## Can handle -Inf: subplex, nlminb, int1d, mixed,
   ## Require finite values: optim, nlm, minqa, optimize
   if ( is.na(fail.value) ) {
     if ( method %in% c("optim", "nlm", "minqa", "optimize") )
       fail.value <- y.init - control$fail.penalty
     else if ( method %in% c("subplex", "nlminb", "int1d", "mixed",
-                            "tgp", "subplexR") )
+                            "subplexR") )
       fail.value <- -Inf
   }
 

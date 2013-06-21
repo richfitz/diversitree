@@ -26,24 +26,32 @@ boxconstrain <- function(f, lower, upper, fail.value=-Inf) {
   }
 }
 
-big.brother <- function(f, interval=1) {
+big.brother <- function(f, interval=1, file="") {
   f <- f # force argument to prevent recursion (pass by value)
   .x.eval <- list()
   .y.eval <- list()
   if ( interval < 0 )
     stop("Interval must be >= 0")
-  function(x, ...) {
+  ret <- function(x, ...) {
     i <- length(.x.eval) + 1
-    if ( interval > 0 && i %% interval == 0 )
-      cat(sprintf("[%s]", paste(formatC(x, 5), collapse=", ")))
-    else if (interval > 0 )
-      cat(".")
+    if ( interval > 0 && i %% interval == 0 ) {
+      cat(sprintf("[%s]", paste(formatC(x, 5), collapse=", ")),
+          file=file)
+      on.exit("\t -> [calculation failure]\n")
+    } else if (interval > 0 ) {
+      cat(".", file=file)
+    }
     .x.eval[[i]] <<- x
     .y.eval[[i]] <<- ans <- f(x, ...)
-    if ( interval > 0 && i %% interval == 0 )
-      cat(sprintf("\t -> %2.5f\n", ans))
+    if ( interval > 0 && i %% interval == 0 ) {
+      cat(sprintf("\t -> %2.5f\n", ans), file=file)
+      on.exit()
+    }
     ans
   }
+  class(ret) <- c("big.brother", "function")
+  attr(ret, "func") <- f
+  ret
 }
 
 count.eval <- function(f) {
@@ -129,7 +137,16 @@ toC.int <- function(x) {
 ## Used by bm.vcv
 dmvnorm2 <- function(x, mean, sigma, sigma.inv, log=FALSE) {
   distval <- mahalanobis(x, center=mean, cov=sigma.inv, TRUE)
-  logdet <- as.numeric(determinant(sigma, TRUE)$modulus)
+  logdet <- as.numeric(determinant.matrix(sigma, TRUE)$modulus)
+  logretval <- -(length(x) * log(2 * pi) + logdet + distval)/2
+  if ( log )
+    logretval
+  else
+    exp(logretval)
+}
+
+dmvnorm3 <- function(x, mean, sigma.inv, logdet, log=FALSE) {
+  distval <- mahalanobis(x, center=mean, cov=sigma.inv, TRUE)
   logretval <- -(length(x) * log(2 * pi) + logdet + distval)/2
   if ( log )
     logretval
@@ -158,4 +175,14 @@ combine <- function(liks) {
                               info$name.pretty, length(liks))
   set.info(ret, info)
   ret
+}
+
+run.cached <- function(filename, expr, regenerate=FALSE) {
+  if ( file.exists(filename) && !regenerate ) {
+    readRDS(filename)
+  } else {
+    res <- eval.parent(substitute(expr))
+    saveRDS(res, file=filename)
+    res
+  }
 }

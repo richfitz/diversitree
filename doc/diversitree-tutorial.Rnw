@@ -2,16 +2,17 @@
 \usepackage{fullpage}
 \usepackage{natbib}
 \usepackage{amsmath}
-\usepackage{color}
 
+\usepackage{xcolor}
 \definecolor{navy}{rgb}{0,0,0.4}
 \usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
 
-\newcommand{\code}{\texttt}
-
-\usepackage{Sweave}
 \usepackage{dtsweave}
-\SweaveOpts{prefix.string=cache/diversitree-tutorial,eps=FALSE}
+% Needed or Sweave adds it in:
+% \usepackage{Sweave}
+\SweaveOpts{keep.source=TRUE,eps=FALSE}
+\SweaveOpts{prefix.string=cache/diversitree-tutorial}
+
 <<results=hide,echo=FALSE>>=
 library(cacheSweave)
 ## Remove stars, as they don't look nice when typeset
@@ -20,13 +21,6 @@ options(show.signif.stars=FALSE, continue="  ")
 chi <- function(m1, m2, digits=1)
   round(2*(m1$lnLik - m2$lnLik), digits)
 @ 
-
-% I like Garamond (who doesn't?).  However, it's not included in most
-% TeX distributions due to licence restrictions.  Either use
-% getfontsnonfree to install it, remove this line to get computer
-% modern (TeX defaults) or replace it with \usepackage{mathpazo} for
-% Palatino, which is also quite nice.
-\usepackage[garamond]{mathdesign}
 
 %\VignetteIndexEntry{Introduction to diversitree}
 %\VignettePackage{diversitree}
@@ -272,7 +266,7 @@ generate it, is in figure \ref{fig:bd-mcmc-distr}.
 samples$r <- samples$lambda - samples$mu
 col <- c("#eaab00", "#004165", "#618e02")
 profiles.plot(samples[c("lambda", "mu", "r")], col.line=col, las=1,
-              alpha=.75, legend.pos="topright")
+              opacity=.75, legend.pos="topright")
 abline(v=c(.1, .03, .07), col=col, lty=2)
 @ 
   \caption{Posterior probability distributions for the parameters of the
@@ -440,6 +434,7 @@ mean(samples$q01 > samples$q10)
 
 \clearpage
 \section{Binary traits and diversification: BiSSE}
+\label{sec:bisse}
 
 The BiSSE (Binary State Speciation and Extinction) model combines
 the features of the constant-rates birth-death model with the
@@ -634,6 +629,7 @@ The required files can be downloaded from
 Read in the phylogenetic tree
 <<>>=
 tree <- read.nexus("data/Thomas-tree.nex")
+tree <- ladderize(tree)
 @ 
 The tree contains many polytomies; the original tree, and a simplified
 tree with polytomies converted into clades are shown in figure
@@ -692,6 +688,52 @@ states.15 <- (abs(states) > 0.15) + 0
 tree.clade <- clades.from.polytomies(tree)
 lik <- make.bisse(tree.clade, states.15)
 @ 
+
+\setkeys{Gin}{width=1.0\textwidth}
+\begin{figure}[p]
+  \centering
+<<shorebirds-tree-with-traits,fig=TRUE,width=6.5,height=6.75,results=hide,echo=FALSE>>=
+## Diversitree imports:
+group.label.tip <- diversitree:::group.label.tip
+filled.arcs <- diversitree:::filled.arcs
+add.alpha <- diversitree:::add.alpha
+
+## Determine family for each tip:
+families <- read.csv("data/shorebird-families.csv", as.is=TRUE)
+family <- families$family[match(tree.clade$tip.label, families$spp)]
+
+## Summarise trait over clades, and make vector where 1 is grey, 0 is
+## black, and values in between are darker or lighter.
+nn <- sapply(tree.clade$clades, function(x) 
+             tabulate(states.15[x]+1, 2))
+p <- states.15[tree.clade$tip.label]
+p[colnames(nn)] <- nn[2,] / colSums(nn)
+cols <- add.alpha("black", (1 - p)*2/3 + 1/3)
+names(cols) <- tree.clade$tip.label
+
+w <- max(branching.times(tree)) / 30
+plt <- plot(tree.clade, show.tip.label=FALSE, no.margin=TRUE,
+            transform=sqrt, clade.fill="gray", label.offset=33,
+            type="fan")
+group.label.tip(plt, family, "black", "black", 1, 2*w, 3*w, cex=.8)
+
+theta <- plt$xy$theta[seq_along(tree.clade$tip.label)]
+dt <- (plt$n.taxa/2 - .1) / plt$n.spp * 2 * pi
+filled.arcs(theta - dt, theta + dt,  max(plt$xy$x) + w/2, w, cols)
+@ 
+\caption{Phylogenetic tree of the 350 species of
+    shorebirds (Charadriiformes) and measures of sexual dimorphism,
+    based on \citet{Thomas-2004-28}.  Gray triangles indicate
+    unresolved clades, with the height of the triangle being
+    proportional to the square root of the number of species.
+    Character states at the 15\% threshold level are indicated at the
+    tips; gray indicates sexually dimorphic, black indicates sexually
+    monomorphic, and white indicates no data.  For unresolved clades,
+    the degree of shading indicates the proportion of species in each
+    state.  For clarity, only family or subfamily names are shown.}
+  \label{fig:shorebird-tree-with-traits}
+\end{figure}
+\setkeys{Gin}{width=0.8\textwidth}
 
 A sensible starting point can still be computed with
 \code{starting.point.bisse}; this takes into account the clade
@@ -753,6 +795,21 @@ if ( file.exists(.save) ) {
   save(samples, file=.save)
 }
 @ 
+
+\begin{figure}[p]
+  \centering
+<<shorebird-mcmc-plot,fig=TRUE>>=
+par(mar=c(4.1, 4.1, .5, .5))
+col <- c("#004165", "#618e02")
+## col <- c("#004165", "#eaab00")
+profiles.plot(samples[c("lambda0", "lambda1")], col, las=1,
+              legend.pos="topright", xlab="Speciation rate estimate")
+@ 
+  \caption{Posterior probability distributions for speciation rates
+for non-dimorphoc species (blue) and dimorphic species (yellow),
+estimated using MCMC.}
+\label{fig:shorebird-mcmc-plot}
+\end{figure}
 
 Setting up the likelihood function above assumed that the tree being
 used contained polytomies, and this is the source of the unresolved
@@ -1259,6 +1316,8 @@ coef(mle.cl)
 The speciation rate in the foreground clade is a negative function of
 body size (\code{l.m.2} is negative) -- increasing body size decreases the speciation rate.
 
+% TODO: Demonstrate how to plot the fits, as in the paper, as there is some confusion here.
+
 \subsection{Controlling the calculations}
 
 There are a number of ways to control the behaviour of the integrator:
@@ -1323,12 +1382,14 @@ for a full explanation of the model assumptions.
 
 \subsection{Parameters and a tree}
 
-Simulating trees under GeoSSE is not yet part of {\tt diversitree},
-but it can be done with a separate program, \citeauthor{simtreesdd}.
-A simulated tree is included and shown in Figure \ref{fig:geosse-phy}.
+Simulating trees under GeoSSE can be done with the function
+\code{tree.geosse}; a simulated tree shown in Figure
+\ref{fig:geosse-phy}.
 <<loadlib>>=
-data("geosse")
-phy <- geosse.phy
+pars <- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
+names(pars) <- diversitree:::default.argnames.geosse()
+set.seed(5)
+phy <- tree.geosse(pars, max.t=4, x0=0)
 @
 <<plottree1, eval=false>>=
 statecols <- c("AB"="purple", "A"="blue", "B"="red")
@@ -1553,18 +1614,105 @@ lnL.multi(p)
 @
 or used in {\tt find.mle()} or {\tt mcmc()}.
 
+\section{Priors for MCMC}
+\label{sec:priors-mcmc}
+Above, the prior used for MCMC analysis was exponential with a mean of
+twice the net diversification rate for all parameters.  However, any
+prior can be used; the only requirement is that a prior function takes
+as its only argument a vector of parameters, and returns as output the
+log prior probability.  For demonstration, here is the tree from
+section \ref{sec:bisse}:
+<<>>=
+pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(4)
+phy <- tree.bisse(pars, max.t=30, x0=0)
+states <- phy$tip.state
+@ 
+% $ % for emacs
+The state-independent diversification rate can be computed as
+<<>>=
+p <- starting.point.bd(phy)
+r <- p[[1]] - p[[2]]
+r
+@ 
+and we can use \code{make.prior.exponential} to make a prior with a
+mean of twice this rate as
+<<>>=
+prior <- make.prior.exponential(1/(2*r))
+@ 
+%
+Note that R's parametrisation of the exponential distribution (which
+diversitree uses) uses the rate of an exponential distribution, not
+the mean, which is why we take $1/\mathrm{mean}$.
+%
+The definition of \code{make.prior.exponential} is
+<<>>=
+make.prior.exponential
+@ 
+%
+This is functional programming; the function
+\code{make.prior.exponential} takes an argument \code{r}, and
+\emph{returns a function} which takes an argument \code{pars}.  This
+returned function (which we saved as \code{prior} above) uses its
+argument \code{pars} along with the previously specified rate \code{r}
+to compute the likelihood.
+
+The rate passed to \code{make.prior.exponential} need not be a scalar;
+it can also be the same length as \code{prior} (it could be other
+lengths, but I would not do this as results could be surprising).  For
+example, suppose that we feel that the character transition rate
+parameters $q_{01}$ and $q_{10}$ (elements 5 and 6 in \code{pars})
+should be lower than the speciation and extinction rates, with a mean
+of $r/4$, rather than $2r$.  We can make a prior function that
+reflects this.  First, make a vector of means where the first four
+elements ($\lambda_0$, $\lambda_1$, $\mu_0$, and $\mu_1$) have mean
+$2r$ and the second two elements have mean $r/4$;
+<<>>=
+prior.means <- rep(c(2*r, r/4), c(4, 2))
+prior.means
+@ 
+then pass \code{1/prior.means} to \code{make.prior.exponential}:
+<<>>=
+prior.lowq <- make.prior.exponential(1/prior.means)
+@ 
+
+Other distributions can be used, though you will have to write your
+own prior functions.  For example, to use a uniform distribution on
+[min,max], we can use R's \code{dunif} to compute the log probability
+density of some parameters.  The format is:
+<<eval=FALSE>>=
+dunif(parameters, min, max, log=TRUE)
+@ 
+%
+(demonstration only --- this will not run).  We can make a generator
+function for a prior distribution where the first four parameters are
+exponentially distributed and the last two are uniformly distributed
+between \code{min} and \code{max}:
+<<>>=
+make.prior.expuniform <- function(r, min, max) {
+  function(pars)
+    sum(dexp(pars[1:4], r, log=TRUE)) + 
+      sum(dunif(pars[5:6], min, max, log=TRUE))
+}
+@ 
+Using this with the usual prior on $\lambda$ and $\mu$, and letting
+the $q$ parameters be uniformly distributed on $[0,0.01]$ we would write:
+<<>>=
+prior.expu <- make.prior.expuniform(1/(2*r), 0, 0.01)
+@ 
+
 \section{Topics not covered}
 
 I have not covered several included models here, but information can
 be found in the online documentation.  
 
 \begin{itemize}
-\item MEDUSA-style ``split'' models.  Following
-  \citep{Alfaro-2009-13410}, these models allow different regions of
-  the tree to have different parameters.  This is implemented for
-  birth-death models (\code{make.bd.split}, which is identical to
-  MEDUSA), BiSSE (\code{?make.bisse.split}), and MuSSE
-  (\code{?make.musse.split}).
+% \item MEDUSA-style ``split'' models.  Following
+%   \citep{Alfaro-2009-13410}, these models allow different regions of
+%   the tree to have different parameters.  This is implemented for
+%   birth-death models (\code{make.bd.split}, which is identical to
+%   MEDUSA), BiSSE (\code{?make.bisse.split}), and MuSSE
+%   (\code{?make.musse.split}).
 \item Time-dependent models.  In these, time is divided into
   ``epochs'', each of which may have different parameters.  This is
   implemented for BiSSE (\code{?make.bisse.td}) and MuSSE
@@ -1572,10 +1720,10 @@ be found in the online documentation.
   possible, where rates are arbitrary functions of time: implemented
   for plain birth-death models (\code{?make.bd.t}), BiSSE
   (\code{?make.bisse.td}) and MuSSE (\code{?make.musse.td}).
-\item Brownian motion.  A very simple-minded Brownian motion
-  likelihood calculation is included.  This allows estimation of the
-  diffusion parameter of a Brownian motion process for the evolution
-  of a single continuous trait (\code{?make.bm}).
+\item Brownian motion and Ornstein-Uhlenbeck.  A very simple-minded
+  Brownian motion likelihood calculation is included.  This allows
+  estimation of the diffusion parameter of a Brownian motion process
+  for the evolution of a single continuous trait (\code{?make.bm}).
 \item Stochastic character mapping.  Currently implemented only for
   Markov models of discrete character evolution (?asr.stoch.mkn).
 \end{itemize}

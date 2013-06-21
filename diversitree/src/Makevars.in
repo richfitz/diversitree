@@ -1,4 +1,11 @@
 ## -*-makefile-*-
-PKG_CPPFLAGS=-I./cvodes/include -Icvodes @PKG_CPPFLAGS@
+
+# GSL configuration based on package 'gsl'
+GSL_CFLAGS = @GSL_CFLAGS@
+GSL_LIBS   = @GSL_LIBS@
+
+RCPP_LDFLAGS=`$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`
+
+PKG_CPPFLAGS=@PKG_CPPFLAGS@ $(GSL_CFLAGS)
 PKG_CFLAGS=@PKG_CFLAGS@
-PKG_LIBS=@PKG_LIBS@ ${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS}
+PKG_LIBS=@PKG_LIBS@ ${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS} ${RCPP_LDFLAGS} $(GSL_LIBS)

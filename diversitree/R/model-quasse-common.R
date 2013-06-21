@@ -31,10 +31,13 @@ stepf.x <- function(x, y0, y1, xmid)
 
 normalise <- function(x) x / sum(x)
 
-starting.point.quasse <- function(tree, states, states.sd=NULL)
-  c(starting.point.bd(tree),
-    diffusion=as.numeric(coef(find.mle(make.bm(tree, states,
-      states.sd), .1))))
+starting.point.quasse <- function(tree, states, states.sd=NULL) {
+  p.bd <- starting.point.bd(tree)
+
+  lik.bm <- make.bm(tree, states, states.sd,
+                    control=list(method="pruning", backend="C"))
+  c(p.bd, diffusion=as.numeric(coef(find.mle(lik.bm, .1))))
+}
 
 load.wisdom <- function(file="wisdom") {
   w <- paste(readLines(file), collapse="\n")

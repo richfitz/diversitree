@@ -1,0 +1,36 @@
+\newif\ifplain\plainfalse
+\DeclareOption{plain}{\plaintrue}
+\ProcessOptions\relax
+
+\RequirePackage{fancyvrb}
+\RequirePackage{xcolor}
+\RequirePackage{relsize}
+
+\ifplain
+% 1. Schunk
+\newenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}} 
+% 2. Sinput
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{fontshape=sl,xleftmargin=1em,%
+frame=none,baselinestretch=1,fontsize=\relsize{-.5}}
+% 3. Soutput
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=1em,%
+frame=none,baselinestretch=1,fontsize=\relsize{-.5}}
+% 4. Scode
+\DefineVerbatimEnvironment{Scode}{Verbatim}{fontshape=sl}
+\else
+\definecolor{darkblue}{rgb}{.2,.2,.4}
+\definecolor{lgray}{rgb}{.33,.33,.33}
+% 1. Schunk
+\newenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}} 
+% 2. Sinput
+\DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em,fontshape=sl,frame=leftline,framerule=1.5px,gobble=2,framesep=1.5em,rulecolor=\color{lgray}}
+% 3. Soutput
+\DefineVerbatimEnvironment{Soutput}{Verbatim} {xleftmargin=2em,formatcom=\color{darkblue},frame=leftline,framerule=1.5px,framesep=1.5em,}
+% 4. Scode
+\DefineVerbatimEnvironment{Scode}{Verbatim}{xleftmargin=2em}
+\fi
+
+\newcommand{\showfile}[1]{\VerbatimInput[frame=single,framerule=1px,xleftmargin=1.5em,fontsize=\relsize{-1}]{#1}}
+\fvset{listparameters={\setlength{\topsep}{0pt}}}
+
+\providecommand{\code}{\texttt}

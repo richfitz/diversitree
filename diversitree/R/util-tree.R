@@ -12,6 +12,50 @@ descendants <- function(node, edge) {
   unlist(ans)
 }
 
+descendants.C <- function(node, edge, n.tip) {
+  storage.mode(edge) <- "integer"
+  storage.mode(node) <- "integer"
+  storage.mode(n.tip) <- "integer"
+  .Call("r_descendants", node, edge, n.tip, PACKAGE="diversitree")
+}
+
+descendants.flag.C <- function(node, edge, n.tip) {
+  storage.mode(edge) <- "integer"
+  storage.mode(node) <- "integer"
+  storage.mode(n.tip) <- "integer"
+  .Call("r_descendants_flag", node, edge, n.tip, PACKAGE="diversitree")
+}
+
+descendants.idx.C <- function(node, edge, n.tip) {
+  storage.mode(edge) <- "integer"
+  storage.mode(node) <- "integer"
+  storage.mode(n.tip) <- "integer"
+  .Call("r_descendants_idx", node, edge, n.tip, PACKAGE="diversitree")
+}
+
+get.children <- function(edge, n.tip) {
+  ## To construct the children vector, this is what I used to do:
+  ##   lapply(idx[!is.tip], function(x) edge[edge[,1] == x,2])
+  ## But this is slow for large trees.  This is faster:
+  ## children <- split(edge[,2], edge[,1])
+  ## Surprisingly, most of the time is in coercing edge[,1] into a
+  ## factor.
+  x <- as.integer(edge[,1])
+  levels <- as.integer((n.tip+1):max(edge[,1]))
+  f <- match(x, levels)
+  levels(f) <- as.character(levels)
+  class(f) <- "factor"
+  children <- split(edge[,2], f)
+  names(children) <- NULL
+
+  ## In most cases, this will have been checked by check.tree()
+  ## This is currently the time sink here.
+  if ( !all(unlist(lapply(children, length)) == 2) )
+    stop("Multifircations/unbranched nodes in tree - best get rid of them")
+
+  rbind(matrix(NA, n.tip, 2), t(matrix(unlist(children), 2)))
+}
+
 ancestors <- function(phy, i=seq_along(phy$tip.label)) {
   anc <- i
   edge <- phy$edge
@@ -68,4 +112,31 @@ branching.depth <- function(len, children, order, tips) {
   for ( i in order )
     depth[i] <- depth[children[i,1]] + len[children[i,1]]
   depth
+}
+
+get.descendants <- function(node, tree, tips.only=FALSE,
+                            edge.index=FALSE) {
+  n.tip <- length(tree$tip.label)
+  if ( length(node) != 1 )
+    stop("'node' must be scalar")
+  if ( is.character(node) ) {
+    node <- match(node, tree$node.label) + n.tip
+    if ( is.na(node) )
+      stop(sprintf("Node '%s' not found in tree"), node)
+  } else {
+    node <- check.integer(node)
+    if ( node >= 1 && node < tree$Nnode ) # on 1..(n.node), probably
+      node <- node + n.tip
+    else if ( !(node > n.tip && node <= n.tip + tree$Nnode) )
+      stop("Invalid node number")
+  }
+    
+  edge <- tree$edge
+
+  desc <- descendants.C(node, edge, n.tip)
+  if ( tips.only )
+    desc <- desc[desc <= n.tip]
+  if ( edge.index )
+    desc <- match(desc, edge[,2])
+  desc
 }

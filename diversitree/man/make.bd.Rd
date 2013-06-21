@@ -21,7 +21,8 @@ starting.point.bd(tree, yule=FALSE)
 }
 
 \arguments{
-  \item{tree}{A phylogenetic tree, in \code{ape} \dQuote{phylo} format.}
+  \item{tree}{An ultrametric bifurcating phylogenetic tree, in
+    \code{ape} \dQuote{phylo} format.}
   
   \item{times}{Vector of branching times, as returned by
     \code{branching.times}.  You don't need to use this unless you know
@@ -130,9 +131,9 @@ coef(fit.nosurv) # higher lambda than before
 ## Look at the marginal likelihoods, computed through MCMC (see
 ## \link{mcmc} for details, and increase nsteps for smoother
 ## plots [takes longer]).
-samples <- mcmc(lik, fit$par, nsteps=2000,
+samples <- mcmc(lik, fit$par, nsteps=500,
                 lower=c(-Inf, -Inf), upper=c(Inf, Inf), w=c(.1, .1),
-                fail.value=-Inf, print.every=200)
+                fail.value=-Inf, print.every=100)
 samples$r <- with(samples, lambda - mu)
 
 ## Plot the profiles (see \link{profiles.plot}).
@@ -152,17 +153,9 @@ lik2 <- make.bd(phy2, sampling.f=20/25)
 fit2 <- find.mle(lik2, c(.1, .03))
 
 ## The ODE based version gives comparable results.  However, it is
-## about 12x slower.
+## about 55x slower.
 lik.ode <- make.bd(phy, control=list(method="ode"))
 all.equal(lik.ode(coef(fit)), lik(coef(fit)), tolerance=2e-7)
-
-## The CVODES-based ODE version is about 4.5 slower
-if ( check.cvodes(FALSE) ) {
-  lik.ode <- make.bd(phy, control=list(method="ode", backend="CVODES"))
-  all.equal(lik.ode(coef(fit)), lik(coef(fit)), tolerance=3e-7)
-}
-
-%% TODO: Example of unresolved clades
 }
 
 \references{

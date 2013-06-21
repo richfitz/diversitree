@@ -1,0 +1,130 @@
+%% Manuscript class; put generally useful things in here.
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]
+\ProvidesPackage{ms}[2008/07/28 v1 Rich's manuscript definitions]
+\typeout{Package: ms - common definitions}
+
+%% Set up conditionals:
+\newif\iffinal\finalfalse
+
+%% Process options
+\DeclareOption{final}{
+  \finaltrue
+}
+\ProcessOptions\relax
+
+\RequirePackage{setspace}
+\doublespacing
+
+%% Line numbering
+\RequirePackage{lineno}
+%\linenumbers
+\renewcommand\linenumberfont{\normalfont\tiny}
+
+% Fix for the amsmath equation environments:
+% http://phaseportrait.blogspot.com/2007/08/lineno-and-amsmath-compatibility.html
+\newcommand*\patchAmsMathEnvironmentForLineno[1]{%
+  \expandafter\let\csname old#1\expandafter\endcsname\csname #1\endcsname
+  \expandafter\let\csname oldend#1\expandafter\endcsname\csname end#1\endcsname
+  \renewenvironment{#1}%
+     {\linenomath\csname old#1\endcsname}%
+     {\csname oldend#1\endcsname\endlinenomath}}%
+\newcommand*\patchBothAmsMathEnvironmentsForLineno[1]{%
+  \patchAmsMathEnvironmentForLineno{#1}%
+  \patchAmsMathEnvironmentForLineno{#1*}}%
+\AtBeginDocument{%
+\patchBothAmsMathEnvironmentsForLineno{equation}%
+\patchBothAmsMathEnvironmentsForLineno{align}%
+\patchBothAmsMathEnvironmentsForLineno{flalign}%
+\patchBothAmsMathEnvironmentsForLineno{alignat}%
+\patchBothAmsMathEnvironmentsForLineno{gather}%
+\patchBothAmsMathEnvironmentsForLineno{multline}%
+}
+
+% One float-per-page, following
+%   http://www.tex.ac.uk/cgi-bin/texfaq2html?label=floatpages+vertposfp
+\renewcommand\floatpagefraction{.001}
+\makeatletter
+\setlength\@fpsep{\textheight}
+\makeatother
+
+%% Reference marking
+\usepackage{color}
+\definecolor{navy}{rgb}{0,0,0.4}
+
+% \iffinal
+\newcommand{\email}[1]{\texttt{#1}}
+\newcommand{\url}[1]{\texttt{#1}}
+% \else
+% \usepackage[colorlinks,citecolor=navy,linkcolor=navy,urlcolor=navy]{hyperref}
+% \newcommand{\email}[1]{\href{mailto:#1}{\texttt{#1}}}
+% \fi
+
+% Float figures to the end.
+\iffinal
+\usepackage[nomarkers,notablist,tablesfirst]{endfloat}
+\renewcommand\listfigurename{Figure Captions}
+%\renewcommand\listtablename{Table Captions}
+% OR:
+% \usepackage[nomarkers,nofiglist,notablist]{endfloat}
+\else
+\usepackage[nomarkers,nofiglist,notablist]{endfloat}
+\fi
+
+\iffinal
+% \raggedright
+% \parindent=20pt
+\fi
+
+\iffinal
+% Titles for Systematic biology:
+% \usepackage{titlesec}
+% \titleformat*{\section}{\large\scshape}
+% \titleformat*{\subsection}{\itshape}
+% \titleformat{\subsubsection}[runin]
+% {\normalfont\itshape}
+% {}{0pt}{}[. ---]
+% %\titleformat{\subsubsection}[runin]{\itshape}
+% \setcounter{secnumdepth}{0}
+\fi
+
+% Ugly fonts
+\iffinal
+\usepackage{indentfirst}
+%\usepackage{times}
+\fi
+
+% Things for the title pages
+\def\title{\gdef\mstitle}
+\def\author{\gdef\theauthor}
+\def\affiliation{\gdef\theaffiliation}
+\def\runninghead{\gdef\therunninghead}
+\def\keywords{\gdef\thekeywords}
+\def\version{\gdef\theversion}
+
+\newcommand{\mstitlepage}{
+%\begin{titlepage}
+%\singlespacing
+\paragraph{Running head:} \MakeUppercase{\therunninghead}
+\parindent=0pt
+%\maketitle
+\begin{center}%
+  {\LARGE \mstitle \par}%
+  \vskip 3em%
+  {\large
+    \lineskip .75em%
+    \begin{tabular}[t]{c}%
+      \theauthor
+    \end{tabular}\par}%
+  \vskip 1.5em%
+\end{center}\par
+
+\theaffiliation
+%\end{titlepage}
+\doublespacing
+\clearpage
+}
+
+% Abstract environment that does not decrease the font size.
+\renewenvironment{abstract}{
+  \section*{Abstract}
+}{}

@@ -14,10 +14,7 @@ sim.character <- function(tree, pars, x0=0, model="bm", br=NULL) {
   n.tip <- length(tree$tip.label)
   root <- n.tip + 1
   is.tip <- idx <= n.tip
-  children <- lapply(idx[!is.tip], function(x)
-                     edge[edge[,1] == x, 2])
-  children <- rbind(matrix(NA, n.tip, 2),
-                    t(matrix(unlist(children), 2)))
+  children <- get.children(edge, n.tip)
   order <- rev(get.ordering(children, is.tip, root))
   len <- tree$edge.length[match(idx, edge[, 2])]
 
@@ -49,7 +46,7 @@ make.br.bm <- function(pars) {
 }
 
 ## OU: three parameters -- s2, alpha, theta
-make.br.bm <- function(pars) {
+make.br.ou <- function(pars) {
   s2    <- pars[1]
   alpha <- pars[2]
   theta <- pars[3]

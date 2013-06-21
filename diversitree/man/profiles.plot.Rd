@@ -7,7 +7,8 @@
 \usage{
 profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50,
               opacity=.5, xlab="Parameter estimate",
-              ylab="Probability density", legend.pos=NULL, ...)
+              ylab="Probability density", legend.pos=NULL,
+              with.bar=TRUE, ...)
 }
 
 \arguments{
@@ -34,6 +35,9 @@ profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50,
   \item{legend.pos}{String to pass to \code{\link{legend}} to position
     the legend (for automatic legend building based on the names of
     \code{y}).}
+
+  \item{with.bar}{Should a bar be included that shows the CI ranges
+    below the plot (in addition to the shading)?}
 
   \item{...}{Additional arguments passed through to \code{\link{plot}}.}
 }
