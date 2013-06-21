@@ -4,7 +4,7 @@
 GSL_CFLAGS = @GSL_CFLAGS@
 GSL_LIBS   = @GSL_LIBS@
 
-RCPP_LDFLAGS:=`$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`
+RCPP_LDFLAGS=`$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`
 
 PKG_CPPFLAGS=@PKG_CPPFLAGS@ $(GSL_CFLAGS)
 PKG_CFLAGS=@PKG_CFLAGS@

@@ -1,6 +1,6 @@
 Package: diversitree
 Title: diversitree: comparative phylogenetic analyses of diversification
-Version: 0.9-5
+Version: 0.9-6
 Date: 2013-06-13
 Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE and
   ClaSSE by Emma E. Goldberg <eeg@uic.edu>, and BiSSE-ness by Karen
@@ -24,5 +24,5 @@ Description: Contains a number of comparative phylogenetic methods,
   Other included methods include Markov models of discrete and
   continuous trait evolution and constant rate speciation and
   extinction.
-License: GPL (>=2)
+License: GPL (>= 2)
 URL: http://www.zoology.ubc.ca/prog/diversitree

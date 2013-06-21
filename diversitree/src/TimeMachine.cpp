@@ -114,7 +114,7 @@ void TimeMachine::setup_q(size_t k_) {
     // Space to indicate when rows/columns(?) of Q are constant
     const_q.resize(k, true);
     std::vector<TimeMachineFunction>::iterator f = functions.begin();
-    advance(f, idx_q_f);
+    std::advance(f, idx_q_f);
     for (size_t i = 0; i < k; i++) {
       for (size_t j = 0; j < k - 1; j++) {
 	const_q[i] = const_q[i] && f->is_constant;
