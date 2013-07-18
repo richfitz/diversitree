@@ -46,7 +46,7 @@ make.cache.mkn.multitrait <- function(tree, states, depth,
   k <- 2^n.trait
   
   if ( is.null(control$method) )
-    control$method <- if (n.trait > 3) "ode" else "exp"
+    control$method <- if (n.trait > 3) "ode" else "pij"
 
   states <- check.states.musse.multitrait(tree, states, strict=strict,
                                           strict.vals=0:1)
