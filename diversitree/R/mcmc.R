@@ -35,7 +35,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     save.type <- match.arg(tolower(save.type), c("csv", "rds"))
     save.fun <- switch(save.type,
                        rds=saveRDS,
-                       csv=function(x) write.csv(x, row.names=FALSE))
+                       csv=function(x, f) write.csv(x, f, row.names=FALSE))
     save.file.bak <- paste(save.file, ".bak", sep="")
   }
 
@@ -120,7 +120,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
         ## fails while saving.
         if ( file.exists(save.file) )
           ok <- file.rename(save.file, save.file.bak)
-        ok <- try(save.fun(clean.hist(hist.pars[j,], hist.prob[j]),
+        ok <- try(save.fun(clean.hist(hist.pars[j,,drop=FALSE], hist.prob[j]),
                            save.file))
         if ( inherits(ok, "try-error") )
           warning("Error while writing progress file (continuing)",
