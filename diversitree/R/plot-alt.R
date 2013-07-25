@@ -14,6 +14,7 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
                         direction="rightwards", lab4ut="horizontal",
                         tip.color="black", ...,
                         n.taxa=NULL,
+                        clade.lwd=1,
                         clade.color=NULL, clade.fill=NULL, pad=0) {
   n.tip <- length(x$tip.label)
   ## Difference: ape has warning and returns NULL - I have error.
@@ -61,19 +62,19 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
   ## This is not perfect, but should cover most cases.
   if ( !is.null(x$n.taxa) ) {
     i <- match(seq_len(n.tip), x$edge[,2])
-    if ( is.null(clade.color) )
-      clade.color <- edge.color[i]
-    else if ( length(clade.color) == 1 )
-      clade.color <- rep(clade.color, n.tip)
-    else if ( length(clade.color) != n.tip )
-      stop("Not yet handled")
+    rep.clade <- function(x, edge) {
+      if (is.null(x))
+        x <- edge
+      else if (length(x) == 1)
+        x <- rep(x, n.tip)
+      else if (length(x) != n.tip)
+        stop("Not yet handled")
+      x
+    }
 
-    if ( is.null(clade.fill) )
-      clade.fill <- edge.color[i]
-    else if ( length(clade.fill) == 1 )
-      clade.fill <- rep(clade.fill, n.tip)
-    else if ( length(clade.fill) != n.tip )
-      stop("Not yet handled")
+    clade.color <- rep.clade(clade.color, edge.color[i])
+    clade.fill  <- rep.clade(clade.fill,  edge.color[i])
+    clade.lwd   <- rep.clade(clade.lwd,   edge.width[i])
 
     ## Supress drawing of the terminals that have clades.
     edge.color[match(which(x$n.taxa > 1), x$edge[,2])] <- NA
@@ -108,7 +109,7 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
   pp.segments(x, xy.seg, edge.color, edge.width, edge.lty)
 
   if ( !is.null(x$n.taxa) && any(x$n.taxa > 1) )
-    pp.clades(x, xy, xy.seg, clade.color, clade.fill)
+    pp.clades(x, xy, xy.seg, clade.color, clade.fill, clade.lwd)
   if ( show.tip.label ) {
     if ( !underscore )
       x$tip.label <- gsub("_", " ", x$tip.label)
@@ -272,7 +273,7 @@ pp.segments.fan <- function(phy, xy.seg, col, lwd, lty, np=1000) {
          arcs(theta0, theta1, r1, col[i], lty[i], lwd[i], np))
 }  
 
-pp.clades.phylogram <- function(phy, xy, xy.seg, border, fill) {
+pp.clades.phylogram <- function(phy, xy, xy.seg, border, fill, lwd) {
   n <- phy$n.spp
   i <- phy$n.taxa > 1
   n.taxa <- phy$n.taxa[i]
@@ -289,10 +290,10 @@ pp.clades.phylogram <- function(phy, xy, xy.seg, border, fill) {
 
   polygon(rbind(x0, x1, x1, x0, NA), 
           rbind(ym, y0, y1, ym, NA),
-          border=border[i], col=fill[i])
+          border=border[i], col=fill[i], lwd=lwd[i])
 }
 
-pp.clades.fan <- function(phy, xy, xy.seg, border, fill) {
+pp.clades.fan <- function(phy, xy, xy.seg, border, fill, lwd) {
   n <- phy$n.spp
   i <- phy$n.taxa > 1
   n.taxa <- phy$n.taxa[i]
@@ -305,7 +306,7 @@ pp.clades.fan <- function(phy, xy, xy.seg, border, fill) {
   t0 <- tmp$theta0 - dt
   t1 <- tmp$theta0 + dt
 
-  sectors(t0, t1, r0, r1, border=border[i], col=fill[i])
+  sectors(t0, t1, r0, r1, border=border[i], col=fill[i], lwd=lwd)
 }
 
 pp.tiplabel.phylogram <- function(phy, xy, label.offset, adj, cex,
