@@ -1,12 +1,14 @@
 ## TODO: I still do not deal with the case where there is only a
 ## single unique y value very nicely.  I should probably draw a delta
 ## function?
-profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
+profiles.plot <- function(y, col.line, col.fill,
+                          xlim=NULL, ymax=NULL,
                           n.br=50, opacity=.5,
                           xlab="Parameter estimate",
                           ylab="Probability density",
                           legend.pos=NULL,
                           with.bar=TRUE,
+                          col.bg=NA, lwd=1, lines.on.top=TRUE,
                           ...) {
   if ( !is.data.frame(y) && is.matrix(y) )
     y <- as.data.frame(y)
@@ -40,11 +42,20 @@ profiles.plot <- function(y, col.line, col.fill, xlim=NULL, ymax=NULL,
   
   plot(NA, xlim=xlim, ylim=ylim, type="n", yaxs="i", xlab=xlab,
        ylab=ylab, ...)
-  for ( i in seq_along(y) )
-    add.profile.shading(hh[[i]], ci[[i]], col.fill[i])
-  for ( i in seq_along(y) )
-    add.profile.outline(hh[[i]], col.line[i])
-
+  if (!is.na(col.bg))
+    for (i in seq_along(y))
+      add.profile.shading(hh[[i]], ci[[i]], col.bg)
+  if (lines.on.top) {
+    for (i in seq_along(y))
+      add.profile.shading(hh[[i]], ci[[i]], col.fill[i])
+    for (i in seq_along(y))
+      add.profile.outline(hh[[i]], col.line[i], lwd=lwd)
+  } else {
+    for (i in seq_along(y)) {
+      add.profile.shading(hh[[i]], ci[[i]], col.fill[i])
+      add.profile.outline(hh[[i]], col.line[i], lwd=lwd)
+    }
+  }
   if ( with.bar ) {
     z <- seq(0, 1, length.out=length(y) + 2)[-1] * par("usr")[3]
     for ( i in seq_along(y) )
@@ -65,14 +76,14 @@ add.profile.shading <- function(h, ci, col) {
   ys <- c(0, rep(h$density[c(j, i)], each=2), 0)
   polygon(xs, ys, col=col, border=NA)
 }
-add.profile.outline <- function(h, col, vertical=FALSE) {
+add.profile.outline <- function(h, col, vertical=FALSE, ...) {
   dx <- diff(h$mids[1:2])
-  if ( vertical )
+  if (vertical)
     lines(h, freq=FALSE, col=col)
   else {
     xx <- rep(with(h, c(mids-dx/2, mids[length(mids)]+dx/2)), each=2)
     yy <- c(0, rep(h$density, each=2), 0)
-    lines(xx, yy, col=col)
+    lines(xx, yy, col=col, ...)
   }
 }
 

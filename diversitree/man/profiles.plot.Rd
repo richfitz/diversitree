@@ -8,7 +8,7 @@
 profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50,
               opacity=.5, xlab="Parameter estimate",
               ylab="Probability density", legend.pos=NULL,
-              with.bar=TRUE, ...)
+              with.bar=TRUE, col.bg=NA, lwd=1, lines.on.top=TRUE, ...)
 }
 
 \arguments{
@@ -38,6 +38,13 @@ profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50,
 
   \item{with.bar}{Should a bar be included that shows the CI ranges
     below the plot (in addition to the shading)?}
+
+  \item{col.bg}{Colour to draw behind the profiles (set to "white" for
+    nicer transparency on non-white backgrounds)}
+
+  \item{lwd}{Width of lines around the profiles}
+
+  \item{lines.on.top}{Draw lines around profiles on top of all profiles?}
 
   \item{...}{Additional arguments passed through to \code{\link{plot}}.}
 }
