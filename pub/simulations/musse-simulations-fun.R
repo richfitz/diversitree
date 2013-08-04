@@ -66,8 +66,7 @@ fit.ml.one <- function(x) {
 
   ## Constrain lambdas in turn, and fit constrained models:
   lik0 <- make.musse.multitrait(x, states, depth=c(1, 0, 0),
-                                strict=FALSE, # daring...
-                                control=list(backend="CVODES"))
+                                strict=FALSE) # daring...
   p0 <- starting.point.musse.multitrait(x, lik0)
 
   formulae <- lapply(sprintf("lambda%s ~ 0", LETTERS[1:n.trait]),
@@ -114,8 +113,7 @@ fit.mcmc.one <- function(x, print.every=100, incorrect=FALSE) {
 
   ## Constrain lambdas in turn, and fit constrained models:
   lik <- make.musse.multitrait(x, states, depth=c(1, 0, 0),
-                               strict=FALSE, # daring...
-                               control=list(backend="CVODES"))
+                               strict=FALSE) # daring...
   p <- starting.point.musse.multitrait(x, lik)
   prior <- make.prior.multitrait(x, lik)
 
