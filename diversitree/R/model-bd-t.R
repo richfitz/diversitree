@@ -17,7 +17,7 @@ make.bd.t <- function(tree, functions, sampling.f=NULL,
 
 make.cache.bd.t <- function(tree, functions, unresolved, sampling.f,
                             truncate, spline.data) {
-  cache <- make.cache.bd.ode(tree, unresolved, sampling.f)
+  cache <- make.cache.bd.ode(tree, sampling.f, unresolved)
   if ( !is.null(cache$unresolved) )
     stop("Cannot do time-varying birth-death with unresolved clades")
   cache$info$ml.default <- "subplex"
