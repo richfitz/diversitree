@@ -5,11 +5,10 @@
 ## be repetition.
 ## col.bar and col.lab: vectors along sort(unique(lab)) with colours
 ## for the bar and label.
-trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
-                       class=NULL, type="f", w=1/50,
-                       legend=length(cols) > 1, cex.lab=.5,
-                       font.lab=3, cex.legend=.75, margin=1/4,
-                       check=TRUE, quiet=FALSE, ...) {
+trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
+                       type="f", w=1/50, legend=length(cols) > 1, cex.lab=.5,
+                       font.lab=3, cex.legend=.75, margin=1/4, check=TRUE,
+                       quiet=FALSE, ...) {
   if ( type != "f" )
     stop("type != f not yet implemented")
   if ( !is.null(class) && length(class) != length(tree$tip.label) )
@@ -35,6 +34,10 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
       stop("'cols' must be named")
     dat <- dat[names(cols)]
   }
+
+  if ( is.null(str) ) {
+      str <- lapply(cols, function(x) as.character(0 : (length(x) - 1)))
+  }
   
   dat <- dat[tree$tip.label,,drop=FALSE]
 
@@ -58,15 +61,26 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=0:1,
   dt <- diff(sort(theta))[1]/2
 
   for ( i in seq_along(cols) ) {
+    idx <- dat[[names(dat)[i]]]
+    if (any(idx == 0, na.rm=TRUE))
+      idx <- idx + 1
     filled.arcs(theta - dt, theta + dt, max(xy$x) + i * w, w,
-                cols[[i]][dat[[i]]+1])
+                cols[[i]][idx])
   }
 
   if ( legend ) {
-    leg <- legend("topright", legend=rep(str, each=n), ncol=2, bty="n",
-                  fill=c(do.call(rbind, cols)), cex=cex.legend)
-    text(leg$rect$left, leg$text$y[1:n], sprintf("%s:", lab), adj=1,
-         cex=cex.legend)
+    for ( i in seq_along(cols) ) {
+      c.i <- cols[[i]]
+      leg.txt <- str[[i]]
+      leg.arg <- list(legend=leg.txt, title=lab[i], title.adj=0, bty="n",
+                      fill=c.i, cex=cex.legend, horiz=TRUE)
+
+      ifelse (i == 1, 
+              leg <- do.call("legend", c("topleft", leg.arg)),
+              leg <- do.call("legend", c(leg$rect$left, leg$rect$top -
+                                         leg$rect$h, leg.arg))
+                     )
+    }
   }
   invisible(plt)
 }
