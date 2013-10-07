@@ -9,8 +9,10 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
                        type="f", w=1/50, legend=length(cols) > 1, cex.lab=.5,
                        font.lab=3, cex.legend=.75, margin=1/4, check=TRUE,
                        quiet=FALSE, ...) {
-  if ( type != "f" )
-    stop("type != f not yet implemented")
+  if ( !(type %in% c("f", "p")) )
+    stop("Only types 'f'an and 'p'hylogram are available")
+  if ( type == "p" & !is.null(class) )
+    stop("Currently can only use 'class' with type = 'f'")
   if ( !is.null(class) && length(class) != length(tree$tip.label) )
     stop("'class' must be a vector along tree$tip.label")
   n <- length(cols)
@@ -36,7 +38,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
   }
 
   if ( is.null(str) ) {
-      str <- lapply(cols, function(x) as.character(0 : (length(x) - 1)))
+      str <- apply(dat, 2, function(x) as.character(sort(unique(x))))
   }
   
   dat <- dat[tree$tip.label,,drop=FALSE]
@@ -45,7 +47,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
   t <- max(branching.times(tree))
   w <- w * t
   if ( is.null(class) ) {
-    plt <- plot2.phylo(tree, type="f", show.tip.label=TRUE,
+    plt <- plot2.phylo(tree, type=type, show.tip.label=TRUE,
                        label.offset=(n+2)*w, cex=cex.lab, ...)
   } else {
     plt <- plot2.phylo(tree, type="f", show.tip.label=FALSE,
@@ -56,16 +58,31 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
                     check=check, quiet=quiet)
   }
 
-  xy <- plt$xy
-  theta <- xy$theta[seq_along(tree$tip.label)]
-  dt <- diff(sort(theta))[1]/2
+  if (type == "f") {
+    xy <- plt$xy
+    theta <- xy$theta[seq_along(tree$tip.label)]
+    dt <- diff(sort(theta))[1]/2
 
-  for ( i in seq_along(cols) ) {
-    idx <- dat[[names(dat)[i]]]
-    if (any(idx == 0, na.rm=TRUE))
-      idx <- idx + 1
-    filled.arcs(theta - dt, theta + dt, max(xy$x) + i * w, w,
-                cols[[i]][idx])
+    for ( i in seq_along(cols) ) {
+      idx <- dat[[names(dat)[i]]]
+      if (any(idx == 0, na.rm=TRUE))
+        idx <- idx + 1
+      filled.arcs(theta - dt, theta + dt, max(xy$x) + i * w, w,
+                  cols[[i]][idx])
+    }
+  } else {
+    xy <- plt$xy[seq_along(tree$tip.label),]
+    dy <- 0.5
+    for ( i in seq_along(cols) ) {
+      idx <- dat[[names(dat)[i]]]
+      if (any(idx == 0, na.rm=TRUE))
+        idx <- idx + 1
+      xleft <- xy[1,1] + w * i
+      xright <- xleft + w
+      ybottom <- xy[,2] - dy
+      ytop <- ybottom + dy * 2
+      rect(xleft, ybottom, xright, ytop, col=cols[[i]][idx], border=NA)
+    }
   }
 
   if ( legend ) {

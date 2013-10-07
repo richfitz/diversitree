@@ -5,7 +5,7 @@
 
 \description{Plot a phylogeny and label the tips with traits.
   This function is experimental, and may change soon.  Currently it is
-  limited to radial trees and discrete-valued traits.}
+  limited to discrete-valued traits and two basic tree shapes.}
 
 \usage{
 trait.plot(tree, dat, cols, lab=names(cols), str=NULL, 
@@ -40,7 +40,8 @@ trait.plot(tree, dat, cols, lab=names(cols), str=NULL,
     ensure that such classifications are not polyphyletic.}
 
   \item{type}{Plot type (same as \code{type} in \code{?plot.phylo}).
-    Currently only \code{f} (fan) is implemented.}
+    Currently only \code{f} (fan) is fully implemented, and \code{p}
+    (rightwards phylogram) is implemented without \code{class}.}
 
   \item{w}{Width of the trait plot, as a fraction of the tree depth.}
 
@@ -105,6 +106,10 @@ trait.plot(phy, phy$tip.state,
            cols=list(char1=c("pink", "red"), char2=c("lightblue",
            "blue", "purple")), str=list(c("A", "B"), c("X", "Y", "Z"))
            )
+## Same tree, not radial.
+trait.plot(phy, phy$tip.state, type="p",
+           cols=list(char1=c("pink", "red"), char2=c("lightblue",
+           "blue", "purple")))
 }
 
 \keyword{hplot}
