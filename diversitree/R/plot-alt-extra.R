@@ -53,7 +53,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
     plt <- plot2.phylo(tree, type="f", show.tip.label=FALSE,
                        label.offset=t*margin, ...)
     group.label.tip(plt, class, "black", "black", lwd=1.5,
-                    offset.bar=w*4, offset.lab=w*5,
+                    offset.bar=w*(n+2), offset.lab=w*(n+3),
                     cex=cex.lab, font=font.lab,
                     check=check, quiet=quiet)
   }
