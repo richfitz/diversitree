@@ -97,19 +97,21 @@ trait.plot(phy, phy$tip.state,
            cols=list(A=c("pink", "red"), B=c("lightblue", "blue")),
            class=class, font=1, cex.lab=1, cex.legend=1)
 
-## An example with states on 0:1 and 1:3, and named.
-phy <- tree.bisse(c(.1, 0.1, 0, 0, .01, 0.1), max.taxa=100, x0=0)
+## Add another state, showing values 1:3, names, and trait ordering.
 tmp <- sim.character(phy, c(-.1, .05, .05, .05, -.1, .05, .05, 0.05, -.1), 
                      model="mkn", x0=1)
-phy$tip.state <- data.frame(char1=phy$tip.state, char2=tmp)
+phy$tip.state <- data.frame(phy$tip.state, C=tmp)
 trait.plot(phy, phy$tip.state,
-           cols=list(char1=c("pink", "red"), char2=c("lightblue",
-           "blue", "purple")), str=list(c("A", "B"), c("X", "Y", "Z"))
-           )
-## Same tree, not radial.
-trait.plot(phy, phy$tip.state, type="p",
-           cols=list(char1=c("pink", "red"), char2=c("lightblue",
-           "blue", "purple")))
+           cols=list(C=c("palegreen", "green3", "darkgreen"),
+                     A=c("pink", "red"), B=c("lightblue", "blue")),
+           lab=c("Animal", "Vegetable", "Mineral"),
+           str=list(c("crane", "toad", "snail"), c("kale", "carrot"), 
+                    c("calcite", "beryl")))
+
+## Rectangular/phylogram plot. (ladderize to make space for legend)
+trait.plot(ladderize(phy, right=FALSE), phy$tip.state, type="p",
+           cols=list(A=c("pink", "red"), B=c("lightblue", "blue"),
+                     C=c("palegreen", "green3", "darkgreen")))
 }
 
 \keyword{hplot}
