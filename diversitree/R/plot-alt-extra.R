@@ -38,7 +38,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
   }
 
   if ( is.null(str) ) {
-      str <- apply(dat, 2, function(x) as.character(sort(unique(x))))
+      str <- lapply(dat, function(x) as.character(sort(unique(x))))
   }
   
   dat <- dat[tree$tip.label,,drop=FALSE]
