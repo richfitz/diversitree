@@ -1,18 +1,20 @@
 \name{make.bm}
 \alias{make.bm}
 \alias{make.ou}
+\alias{make.eb}
 
-\title{Brownian Motion and Ornstein-Uhlenbeck Character Evolution}
+\title{Brownian Motion and Related Models of Character Evolution}
 
 \description{Create a likelihood function for models of simple Brownian
-  Motion or Ornstein-Uhlenbeck (OU) character evolution.  This function
-  creates a likelihood function that can be used in
-  \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
+  Motion (BM), Ornstein-Uhlenbeck (OU), or Early Burst (EB) character
+  evolution.  This function creates a likelihood function that can be
+  used in \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
   inference.}
 
 \usage{
 make.bm(tree, states, states.sd=0, control=list())
 make.ou(tree, states, states.sd=0, control=list())
+make.eb(tree, states, states.sd=0, control=list())
 }
 
 \arguments{
@@ -47,11 +49,16 @@ make.ou(tree, states, states.sd=0, control=list())
   (and stable) R calculator and a fast (but less extensively tested) C
   calculator.  \code{backend="R"} is currently the default.
 
-  The VCV-based \code{make.bm} function is heavily based on
-  \code{fitContinuous} in the \code{geiger} package.
+  The VCV-based functions are heavily based on \code{fitContinuous} in
+  the \code{geiger} package.
 
   For non-ultrametric trees with OU models, computed likelihoods will
   differ because of the different root treatments.
+
+  For the EB model, the parameter intepretation follows geiger; the 'a'
+  parameter is equivalent to -log(g) in Bloomberg et al. 2003; when
+  negative it indicates a decelerating rate of trait evolution over
+  time.  When zero, it reduces to Brownian motion.
 
   % TODO: Describe root treatments!
 }

@@ -244,6 +244,22 @@ double branches_ou(double *vars_in, double len, double *pars,
   return len * alpha + z;
 }
 
+double branches_eb(double *vars_in, double len, double *pars,
+		  double t0, int idx, double *vars_out) {
+  const double m = vars_in[0], v = vars_in[1], z = vars_in[2],
+    sigma2 = pars[0], a = pars[1], tr = pars[2];
+  double s0, s1;
+  if (a != 0) {
+    s1 = tr - t0;
+    s0 = s1 - len;
+    len = (exp(a * s1) - exp(a * s0))/a;
+  }
+  vars_out[0] = m;
+  vars_out[1] = v + sigma2 * len;
+  vars_out[2] = 0.0;
+  return z;
+}
+
 /* Shared between bm and ou */
 void initial_conditions_bm(int neq, double *vars_l, double *vars_r,
 			   double *pars, double t, 
