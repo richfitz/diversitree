@@ -1,7 +1,7 @@
 Package: diversitree
 Title: diversitree: comparative phylogenetic analyses of diversification
-Version: 0.9-6
-Date: 2013-06-13
+Version: 0.9-7
+Date: 2013-10-09
 Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE and
   ClaSSE by Emma E. Goldberg <eeg@uic.edu>, and BiSSE-ness by Karen
   Magnuson-Ford.
@@ -10,7 +10,7 @@ Depends: R (>= 2.10), deSolve (>= 1.7), ape, subplex, methods, Rcpp (>= 0.10.0)
 Suggests: numDeriv, minqa, lubridate
 LinkingTo: Rcpp
 RcppModules: diversitree
-SystemRequirements: fftw3 (>= 3.1.2), gsl (>= 1.12)
+SystemRequirements: fftw3 (>= 3.1.2), gsl (>= 1.15)
 Description: Contains a number of comparative phylogenetic methods,
   mostly focusing on analysing diversification and character
   evolution.  Contains implementations of BiSSE (Binary State

@@ -291,6 +291,13 @@ check.nonnegative <- function(x, msg=NULL) {
     stop(msg)
   x
 }
+check.nonpositive <- function(x, msg=NULL) {
+  if ( is.null(msg) )
+    msg <- "Parameters must be non-positive and finite"
+  if ( any(!is.finite(x)) || any(x > 0)  )
+    stop(msg)
+  x
+}
 
 ## Check that a pointer is not NULL.
 check.ptr <- function(ptr)
