@@ -4,8 +4,8 @@
 \title{Plot a Phylogeny and Traits}
 
 \description{Plot a phylogeny and label the tips with traits.
-  This function is experimental, and may change soon.  Currently it is
-  limited to discrete-valued traits and two basic tree shapes.}
+  This function is experimental, and may change soon.  Currently it can
+  handle discrete-valued traits and two basic tree shapes.}
 
 \usage{
 trait.plot(tree, dat, cols, lab=names(cols), str=NULL, 
@@ -32,16 +32,16 @@ trait.plot(tree, dat, cols, lab=names(cols), str=NULL,
   \item{lab}{Alternative names for the legend (perhaps longer or more
     informative).  Must be in the same order as \code{cols}.}
 
-  \item{str}{Strings used for the states in the legend.  If NULL (the
-    default), states are named sequentially from 0.}
+  \item{str}{Strings used for the states in the legend.  If \code{NULL}
+    (the default), the values in \code{dat} are used.}
 
   \item{class}{A vector along \code{phy$tip.label} giving a higher level
     classification (e.g., genus or family).  No checking is done to
     ensure that such classifications are not polyphyletic.}
 
   \item{type}{Plot type (same as \code{type} in \code{?plot.phylo}).
-    Currently only \code{f} (fan) is fully implemented, and \code{p}
-    (rightwards phylogram) is implemented without \code{class}.}
+    Currently only \code{f} (fan) and \code{p} (rightwards phylogram)
+    are implemented.}
 
   \item{w}{Width of the trait plot, as a fraction of the tree depth.}
 
@@ -108,10 +108,11 @@ trait.plot(phy, phy$tip.state,
            str=list(c("crane", "toad", "snail"), c("kale", "carrot"), 
                     c("calcite", "beryl")))
 
-## Rectangular/phylogram plot. (ladderize to make space for legend)
+## Rectangular/phylogram plot with groups.
 trait.plot(ladderize(phy, right=FALSE), phy$tip.state, type="p",
            cols=list(A=c("pink", "red"), B=c("lightblue", "blue"),
-                     C=c("palegreen", "green3", "darkgreen")))
+                     C=c("palegreen", "green3", "darkgreen")),
+           class=class, font=1, cex.lab=1)
 }
 
 \keyword{hplot}

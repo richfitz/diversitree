@@ -1,5 +1,3 @@
-## TODO: phylogram version.
-
 ## obj: result of plot2.phylo
 ## lab: vector along the tip labels with a "group" level.  There will
 ## be repetition.
@@ -11,8 +9,6 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
                        quiet=FALSE, ...) {
   if ( !(type %in% c("f", "p")) )
     stop("Only types 'f'an and 'p'hylogram are available")
-  if ( type == "p" & !is.null(class) )
-    stop("Currently can only use 'class' with type = 'f'")
   if ( !is.null(class) && length(class) != length(tree$tip.label) )
     stop("'class' must be a vector along tree$tip.label")
   n <- length(cols)
@@ -50,7 +46,7 @@ trait.plot <- function(tree, dat, cols, lab=names(cols), str=NULL, class=NULL,
     plt <- plot2.phylo(tree, type=type, show.tip.label=TRUE,
                        label.offset=(n+2)*w, cex=cex.lab, ...)
   } else {
-    plt <- plot2.phylo(tree, type="f", show.tip.label=FALSE,
+    plt <- plot2.phylo(tree, type=type, show.tip.label=FALSE,
                        label.offset=t*margin, ...)
     group.label.tip(plt, class, "black", "black", lwd=1.5,
                     offset.bar=w*(n+2), offset.lab=w*(n+3),
