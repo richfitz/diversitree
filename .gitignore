@@ -57,6 +57,15 @@ diversitree/configure
 diversitree/src/Makevars
 diversitree/src/config.h
 diversitree/src/config.h.in
+diversitree/config.log
+
+diversitree/config.log
+diversitree/src/*.o
+diversitree/src/*.so
+diversitree/src/symbols.rds
+*.swp
+diversitree_*.tar.gz
+diversitree.pdf
 
 ## I will often have a checking file here:
 diversitree.Rcheck

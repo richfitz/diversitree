@@ -3,14 +3,15 @@
 
 \title{Plot a Phylogeny and Traits}
 
-\description{Plot a phylogeny and label the tips with binary traits.
-  This function is experimental, and may change soon.  Currently it is
-  limited to radial trees and binary traits.}
+\description{Plot a phylogeny and label the tips with traits.
+  This function is experimental, and may change soon.  Currently it can
+  handle discrete-valued traits and two basic tree shapes.}
 
 \usage{
-trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
-           type="f", w=1/50, legend=length(cols) > 1, cex.lab=.5,
-           font.lab=3, cex.legend=.75, margin=1/4,
+trait.plot(tree, dat, cols, lab=names(cols), str=NULL, 
+           class=NULL, type="f", w=1/50, 
+           legend=length(cols) > 1, cex.lab=.5, 
+           font.lab=3, cex.legend=.75, margin=1/4, 
            check=TRUE, quiet=FALSE, ...)
 }
 
@@ -19,25 +20,28 @@ trait.plot(tree, dat, cols, lab=names(cols), str=0:1, class=NULL,
 
   \item{dat}{A \code{data.frame} of trait values.  The row names must be
     the same names as the tree (\code{tree$tip.label}), and each column
-    contains the states (0, 1, or \code{NA}).  The column names must
-    give the trait names.}
+    contains the states (0, 1, etc., or \code{NA}).  The column names
+    must give the trait names.}
 
-  \item{cols}{A list, each element of which is a vector of length 2
-    being the colours for state 0 and state 1 for each trait.  The list
-    must be named so that all names appear in \code{names(dat)}.
-    Traits will be plotted in the order given by \code{cols}.}
+  \item{cols}{A list with colors.  Each element corresponds to a trait
+    and must be named so that all names appear in \code{names(dat)}.
+    Each of these elements is a vector of colors, with length matching
+    the number of states for that trait.  Traits will be plotted in the
+    order given by \code{cols}.}
 
   \item{lab}{Alternative names for the legend (perhaps longer or more
-    informative).  Must be in the same order as \code{cols}.}.
+    informative).  Must be in the same order as \code{cols}.}
 
-  \item{str}{Strings used for the states in the legend.}
+  \item{str}{Strings used for the states in the legend.  If \code{NULL}
+    (the default), the values in \code{dat} are used.}
 
   \item{class}{A vector along \code{phy$tip.label} giving a higher level
     classification (e.g., genus or family).  No checking is done to
     ensure that such classifications are not polyphyletic.}
 
   \item{type}{Plot type (same as \code{type} in \code{?plot.phylo}).
-    Currently only \code{f} (fan) is implemented.}
+    Currently only \code{f} (fan) and \code{p} (rightwards phylogram)
+    are implemented.}
 
   \item{w}{Width of the trait plot, as a fraction of the tree depth.}
 
@@ -92,6 +96,23 @@ for ( i in seq_along(grp) )
 trait.plot(phy, phy$tip.state,
            cols=list(A=c("pink", "red"), B=c("lightblue", "blue")),
            class=class, font=1, cex.lab=1, cex.legend=1)
+
+## Add another state, showing values 1:3, names, and trait ordering.
+tmp <- sim.character(phy, c(-.1, .05, .05, .05, -.1, .05, .05, 0.05, -.1), 
+                     model="mkn", x0=1)
+phy$tip.state <- data.frame(phy$tip.state, C=tmp)
+trait.plot(phy, phy$tip.state,
+           cols=list(C=c("palegreen", "green3", "darkgreen"),
+                     A=c("pink", "red"), B=c("lightblue", "blue")),
+           lab=c("Animal", "Vegetable", "Mineral"),
+           str=list(c("crane", "toad", "snail"), c("kale", "carrot"), 
+                    c("calcite", "beryl")))
+
+## Rectangular/phylogram plot with groups.
+trait.plot(ladderize(phy, right=FALSE), phy$tip.state, type="p",
+           cols=list(A=c("pink", "red"), B=c("lightblue", "blue"),
+                     C=c("palegreen", "green3", "darkgreen")),
+           class=class, font=1, cex.lab=1)
 }
 
 \keyword{hplot}
