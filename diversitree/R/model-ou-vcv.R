@@ -35,5 +35,5 @@ ouMatrix <- function(vcv, alpha) {
   diagi <- matrix(vcv.d, length(vcv.d), length(vcv.d))
   diagj <- matrix(vcv.d, length(vcv.d), length(vcv.d), byrow=TRUE)
   Tij <- diagi + diagj - (2 * vcv)
-  (1 / (2 * alpha)) * exp(-alpha * Tij) * (1 - exp(-2 * alpha * vcv))
+  (1 / (2 * alpha)) * exp(-alpha * Tij) * (-expm1(-2 * alpha * vcv))
 }
