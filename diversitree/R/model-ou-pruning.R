@@ -38,7 +38,7 @@ branches.ou <- function(y, len, pars, t0, idx) {
   if ( alpha > 0 )
     list(len * alpha + z,
          c(exp(len * alpha) * (m - theta) + theta,
-           (exp(2*len*alpha) - 1) * sigma2 / (2*alpha) +
+           expm1(2*len*alpha) * sigma2 / (2*alpha) +
            exp(2*len*alpha) * v,
            0))
   else
