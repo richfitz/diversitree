@@ -62,7 +62,7 @@ make.musse.t(tree, states, k, functions, sampling.f=NULL,
 }
 
 \details{
-  Please see \code{\link{make.bisse}} for further details.
+  Please see \code{\link{make.bisse.t}} for further details.
 }
 
 \examples{
