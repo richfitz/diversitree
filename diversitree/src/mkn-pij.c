@@ -204,10 +204,14 @@ void asr_normalise(int n_states, double *vals) {
   int i;
   double maxp = R_NegInf, tot = 0.0;
   for ( i = 0; i < n_states; i++ )
-    if ( vals[i] > maxp )
+    if (vals[i] > maxp)
       maxp = vals[i];
-  for ( i = 0; i < n_states; i++ )
-    tot += vals[i] = exp(vals[i] - maxp);
+  for ( i = 0; i < n_states; i++ ) {
+    if (ISNAN(vals[i]))
+      vals[i] = 0.0;
+    else
+      tot += vals[i] = exp(vals[i] - maxp);
+  }
   for ( i = 0; i < n_states; i++ )
     vals[i] /= tot;
 }
