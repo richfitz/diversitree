@@ -217,15 +217,15 @@ make.prior.uniform <- function(lower, upper, log=TRUE) {
 coef.mcmcsamples <- function(object, thin=1, full=FALSE, lik=NULL,
                              ...) {
   p <- as.matrix(object[-c(1, ncol(object))])
-  if ( thin > 1 )
+  if (thin > 1)
     p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
-  if ( full ) {
-    if ( is.null(lik) )
+  if (full) {
+    if (is.null(lik))
       stop("'lik' must be provided if full=TRUE")
     else if ( inherits(lik, "constrained") ) {
-      if ( ncol(p) != length(argnames(object)) )
+      if (ncol(p) != length(argnames(lik)))
         stop("Dimensions of parameters are not correct for this function")
-      p <- t(apply(p, 1, object, pars.only=TRUE))
+      p <- t(apply(p, 1, lik, pars.only=TRUE))
     }
   }
     
