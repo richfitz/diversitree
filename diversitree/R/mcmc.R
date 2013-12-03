@@ -24,6 +24,7 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
                          control=list(),
                          save.file, save.every=0, save.every.dt=NULL,
                          previous=NULL, previous.tol=1e-4,
+                         keep.func=TRUE,
                          ...) {
   if ( is.null(sampler) )
     sampler <- sampler.slice
@@ -146,6 +147,11 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
   if ( save.every > 0 || !is.null(save.every.dt) )
     if ( nrow(samples) == nsteps && file.exists(save.file.bak) )
       file.remove(save.file.bak)
+
+  if (keep.func) {
+    attr(samples, "func")  <- set.defaults(lik, defaults=list(...))
+    attr(samples, "prior") <- prior
+  }
 
   samples
 }
