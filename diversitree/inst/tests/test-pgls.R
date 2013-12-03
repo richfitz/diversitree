@@ -92,3 +92,17 @@ test_that("Calculations agree at differing point", {
   expect_that(lik.con.ya(p2.ya),   equals(lik.vcv.ya(p2.ya)))
   expect_that(lik.con.yab(p2.yab), equals(lik.vcv.yab(p2.yab)))
 })
+
+test_that("Fitted values are correct", {
+  expect_that(fitted(lik.vcv.ya, p.ya),   equals(fitted(fit.caper.ya)))
+  expect_that(fitted(lik.con.ya, p.ya),   equals(fitted(fit.caper.ya)))
+  expect_that(fitted(lik.vcv.yab, p.yab), equals(fitted(fit.caper.yab)))
+  expect_that(fitted(lik.con.yab, p.yab), equals(fitted(fit.caper.yab)))
+})
+
+test_that("Residuals values are correct", {
+  expect_that(resid(lik.vcv.ya, p.ya),   equals(resid(fit.caper.ya)))
+  expect_that(resid(lik.con.ya, p.ya),   equals(resid(fit.caper.ya)))
+  expect_that(resid(lik.vcv.yab, p.yab), equals(resid(fit.caper.yab)))
+  expect_that(resid(lik.con.yab, p.yab), equals(resid(fit.caper.yab)))
+})

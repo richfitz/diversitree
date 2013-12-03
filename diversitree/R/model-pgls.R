@@ -220,3 +220,14 @@ pgls.root.mean.bm <- function(tree, states) {
   lik <- make.bm(tree, states, control=list(method="pruning"))
   attr(lik(1, intermediates=TRUE), "vals")[[1]]
 }
+
+residuals.pgls.dt <- function(object, p, ...) {
+  get.cache(object)$response - fitted(object, p, ...)
+}
+
+fitted.pgls.dt <- function(object, p, ...) {
+  b <- p[-length(p)]
+  cache <- get.cache(object)
+  X <- cache$predictors
+  X %*% b
+}
