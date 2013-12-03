@@ -122,6 +122,7 @@ export(prune)
 export(get.descendants)
 
 export(run.cached)
+export(drop.func)
 
 ## Support for QuaSSE models.
 export(constant.x)

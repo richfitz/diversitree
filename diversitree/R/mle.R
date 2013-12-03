@@ -14,14 +14,14 @@ find.mle.default <- function(func, x.init, method,
     x.init <- guess.constrained.start(func, x.init)
 
   ans <- do.mle.search(func, x.init, method, fail.value, ...)
-  ans$func.class <- class(func) # used by anova()
   class(ans) <- c(class.append, class(ans))
   ans
 }
 
 do.mle.search <- function(func, x.init, method, fail.value=-Inf,
                           control=list(), lower=-Inf, upper=Inf,
-                          hessian=FALSE, verbose=0, ...) {
+                          hessian=FALSE, verbose=0, keep.func=TRUE,
+                          ...) {
   method <- match.arg(method, c("optim", "subplex", "nlminb", "nlm",
                                 "minqa", "optimize", "int1d",
                                 "mixed", "subplexR"))
@@ -95,6 +95,15 @@ do.mle.search <- function(func, x.init, method, fail.value=-Inf,
     ## However, I don't know if it was ever used.
     ans$par.full <- func(ans$par, pars.only=TRUE)
   }
+
+  ## I'm using attributes here, rather than saving as an element, for
+  ## symmetry with the mcmc() function.  A better approach would
+  ## probably be to define a generic function that will extract the
+  ## likelihood from any fitted object.
+  if (keep.func)
+    attr(ans, "func") <- set.defaults(func, defaults=list(...))
+  ans$func.class <- class(func) # used by anova()
+
   class(ans) <- "fit.mle"
   ans
 }
@@ -239,4 +248,11 @@ guess.constrained.start <- function(func, x.init, warn=TRUE) {
   }
 
   x.init
+}
+
+## Simple function to drop the likelihood function from a fitted
+## object.
+drop.func <- function(x) {
+  attr(x, "func") <- NULL
+  x
 }

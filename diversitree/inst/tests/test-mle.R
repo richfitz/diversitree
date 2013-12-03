@@ -1,6 +1,7 @@
 library(diversitree)
 library(testthat)
 library(minqa)
+source("helper-diversitree.R")
 
 context("MLE")
 
@@ -129,3 +130,34 @@ fit.m <- find.mle(rosen.mixed, p, method="mixed",
 fit.m2 <- find.mle(rosen.mixed, fit.m$par, method="mixed",
                    control=list(is.integer=3))
 expect_that(fit.m2$par[3], is_identical_to(-11))
+
+## Options around saving the objective function.
+test_that("Likelihood function is saved with fit", { 
+  lik <- make.bd(phy)
+  pars <- c(0.1, 0.03)  
+  fit <- find.mle(lik, pars)
+  expect_that(fit, has_attribute("func"))
+  expect_that(attr(fit, "func"), is_a("function"))
+  expect_that(attr(fit, "func"), is_identical_to(lik))
+
+  fit.no.func <- find.mle(lik, pars, keep.func=FALSE)
+  expect_that(attr(fit.no.func, "func"), is_null())
+
+  expect_that(attr(drop.func(fit),         "func"), is_null())
+  expect_that(attr(drop.func(fit.no.func), "func"), is_null())
+})
+
+test_that("Argument modification is saved at function save", { 
+  lik <- make.bd(phy)
+  ## Otherwise the stuff below has no effect.
+  expect_that(formals(lik)$condition.surv, is_true())
+  
+  pars <- c(0.1, 0.03)  
+  fit <- find.mle(lik, pars, condition.surv=FALSE)
+  expect_that(fit, has_attribute("func"))
+  expect_that(formals(attr(fit, "func"))$condition.surv,
+              is_false())
+
+  ## Will be simplified by the new "devtools::not()".
+  expect_that(identical(attr(fit, "func"), lik), is_false())
+})
