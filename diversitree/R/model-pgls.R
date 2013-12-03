@@ -231,3 +231,11 @@ fitted.pgls.dt <- function(object, p, ...) {
   X <- cache$predictors
   X %*% b
 }
+
+residuals.fit.mle.pgls <- function(object, lik, ...) {
+  residuals(lik, coef(object))
+}
+
+fitted.fit.mle.pgls <- function(object, lik, ...) {
+  fitted(lik, coef(object))
+}

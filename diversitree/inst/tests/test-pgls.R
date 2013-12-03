@@ -106,3 +106,20 @@ test_that("Residuals values are correct", {
   expect_that(resid(lik.vcv.yab, p.yab), equals(resid(fit.caper.yab)))
   expect_that(resid(lik.con.yab, p.yab), equals(resid(fit.caper.yab)))
 })
+
+fit.ya  <- find.mle(lik.con.ya, p.ya)
+fit.yab <- find.mle(lik.con.yab, p.yab)
+
+test_that("Fitted values are correct (ML search object)", {
+  expect_that(fitted(fit.ya, lik.con.ya),
+              is_identical_to(fitted(lik.con.ya, coef(fit.ya))))
+  expect_that(fitted(fit.yab, lik.con.yab),
+              is_identical_to(fitted(lik.con.yab, coef(fit.yab))))
+})
+
+test_that("Residuals values are correct (ML search object)", {
+  expect_that(resid(fit.ya, lik.con.ya),
+              is_identical_to(resid(lik.con.ya, coef(fit.ya))))
+  expect_that(resid(fit.yab, lik.con.yab),
+              is_identical_to(resid(lik.con.yab, coef(fit.yab))))
+})

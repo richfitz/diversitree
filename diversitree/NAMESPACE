@@ -168,6 +168,8 @@ S3method(make.asr.marginal, musse.t)
 
 S3method(residuals, pgls.dt)
 S3method(fitted,    pgls.dt)
+S3method(residuals, fit.mle.pgls)
+S3method(fitted,    fit.mle.pgls)
 
 ## TODO: This means that the time-dependent ones won't dispatch?
 
