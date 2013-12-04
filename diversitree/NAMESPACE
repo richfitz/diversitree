@@ -122,7 +122,8 @@ export(prune)
 export(get.descendants)
 
 export(run.cached)
-export(drop.func)
+export(drop.likelihood)
+export(get.likelihood)
 
 ## Support for QuaSSE models.
 export(constant.x)

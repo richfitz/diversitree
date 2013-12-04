@@ -15,7 +15,7 @@ mcmc(lik, x.init, nsteps, ...)
              sampler=sampler.slice, fail.value=-Inf, lower=-Inf,
              upper=Inf, print.every=1, control=list(),
              save.file, save.every=0, save.every.dt=NULL,
-             previous=NULL, previous.tol=1e-4, ...)
+             previous=NULL, previous.tol=1e-4, keep.func=TRUE, ...)
 
 sampler.slice(lik, x.init, y.init, w, lower, upper, control)
 sampler.norm(lik, x.init, y.init, w, lower, upper, control)
@@ -85,6 +85,10 @@ sampler.norm(lik, x.init, y.init, w, lower, upper, control)
     posterior probability in the \code{previous} samples.  If the
     difference is greater than \code{previous.tol} then \code{mcmc} will
     not continue.}
+
+  \item{keep.func}{Indicates if the returned samples should include the
+    likelihood function, which can be accessed with
+    \code{\link{get.likelihood}}.}
   
   \item{...}{Arguments passed to the function \code{lik}}
 

@@ -142,9 +142,13 @@ test_that("Likelihood function is saved with fit", {
 
   fit.no.func <- find.mle(lik, pars, keep.func=FALSE)
   expect_that(attr(fit.no.func, "func"), is_null())
+  expect_that(get.likelihood(fit.no.func), throws_error())
 
-  expect_that(attr(drop.func(fit),         "func"), is_null())
-  expect_that(attr(drop.func(fit.no.func), "func"), is_null())
+  expect_that(attr(drop.likelihood(fit),         "func"), is_null())
+  expect_that(attr(drop.likelihood(fit.no.func), "func"), is_null())
+
+  expect_that(get.likelihood(drop.likelihood(fit)),
+              throws_error())
 })
 
 test_that("Argument modification is saved at function save", { 

@@ -66,8 +66,8 @@ test_that("Likelihood function is saved with fit", {
                           keep.func=FALSE)
   expect_that(attr(samples.no.func, "func"), is_null())
 
-  expect_that(attr(drop.func(samples),         "func"), is_null())
-  expect_that(attr(drop.func(samples.no.func), "func"), is_null())
+  expect_that(attr(drop.likelihood(samples),         "func"), is_null())
+  expect_that(attr(drop.likelihood(samples.no.func), "func"), is_null())
 })
 
 test_that("Argument modification is saved at function save", {

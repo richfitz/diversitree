@@ -252,7 +252,15 @@ guess.constrained.start <- function(func, x.init, warn=TRUE) {
 
 ## Simple function to drop the likelihood function from a fitted
 ## object.
-drop.func <- function(x) {
-  attr(x, "func") <- NULL
-  x
+drop.likelihood <- function(object) {
+  attr(object, "func") <- NULL
+  object
+}
+
+## And to retrieve it.
+get.likelihood <- function(object) {
+  lik <- attr(object, "func")
+  if (is.null(lik) || !is.function(lik))
+    stop("Did not find likelihood function in diversitree object")
+  lik
 }
