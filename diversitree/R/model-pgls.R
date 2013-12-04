@@ -232,10 +232,12 @@ fitted.pgls.dt <- function(object, p, ...) {
   X %*% b
 }
 
-residuals.fit.mle.pgls <- function(object, lik, ...) {
-  residuals(lik, coef(object))
+residuals.fit.mle.pgls <- function(object, ...) {
+  residuals(get.likelihood(object), coef(object))
 }
 
-fitted.fit.mle.pgls <- function(object, lik, ...) {
-  fitted(lik, coef(object))
+fitted.fit.mle.pgls <- function(object, ...) {
+  fitted(get.likelihood(object), coef(object))
 }
+
+## TODO: also for mcmcsamples
