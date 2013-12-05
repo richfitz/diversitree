@@ -53,10 +53,8 @@ diversitree/a.out.dSYM
 diversitree/src-i386
 diversitree/autom4te.cache/
 diversitree/config.status
-diversitree/configure
 diversitree/src/Makevars
 diversitree/src/config.h
-diversitree/src/config.h.in
 diversitree/config.log
 
 diversitree/config.log
