@@ -113,6 +113,10 @@ test_that("coef.mcmcsamples works", {
   expect_that(ncol(p), equals(ncol(samples) - 2))
   expect_that(nrow(p), equals(n - nb))
 
+  pb <- 1/pi
+  p <- coef(samples, burnin=pb)
+  expect_that(nrow(p), equals(n - floor(n * pb)))
+  
   thin <- 7
   p <- coef(samples, thin=thin)
   expect_that(ncol(p), equals(ncol(samples) - 2))

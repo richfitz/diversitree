@@ -224,8 +224,11 @@ coef.mcmcsamples <- function(object, burnin=0, thin=1, sample=NA,
                              full=FALSE, lik=NULL, ...) {
   p <- as.matrix(object[-c(1, ncol(object))])
 
-  if (burnin > 0)
+  if (burnin > 0) {
+    if (burnin < 1)
+      burnin <- floor(burnin * nrow(object))
     p <- p[seq_len(nrow(p)) > burnin,,drop=FALSE]
+  }
   if (thin > 1)
     p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
   
