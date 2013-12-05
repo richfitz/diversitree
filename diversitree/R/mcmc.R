@@ -220,11 +220,15 @@ make.prior.uniform <- function(lower, upper, log=TRUE) {
   }
 }
 
-coef.mcmcsamples <- function(object, thin=1, full=FALSE, lik=NULL,
-                             ...) {
+coef.mcmcsamples <- function(object, burnin=0, thin=1, sample=NA,
+                             full=FALSE, lik=NULL, ...) {
   p <- as.matrix(object[-c(1, ncol(object))])
+
+  if (burnin > 0)
+    p <- p[seq_len(nrow(p)) > burnin,,drop=FALSE]
   if (thin > 1)
     p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
+  
   if (full) {
     if (is.null(lik))
       stop("'lik' must be provided if full=TRUE")
@@ -233,6 +237,12 @@ coef.mcmcsamples <- function(object, thin=1, full=FALSE, lik=NULL,
         stop("Dimensions of parameters are not correct for this function")
       p <- t(apply(p, 1, lik, pars.only=TRUE))
     }
+  }
+
+  if (!is.na(sample)) {
+    if (sample > nrow(p))
+      warning("Sampling *will* generate duplicates")
+    p <- p[sample(nrow(p), sample, replace=TRUE),,drop=FALSE]
   }
     
   p

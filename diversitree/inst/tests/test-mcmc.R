@@ -91,6 +91,50 @@ test_that("Argument modification is saved at function save", {
   expect_that(identical(attr(samples, "func"), lik), is_false())
 })
 
+## Not tested:
+## 
+##   * Correct behaviour when sampling from univariate models
+##     (i.e. check that drop=FALSE works)
+##   * Check that expansion of constrained models works via
+##     full=TRUE.
+test_that("coef.mcmcsamples works", {
+  n <- 300
+  set.seed(1)
+  samples <- mcmc(lik, c(0, 0), n, w=5, print.every=0)
+  p <- coef(samples)
+
+  expect_that(samples, is_a("data.frame"))
+  expect_that(p, is_a("matrix"))
+  expect_that(ncol(p), equals(ncol(samples) - 2))
+  expect_that(nrow(p), equals(n))
+
+  nb <- 100
+  p <- coef(samples, burnin=nb)
+  expect_that(ncol(p), equals(ncol(samples) - 2))
+  expect_that(nrow(p), equals(n - nb))
+
+  thin <- 7
+  p <- coef(samples, thin=thin)
+  expect_that(ncol(p), equals(ncol(samples) - 2))
+  expect_that(nrow(p), equals(ceiling(n / thin)))
+
+  p <- coef(samples, burnin=nb, thin=thin)
+  expect_that(ncol(p), equals(ncol(samples) - 2))
+  expect_that(nrow(p), equals(ceiling((n - nb) / thin)))
+
+  ns <- 50
+  p <- coef(samples, sample=ns)
+  expect_that(ncol(p), equals(ncol(samples) - 2))
+  expect_that(nrow(p), equals(ns))
+
+  ns2 <- floor((n - nb) / thin)
+  expect_that(p <- coef(samples, burnin=nb, thin=thin, sample=ns),
+              gives_warning())
+  
+  p <- coef(samples, burnin=nb, thin=thin, sample=ns2)
+  expect_that(nrow(p), equals(ns2))  
+})
+
 ## Not tested yet:
 
 ## Then, with saving:
