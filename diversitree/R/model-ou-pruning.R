@@ -1,4 +1,6 @@
 make.all.branches.ou.pruning <- function(cache, control) {
+  if (!is.ultrametric(cache$info$phy))
+    warning("I am not sure that OU via pruning on non-ultrametric trees is calculated correctly")
   if ( control$backend == "R" )  
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache,
