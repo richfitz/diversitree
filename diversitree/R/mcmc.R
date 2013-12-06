@@ -95,9 +95,12 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     stop(msg)
   }
 
+  class.str <- c(sprintf("mcmcsamples.%s", get.info(lik)$name),
+                 "mcmcsamples", "data.frame")
+
   clean.hist <- function(pars, p) {
     out <- data.frame(i=seq_along(p), pars, p)
-    class(out) <- c("mcmcsamples", "data.frame")
+    class(out) <- class.str
     out
   }
 
@@ -220,16 +223,16 @@ make.prior.uniform <- function(lower, upper, log=TRUE) {
   }
 }
 
-coef.mcmcsamples <- function(object, burnin=0, thin=1, sample=NA,
+coef.mcmcsamples <- function(object, burnin=NA, thin=NA, sample=NA,
                              full=FALSE, lik=NULL, ...) {
   p <- as.matrix(object[-c(1, ncol(object))])
 
-  if (burnin > 0) {
+  if (!is.na(burnin) && burnin > 0) {
     if (burnin < 1)
       burnin <- floor(burnin * nrow(object))
     p <- p[seq_len(nrow(p)) > burnin,,drop=FALSE]
   }
-  if (thin > 1)
+  if (!is.na(thin) && thin > 1)
     p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
   
   if (full) {

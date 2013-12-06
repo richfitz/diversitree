@@ -70,6 +70,20 @@ test_that("Likelihood function is saved with fit", {
   expect_that(attr(drop.likelihood(samples.no.func), "func"), is_null())
 })
 
+test_that("dtlik mcmcsamples have correct class", {
+  samples <- mcmc(lik, c(0, 0), 10, w=1, print.every=0)
+  expect_that(class(samples),
+              equals(c("mcmcsamples", "data.frame")))
+  
+  pars <- c(0.1, 0.03)
+  set.seed(2)
+  phy <- tree.bd(pars, max.taxa=60)
+  lik <- make.bd(phy)
+  samples <- mcmc(lik, pars, 10, w=1, print.every=0)
+  expect_that(class(samples),
+              equals(c("mcmcsamples.bd", "mcmcsamples", "data.frame")))
+})
+
 test_that("Argument modification is saved at function save", {
   pars <- c(0.1, 0.03)
   set.seed(2)
