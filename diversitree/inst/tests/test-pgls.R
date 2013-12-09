@@ -123,3 +123,52 @@ test_that("Residuals values are correct (ML search object)", {
   expect_that(resid(fit.yab),
               is_identical_to(resid(lik.con.yab, coef(fit.yab))))
 })
+
+set.seed(1)
+samples.ya  <- mcmc(lik.con.ya, coef(fit.ya), 100, w=1, print.every=0)
+samples.yab <- mcmc(lik.con.yab, coef(fit.yab), 100, w=1, print.every=0)
+
+test_that("Fitted values are correct (MCMC object)", {
+  m2l <- diversitree:::matrix.to.list
+  f <- function(p, lik)
+    do.call(cbind, lapply(m2l(p), function(pi) fitted(lik, pi)))
+  
+  expect_that(fitted(samples.ya),
+              is_identical_to(f(coef(samples.ya), lik.con.ya)))
+  expect_that(fitted(samples.yab),
+              is_identical_to(f(coef(samples.yab), lik.con.yab)))
+
+  ## Argument passing:
+  burnin <- 10
+  thin <- 2
+  sample <- 10
+  set.seed(1)
+  cmp <- f(coef(samples.ya, burnin=burnin, thin=thin, sample=sample),
+           lik.con.ya)
+  set.seed(1)
+  expect_that(fitted(samples.ya, burnin=burnin, thin=thin, sample=sample),
+              is_identical_to(cmp))
+})
+
+test_that("Residuals are correct (MCMC object)", {
+  m2l <- diversitree:::matrix.to.list
+  f <- function(p, lik)
+    do.call(cbind, lapply(m2l(p), function(pi) resid(lik, pi)))
+  
+  expect_that(resid(samples.ya),
+              is_identical_to(f(coef(samples.ya), lik.con.ya)))
+  expect_that(resid(samples.yab),
+              is_identical_to(f(coef(samples.yab), lik.con.yab)))
+
+  ## Argument passing:
+  burnin <- 10
+  thin <- 2
+  sample <- 10
+  set.seed(1)
+  cmp <- f(coef(samples.ya, burnin=burnin, thin=thin, sample=sample),
+           lik.con.ya)
+  set.seed(1)
+  expect_that(resid(samples.ya, burnin=burnin, thin=thin, sample=sample),
+              is_identical_to(cmp))
+})
+

@@ -221,10 +221,6 @@ pgls.root.mean.bm <- function(tree, states) {
   attr(lik(1, intermediates=TRUE), "vals")[[1]]
 }
 
-residuals.pgls.dt <- function(object, p, ...) {
-  get.cache(object)$response - fitted(object, p, ...)
-}
-
 fitted.pgls.dt <- function(object, p, ...) {
   b <- p[-length(p)]
   cache <- get.cache(object)
@@ -232,12 +228,23 @@ fitted.pgls.dt <- function(object, p, ...) {
   X %*% b
 }
 
-residuals.fit.mle.pgls <- function(object, ...) {
-  residuals(get.likelihood(object), coef(object))
-}
-
 fitted.fit.mle.pgls <- function(object, ...) {
-  fitted(get.likelihood(object), coef(object))
+  fitted(get.likelihood(object), coef(object, ...))
 }
 
-## TODO: also for mcmcsamples
+fitted.mcmcsamples.pgls <- function(object, ...) {
+  p <- coef(object, ...)
+  lik <- get.likelihood(object)
+  ret <- apply(p, 1, function(x) fitted(lik, x))
+  rownames(ret) <- rownames(diversitree:::get.cache(lik)$predictors)
+  ret
+}
+
+## Residuals follow from the fitted:
+residuals.pgls.dt <- function(object, p, ...) {
+  get.cache(object)$response - fitted(object, p, ...)
+}
+residuals.fit.mle.pgls <- function(object, ...) {
+  get.cache(get.likelihood(object))$response - fitted(object, ...)
+}
+residuals.mcmcsamples.pgls <- residuals.fit.mle.pgls

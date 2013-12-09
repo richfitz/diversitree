@@ -172,6 +172,8 @@ S3method(residuals, pgls.dt)
 S3method(fitted,    pgls.dt)
 S3method(residuals, fit.mle.pgls)
 S3method(fitted,    fit.mle.pgls)
+S3method(residuals, mcmcsamples.pgls)
+S3method(fitted,    mcmcsamples.pgls)
 
 ## TODO: This means that the time-dependent ones won't dispatch?
 
