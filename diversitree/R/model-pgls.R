@@ -216,8 +216,12 @@ pgls.root.var.bm <- function(tree) {
 ## the same way that pgls.root.var.bm works.  However, that uses
 ## internal features of ape's pic function that I'd rather not go
 ## near.
+##
+## TODO: This is going to be worse when we are trying to do this on a
+## rescaled tree.  I wonder if we can pull this from the contrasts
+## instead?
 pgls.root.mean.bm <- function(tree, states) {
-  lik <- make.bm(tree, states, control=list(method="pruning"))
+  lik <- make.bm(tree, states, control=list(method="pruning", backend="C"))
   attr(lik(1, intermediates=TRUE), "vals")[[1]]
 }
 

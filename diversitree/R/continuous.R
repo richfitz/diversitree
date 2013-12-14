@@ -8,8 +8,12 @@ check.control.continuous <- function(control) {
     warning('method="direct" is deprecated, please use method="pruning"')
     control$method <- "pruning"
   }
-    
-  methods <- c("vcv", "pruning")
+
+  ## NOTE: contrasts is not actually working for everything yet (eb
+  ## and ou models), and specifying it here will cause the function to
+  ## silently select the pruning method.  But it's not the cutting
+  ## edge if nobody is bleeding.
+  methods <- c("vcv", "pruning", "contrasts")
   if ( !(control$method %in% methods) )
     stop(sprintf("control$method must be in %s",
                  paste(methods, collapse=", ")))

@@ -11,7 +11,6 @@ make.all.branches.bm.vcv <- function(cache, control) {
   states <- cache$states
   states.sd <- cache$states.sd
   vcv <- cache$vcv
-  one <- rep(1, n.tip)
 
   if ( all(states.sd == 0) ) {
     VI.tmp <- solve(vcv)

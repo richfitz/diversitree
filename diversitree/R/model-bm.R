@@ -3,12 +3,17 @@ make.bm <- function(tree, states, states.sd=0, control=list()) {
   control <- check.control.continuous(control)
   cache <- make.cache.bm(tree, states, states.sd, control)
 
-  if ( control$method == "vcv" ) {
+  if (control$method == "vcv") {
     all.branches <- make.all.branches.bm.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
-  } else {
+  } else if (control$method == "pruning") {
     all.branches <- make.all.branches.bm.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
+  } else if (control$method == "contrasts") {
+    all.branches <- make.all.branches.bm.contrasts(cache, control)
+    rootfunc <- rootfunc.bm.contrasts
+  } else {
+    stop("Unknown method", method)
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
@@ -59,10 +64,24 @@ make.cache.bm <- function(tree, states, states.sd, control) {
     cache$states.sd <- tmp$states.sd
   }
 
-  if ( method == "vcv" )
-    cache$vcv <- vcv.phylo(tree)
-  else
+  ## There are slightly different things needed for the different
+  ## approaches; only compute things where we know that it wil be
+  ## useful.
+  if (method == "vcv") {
+    cache$vcv <- vcv(tree)
+  } else if (method == "pruning") {
     cache$y <- initial.tip.bm.pruning(cache)
+  } else if (method == "contrasts") {
+    ## There is duplication here with make.cache.pgls; perhaps merge
+    ## these?  That might help with some of the root treatment
+    ## things.
+    cache$n <- length(tree$tip.label)
+    pics <- pic(cache$states, tree, var.contrasts=TRUE)
+    cache$u <- pics[,"contrasts"]
+    cache$V <- pics[,"variance"]
+    cache$V0 <- pgls.root.var.bm(tree)
+    cache$root.x <- pgls.root.mean.bm(tree, cache$states)
+  }
   cache$info <- make.info.bm(tree)
   cache
 }

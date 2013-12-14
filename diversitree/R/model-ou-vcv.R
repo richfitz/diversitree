@@ -4,7 +4,6 @@ make.all.branches.ou.vcv <- function(cache, control) {
   states <- cache$states
   states.sd <- cache$states.sd
   vcv <- cache$vcv
-  one <- rep(1, n.tip)
 
   function(pars, intermediates) {
     s2 <- pars[1]
