@@ -77,7 +77,7 @@ set.defaults <- function(f, ..., defaults=NULL) {
     stop("Unknown defaults")
   att <- attributes(f)
   formals(f)[names(defaults)] <- defaults
-  attributes(f) <- att
+  attributes(f) <- att[names(att) != "srcref"]
   f
 }
 
