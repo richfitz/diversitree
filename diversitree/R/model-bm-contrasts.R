@@ -3,8 +3,10 @@
 ## This approach will not tolerate standard deviations for tip
 ## species.  Though incorporating them would probably not be all that
 ## hard.
+##
+## One way to look at that is how arbutus:::model.phylo.se() does this.
+
 make.all.branches.bm.contrasts <- function(cache, control) {
-  n.tip <- cache$n.tip
   states <- cache$states
   if (any(cache$states.sd > 0))
     stop("Cannot (yet) do contrasts based bm models with state error")
@@ -85,7 +87,6 @@ rootfunc.bm.contrasts <- function(res, pars, root, root.x,
   if ( intermediates ) {
     res$root.p <- NA # not sure what would be good here...
     attr(loglik, "intermediates") <- res
-    attr(loglik, "vals") <- vals
   }
 
   loglik
