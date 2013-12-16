@@ -8,7 +8,10 @@ make.all.branches.ou.vcv <- function(cache, control) {
   function(pars, intermediates) {
     s2 <- pars[1]
     alpha <- pars[2]
-    vv <- s2 * ouMatrix(vcv, alpha)
+    if (alpha > 0)
+      vv <- s2 * ouMatrix(vcv, alpha)
+    else
+      vv <- s2 * vcv
     diag(vv) <- diag(vv) + states.sd^2
     mu <- phylogMean(vv, states)
     dmvnorm2(states, rep(mu, n.tip), vv, solve(vv), log=TRUE)
