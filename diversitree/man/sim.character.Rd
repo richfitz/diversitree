@@ -1,5 +1,6 @@
 \name{sim.character}
 \alias{sim.character}
+\alias{make.sim.character}
 
 \title{Simulate a Character Distribution on a Tree}
 
@@ -10,6 +11,7 @@
 
 \usage{
 sim.character(tree, pars, x0=0, model="bm", br=NULL)
+sim.character(tree, pars, model="bm", br=NULL)
 }
 
 \arguments{

@@ -1,5 +1,5 @@
 ## TODO: Still have to record the character history...
-sim.character <- function(tree, pars, x0=0, model="bm", br=NULL) {
+make.sim.character <- function(tree, pars, model="bm", br=NULL) {
   if ( is.null(br) ) {
     model <- match.arg(model, c("bm", "ou", "bbm", "mkn", "mk2", "meristic"))
     ## Can't get match.fun to work here, and cannot see why.
@@ -19,22 +19,28 @@ sim.character <- function(tree, pars, x0=0, model="bm", br=NULL) {
   len <- tree$edge.length[match(idx, edge[, 2])]
 
   y <- rep.int(NA, length(len))
-  y[root] <- x0
 
-  for ( i in order ) {
-    j <- children[i,]
-    y[j[1]] <- br(y[i], len[j[1]])
-    y[j[2]] <- br(y[i], len[j[2]])
+  function(x0=0) {
+    y[root] <- x0
+
+    for ( i in order ) {
+      j <- children[i,]
+      y[j[1]] <- br(y[i], len[j[1]])
+      y[j[2]] <- br(y[i], len[j[2]])
+    }
+
+    y.tip <- y[is.tip]
+    names(y.tip) <- tree$tip.label
+    y.node <- y[!is.tip]
+    names(y.node) <- tree$node.label
+    attr(y.tip, "node.state") <- y.node
+
+    y.tip
   }
+}
 
-
-  y.tip <- y[is.tip]
-  names(y.tip) <- tree$tip.label
-  y.node <- y[!is.tip]
-  names(y.node) <- tree$node.label
-  attr(y.tip, "node.state") <- y.node
-
-  y.tip
+sim.character <- function(tree, pars, x0=0, model="bm", br=NULL) {
+  make.sim.character(tree, pars, model, br)(x0)
 }
 
 ## BM: one parameter -- s2

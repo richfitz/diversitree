@@ -105,6 +105,7 @@ export(tree.quasse)
 export(tree.yule)
 
 export(sim.character)
+export(make.sim.character)
 
 ## Utility functions:
 export(protect)
