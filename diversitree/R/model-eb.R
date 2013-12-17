@@ -150,7 +150,7 @@ make.all.branches.eb.pruning <- function(cache, control) {
     function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache,
                           initial.conditions.bm.pruning,
-                          branches.ou, preset)
+                          branches.eb, preset)
   else {
     ## NOTE: This is a hack, but allow here for the extra paramter:
     cache$info$np <- 3L

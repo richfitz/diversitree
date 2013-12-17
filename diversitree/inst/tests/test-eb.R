@@ -55,18 +55,8 @@ p2 <- c(0.02, -0.1)
 l2 <- as.numeric(lik.geiger(p2[2:1]))
 
 expect_that(lik.vcv(p2), equals(l2))
-## For some reason the plain pruning version is less accurate here.
-expect_that(lik.pruning(p2), equals(l2, tolerance=0.001))
+expect_that(lik.pruning(p2), equals(l2))
 expect_that(lik.pruning.C(p2), equals(l2))
 
 ## These are quite different -- more than I'd expect.
-## expect_that(lik.pruning(p2), equals(lik.pruning.C(p2)))
-
-## ans.R <- lik.pruning(p2, intermediates=TRUE)
-## ans.C <- lik.pruning.C(p2, intermediates=TRUE)
-
-## ## Widespread calculation differences:
-## all.equal(attr(ans.R, "intermediates"),
-##           attr(ans.C, "intermediates"))
-
-
+expect_that(lik.pruning(p2), equals(lik.pruning.C(p2)))
