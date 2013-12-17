@@ -87,13 +87,14 @@ mrca.tipset <- function(phy, tips) {
 branching.heights <- function(phy) {
   if (!inherits(phy, "phylo"))
     stop('object "phy" is not of class "phylo"')
+  phy <- reorder(phy, "cladewise")
 
   edge <- phy$edge
   n.node <- phy$Nnode
   n.tip <- length(phy$tip.label)
 
   ht <- numeric(n.node + n.tip) # zero'd
-  for (i in seq_len(nrow(edge)) )
+  for (i in seq_len(nrow(edge)))
     ht[edge[i, 2]] <- ht[edge[i, 1]] + phy$edge.length[i]
 
   ## Ugly, but fairly compatible with branching.times()
