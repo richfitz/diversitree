@@ -37,7 +37,7 @@ make.ou <- function(tree, states, states.sd=0, with.optimum=FALSE,
     all.branches <- make.all.branches.ou.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
-    stop("Unknown method", method)
+    stop("Unknown method", control$method)
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,

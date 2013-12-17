@@ -13,7 +13,7 @@ make.bm <- function(tree, states, states.sd=0, control=list()) {
     all.branches <- make.all.branches.bm.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
-    stop("Unknown method", method)
+    stop("Unknown method", control$method)
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,

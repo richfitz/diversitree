@@ -11,7 +11,7 @@
 
 \usage{
 sim.character(tree, pars, x0=0, model="bm", br=NULL)
-sim.character(tree, pars, model="bm", br=NULL)
+make.sim.character(tree, pars, model="bm", br=NULL)
 }
 
 \arguments{

@@ -29,7 +29,7 @@ make.eb(tree, states, states.sd=0, control=list())
     for all tips, otherwise the vector must be named as for
     \code{states}.}
 
-  \item{with.optimium}{Should the optimum (often "theta") be considered
+  \item{with.optimum}{Should the optimum (often "theta") be considered
     a free parameter?  The default, \code{FALSE}, makes this behave like
     geiger's \code{fitContinuous}.  Setting \code{TRUE} leaves the
     optimim to be a free parameter to be estimated.  This setting can
