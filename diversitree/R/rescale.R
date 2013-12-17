@@ -14,28 +14,45 @@ branching.times.edge <- function(phy) {
        max=max(ht))
 }
 
+## The direct translation from geiger via arbutus is a rescaling of:
+##     tau.max   <- 2 * alpha * t.max
+##     tau.start <- 2 * alpha * t.start
+##     tau.end   <- 2 * alpha * t.end
+##     exp(-tau.max) / (2 * alpha) * (
+##       exp(tau.start) * expm1(-tau.start) -
+##       exp(tau.end)   * expm1(-tau.end))
+## but there is a useful simplification here:
+##     exp(x)(1 - exp(-x)) ---> exp(x) - 1
+## so we have
+##     exp(-tau.max) * (expm1(tau.end) - expm1(tau.start)) / (2 * alpha)
+## or
+##     exp(-tau.max) * (exp(tau.end) - exp(tau.start)) / (2 * alpha)
+## The first of which seems to be more numerically stable as alpha
+## tends towards zero.
+##
+## So, given depth in the tree (t.max - t.start) and len, this
+## is equivalent:
+##     len <- t.end - t.start
+##     exp(-2 * alpha * (t.max - t.start)) * expm1(2 * alpha * len)/(2*alpha)
+## where t.max - t.start is of course the depth of the bottom of the
+## branch.  That will come in useful elsewhere.
 make.rescale.phylo.ou <- function(phy) {
   t <- branching.times.edge(phy)
   t.start <- t$start
   t.end   <- t$end
   t.max   <- t$max
 
-  ## This should also be easy to port over to a theta-less pruning
-  ## approach.
   function(alpha) {
     if (alpha > 0) {
-      tau.max   <- 2 * alpha * t.max
-      tau.start <- 2 * alpha * t.start
-      tau.end   <- 2 * alpha * t.end
       phy$edge.length <-
-        exp(-tau.max) / (2 * alpha) * (
-          exp(tau.start) * expm1(-tau.start) -
-          exp(tau.end)   * expm1(-tau.end))
+        exp(-2 * alpha * t.max) * (
+          # exp  (2 * alpha * t.end) - exp  (2 * alpha * t.start)) /
+          expm1(2 * alpha * t.end) - expm1(2 * alpha * t.start)) /
+          (2 * alpha)
     }
     phy
   }
 }
-
 make.rescale.phylo.eb <- function(phy, pars) {
   t <- branching.times.edge(phy)
   t.start <- t$start

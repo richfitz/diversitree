@@ -30,6 +30,12 @@ test_that("OU rescaling agrees with arbutus", {
 
   expect_that(r.ou(.1),
               equals(arbutus:::model.phylo.ou(phy, p(.1))))
+  ## Calculations can get unstable with very small alpha - can cause
+  ## complete failure.  Unfortunately all.equal.phylo does not honour
+  ## additional arguments, so unclassing is required here.
+  expect_that(unclass(r.ou(1e-10)),
+              equals(unclass(arbutus:::model.phylo.ou(phy, p(1e-10))),
+                     tolerance=1e-6))
 })
 
 test_that("EB rescaling agrees with arbutus", {
