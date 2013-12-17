@@ -14,6 +14,8 @@
 make.all.branches.ou.contrasts <- function(cache, control) {
   if (any(cache$states.sd > 0))
     stop("Cannot (yet) do contrasts based bm models with state error")
+  if (cache$with.optimum)
+    stop("Cannot fit a model with optimum using contrasts (use pruning)")
 
   ## This is annoying; we'll have to do this in make.bm.  If we don't,
   ## then we will reorder every time and that's going to hurt,
@@ -42,7 +44,10 @@ make.all.branches.ou.contrasts <- function(cache, control) {
     ## This step is brutal.  We could rewrite the branch lengths there
     ## once the lookups are done properly.  This is particularly bad
     ## because it will involve doing another tree reordering.
-    ## Costly!
+    ## Costly!  What's more is we can actually get it from the PIC
+    ## calculation.  So this part needs to be done separately, and for
+    ## all the pic methods.  This entire section of code is horribly
+    ## duplicated!
     root.x <- pgls.root.mean.bm(tree, cache$states)
 
     ## This is the bit that is shared with all.branches.bm

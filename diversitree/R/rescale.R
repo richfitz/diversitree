@@ -35,7 +35,7 @@ branching.times.edge <- function(phy) {
 ##     len <- t.end - t.start
 ##     exp(-2 * alpha * (t.max - t.start)) * expm1(2 * alpha * len)/(2*alpha)
 ## where t.max - t.start is of course the depth of the bottom of the
-## branch.  That will come in useful elsewhere.
+## branch.  That will come in useful elsewhere.  See model-ou-pruning.R
 make.rescale.phylo.ou <- function(phy) {
   t <- branching.times.edge(phy)
   t.start <- t$start

@@ -22,9 +22,10 @@
 ##   branches
 
 ## 1: make
-make.ou <- function(tree, states, states.sd=0, control=list()) {
+make.ou <- function(tree, states, states.sd=0, with.optimum=FALSE,
+                    control=list()) {
   control <- check.control.continuous(control)
-  cache <- make.cache.ou(tree, states, states.sd, control)
+  cache <- make.cache.ou(tree, states, states.sd, with.optimum, control)
 
   if (control$method == "vcv") {
     all.branches <- make.all.branches.ou.vcv(cache, control)
@@ -41,7 +42,7 @@ make.ou <- function(tree, states, states.sd=0, control=list()) {
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
                  intermediates=FALSE) {
-    check.pars.ou(pars)
+    check.pars.ou(pars, with.optimum)
     ans <- all.branches(pars, intermediates)
     rootfunc(ans, pars, root, root.x, intermediates)
   }
@@ -50,12 +51,12 @@ make.ou <- function(tree, states, states.sd=0, control=list()) {
 }
 
 ## 2: info
-make.info.ou <- function(phy) {
+make.info.ou <- function(phy, with.optimum) {
   list(name="ou",
        name.pretty="Ornstein-Uhlenbeck",
        ## Parameters:
-       np=3L,
-       argnames=default.argnames.ou(),
+       np=if (with.optimum) 3L else 2L,
+       argnames=default.argnames.ou(with.optimum),
        ## Variables:
        ny=3L,
        k=NA,
@@ -71,12 +72,14 @@ make.info.ou <- function(phy) {
        reference=c(
          "I really don't know"))
 }
-default.argnames.ou <- function() c("s2", "alpha", "theta")
+default.argnames.ou <- function(with.optimum)
+  c("s2", "alpha", if (with.optimum) "theta")
 
 ## 3: make.cache
-make.cache.ou <- function(tree, states, states.sd, control) {
+make.cache.ou <- function(tree, states, states.sd, with.optimum, control) {
   cache <- make.cache.bm(tree, states, states.sd, control)
-  cache$info <- make.info.ou(tree)
+  cache$info <- make.info.ou(tree, with.optimum)
+  cache$with.optimum <- with.optimum
   cache
 }
 
@@ -84,8 +87,8 @@ make.cache.ou <- function(tree, states, states.sd, control) {
 ## Additional functions
 
 ## Checking
-check.pars.ou <- function(pars) {
-  if ( length(pars) != 3 )
+check.pars.ou <- function(pars, with.optimum) {
+  if (length(pars) != (if (with.optimum) 3 else 2))
     stop("Incorrect parameter length")
   check.nonnegative(pars[1:2])
   TRUE

@@ -229,8 +229,8 @@ double branches_bm(double *vars_in, double len, double *pars,
 /* Note use of expm1 here; saves numerical disaster when alpha is very
    very small (e.g. 1e-20); this is needed so that we converge
    gracefully on the alpha=0 case. */
-double branches_ou(double *vars_in, double len, double *pars, 
-		   double t0, int idx, double *vars_out) {
+double branches_ou_opt(double *vars_in, double len, double *pars, 
+		       double t0, int idx, double *vars_out) {
   const double m = vars_in[0], v = vars_in[1], z = vars_in[2],
     s2 = pars[0], alpha = pars[1], theta = pars[2];
 
@@ -245,6 +245,24 @@ double branches_ou(double *vars_in, double len, double *pars,
   vars_out[2] = 0.0;
 
   return len * alpha + z;
+}
+
+double branches_ou_noopt(double *vars_in, double len, double *pars, 
+		   double t0, int idx, double *vars_out) {
+  const double m = vars_in[0], v = vars_in[1], z = vars_in[2],
+    s2 = pars[0], alpha = pars[1];
+
+  if (alpha > 0) {
+    vars_out[0] = m;
+    vars_out[1] = v - s2 *
+      exp(-2 * alpha * t0) * expm1(-2 * alpha * len) / (2 * alpha);
+  } else {
+    vars_out[0] = m;
+    vars_out[1] = v + len * s2;
+  }
+  vars_out[2] = 0.0;
+
+  return z;
 }
 
 double branches_eb(double *vars_in, double len, double *pars,

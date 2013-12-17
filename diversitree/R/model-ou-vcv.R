@@ -1,5 +1,8 @@
 ## OU motion model from Luke's geiger package.
 make.all.branches.ou.vcv <- function(cache, control) {
+  if (cache$with.optimum)
+    stop("Cannot fit a model with optimum using VCV method (use pruning)")
+
   n.tip <- cache$n.tip
   states <- cache$states
   states.sd <- cache$states.sd

@@ -13,7 +13,7 @@
 
 \usage{
 make.bm(tree, states, states.sd=0, control=list())
-make.ou(tree, states, states.sd=0, control=list())
+make.ou(tree, states, states.sd=0, with.optimum=FALSE, control=list())
 make.eb(tree, states, states.sd=0, control=list())
 }
 
@@ -28,6 +28,13 @@ make.eb(tree, states, states.sd=0, control=list())
     deviation around the mean.  If a single value is given it is used
     for all tips, otherwise the vector must be named as for
     \code{states}.}
+
+  \item{with.optimium}{Should the optimum (often "theta") be considered
+    a free parameter?  The default, \code{FALSE}, makes this behave like
+    geiger's \code{fitContinuous}.  Setting \code{TRUE} leaves the
+    optimim to be a free parameter to be estimated.  This setting can
+    (currently) only be set to \code{TRUE} with
+    \code{method="pruning"}.}
 
   \item{control}{A list of control parameters.  See details below.}
 }
