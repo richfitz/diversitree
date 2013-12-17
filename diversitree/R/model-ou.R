@@ -1,3 +1,12 @@
+## TODO: It should be fairly straightforward to rewrite a pruning
+## calculator that uses the rescaling approach; we are just dealing
+## with a variance of eq:3 in ou-3.tex.  Super easy.  Just sort out
+## how the indexing works and all should come together.
+
+## That means that we probably need an additional argument to the
+## function: "free.optimum=TRUE/FALSE"; that should work.  Check that
+## the optimum *can* be freed (only with pruning) and work from there.
+
 ## My simple-minded OU calculator, direct from the SDE:
 
 ## Models should provide:
@@ -17,12 +26,17 @@ make.ou <- function(tree, states, states.sd=0, control=list()) {
   control <- check.control.continuous(control)
   cache <- make.cache.ou(tree, states, states.sd, control)
 
-  if ( control$method == "vcv" ) {
+  if (control$method == "vcv") {
     all.branches <- make.all.branches.ou.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
-  } else {
+  } else if (control$method == "pruning") {
     all.branches <- make.all.branches.ou.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
+  } else if (control$method == "contrasts") {
+    all.branches <- make.all.branches.ou.contrasts(cache, control)
+    rootfunc <- rootfunc.bm.contrasts
+  } else {
+    stop("Unknown method", method)
   }
 
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
