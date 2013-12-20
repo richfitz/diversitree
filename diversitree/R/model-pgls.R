@@ -10,6 +10,8 @@ make.pgls <- function(tree, formula, data, control=list()) {
   cache <- make.cache.pgls(tree, formula, data, control)
   if (control$method == "vcv")
     all.branches <- make.all.branches.pgls.vcv(cache, control)
+  else if (control$method == "pruning")
+    all.branches <- make.all.branches.pgls.pruning(cache, control)
   else if (control$method == "contrasts")
     all.branches <- make.all.branches.pgls.contrasts(cache, control)
   check.pars <- make.check.pars.pgls(cache$np)
@@ -24,6 +26,17 @@ make.pgls <- function(tree, formula, data, control=list()) {
   ll
 }
 
+make.initial.tip.pgls.pruning <- function(cache) {
+  cache$states <- cache$Y # a dummy variable, but needed for below:
+  y <- initial.tip.bm.pruning(cache)
+  idx <- match(seq_len(cache$n), y$target)
+
+  function(z) {
+    cache$states <- y$y[1,idx] <- z
+    y
+  }
+}
+
 make.cache.pgls <- function(tree, formula, data, control) {
   tree <- check.tree(tree, ultrametric=FALSE)
 
@@ -36,6 +49,13 @@ make.cache.pgls <- function(tree, formula, data, control) {
     cache$vcv.inverse <- solve(cache$vcv)
     cache$vcv.logdet  <- determinant(cache$vcv, logarithm=TRUE)$modulus
     ## Rename in order to match up with the equations better:
+    cache$X <- cache$predictors
+    cache$Y <- cache$response
+  } else if (control$method == "pruning") {
+    ## Whole big pile of stuff here:
+    cache <- c(cache, make.cache(tree))
+    ## The initial conditions code will assume the states.sd is zero.
+    cache$states.sd <- rep(0, cache$n)
     cache$X <- cache$predictors
     cache$Y <- cache$response
   } else {
@@ -105,6 +125,32 @@ make.all.branches.pgls.vcv <- function(cache, control) {
     -(n * log(2 * pi) +
       n * log(s2) + vcv.logdet + 
       as.numeric(t(z) %*% (vcv.inverse / s2) %*% (z))) / 2
+  }
+}
+
+make.all.branches.pgls.pruning <- function(cache, control) {
+  X <- cache$X
+  Y <- cache$Y
+  cache$info$ny <- 3L
+  initial.tips <- make.initial.tip.pgls.pruning(cache)
+
+  function(pars) {
+    b <- pars[-length(pars)]
+    s2 <- pars[[length(pars)]]
+    z <- as.numeric(Y - X %*% b)
+    cache$y <- initial.tips(z)
+    res <- all.branches.matrix(s2, cache,
+                               initial.conditions.bm.pruning,
+                               branches.bm.pruning, NULL)
+    ## Arguments:            res, pars, root,     root.x, intermediates
+    ll <- rootfunc.bm.pruning(res, NA,   ROOT.MAX, NA,     FALSE)
+    ## in comparion with model.pgls:
+    ## res$vals[[1]] is equal to intercept - (root.y - b %*% root.x)
+    ## res$vals[[2]] is equal to s2 * V0
+    ## I think I could probably do this better through root.x though,
+    ## but not sure how and don't think it matters that much.
+    dll <- -0.5 * res$vals[[1]]^2 / res$vals[[2]]
+    ll + dll
   }
 }
 
@@ -195,7 +241,7 @@ check.control.pgls <- function(control) {
 
   if ( length(control$method) != 1 )
     stop("control$method must be a scalar")
-  methods <- c("vcv", "contrasts")
+  methods <- c("vcv", "pruning", "contrasts")
   if (!(control$method %in% methods))
     stop(sprintf("control$method must be in %s",
                  paste(methods, collapse=", ")))
