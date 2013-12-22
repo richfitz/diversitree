@@ -14,7 +14,7 @@ make.pgls <- function(tree, formula, data, control=list()) {
     all.branches <- make.all.branches.pgls.pruning(cache, control)
   else if (control$method == "contrasts")
     all.branches <- make.all.branches.pgls.contrasts(cache, control)
-  check.pars <- make.check.pars.pgls(cache$np)
+  check.pars <- make.check.pars.pgls(cache$info$np)
 
   ll <- function(pars) {
     check.pars(pars)
@@ -42,7 +42,6 @@ make.cache.pgls <- function(tree, formula, data, control) {
 
   cache <- check.data.pgls(tree, formula, data)
   cache$n  <- length(tree$tip.label)
-  cache$np <- ncol(cache$predictors) + 1 # plus s2
 
   if (control$method == "vcv") {
     cache$vcv <- vcv(tree)
@@ -77,7 +76,7 @@ make.info.pgls <- function(phy, predictors) {
   list(name="pgls",
        name.pretty="PGLS",
        ## Parameters:
-       np=3L,
+       np=ncol(predictors) + 1L, # + bm
        argnames=default.argnames.pgls(predictors),
        ## Variables:
        ny=NA,
@@ -133,31 +132,54 @@ make.all.branches.pgls.pruning <- function(cache, control) {
   Y <- cache$Y
   cache$info$ny <- 3L
   initial.tips <- make.initial.tip.pgls.pruning(cache)
+  np <- cache$info$np
 
-  function(pars) {
-    b <- pars[-length(pars)]
-    s2 <- pars[[length(pars)]]
-    z <- as.numeric(Y - X %*% b)
-    cache$y <- initial.tips(z)
-    res <- all.branches.matrix(s2, cache,
-                               initial.conditions.bm.pruning,
-                               branches.bm.pruning, NULL)
-    ## Arguments:            res, pars, root,     root.x, intermediates
-    ll <- rootfunc.bm.pruning(res, NA,   ROOT.MAX, NA,     FALSE)
-    ## in comparion with model.pgls:
-    ## res$vals[[1]] is equal to intercept - (root.y - b %*% root.x)
-    ## res$vals[[2]] is equal to s2 * V0
-    ## I think I could probably do this better through root.x though,
-    ## but not sure how and don't think it matters that much.
-    dll <- -0.5 * res$vals[[1]]^2 / res$vals[[2]]
-    ll + dll
+  if (control$backend == "R") {
+    function(pars) {
+      b <- pars[-np]
+      s2 <- pars[[np]]
+      z <- as.numeric(Y - X %*% b)
+      cache$y <- initial.tips(z)
+      res <- all.branches.matrix(s2, cache,
+                                 initial.conditions.bm.pruning,
+                                 branches.bm.pruning, NULL)
+      rootfunc.pgls.pruning(res)
+    }
+  } else {
+    ## Force selection of BM for now.
+    cache$info$name <- "bm"
+    ## This is needed by make.all.branches.continuous to set up
+    ## initial tip memory:
+    ## NOTE: The -1 here is only for the bm method.  We will need to
+    ## know how many parameters belong to OU, etc soon.
+    cache$y <- initial.tips(Y)
+    ## Also this is needed, because the residuals take 1 parameter
+    cache$info$np <- 1L
+    all.branches <- make.all.branches.continuous(cache, control)
+    ptr <- environment(all.branches)$ptr
+    cache.C <- environment(all.branches)$cache.C
+    y <- cache.C$y$y
+
+    function(pars) {
+      b <- pars[-np]
+      s2 <- pars[[np]]
+      z <- as.numeric(Y - X %*% b)
+
+      ## These two lines special
+      ## initial.tips() should just return y, not the full list.
+      ## then for the R case it is cache$y$y <- initial.tips(z)
+      y[1,] <- z
+      .Call("r_dt_cont_reset_tips", ptr, y, PACKAGE="diversitree")
+      res <- all.branches(s2)
+      rootfunc.pgls.pruning(res)
+    }
   }
 }
 
 make.all.branches.pgls.contrasts <- function(cache, control) {
   u.x    <- cache$u.x
   u.y    <- cache$u.y
-  np     <- cache$np
+  np     <- cache$info$np
   n      <- cache$n
   V      <- cache$V
   V0     <- cache$V0
@@ -236,7 +258,7 @@ make.check.pars.pgls <- function(k) {
 ## that mean in the context of Bayesian inference?  See Rob's email
 ## for some direction here.
 check.control.pgls <- function(control) {
-  defaults <- list(method="vcv", REML=FALSE)
+  defaults <- list(method="vcv", REML=FALSE, backend="R")
   control <- modifyList(defaults, control)
 
   if ( length(control$method) != 1 )
@@ -245,6 +267,15 @@ check.control.pgls <- function(control) {
   if (!(control$method %in% methods))
     stop(sprintf("control$method must be in %s",
                  paste(methods, collapse=", ")))
+
+  if (control$method == "pruning") { # no need to check otherwise
+    if ( length(control$backend) != 1 )
+      stop("control$backend must be a scalar")
+    backends <- c("C", "R")
+    if (!(control$backend %in% backends))
+      stop(sprintf("control$backend must be in %s",
+                   paste(backends, collapse=", ")))
+  }
   control
 }
 
@@ -298,3 +329,18 @@ residuals.fit.mle.pgls <- function(object, ...) {
   get.cache(get.likelihood(object))$response - fitted(object, ...)
 }
 residuals.mcmcsamples.pgls <- residuals.fit.mle.pgls
+
+rootfunc.pgls.pruning <- function(res) {
+  ll <- rootfunc.bm.pruning(res, NA,   ROOT.MAX, NA,     FALSE)
+  ## in comparion with model.pgls:
+  ## res$vals[[1]] is equal to intercept - (root.y - b %*% root.x)
+  ## res$vals[[2]] is equal to s2 * V0
+  ## I think I could probably do this better through root.x though,
+  ## but not sure how and don't think it matters that much.
+  dll <- -0.5 * res$vals[[1]]^2 / res$vals[[2]]
+  ll + dll
+}
+
+## TODO: nlme::gls returns a vector of residuals, but caper::pgls
+## returns a 1-column matrix.  What should we return?  I don't like
+## the 1 column matrix much!

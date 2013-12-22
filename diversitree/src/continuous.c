@@ -298,3 +298,26 @@ void initial_conditions_bm(int neq, double *vars_l, double *vars_r,
     log(2 * M_PI * vv) / 2;
 }
 
+/* PGLS: tip_y is cache$y$y, but in tip order because of the
+   reordering done by this point already).  Also, this code duplicates
+   code from dt_cont_setup_tips.
+
+   TODO: Wrap this up nicely (look in model-pgls.R for use).
+ */
+SEXP r_dt_cont_reset_tips(SEXP extPtr, SEXP tip_y) {
+  dt_obj_cont *obj = (dt_obj_cont*)R_ExternalPtrAddr(extPtr);
+  double *y = REAL(tip_y);
+  int i, idx, neq = obj->neq, n_tip = obj->n_tip;
+  if (LENGTH(tip_y) != neq * n_tip)
+    error("Wrong length tip_y - expected %d, got %d",
+	  neq * n_tip, LENGTH(tip_y));
+
+  for (i = 0; i < n_tip; i++) {
+    idx = obj->tip_target[i];
+    memcpy(obj->init   + neq * idx,
+	   y           + neq * i,
+	   neq * sizeof(double));
+  }
+
+  return R_NilValue;
+}

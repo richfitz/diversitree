@@ -94,35 +94,51 @@ test_that("Calculations agree at differing point", {
 })
 
 ## 6. Pruning
-lik.pru.ya  <- make.pgls(phy, y ~ a,     data, control=list(method="pruning"))
-lik.pru.yab <- make.pgls(phy, y ~ a + b, data, control=list(method="pruning"))
+## lik.pru.ya  <- make.pgls(phy, y ~ a,     data, control=list(method="pruning"))
+## lik.pru.yab <- make.pgls(phy, y ~ a + b, data, control=list(method="pruning"))
+lik.pru.R.ya  <- make.pgls(phy, y ~ a,     data,
+                           control=list(method="pruning", backend="R"))
+lik.pru.R.yab <- make.pgls(phy, y ~ a + b, data,
+                           control=list(method="pruning", backend="R"))
+lik.pru.C.ya  <- make.pgls(phy, y ~ a,     data,
+                           control=list(method="pruning", backend="C"))
+lik.pru.C.yab <- make.pgls(phy, y ~ a + b, data,
+                           control=list(method="pruning", backend="C"))
 
-test_that("Contrasts Likelihoods agree at ML points", {
-  expect_that(lik.pru.ya(p.ya),   equals(l.ya))
-  expect_that(lik.pru.yab(p.yab), equals(l.yab))
+test_that("Pruning likelihoods agree at ML points", {
+  expect_that(lik.pru.R.ya(p.ya),   equals(l.ya))
+  expect_that(lik.pru.R.yab(p.yab), equals(l.yab))
+  expect_that(lik.pru.C.ya(p.ya),   equals(l.ya))
+  expect_that(lik.pru.C.yab(p.yab), equals(l.yab))
 })
 
 test_that("Calculations agree at differing point", {
-  expect_that(lik.pru.ya(p2.ya),   equals(lik.vcv.ya(p2.ya)))
-  expect_that(lik.pru.yab(p2.yab), equals(lik.vcv.yab(p2.yab)))
+  expect_that(lik.pru.R.ya(p2.ya),   equals(lik.vcv.ya(p2.ya)))
+  expect_that(lik.pru.R.yab(p2.yab), equals(lik.vcv.yab(p2.yab)))
+  expect_that(lik.pru.C.ya(p2.ya),   equals(lik.vcv.ya(p2.ya)))
+  expect_that(lik.pru.C.yab(p2.yab), equals(lik.vcv.yab(p2.yab)))
 })
 
 test_that("Fitted values are correct", {
-  expect_that(fitted(lik.vcv.ya, p.ya),   equals(fitted(fit.caper.ya)))
-  expect_that(fitted(lik.con.ya, p.ya),   equals(fitted(fit.caper.ya)))
-  expect_that(fitted(lik.pru.ya, p.ya),   equals(fitted(fit.caper.ya)))
-  expect_that(fitted(lik.vcv.yab, p.yab), equals(fitted(fit.caper.yab)))
-  expect_that(fitted(lik.con.yab, p.yab), equals(fitted(fit.caper.yab)))
-  expect_that(fitted(lik.pru.yab, p.yab), equals(fitted(fit.caper.yab)))
+  expect_that(fitted(lik.vcv.ya, p.ya),     equals(fitted(fit.caper.ya)))
+  expect_that(fitted(lik.con.ya, p.ya),     equals(fitted(fit.caper.ya)))
+  expect_that(fitted(lik.pru.R.ya, p.ya),   equals(fitted(fit.caper.ya)))
+  expect_that(fitted(lik.pru.C.ya, p.ya),   equals(fitted(fit.caper.ya)))
+  expect_that(fitted(lik.vcv.yab, p.yab),   equals(fitted(fit.caper.yab)))
+  expect_that(fitted(lik.con.yab, p.yab),   equals(fitted(fit.caper.yab)))
+  expect_that(fitted(lik.pru.R.yab, p.yab), equals(fitted(fit.caper.yab)))
+  expect_that(fitted(lik.pru.C.yab, p.yab), equals(fitted(fit.caper.yab)))
 })
 
 test_that("Residuals values are correct", {
-  expect_that(resid(lik.vcv.ya, p.ya),   equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.con.ya, p.ya),   equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.pru.ya, p.ya),   equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.vcv.yab, p.yab), equals(resid(fit.caper.yab)))
-  expect_that(resid(lik.con.yab, p.yab), equals(resid(fit.caper.yab)))
-  expect_that(resid(lik.pru.yab, p.yab), equals(resid(fit.caper.yab)))
+  expect_that(resid(lik.vcv.ya, p.ya),     equals(resid(fit.caper.ya)))
+  expect_that(resid(lik.con.ya, p.ya),     equals(resid(fit.caper.ya)))
+  expect_that(resid(lik.pru.R.ya, p.ya),   equals(resid(fit.caper.ya)))
+  expect_that(resid(lik.pru.C.ya, p.ya),   equals(resid(fit.caper.ya)))
+  expect_that(resid(lik.vcv.yab, p.yab),   equals(resid(fit.caper.yab)))
+  expect_that(resid(lik.con.yab, p.yab),   equals(resid(fit.caper.yab)))
+  expect_that(resid(lik.pru.R.yab, p.yab), equals(resid(fit.caper.yab)))
+  expect_that(resid(lik.pru.C.yab, p.yab), equals(resid(fit.caper.yab)))
 })
 
 fit.ya  <- find.mle(lik.con.ya, p.ya)

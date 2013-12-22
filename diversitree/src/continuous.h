@@ -38,3 +38,4 @@ typedef struct {
 
 void dt_cont_setup_tips(dt_obj_cont *obj, SEXP cache);
 void dt_cont_setup_internal(dt_obj_cont *obj, SEXP cache);
+SEXP r_dt_cont_reset_tips(SEXP extPtr, SEXP tips);
