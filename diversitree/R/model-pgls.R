@@ -26,22 +26,13 @@ make.pgls <- function(tree, formula, data, control=list()) {
   ll
 }
 
-make.initial.tip.pgls.pruning <- function(cache) {
-  cache$states <- cache$Y # a dummy variable, but needed for below:
-  y <- initial.tip.bm.pruning(cache)
-  idx <- match(seq_len(cache$n), y$target)
-
-  function(z) {
-    cache$states <- y$y[1,idx] <- z
-    y
-  }
-}
-
 make.cache.pgls <- function(tree, formula, data, control) {
   tree <- check.tree(tree, ultrametric=FALSE)
 
   cache <- check.data.pgls(tree, formula, data)
   cache$n  <- length(tree$tip.label)
+  ## Hard coded for BM, for now:
+  cache$phylo.model.info <- make.info.bm(NULL)
 
   if (control$method == "vcv") {
     cache$vcv <- vcv(tree)
@@ -51,13 +42,11 @@ make.cache.pgls <- function(tree, formula, data, control) {
     cache$X <- cache$predictors
     cache$Y <- cache$response
   } else if (control$method == "pruning") {
-    ## Whole big pile of stuff here:
     cache <- c(cache, make.cache(tree))
-    ## The initial conditions code will assume the states.sd is zero.
-    cache$states.sd <- rep(0, cache$n)
+    cache$states.sd <- rep(0, cache$n) # require no error
     cache$X <- cache$predictors
     cache$Y <- cache$response
-  } else {
+  } else { # contrasts
     pred <- cache$predictors[,-1,drop=FALSE]
     cache$u.x <- apply(pred, 2, pic, tree)
     cache$u.y <- pic(cache$response, tree)
@@ -68,18 +57,19 @@ make.cache.pgls <- function(tree, formula, data, control) {
     cache$root.y <- pgls.root.mean.bm(tree, cache$response)
   }
 
-  cache$info <- make.info.pgls(tree, cache$predictors)
+  cache$info <- make.info.pgls(tree, cache$predictors,
+                               cache$phylo.model.info)
   cache
 }
 
-make.info.pgls <- function(phy, predictors) {
+make.info.pgls <- function(phy, predictors, phylo.model.info) {
   list(name="pgls",
        name.pretty="PGLS",
        ## Parameters:
-       np=ncol(predictors) + 1L, # + bm
+       np=ncol(predictors) + phylo.model.info$np,
        argnames=default.argnames.pgls(predictors),
        ## Variables:
-       ny=NA,
+       ny=3L, # needed for pruning, ignored elsewhere
        k=NA,
        idx.e=NA,
        idx.d=NA,
@@ -130,49 +120,19 @@ make.all.branches.pgls.vcv <- function(cache, control) {
 make.all.branches.pgls.pruning <- function(cache, control) {
   X <- cache$X
   Y <- cache$Y
-  cache$info$ny <- 3L
-  initial.tips <- make.initial.tip.pgls.pruning(cache)
-  np <- cache$info$np
 
-  if (control$backend == "R") {
-    function(pars) {
-      b <- pars[-np]
-      s2 <- pars[[np]]
-      z <- as.numeric(Y - X %*% b)
-      cache$y <- initial.tips(z)
-      res <- all.branches.matrix(s2, cache,
-                                 initial.conditions.bm.pruning,
-                                 branches.bm.pruning, NULL)
-      rootfunc.pgls.pruning(res)
-    }
-  } else {
-    ## Force selection of BM for now.
-    cache$info$name <- "bm"
-    ## This is needed by make.all.branches.continuous to set up
-    ## initial tip memory:
-    ## NOTE: The -1 here is only for the bm method.  We will need to
-    ## know how many parameters belong to OU, etc soon.
-    cache$y <- initial.tips(Y)
-    ## Also this is needed, because the residuals take 1 parameter
-    cache$info$np <- 1L
-    all.branches <- make.all.branches.continuous(cache, control)
-    ptr <- environment(all.branches)$ptr
-    cache.C <- environment(all.branches)$cache.C
-    y <- cache.C$y$y
+  ## Indices to the parameter vector for the linear and phylogenetic
+  ## part of the model.
+  i.linear <- seq_len(cache$info$np - cache$phylo.model.info$np)
+  i.phylo  <- -i.linear
 
-    function(pars) {
-      b <- pars[-np]
-      s2 <- pars[[np]]
-      z <- as.numeric(Y - X %*% b)
+  all.branches <- make.all.branches.pgls.pruning.phylo(cache, control)
 
-      ## These two lines special
-      ## initial.tips() should just return y, not the full list.
-      ## then for the R case it is cache$y$y <- initial.tips(z)
-      y[1,] <- z
-      .Call("r_dt_cont_reset_tips", ptr, y, PACKAGE="diversitree")
-      res <- all.branches(s2)
-      rootfunc.pgls.pruning(res)
-    }
+  function(pars) {
+    b <- pars[i.linear]
+    z <- as.numeric(Y - X %*% b)
+    res <- all.branches(pars[i.phylo], z)
+    rootfunc.pgls.pruning(res)
   }
 }
 
@@ -329,6 +289,54 @@ residuals.fit.mle.pgls <- function(object, ...) {
   get.cache(get.likelihood(object))$response - fitted(object, ...)
 }
 residuals.mcmcsamples.pgls <- residuals.fit.mle.pgls
+
+## This organises wrapping around the normal "all.branches" functions,
+## from the point of view of:
+##
+## * only some of the parameters belong to a phylogenetic model
+## * the data change between calls.
+##
+## We will take parameters (all of them, and we'll subset down) and a
+## vector of residuals to act as new data.  Then we'll shepherd
+## through the appropriate phylogenetic model.  For now this will just
+## be BM, but eventually will be OU, EB and lambda too.
+##
+## To make that make sense, we need extra elements in the cache
+## object.
+make.all.branches.pgls.pruning.phylo <- function(cache, control) {
+  ## Dummy variable, needed for initial.tip.bm.pruning()
+  cache$states <- cache[["Y"]]
+
+  ## This is needed by make.all.branches.continuous to set up
+  ## initial tip memory:
+  cache$y <- initial.tip.bm.pruning(cache)
+
+  ## Then, we build things based on the *phylo* model, not the
+  ## container.
+  cache$info <- cache$phylo.model.info
+
+  all.branches <- make.all.branches.bm.pruning(cache, control)
+
+  if (control$backend == "R") {
+    y <- get.cache(all.branches)$y$y
+    idx <- match(seq_len(cache$n), cache$y$target)
+    function(pars, residuals) {
+      y[1,idx] <- residuals
+      environment(all.branches)$cache$y$y <- y
+      all.branches(pars)
+    }
+  } else { # backend "C"
+    ptr <- environment(all.branches)$ptr
+    ## NOTE: We need the mangled version here - differently ordered!
+    y <- environment(all.branches)$cache.C$y$y
+
+    function(pars, residuals) {
+      y[1,] <- residuals
+      .Call("r_dt_cont_reset_tips", ptr, y, PACKAGE="diversitree")
+      all.branches(pars)
+    }
+  }
+}
 
 rootfunc.pgls.pruning <- function(res) {
   ll <- rootfunc.bm.pruning(res, NA,   ROOT.MAX, NA,     FALSE)

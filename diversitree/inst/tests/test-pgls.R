@@ -94,8 +94,6 @@ test_that("Calculations agree at differing point", {
 })
 
 ## 6. Pruning
-## lik.pru.ya  <- make.pgls(phy, y ~ a,     data, control=list(method="pruning"))
-## lik.pru.yab <- make.pgls(phy, y ~ a + b, data, control=list(method="pruning"))
 lik.pru.R.ya  <- make.pgls(phy, y ~ a,     data,
                            control=list(method="pruning", backend="R"))
 lik.pru.R.yab <- make.pgls(phy, y ~ a + b, data,
