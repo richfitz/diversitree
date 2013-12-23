@@ -223,34 +223,32 @@ make.prior.uniform <- function(lower, upper, log=TRUE) {
   }
 }
 
-coef.mcmcsamples <- function(object, burnin=NA, thin=NA, sample=NA,
-                             full=FALSE, lik=NULL, ...) {
-  p <- as.matrix(object[-c(1, ncol(object))])
-
+mcmcsamples.index <- function(n, burnin=NA, thin=NA, sample=NA) {
+  i <- seq_len(n)
   if (!is.na(burnin) && burnin > 0) {
     if (burnin < 1)
-      burnin <- floor(burnin * nrow(object))
-    p <- p[seq_len(nrow(p)) > burnin,,drop=FALSE]
+      burnin <- floor(burnin * n)
+    i <- i[i > burnin]
   }
   if (!is.na(thin) && thin > 1)
-    p <- p[seq(1, nrow(p), by=thin),,drop=FALSE]
-  
-  if (full) {
-    if (is.null(lik))
-      stop("'lik' must be provided if full=TRUE")
-    else if ( inherits(lik, "constrained") ) {
-      if (ncol(p) != length(argnames(lik)))
-        stop("Dimensions of parameters are not correct for this function")
-      p <- t(apply(p, 1, lik, pars.only=TRUE))
-    }
-  }
-
+    i <- i[seq(1, length(i), by=thin)]
   if (!is.na(sample)) {
-    if (sample > nrow(p))
+    if (sample > length(i))
       warning("Sampling *will* generate duplicates")
-    p <- p[sample(nrow(p), sample, replace=TRUE),,drop=FALSE]
+    i <- i[sample(length(i), sample, replace=TRUE)]
   }
-    
+  i
+}
+
+coef.mcmcsamples <- function(object, burnin=NA, thin=NA, sample=NA,
+                             full=FALSE, ...) {
+  i <- mcmcsamples.index(nrow(object), burnin, thin, sample)
+  p <- as.matrix(object[i,-c(1, ncol(object)),drop=FALSE])
+  if (full) {
+    lik <- get.likelihood(object)
+    if (inherits(lik, "constrained"))
+      p <- t(apply(p, 1, lik, pars.only=TRUE))
+  }
   p
 }
 
