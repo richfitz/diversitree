@@ -202,10 +202,7 @@ test_that("Can fit models with ML (with SE)", {
 
   ## Second, at the geiger ML point.
   p <- coef(fit.geiger)[c("sigsq", "lambda")]
-  expect_that(lik.vcv(p), equals(fit.geiger$opt$lnL, tolerance=1e-5))
-  expect_that(lik.pru.R(p), equals(fit.geiger$opt$lnL, tolerance=1e-5))
-  expect_that(lik.pru.C(p), equals(fit.geiger$opt$lnL, tolerance=1e-5))
-
-  ## And then check that diversitree found a better point:
-  expect_that(fit.vcv$lnLik > fit.geiger$opt$lnL, is_true())
+  expect_that(lik.vcv.se(p), equals(fit.geiger$opt$lnL))
+  expect_that(lik.pru.R.se(p), equals(fit.geiger$opt$lnL))
+  expect_that(lik.pru.C.se(p), equals(fit.geiger$opt$lnL))
 })
