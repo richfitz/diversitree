@@ -69,11 +69,6 @@ make.rescale.phylo.eb <- function(phy, pars) {
 }
 
 make.rescale.phylo.lambda <- function(phy) {
-  t <- branching.times.edge(phy)
-  t.start <- t$start
-  t.end   <- t$end
-  t.max   <- t$max
-
   n.tip <- length(phy$tip.label)
   interns <- which(phy$edge[, 2] >  n.tip)
   externs <- which(phy$edge[, 2] <= n.tip)
@@ -84,7 +79,6 @@ make.rescale.phylo.lambda <- function(phy) {
   function(lambda) {
     phy$edge.length[interns] <-
       phy$edge.length[interns] * lambda
-    # This *might* be correct:
     phy$edge.length[externs] <-
       phy$edge.length[externs] * lambda + (1 - lambda) * height
     phy

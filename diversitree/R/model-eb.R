@@ -79,7 +79,7 @@ make.all.branches.eb.vcv <- function(cache, control) {
   states <- cache$states
   states.sd <- cache$states.sd
 
-  eb.rescale <- make.eb.rescale(cache$info$phy)
+  eb.rescale <- make.rescale.phylo.eb(cache$info$phy)
 
   function(pars, intermediates) {
     s2 <- pars[1]
@@ -92,57 +92,6 @@ make.all.branches.eb.vcv <- function(cache, control) {
     mu <- phylogMean(vv, states)
     dmvnorm2(states, rep(mu, n.tip), vv, solve(vv), log=TRUE)
   }
-}
-
-## Q&D reimplementation of rescale.phylo(EB)
-make.eb.rescale <- function(phy) {
-  ht <- heights.phylo(phy)
-  N <- Ntip(phy)
-  Tmax <- ht$start[N + 1]
-  mm <- match(seq_len(nrow(ht)), phy$edge[, 2])
-  ht$t1 <- Tmax - ht$end[phy$edge[mm, 1]]
-  ht$t2 <- ht$start - ht$end + ht$t1
-
-  ## NOTE: I think that this is in terms of *log* a.  This might be an
-  ## issue with some of the other parameters, too.  In the Blomberg
-  ## formulation, '1' is the switch point between accelerate and
-  ## decelerate, but here it's log(1).  This is also consistent with
-  ## the rewrite that I found from last week, where the definite
-  ## integral of the Blomberg function (and end up with something
-  ## like:
-  ##   (g^t2 - g^t1)/log(g); a = log(g)
-  function(a) {
-    if (a == 0) 
-      return(phy)
-    ## OK, this little bit here is what we need to actually get.  This
-    ## should be really easy as we have depth (t0) and len.
-    bl <- (exp(a * ht$t2) - exp(a * ht$t1))/a
-    phy$edge.length <- bl[phy$edge[, 2]]
-    phy
-  }
-}
-
-heights.phylo <- function(phy) {
-  phy <- reorder(phy, "postorder")
-  n <- length(phy$tip.label)
-  n.node <- phy$Nnode
-  xx <- numeric(n + n.node)
-  for (i in nrow(phy$edge):1)
-    xx[phy$edge[i, 2]] <- xx[phy$edge[i, 1]] + phy$edge.length[i]
-  root <- ifelse(is.null(phy$root.edge), 0, phy$root.edge)
-  labs <- c(phy$tip.label, phy$node.label)
-  depth <- max(xx)
-  tt <- depth - xx
-  idx <- 1:length(tt)
-  dd <- phy$edge.length[idx]
-  mm <- match(1:length(tt), c(phy$edge[, 2], Ntip(phy) + 1))
-  dd <- c(phy$edge.length, root)[mm]
-  ss <- tt + dd
-  res <- cbind(ss, tt)
-  rownames(res) <- idx
-  colnames(res) <- c("start", "end")
-  res <- data.frame(res)
-  res
 }
 
 make.all.branches.eb.pruning <- function(cache, control) {
