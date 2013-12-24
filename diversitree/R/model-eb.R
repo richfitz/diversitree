@@ -16,13 +16,10 @@ make.eb <- function(tree, states, states.sd=0, control=list()) {
     rootfunc <- rootfunc.bm.pruning
   }
 
-  ## Next, find the root depth:
-  max.t <- max(cache$depth)
-
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
                  intermediates=FALSE) {
     check.pars.eb(pars)
-    ans <- all.branches(c(pars, max.t), intermediates)
+    ans <- all.branches(pars, intermediates)
     rootfunc(ans, pars, root, root.x, intermediates)
   }
   class(ll) <- c("eb", "dtlik", "function")
@@ -74,18 +71,21 @@ check.pars.eb <- function(pars) {
 }
 
 ## VCV approach:
+##
+## Notice here that this now works for all rescaling functions - so
+## long as they take parameters except for the first one (s2).
 make.all.branches.eb.vcv <- function(cache, control) {
   n.tip <- cache$n.tip
   states <- cache$states
   states.sd <- cache$states.sd
 
-  eb.rescale <- make.rescale.phylo.eb(cache$info$phy)
+  rescale <- make.rescale.phylo.eb(cache$info$phy)
 
   function(pars, intermediates) {
-    s2 <- pars[1]
-    a <- pars[2]
+    s2 <- pars[[1]]
+    a  <- pars[[2]]
 
-    vcv <- vcv.phylo(eb.rescale(a))
+    vcv <- vcv.phylo(rescale(a))
     vv <- s2 * vcv
     # Below here is identical to make.all.branches.ou.vcv
     diag(vv) <- diag(vv) + states.sd^2
@@ -95,16 +95,22 @@ make.all.branches.eb.vcv <- function(cache, control) {
 }
 
 make.all.branches.eb.pruning <- function(cache, control) {
-  if (control$backend == "R")
-    function(pars, intermediates, preset=NULL)
+  ## NOTE: This is a hack, but allow here for the extra paramter:
+  cache$info$np <- 3L
+
+  pars.extra <- max(cache$depth)
+
+  if (control$backend == "R") {
+    all.branches <- function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache,
                           initial.conditions.bm.pruning,
                           branches.eb, preset)
-  else {
-    ## NOTE: This is a hack, but allow here for the extra paramter:
-    cache$info$np <- 3L
-    make.all.branches.continuous(cache, control)
+  } else {
+    all.branches <- make.all.branches.continuous(cache, control)
   }
+
+  function(pars, ...)
+    all.branches(c(pars, pars.extra), ...)
 }
 
 

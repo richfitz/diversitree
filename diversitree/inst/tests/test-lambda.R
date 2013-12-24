@@ -170,9 +170,6 @@ test_that("Can fit models with ML", {
   expect_that(lik.vcv(p), equals(fit.geiger$opt$lnL))
   expect_that(lik.pru.R(p), equals(fit.geiger$opt$lnL))
   expect_that(lik.pru.C(p), equals(fit.geiger$opt$lnL))
-
-  ## And then check that diversitree found a better point:
-  expect_that(fit.vcv$lnLik > fit.geiger$opt$lnL, is_true())
 })
 
 test_that("Can fit models with ML (with SE)", {

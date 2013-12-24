@@ -95,21 +95,18 @@ make.all.branches.lambda.vcv <- function(cache, control) {
 
 make.all.branches.lambda.pruning <- function(cache, control) {
   ## NOTE: This is a hack, but allow here for the extra parameters
-  ## needed for computing 
   cache$info$np <- 4L
 
   pars.extra <- c(max(cache$depth), cache$n.tip)
   
-  if (control$backend == "R")
+  if (control$backend == "R") {
     all.branches <- function(pars, intermediates, preset=NULL)
       all.branches.matrix(pars, cache,
                           initial.conditions.bm.pruning,
                           branches.lambda, preset)
-  else {
+  } else {
     all.branches <- make.all.branches.continuous(cache, control)
   }
-  ## This is probably slightly more robust than the way way that EB
-  ## does it.
   function(pars, ...)
     all.branches(c(pars, pars.extra), ...)
 }
