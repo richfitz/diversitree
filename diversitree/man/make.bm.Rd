@@ -2,19 +2,22 @@
 \alias{make.bm}
 \alias{make.ou}
 \alias{make.eb}
+\alias{make.lambda}
 
 \title{Brownian Motion and Related Models of Character Evolution}
 
 \description{Create a likelihood function for models of simple Brownian
   Motion (BM), Ornstein-Uhlenbeck (OU), or Early Burst (EB) character
-  evolution.  This function creates a likelihood function that can be
-  used in \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
+  evolution, or BM on a \dQuote{lambda} rescaled tree.  This function
+  creates a likelihood function that can be used in
+  \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
   inference.}
 
 \usage{
 make.bm(tree, states, states.sd=0, control=list())
 make.ou(tree, states, states.sd=0, with.optimum=FALSE, control=list())
 make.eb(tree, states, states.sd=0, control=list())
+make.lambda(tree, states, states.sd=0, control=list())
 }
 
 \arguments{
@@ -44,14 +47,17 @@ make.eb(tree, states, states.sd=0, control=list())
   The main option is \code{method}.  Specifying
   \code{control=list(method="vcv")} uses a variance-covariance matrix
   based approach to compute the likelihood.  This is similar to the
-  approach used by geiger, and is the default for \code{make.bm} (but is
-  not available for \code{make.ou}).  The alternative is to specify
-  \code{control=list(method="pruning")} which uses the transition density
+  approach used by geiger, and is the default.
+
+  Two alternative approaches are available.
+  \code{control=list(method="pruning")} uses the transition density
   function for brownian motion along each branch, similar to how most
   methods in diversitree are computed.  This second approach is much
-  faster for very large trees.
+  faster for very large trees.  \code{control=list(method="contrasts")}
+  uses Freckleton (2012)'s contrasts based approach, which is also much
+  faster on large trees.
 
-  When \code{method="vcv"} is specified, \code{backend="R"} or
+  When \code{method="pruning"} is specified, \code{backend="R"} or
   \code{backend="C"} may also be provided, which switch between a slow
   (and stable) R calculator and a fast (but less extensively tested) C
   calculator.  \code{backend="R"} is currently the default.
@@ -59,8 +65,9 @@ make.eb(tree, states, states.sd=0, control=list())
   The VCV-based functions are heavily based on \code{fitContinuous} in
   the \code{geiger} package.
 
-  For non-ultrametric trees with OU models, computed likelihoods will
-  differ because of the different root treatments.
+  For non-ultrametric trees with OU models, computed likelihoods may
+  differ because of the different root treatments.  This is particularly
+  the case for models where the optimum is estimated.
 
   For the EB model, the parameter intepretation follows geiger; the 'a'
   parameter is equivalent to -log(g) in Bloomberg et al. 2003; when
