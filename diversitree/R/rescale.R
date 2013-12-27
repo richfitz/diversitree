@@ -90,3 +90,12 @@ rescale.phylo.se <- function(phy, se) {
   phy$edge.length[tips] <- phy$edge.length[tips] + se
   phy
 }
+
+## A little wrapping helper function.
+make.rescale.phylo <- function(phy, model) {
+  switch(model,
+         ou=make.rescale.phylo.eb,
+         eb=make.rescale.phylo.eb,
+         lambda=make.rescale.phylo.lambda,
+         stop("Unknown model ", dQuote(model)))(phy)
+}

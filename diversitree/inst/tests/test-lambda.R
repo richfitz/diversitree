@@ -22,17 +22,17 @@ lik.pru.R <- make.lambda(phy, states,
                      control=list(method="pruning", backend="R"))
 lik.pru.C <- make.lambda(phy, states,
                      control=list(method="pruning", backend="C"))
-## lik.con <- make.lambda(phy, states, control=list(method="contrasts"))
+lik.con <- make.lambda(phy, states, control=list(method="contrasts"))
 
 lik.vcv.se <- make.lambda(phy, states, se, control=list(method="vcv"))
 lik.pru.R.se <- make.lambda(phy, states, se,
                      control=list(method="pruning", backend="R"))
 lik.pru.C.se <- make.lambda(phy, states, se,
                      control=list(method="pruning", backend="C"))
-## ## Not yet supported
-## expect_that(make.lambda(phy, states, se,
-##                         control=list(method="contrasts")),
-##             throws_error())
+## Not yet supported
+expect_that(make.lambda(phy, states, se,
+                        control=list(method="contrasts")),
+            throws_error())
 
 test_that("Likelihood calculations agree on known case", {
   ## Start with BM; set lambda to one:

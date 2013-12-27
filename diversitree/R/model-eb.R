@@ -9,7 +9,7 @@ make.eb <- function(tree, states, states.sd=0, control=list()) {
   cache <- make.cache.eb(tree, states, states.sd, control)
 
   if (control$method == "vcv") {
-    all.branches <- make.all.branches.eb.vcv(cache, control)
+    all.branches <- make.all.branches.rescale.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else {
     all.branches <- make.all.branches.eb.pruning(cache, control)
@@ -70,30 +70,6 @@ check.pars.eb <- function(pars) {
   TRUE
 }
 
-## VCV approach:
-##
-## Notice here that this now works for all rescaling functions - so
-## long as they take parameters except for the first one (s2).
-make.all.branches.eb.vcv <- function(cache, control) {
-  n.tip <- cache$n.tip
-  states <- cache$states
-  states.sd <- cache$states.sd
-
-  rescale <- make.rescale.phylo.eb(cache$info$phy)
-
-  function(pars, intermediates) {
-    s2 <- pars[[1]]
-    a  <- pars[[2]]
-
-    vcv <- vcv.phylo(rescale(a))
-    vv <- s2 * vcv
-    # Below here is identical to make.all.branches.ou.vcv
-    diag(vv) <- diag(vv) + states.sd^2
-    mu <- phylogMean(vv, states)
-    dmvnorm2(states, rep(mu, n.tip), vv, solve(vv), log=TRUE)
-  }
-}
-
 make.all.branches.eb.pruning <- function(cache, control) {
   ## NOTE: This is a hack, but allow here for the extra paramter:
   cache$info$np <- 3L
@@ -112,7 +88,6 @@ make.all.branches.eb.pruning <- function(cache, control) {
   function(pars, ...)
     all.branches(c(pars, pars.extra), ...)
 }
-
 
 ## The issue that I have here is that time is computed against the
 ## root, so we'll need to know that.  t0 is the *depth* of the

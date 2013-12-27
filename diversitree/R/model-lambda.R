@@ -4,13 +4,13 @@ make.lambda <- function(tree, states, states.sd=0, control=list()) {
   cache <- make.cache.lambda(tree, states, states.sd, control)
 
   if (control$method == "vcv") {
-    all.branches <- make.all.branches.lambda.vcv(cache, control)
+    all.branches <- make.all.branches.rescale.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else if (control$method == "pruning") {
     all.branches <- make.all.branches.lambda.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
   } else if (control$method == "contrasts") {
-    all.branches <- make.all.branches.lambda.contrasts(cache, control)
+    all.branches <- make.all.branches.rescale.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
     stop("Unknown method", control$method)
@@ -70,27 +70,6 @@ check.pars.lambda <- function(pars) {
   if (pars[[2]] > 1)
     stop("lambda must be in [0,1]")
   TRUE
-}
-
-## VCV approach:
-make.all.branches.lambda.vcv <- function(cache, control) {
-  n.tip <- cache$n.tip
-  states <- cache$states
-  states.sd <- cache$states.sd
-
-  rescale <- make.rescale.phylo.lambda(cache$info$phy)
-
-  function(pars, intermediates) {
-    s2     <- pars[[1]]
-    lambda <- pars[[2]]
-
-    vcv <- vcv.phylo(rescale(lambda))
-    vv <- s2 * vcv
-    # Below here is identical to make.all.branches.ou.vcv
-    diag(vv) <- diag(vv) + states.sd^2
-    mu <- phylogMean(vv, states)
-    dmvnorm2(states, rep(mu, n.tip), vv, solve(vv), log=TRUE)
-  }
 }
 
 make.all.branches.lambda.pruning <- function(cache, control) {

@@ -76,3 +76,71 @@ toC.cache.continuous <- function(cache) {
 
   cache
 }
+
+make.all.branches.rescale.vcv <- function(cache, control) {
+  n.tip <- cache$n.tip
+  states <- cache$states
+  states.sd <- cache$states.sd
+
+  rescale <- make.rescale.phylo(cache$info$phy, cache$info$name)
+
+  function(pars, intermediates) {
+    s2 <- pars[[1]]
+
+    vcv <- vcv.phylo(rescale(pars[-1]))
+    vv <- s2 * vcv
+
+    diag(vv) <- diag(vv) + states.sd^2
+    mu <- phylogMean(vv, states)
+    dmvnorm2(states, rep(mu, n.tip), vv, solve(vv), log=TRUE)
+  }
+}
+
+make.all.branches.rescale.contrasts <- function(cache, control) {
+  if (any(cache$states.sd > 0))
+    stop("Cannot (yet) do contrasts based bm models with state error")
+
+  ## This is annoying; we'll have to do this in make.bm.  If we don't,
+  ## then we will reorder every time and that's going to hurt,
+  ## timewise.  If I rewrite the pic() calculations to use my
+  ## ordering, we can skip this step.  Given that eventually I think I
+  ## want access to more of the pic components, that seems like a good
+  ## idea.
+  tree <- reorder(cache$info$phy, "pruningwise")
+  states <- cache$states[tree$tip.label] # does reorder change this?
+  rescale <- make.rescale.phylo(tree, cache$info$name)
+  n <- length(tree$tip.label)
+
+  function(pars, intermediates, preset=NULL) {
+    s2 <- pars[[1]]
+    tree <- rescale(pars[-1])
+
+    ## Copied from model-bm.R:make.cache.bm
+    ## There is duplication here with make.cache.pgls; perhaps merge
+    ## these?  That might help with some of the root treatment
+    ## things.
+    pics <- pic(cache$states, tree, var.contrasts=TRUE)
+    u <- pics[,"contrasts"]
+    V <- pics[,"variance"]
+    V0 <- pgls.root.var.bm(tree)
+    ## This step is brutal.  We could rewrite the branch lengths there
+    ## once the lookups are done properly.  This is particularly bad
+    ## because it will involve doing another tree reordering.
+    ## Costly!  What's more is we can actually get it from the PIC
+    ## calculation.  So this part needs to be done separately, and for
+    ## all the pic methods.  This entire section of code is horribly
+    ## duplicated!
+    root.x <- pgls.root.mean.bm(tree, cache$states)
+
+    ## This is the bit that is shared with all.branches.bm
+    ll <- -(n * log(2 * pi * s2) +
+            sum(log(V)) +
+            log(V0) +
+            sum(u * u) / s2) * 0.5
+    list(loglik=ll,
+         root.x=root.x,
+         root.v=s2 * V0,
+         # not sure if these are needed...
+         V=V, V0=V0)
+  }
+}
