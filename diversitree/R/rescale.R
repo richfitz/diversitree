@@ -94,7 +94,7 @@ rescale.phylo.se <- function(phy, se) {
 ## A little wrapping helper function.
 make.rescale.phylo <- function(phy, model) {
   switch(model,
-         ou=make.rescale.phylo.eb,
+         ou=make.rescale.phylo.ou,
          eb=make.rescale.phylo.eb,
          lambda=make.rescale.phylo.lambda,
          stop("Unknown model ", dQuote(model)))(phy)

@@ -89,10 +89,11 @@ make.all.branches.rescale.vcv <- function(cache, control) {
 
     vcv <- vcv.phylo(rescale(pars[-1]))
     vv <- s2 * vcv
-
     diag(vv) <- diag(vv) + states.sd^2
-    mu <- phylogMean(vv, states)
-    dmvnorm2(states, rep(mu, n.tip), vv, solve(vv), log=TRUE)
+
+    VI <- solve(vv)
+    mu <- sum(colSums(VI) * states) / sum(VI)
+    dmvnorm2(states, rep(mu, n.tip), vv, VI, log=TRUE)
   }
 }
 

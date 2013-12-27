@@ -27,14 +27,17 @@ make.ou <- function(tree, states, states.sd=0, with.optimum=FALSE,
   control <- check.control.continuous(control)
   cache <- make.cache.ou(tree, states, states.sd, with.optimum, control)
 
+  if (cache$with.optimum && control$method != "pruning")
+    stop("Cannot fit a model with optimum using contrasts (use pruning)")
+
   if (control$method == "vcv") {
-    all.branches <- make.all.branches.ou.vcv(cache, control)
+    all.branches <- make.all.branches.rescale.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else if (control$method == "pruning") {
     all.branches <- make.all.branches.ou.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
   } else if (control$method == "contrasts") {
-    all.branches <- make.all.branches.ou.contrasts(cache, control)
+    all.branches <- make.all.branches.rescale.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
     stop("Unknown method", control$method)
