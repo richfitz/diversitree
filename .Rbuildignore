@@ -3,3 +3,5 @@ doc
 www
 push-www.sh
 Makefile
+run_tests.R
+.travis.yml
