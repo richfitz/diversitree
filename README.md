@@ -10,10 +10,7 @@ released version from CRAN:
 The interesting directories are:
 
 * inst/tests: testing functions that exercise most of the
-package's main features.  Running
-`./inst/tests/zzz.R` will run the tests from
-the installed diversitree package, or use `testthat`'s `test_dir` on
-this directory.
+package's main features.  Running `./run_tests.R` will run the tests.  These take too long to run on CRAN (over a minute), so are not set up in the usual way.
 * doc: Vignettes, and their required data files.
 
 ## Installing diversitree
