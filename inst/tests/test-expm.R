@@ -1,6 +1,4 @@
-library(diversitree)
-library(testthat)
-suppressMessages(library(expm))
+source("helper-diversitree.R")
 
 context("Matrix exponentials")
 

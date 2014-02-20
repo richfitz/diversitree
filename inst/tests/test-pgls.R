@@ -1,7 +1,4 @@
-library(diversitree)
-library(testthat)
-library(caper)
-library(nlme)
+source("helper-diversitree.R")
 
 context("PGLS")
 

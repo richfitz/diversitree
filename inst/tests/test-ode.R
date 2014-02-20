@@ -1,6 +1,5 @@
 ## Testing for the ODE bits.
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 ## All testing is done with the BiSSE equations, just because they are
 ## the equations I've looked at most closely over the years.  In

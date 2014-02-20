@@ -1,3 +1,16 @@
+suppressMessages({
+  library(testthat)
+  library(diversitree)
+  library(geiger)
+  library(parallel)
+  library(ggplot2)
+  library(expm)
+  library(caper)
+  library(nlme)
+  library(lubridate)
+  library(minqa)
+})
+
 has_attribute <- function(key) {
   function(x)
     expectation(key %in% names(attributes(x)),

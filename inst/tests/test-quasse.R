@@ -1,5 +1,4 @@
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 context("QuaSSE")
 

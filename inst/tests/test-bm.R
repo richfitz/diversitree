@@ -1,6 +1,4 @@
-library(diversitree)
-library(testthat)
-suppressMessages(library(geiger))
+source("helper-diversitree.R")
 
 no.stdout <- function(expr) {
   sink(tempfile())
@@ -146,7 +144,6 @@ test_that("Can fit models with ML", {
   expect_that(fit.pru.C, equals(fit.vcv))
   expect_that(fit.con,   equals(fit.vcv))
 
-  library(geiger)
   x <- structure(as.numeric(states), names=names(states))
   fit.geiger <- no.stdout(fitContinuous(phy, x,
                                         control=list(niter=5)))
@@ -166,7 +163,6 @@ test_that("Can fit models with ML (with SE)", {
   expect_that(fit.pru.C, equals(fit.vcv))
   # expect_that(fit.con,   equals(fit.vcv))
 
-  library(geiger)
   x <- structure(as.numeric(states), names=names(states))
   fit.geiger <- no.stdout(fitContinuous(phy, x, SE=se,
                                         control=list(niter=5)))

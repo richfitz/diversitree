@@ -1,5 +1,4 @@
-library(testthat)
-library(diversitree)
+source("helper-diversitree.R")
 
 ## Will be useful to have a function for testing tolerance to within
 ## 1e-7, as that works out to be how accurate most things actually

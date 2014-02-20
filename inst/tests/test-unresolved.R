@@ -1,5 +1,4 @@
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 context("Unresolved clades (BiSSE + BiSSE-ness)")
 

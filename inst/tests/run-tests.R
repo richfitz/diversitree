@@ -1,4 +1,6 @@
-suppressMessages(library(geiger)) # load first because of constrain clash
-suppressMessages(library(diversitree))
-library(testthat)
+#!/usr/bin/env Rscript
+suppressMessages({
+  library(testthat)
+  library(diversitree)
+})
 test_dir(".")

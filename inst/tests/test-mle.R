@@ -1,6 +1,3 @@
-library(diversitree)
-library(testthat)
-library(minqa)
 source("helper-diversitree.R")
 
 context("MLE")

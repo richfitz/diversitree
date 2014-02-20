@@ -1,5 +1,4 @@
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 ## Different control parameters
 control.d <- list(backend="deSolve")

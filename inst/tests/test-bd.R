@@ -1,5 +1,4 @@
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 ## Will be useful to have a function for testing tolerance to within
 ## 1e-7, as that works out to be how accurate most things actually
@@ -51,7 +50,8 @@ fit.ape <- birthdeath(phy)
 p.ape <- rev(fit.ape$para) # zero extinction..
 
 fit.dt <- find.mle(lik.0, p, method="optim", lower=0)
-expect_that(coef(fit.dt), equals(p.ape, tolerance=1e-5, check.attr=FALSE))
+expect_that(coef(fit.dt), equals(p.ape, tolerance=1e-5,
+                                 check.attributes=FALSE))
 expect_that(fit.dt$lnLik, equals(-fit.ape$dev/2))
 
 lik.s.0 <- make.bd(phy, sampling.f=.5)

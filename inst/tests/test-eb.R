@@ -1,6 +1,4 @@
-library(diversitree)
-library(testthat)
-suppressMessages(library(geiger))
+source("helper-diversitree.R")
 
 context("Early Burst")
 

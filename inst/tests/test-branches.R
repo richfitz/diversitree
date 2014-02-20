@@ -1,7 +1,5 @@
 ## Test the branches calculations, with both the R and C++ interfaces.
-
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 context("Branches")
 

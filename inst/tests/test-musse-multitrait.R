@@ -1,5 +1,4 @@
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 equals7 <- function(...)
   equals(..., tolerance=1e-7)

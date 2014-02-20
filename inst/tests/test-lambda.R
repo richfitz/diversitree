@@ -1,6 +1,4 @@
-library(diversitree)
-library(testthat)
-suppressMessages(library(geiger))
+source("helper-diversitree.R")
 
 no.stdout <- function(expr) {
   sink(tempfile())
@@ -151,7 +149,6 @@ test_that("Can fit models with ML", {
 
   ## Geiger does a surprisingly terrible job of fitting the model,
   ## finding a ML point that is way worse than the global optimum.
-  library(geiger)
   x <- structure(as.numeric(states), names=names(states))
   fit.geiger <-
     no.stdout(suppressWarnings(fitContinuous(phy, x, model="lambda",
@@ -183,7 +180,6 @@ test_that("Can fit models with ML (with SE)", {
   expect_that(fit.pru.C, equals(fit.vcv))
   ## expect_that(fit.con,   equals(fit.vcv))
 
-  library(geiger)
   x <- structure(as.numeric(states), names=names(states))
   fit.geiger <-
     no.stdout(suppressWarnings(fitContinuous(phy, x, SE=se, model="lambda",

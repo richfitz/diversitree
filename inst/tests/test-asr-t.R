@@ -1,5 +1,4 @@
-library(diversitree)
-library(testthat)
+source("helper-diversitree.R")
 
 control.d <- list(backend="deSolve")
 control.g <- list(backend="gslode", compiled=FALSE)

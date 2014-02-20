@@ -1,6 +1,3 @@
-library(diversitree)
-library(testthat)
-library(lubridate)
 source("helper-diversitree.R")
 
 context("MCMC")
