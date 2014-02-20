@@ -9,10 +9,9 @@ released version from CRAN:
 
 The interesting directories are:
 
-* diversitree: the R package
-* diversitree/inst/tests: testing functions that exercise most of the
+* inst/tests: testing functions that exercise most of the
 package's main features.  Running
-`./diversitree/diversitree/inst/tests/zzz.R` will run the tests from
+`./inst/tests/zzz.R` will run the tests from
 the installed diversitree package, or use `testthat`'s `test_dir` on
 this directory.
 * doc: Vignettes, and their required data files.
@@ -23,17 +22,25 @@ Clone the repository with
 
     git clone git://github.com/richfitz/diversitree.git
 
+The package should then be installable the usual way.  You'll need a C, C++ and Fortran compiler.
 
-You need to generate the configure script.  In the
-`diversitree/diversitree` directory, run
+To install and specify the location of the fftw library in a
+non-standard place, a line like this is required:
+  R CMD INSTALL diversitree --configure-args='--with-fftw=/path/to/fftw'
+where the path will be the path so that the files
+  /path/to/fftw/include/fftw3.h
+  /path/to/fftw/lib/lib/fftw3.so
+exist.
 
-    autoheader
-    autoconf
+On Windows, set the environment variable LIB_FFTW to point to the
+directory that contains include/fftw.h, and install the package.
 
-The package should then be installable the usual way.
+If fftw is not found, installation will continue, but the (relatively)
+fast C based QuaSSE integration will not be available.  The R based
+fft integrator and the method-of-lines integrator will be available.
 
 ## Branches
 
 The "master" branch contains the bleeding edge version of diversitree.
 It may or may not work for you.  The "release" branch contains stable
-releases, which you can usually get from the diversitree website.
+releases.
