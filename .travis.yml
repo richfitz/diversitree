@@ -8,7 +8,7 @@ install:
   - ./travis-tool.sh aptget_install libgsl0-dev
   - ./travis-tool.sh aptget_install fftw3-dev
   - ./travis-tool.sh install_deps
-script: ./travis-tool.sh run_tests && ./run_tests.R
+script: ./travis-tool.sh run_tests && make install test
 
 on_failure:
   - ./travis-tool.sh dump_logs
