@@ -1,13 +1,12 @@
 ## NAMESPACE
 
-## Import Rcpp so that .onLoad can load the modules.
+useDynLib(diversitree)
+
+import(methods)
 import(Rcpp)
 import(ape)
 import(deSolve)
-import(methods)
 import(subplex)
-
-useDynLib(diversitree)
 
 ## 1. make
 export(make.bd)
