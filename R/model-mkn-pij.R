@@ -46,7 +46,7 @@ make.all.branches.mkn.pij <- function(cache, control) {
               init     = branch.init,
               base     = branch.base,
               lq       = lq,
-              NAOK=TRUE, DUP=FALSE)
+              NAOK=TRUE, package="diversitree")
     list(init=ans$init,
          base=ans$base,
          lq=ans$lq,
