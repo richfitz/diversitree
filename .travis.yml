@@ -6,6 +6,7 @@ before_install:
   - ./travis-tool.sh bootstrap
 install:
   - ./travis-tool.sh aptget_install libgsl0-dev
+  - ./travis-tool.sh aptget_install fftw3-dev
   - ./travis-tool.sh install_deps
 script: ./travis-tool.sh run_tests && ./run_tests.R
 
