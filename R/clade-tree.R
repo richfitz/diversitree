@@ -72,7 +72,7 @@ clades.from.sample <- function(phy, p) {
   n.taxa <- length(phy$tip.label)
 
   desc <- lapply(seq_len(phy$Nnode) + n.taxa, get.descendants, phy, TRUE)
-  anc <- diversitree:::ancestors(phy)
+  anc <- ancestors(phy)
 
   f <- function(i) {
     check <- rev(na.omit(anc[,i]))[-1] - n.taxa

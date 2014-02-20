@@ -277,7 +277,7 @@ fitted.mcmcsamples.pgls <- function(object, ...) {
   p <- coef(object, ...)
   lik <- get.likelihood(object)
   ret <- apply(p, 1, function(x) fitted(lik, x))
-  rownames(ret) <- rownames(diversitree:::get.cache(lik)$predictors)
+  rownames(ret) <- rownames(get.cache(lik)$predictors)
   colnames(ret) <- NULL
   ret
 }
