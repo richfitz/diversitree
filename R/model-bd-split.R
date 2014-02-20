@@ -35,7 +35,7 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
                                 sampling.f=NULL, unresolved=NULL) {
   tree <- check.tree(tree, node.labels=TRUE)
 
-  if ( !isTRUE(all.equal(unique(split.t), Inf, check.attr=FALSE)) )
+  if ( !isTRUE(all.equal(unique(split.t), Inf, check.attributes=FALSE)) )
     stop("split.t cannot yet be changed")
   nodes <- check.split(tree, nodes, split.t)$nodes
   n <- length(nodes)
