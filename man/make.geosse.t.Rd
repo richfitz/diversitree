@@ -4,10 +4,10 @@
 \title{Geographic State Speciation and Extinction Model: Time Dependent
   Models}
 
-\description{Prepare to run time dependent GeoSSE (Geographic State Speciation and
-  Extinction) on a phylogenetic tree and character distribution. This
-  function creates a likelihood function that can be used in
-  \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
+\description{Prepare to run time dependent GeoSSE (Geographic State
+  Speciation and Extinction) on a phylogenetic tree and character
+  distribution. This function creates a likelihood function that can be
+  used in \link[=find.mle]{maximum likelihood} or \link[=mcmc]{Bayesian}
   inference.}
 
 \usage{
@@ -83,9 +83,10 @@ make.geosse.t(tree, states, functions, sampling.f=NULL, strict=TRUE,
 }
 
 \seealso{
-  \code{\link{constrain}} for making submodels and reduce number of parameters, \code{\link{find.mle}}
-  for ML parameter estimation, \code{\link{mcmc}} for MCMC integration,
-  \code{\link{make.bisse}} and \code{\link{make.bisse.t}} for further relevant examples.
+  \code{\link{constrain}} for making submodels and reduce number
+  of parameters, \code{\link{find.mle}} for ML parameter estimation,
+  \code{\link{mcmc}} for MCMC integration, \code{\link{make.bisse}} and
+  \code{\link{make.bisse.t}} for further relevant examples.
 
   The help page for \code{\link{find.mle}} has further examples of ML
   searches on full and constrained BiSSE models.  Things work similarly
@@ -151,13 +152,15 @@ pars <- c(0.01,0.001,0.01,0.001,0.01,0.001,0.02,0.002,0.02,0.002,0.1,0.1)
 names(pars)<-argnames(lik)
 lik(pars) # -640.1644
 
-## A guess at a starting point from character independent birth-death model (constant across time) .
+## A guess at a starting point from character independent birth-death
+## model (constant across time) .
 p <- starting.point.geosse(phy)
 
 #it only gives 7 parameters for time-constant model.
 names(p)
 
-# it can be modified for time-dependent with a guess on the slopes of speciation and extinction rates.
+## it can be modified for time-dependent with a guess on the slopes of
+## speciation and extinction rates.
 p.t<-c(p[1],0.001,p[2],0.001,p[3],0.001,p[4],0.001,p[5],0.001,p[6],p[7])
 names(p.t)<-argnames(lik)
 
