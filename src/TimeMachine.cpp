@@ -6,7 +6,7 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 			 std::vector<std::string> funcs,
 			 std::vector<bool> nonnegative,
 			 std::vector<bool> truncate,
-			 size_t k,
+			 size_t k_,
 			 std::vector<double> spline_t,
 			 std::vector<double> spline_y) {
   nf = funcs.size();
@@ -31,7 +31,7 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
     np_in += f.np;
   }
 
-  setup_q(k);
+  setup_q(k_);
 }
 
 void TimeMachine::set(std::vector<double> pars) {
@@ -114,7 +114,7 @@ void TimeMachine::setup_q(size_t k_) {
     // Space to indicate when rows/columns(?) of Q are constant
     const_q.resize(k, true);
     std::vector<TimeMachineFunction>::iterator f = functions.begin();
-    std::advance(f, idx_q_f);
+    std::advance(f, static_cast<int>(idx_q_f));
     for (size_t i = 0; i < k; i++) {
       for (size_t j = 0; j < k - 1; j++) {
 	const_q[i] = const_q[i] && f->is_constant;
@@ -206,29 +206,29 @@ double TimeMachineFunction::check_ok(double x) {
 
 //////////////////////////////////////////////////////////////////////
 
-double tm_fun_constant(double t,
+double tm_fun_constant(double /* t */,
 		       std::vector<double>::const_iterator pars_in,
-		       Spline *spline) {
+		       Spline* /* spline */) {
   return *pars_in++;
 }
 
 double tm_fun_linear(double t,
 		     std::vector<double>::const_iterator pars_in,
-		     Spline *spline) {
+		     Spline* /* spline */) {
   const double c = *pars_in++, m = *pars_in++;
   return c + m * t;
 }
 
 double tm_fun_stepf(double t,
 		    std::vector<double>::const_iterator pars_in,
-		    Spline *spline) {
+		    Spline* /* spline */) {
   const double t0 = *pars_in++, t1 = *pars_in++, tc = *pars_in++;
   return t <= tc ? t0 : t1;
 }
 
 double tm_fun_sigmoid(double t,
 		      std::vector<double>::const_iterator pars_in,
-		      Spline *spline) {
+		      Spline* /* spline */) {
   const double y0 = *pars_in++, y1 = *pars_in++, tmid = *pars_in++, 
     r = *pars_in++;
   return y0 + (y1 - y0)/(1 + exp(r * (tmid - t)));

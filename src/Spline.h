@@ -29,7 +29,7 @@ protected:
   void gsl_free_spline();
   void gsl_free_acc();
 
-  void do_gsl_alloc_spline(std::vector<double> x, std::vector<double> y);
+  void do_gsl_alloc_spline(std::vector<double> x_, std::vector<double> y_);
 };
 
 #endif // SPLINE_H_

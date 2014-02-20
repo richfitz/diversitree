@@ -31,14 +31,14 @@ void Spline::gsl_free_acc() {
   }
 }
 
-void Spline::do_gsl_alloc_spline(std::vector<double> x,
-				 std::vector<double> y) {
+void Spline::do_gsl_alloc_spline(std::vector<double> x_,
+				 std::vector<double> y_) {
   const size_t n = size();
   gsl_free_spline();
   gsl_free_acc();
   acc    = gsl_interp_accel_alloc();
   spline = gsl_spline_alloc(gsl_interp_cspline, n);
-  gsl_spline_init(spline, &x.front(), &y.front(), n);  
+  gsl_spline_init(spline, &x_.front(), &y_.front(), n);
 }
 
 void Spline::init(std::vector<double> x_, std::vector<double> y_) {

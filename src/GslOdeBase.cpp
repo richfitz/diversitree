@@ -40,16 +40,16 @@ GslOdeBase::~GslOdeBase() {
 // subclasses, and are constrained only in that they take R objects
 // (SEXPs).
 std::vector<double>
-GslOdeBase::r_derivs(double t, std::vector<double> y, SEXP pars_) {
+GslOdeBase::r_derivs(double t_, std::vector<double> y_, SEXP pars_) {
   // TODO: The call to derivs() should be wrapped in a try (or
   // equivalent) so that pars are reset if the R call fails.
-  if (y.size() != size())
+  if (y_.size() != size())
     Rf_error("Incorrect input length (expected %d, got %d)",
-	     size(), y.size());
+	     size(), y_.size());
   set_pars(pars_);
 
   std::vector<double> ret(size());
-  derivs(t, &y[0], &ret[0]);
+  derivs(t_, &y_[0], &ret[0]);
   clear_pars();
 
   return ret;
@@ -69,11 +69,11 @@ Rcpp::NumericMatrix GslOdeBase::r_run(std::vector<double> times,
 			  static_cast<int>(times.size()-1));
   Rcpp::NumericMatrix::iterator out = ret.begin();
 
-  std::vector<double>::iterator t = times.begin();
-  set_state(*t++, y_); // This makes 'y' contains mutable state.
+  std::vector<double>::iterator t_ = times.begin();
+  set_state(*t_++, y_); // This makes 'y' contains mutable state.
 
-  while ( t != times.end() ) {
-    advance(*t++);
+  while ( t_ != times.end() ) {
+    advance(*t_++);
     std::copy(y.begin(), y.end(), out);
     out += size();
   }
