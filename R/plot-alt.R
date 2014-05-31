@@ -195,8 +195,8 @@ pp.coords.fan <- function(phy, xy) {
 
 pp.coords.fix.xy <- function(phy, xy) {
   n <- length(phy$tip.label) + sum(phy$n.taxa - 1)  
-  xy$theta <- xy$y / (n + 1) * 2 * pi
-  xy$r <- xy$x
+  xy$theta <- xy$yy / (n + 1) * 2 * pi
+  xy$r <- xy$xx
 
   xy$xx <- with(xy, r * cos(theta))
   xy$yy <- with(xy, r * sin(theta))
