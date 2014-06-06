@@ -82,7 +82,7 @@ make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
   \preformatted{functions=rep(c("linear.t", "constant.t"), c(2, 4))}
   The functions here must have \code{t} as their first argument,
   interpreted as time back from the present.  Other possible functions
-  are "sigmoid.t", "stepf.t", "spline.t", and "spline.linear.t".
+  are "sigmoid.t", "stepf.t", "spline.t", "exp.t", and "spline.linear.t".
   Unfortunately, documentation is still pending.
 }
 

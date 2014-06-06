@@ -171,6 +171,9 @@ TimeMachineFunction::TimeMachineFunction(std::string name_,
   } else if ( func_name == "sigmoid.t" ) {
     f = &tm_fun_sigmoid;
     np = 4;
+  } else if ( func_name == "exp.t" ) {
+    f = &tm_fun_exp;
+    np = 2;
   } else if ( func_name == "spline.t" ) {
     f = &tm_fun_spline;
     np = 2;
@@ -239,4 +242,10 @@ double tm_fun_spline(double t,
 		     Spline *spline) {
   const double y0 = *pars_in++, y1 = *pars_in++;
   return y0 + (y1 - y0) * spline->eval(t);
+ }
+double tm_fun_exp(double t,
+                  std::vector<double>::const_iterator pars_in,
+                  Spline* /* spline */) {
+  const double l = *pars_in++, a = *pars_in++;
+  return l * exp(-a * t);
 }

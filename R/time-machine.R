@@ -36,17 +36,18 @@ make.time.machine <- function(functions, t.range, nonnegative=TRUE,
 time.machine.argnames <- function(functions) {
   if ( !is.character(functions) )
     stop("'functions' must be a character vector")
-  
+
   if ( is.null(names(functions)) ) # already true?
     stop("functions must be named")
-  
+
   ## Build up argument names:
   ## Ideally we'd actually get these back from the C side too...
   info.t <- list(constant.t="c",
                  linear.t=c("c", "m"),
                  stepf.t=c("y0", "y1", "tc"),
                  sigmoid.t=c("y0", "y1", "tmid", "r"),
-                 spline.t=c("y0", "y1"))
+                 spline.t=c("y0", "y1"),
+                 exp.t=c("l", "a")) ##New part added by Gustavo Burin
   if ( !all(functions %in% names(info.t)) )
     stop("Unknown functions")
 
@@ -79,7 +80,7 @@ check.spline.data <- function(obj, spline.data) {
   if ( min(t) > t.range[1] || max(t) < t.range[2] )
     stop(sprintf("Spline data must span time range: [%s, %s]",
                  min(t.range), max(t.range)))
-  
+
   deriv <- if (is.null(spline.data$deriv))
     0L else check.integer(spline.data$deriv)
   if ( length(deriv) != 1 )
@@ -87,7 +88,7 @@ check.spline.data <- function(obj, spline.data) {
 
   ## Renormalise y data onto [0,1], after projecting what the actual
   ## minimum and maximum values are.
-  ## 
+  ##
   ## TODO: This could be prone to error, especially as I've just
   ## hardcoded a "large" number of x spacing in here.  Ideally we
   ## would be able to provide this with the spline.data?  But the
@@ -96,6 +97,6 @@ check.spline.data <- function(obj, spline.data) {
   tt <- seq(t.range[1], t.range[2], length.out=10001)
   r <- range(spline(t, y, xout=tt)$y)
   y <- (y - r[1]) / (r[2] - r[1])
-  
+
   list(t=as.numeric(t), y=as.numeric(y), deriv=deriv)
 }

@@ -28,7 +28,7 @@ public:
 private:
   double check_ok(double x);
 
-  typedef double tm_fun(double, 
+  typedef double tm_fun(double,
 			std::vector<double>::const_iterator,
 			Spline *);
   std::string variable_name;
@@ -41,10 +41,10 @@ private:
 };
 
 class TimeMachine {
-  // Default constructor.  
+  // Default constructor.
   //   We need to a vector of functions (identified by name)
   //   We need to know the number of target parameters
-public: 
+public:
   TimeMachine(std::vector<std::string> names,
 	      std::vector<std::string> funcs,
 	      std::vector<bool> nonnegative,
@@ -96,19 +96,22 @@ private:
 };
 
 
-double tm_fun_constant(double t, 
+double tm_fun_constant(double t,
 		       std::vector<double>::const_iterator pars_in,
 		       Spline *spline);
-double tm_fun_linear(double t, 
+double tm_fun_linear(double t,
 		     std::vector<double>::const_iterator pars_in,
 		     Spline *spline);
-double tm_fun_stepf(double t, 
+double tm_fun_stepf(double t,
 		    std::vector<double>::const_iterator pars_in,
 		    Spline *spline);
 double tm_fun_sigmoid(double t,
 		      std::vector<double>::const_iterator pars_in,
 		      Spline *spline);
 double tm_fun_spline(double t,
+		     std::vector<double>::const_iterator pars_in,
+                     Spline *spline);
+double tm_fun_exp(double t,
 		     std::vector<double>::const_iterator pars_in,
 		     Spline *spline);
 
