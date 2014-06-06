@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>argnames. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Argument Names for Vector-Argument Functions</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>argnames(x, ...)
+argnames(x) <- value
+"argnames"(x, ...)
+"argnames"(x) <- value</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>x</dt>
+      <dd>A function taking a vector of parameters as its first
+    argument.</dd>
+      <dt>value</dt>
+      <dd>Vector of names to set the argument names to.</dd>
+      <dt>...</dt>
+      <dd>Ignored arguments to future methods.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Functions to get and set &#147;argument names&#148; for
+  functions that take vectorised arguments.  For example, the likelihood
+  function returned by <code>make.bisse</code> takes a vector of six these
+  functions can be used to get the canonical names for these six
+  parameters, and also to set them to something more memorable.  These
+  names are used by the <code><a href='constrain.html'>constrain</a></code> function to specify
+  submodels.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Methods exist for all models: <code>bisse</code>, <code>geosse</code>, <code>bd</code>,
+  <code>yule</code>, <code>mk2</code>, and <code>mkn</code>.  These are particulary useful
+  for <code>mkn</code> as the number of parameters for the Q matrix can be
+  very large.</p>
+  
+    </div>
+
+    <div class="Argument Names for Vector-Argument Functions">
+      <h2>Argument Names for Vector-Argument Functions</h2>
+      
+    </div>
+
+    <div class="Argument Names for Vector-Argument Functions">
+      <h2>Argument Names for Vector-Argument Functions</h2>
+      
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Same example likelihood function as for \link{make.bisse}:
+pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(4)
+phy &lt;- tree.bisse(pars, max.t=30, x0=0)
+f &lt;- make.bisse(phy, phy$tip.state)
+
+argnames(f) # Canonical argument names (set by default)
+</div>
+<div class='output'>[1] &quot;lambda0&quot; &quot;lambda1&quot; &quot;mu0&quot;     &quot;mu1&quot;     &quot;q01&quot;     &quot;q10&quot;    
+</div>
+<div class='input'>## Names that might be more informative for a tall/short state
+argnames(f) &lt;- c(&quot;l.tall&quot;, &quot;l.short&quot;, &quot;m.tall&quot;, &quot;m.short&quot;,
+                 &quot;q.tall.short&quot;, &quot;q.short.tall&quot;)
+argnames(f)
+</div>
+<div class='output'>[1] &quot;l.tall&quot;       &quot;l.short&quot;      &quot;m.tall&quot;       &quot;m.short&quot;      &quot;q.tall.short&quot;
+[6] &quot;q.short.tall&quot;
+</div>
+<div class='input'></div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>argnames</li><li>argnames&lt;-</li><li>argnames.constrained</li><li>argnames&lt;-.constrained</li>
+    </ul>
+    <ul>
+      <li>programming</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>profiles.plot. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Plot Marginal Distributions from MCMC</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>profiles.plot(y, col.line, col.fill, xlim=NULL, ymax=NULL, n.br=50, opacity=.5, xlab="Parameter estimate", ylab="Probability density", legend.pos=NULL, with.bar=TRUE, col.bg=NA, lwd=1, lines.on.top=TRUE, ...)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>y</dt>
+      <dd>Data frame, columns of which will be plotted as separate
+    profiles.</dd>
+      <dt>col.line</dt>
+      <dd>Vector of colours for the lines.</dd>
+      <dt>col.fill</dt>
+      <dd>Vector of colours for the fill of the 95% most
+    probable region of the distribution.  If ommited, this will be a
+    semi-transparent version of <code>col.line</code>.</dd>
+      <dt>xlim</dt>
+      <dd>X-axis limits - calculated automatically if omitted.</dd>
+      <dt>ymax</dt>
+      <dd>Y-axis upper limit - calculated automatically if omitted.</dd>
+      <dt>n.br</dt>
+      <dd>Number of breaks along the range of the data.</dd>
+      <dt>opacity</dt>
+      <dd>Opacity of the filled region (0 is transparent, 1 is
+    fully opaque).</dd>
+      <dt>xlab,ylab</dt>
+      <dd>Axis labels for the plot.</dd>
+      <dt>legend.pos</dt>
+      <dd>String to pass to <code><a href='http://www.inside-r.org/packages/cran/graphics/docs/legend'>legend</a></code> to position
+    the legend (for automatic legend building based on the names of
+    <code>y</code>).</dd>
+      <dt>with.bar</dt>
+      <dd>Should a bar be included that shows the CI ranges
+    below the plot (in addition to the shading)?</dd>
+      <dt>col.bg</dt>
+      <dd>Colour to draw behind the profiles (set to "white" for
+    nicer transparency on non-white backgrounds)</dd>
+      <dt>lwd</dt>
+      <dd>Width of lines around the profiles</dd>
+      <dt>lines.on.top</dt>
+      <dd>Draw lines around profiles on top of all profiles?</dd>
+      <dt>...</dt>
+      <dd>Additional arguments passed through to <code><a href='http://www.inside-r.org/packages/cran/graphics/docs/plot'>plot</a></code>.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Simple plotting assistance for plotting output from MCMC
+  runs</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## For usage, see the example in ?make.bd</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>profiles.plot</li>
+    </ul>
+    <ul>
+      <li>hplot</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

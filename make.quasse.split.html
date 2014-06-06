@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.quasse.split. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Quantitative State Speciation and Extinction Model: Split Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.quasse.split(tree, states, states.sd, lambda, mu, nodes, split.t, control=NULL, sampling.f=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be a
+    numeric real values.  Missing values (<code>NA</code>) are not yet handled.
+    This vector must have names that correspond to the tip labels in the
+    phylogenetic tree  (<code>tree$tip.label</code>).</dd>
+      <dt>states.sd</dt>
+      <dd>A scalar or vector corresponding to the standard
+    error around the mean in states (the initial probability
+    distribution is assumed to be normal).</dd>
+      <dt>lambda</dt>
+      <dd>A function to use as the speciation function.  The first
+    argument of this must be <code>x</code> (see Details).</dd>
+      <dt>mu</dt>
+      <dd>A function to use as the extinction function.  The first
+    argument of this must be <code>x</code> (see Details.)</dd>
+      <dt>nodes</dt>
+      <dd>Vector of nodes that will be split (see Details).</dd>
+      <dt>split.t</dt>
+      <dd>Vector of split times, same length as <code>nodes</code> (see
+    Details).</dd>
+      <dt>control</dt>
+      <dd>A list of parameters for tuning the performance of the
+    integrator.  A guess at reasonble values will be made here.  See
+    Details in <code><a href='make.quasse.html'>make.quasse</a></code> for possible entries.</dd>
+      <dt>sampling.f</dt>
+      <dd>Scalar with the estimated proportion of extant
+    species that are included in the phylogeny.  A value of <code>0.75</code>
+    means that three quarters of extant species are included in the
+    phylogeny.  By default all species are assumed to be known.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for a QuaSSE model where the
+  tree is partitioned into regions with different parameters.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Branching times can be controlled with the <code>split.t</code>
+argument.  If this is <code>Inf</code>, split at the base of the branch (as in
+MEDUSA).  If <code>0</code>, split at the top (closest to the present, as in
+the new option for MEDUSA).  If <code>0 < split.t < Inf</code> then we split
+at that time on the tree (zero is the present, with time growing
+backwards).</p>
+  
+      <p>TODO: Describe <code>nodes</code> and <code>split.t</code> here.</p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.quasse.split</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

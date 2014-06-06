@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.musse.td. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Multiple State Speciation and Extinction Model: Time Dependent
+  Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.musse.td(tree, states, k, n.epoch, sampling.f=NULL, strict=TRUE, control=list())</div>
+<div>make.musse.t(tree, states, k, functions, sampling.f=NULL, strict=TRUE, control=list(), truncate=FALSE, spline.data=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be an
+    integer between 1 and <code>k</code>.  This vector must have names that
+    correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).  For tips corresponding to unresolved
+    clades, the state should be <code>NA</code>.</dd>
+      <dt>k</dt>
+      <dd>The number of states.</dd>
+      <dt>n.epoch</dt>
+      <dd>Number of epochs.  1 corresponds to plain MuSSE, so
+    this will generally be an integer at least 2.</dd>
+      <dt>functions</dt>
+      <dd>A named list of functions of time.  See details.</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length <code>k</code> where <code>sampling.f[i]</code>
+    is the proportion of species in state <code>i</code> that are present in
+    the phylogeny.  A value of <code>c(0.5, 0.75, 1)</code> means that half of
+    species in state 1, three quarters of species in state 2, and all
+    species in state 3 are included in the phylogeny.  By default all
+    species are assumed to be known</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are integers on <code>1:k</code>.  If <code>strict</code> is
+    <code>TRUE</code> (the default), then the additional check is made that
+    <em>every</em> state is present.  The likelihood models tend to be
+    poorly behaved where states are missing, but there are cases
+    (missing intermediate states for meristic characters) where allowing
+    such models may be useful.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>truncate</dt>
+      <dd>Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of same length as
+    the functions vector).</dd>
+      <dt>spline.data</dt>
+      <dd>List of data for spline-based time functions.  See
+    details</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for a MuSSE model where
+  different chunks of time have different parameters.  This code is
+  experimental!</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Please see <code><a href='make.bisse.td.html'>make.bisse.t</a></code> for further details.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Here we will start with the tree and three-state character set from
+## the make.musse example.  This is a poorly contrived example.
+pars &lt;- c(.1,  .15,  .2,  # lambda 1, 2, 3
+          .03, .045, .06, # mu 1, 2, 3
+          .05, 0,         # q12, q13
+          .05, .05,       # q21, q23
+          0,   .05)       # q31, q32
+set.seed(2)
+phy &lt;- tree.musse(pars, 30, x0=1)
+
+## Suppose we want to see if diversification is different in the most
+## recent 3 time units, compared with the rest of the tree (yes, this is
+## a totally contrived example!):
+plot(phy)
+</div>
+<p><img src='make.musse.td-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>axisPhylo()
+</div>
+<p><img src='make.musse.td-4.png' alt='' width='400' height='400' /></p>
+<div class='input'>abline(v=max(branching.times(phy)) - 3, col=&quot;red&quot;, lty=3)
+</div>
+<p><img src='make.musse.td-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## For comparison, make a plain MuSSE likelihood function
+lik.m &lt;- make.musse(phy, phy$tip.state, 3)
+
+## Create the time-dependent likelihood function.  The final argument
+## here is the number of &#39;epochs&#39; that are allowed.  Two epochs is one
+## switch point.
+lik.t &lt;- make.musse.td(phy, phy$tip.state, 3, 2)
+
+## The switch point is the first argument.  The remaining 12 parameters
+## are the MuSSE parameters, with the first 6 being the most recent
+## epoch.
+argnames(lik.t)
+</div>
+<div class='output'> [1] &quot;t.1&quot;       &quot;lambda1.1&quot; &quot;lambda2.1&quot; &quot;lambda3.1&quot; &quot;mu1.1&quot;     &quot;mu2.1&quot;    
+ [7] &quot;mu3.1&quot;     &quot;q12.1&quot;     &quot;q13.1&quot;     &quot;q21.1&quot;     &quot;q23.1&quot;     &quot;q31.1&quot;    
+[13] &quot;q32.1&quot;     &quot;lambda1.2&quot; &quot;lambda2.2&quot; &quot;lambda3.2&quot; &quot;mu1.2&quot;     &quot;mu2.2&quot;    
+[19] &quot;mu3.2&quot;     &quot;q12.2&quot;     &quot;q13.2&quot;     &quot;q21.2&quot;     &quot;q23.2&quot;     &quot;q31.2&quot;    
+[25] &quot;q32.2&quot;    
+</div>
+<div class='input'>
+pars.t &lt;- c(3, pars, pars)
+names(pars.t) &lt;- argnames(lik.t)
+
+## Calculations are identical to a reasonable tolerance:
+lik.m(pars) - lik.t(pars.t)
+</div>
+<div class='output'>[1] 2.505392e-08
+</div>
+<div class='input'>
+## It will often be useful to constrain the time as a fixed quantity.
+lik.t2 &lt;- constrain(lik.t, t.1 ~ 3)
+
+## Parameter estimation under maximum likelihood.  This is marked &quot;don&#39;t
+## run&quot; because the time-dependent fit takes a few minutes.
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# ## Fit the MuSSE ML model
+# fit.m &lt;- find.mle(lik.m, pars)
+# 
+# ## And fit the MuSSE/td model
+# fit.t &lt;- find.mle(lik.t2, pars.t[argnames(lik.t2)],
+#                   control=list(maxit=20000))
+# 
+# ## Compare these two fits with a likelihood ratio test (lik.t2 is nested
+# ## within lik.m)
+# anova(fit.m, td=fit.t)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.musse.t</li><li>make.musse.td</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

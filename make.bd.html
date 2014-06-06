@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.bd. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Constant Rate Birth-Death Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.bd(tree, sampling.f=NULL, unresolved=NULL, times=NULL, control=list())
+make.yule(tree, sampling.f=NULL, unresolved=NULL, times=NULL, control=list())
+starting.point.bd(tree, yule=FALSE)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>times</dt>
+      <dd>Vector of branching times, as returned by
+    <code>branching.times</code>.  You don't need to use this unless you know
+    that you need to use this.  Don't use it at the same time as
+    <code>tree</code>.</dd>
+      <dt>sampling.f</dt>
+      <dd>Probability of an extant species being included in
+    the phylogeny (sampling fraction).  By default, all extant species are
+    assumed to be included.</dd>
+      <dt>unresolved</dt>
+      <dd>Unresolved clade information.  This is a named
+    vector, with the number of species as the value and names
+    corresponding to tip labels.  Tips that represent a single species
+    should not be included in this vector.  For example
+    <code>sp1=10, sp2=2</code>, would mean that <code>sp1</code> represents 10
+    species, while <code>sp2</code> represents two.  These labels must exist
+    in <code>tree$tip.label</code> and all other tips are assumed to
+    represent one species.</dd>
+      <dt>yule</dt>
+      <dd>Should the starting point function return a Yule model
+    (zero extinction rate)?</dd>
+      <dt>control</dt>
+      <dd>List of control parameters.  The element <code>method</code>
+    can be either <code>nee</code> or <code>ode</code> to compute the likelihood
+    using the equation from Nee et al. (1994) or in a BiSSE-style ODE
+    approach respectively.  <code>nee</code> should be faster, and <code>ode</code>
+    is provided for completeness (and forms the basis of other methods).
+    When <code>ode</code> is selected, other elements of <code>control</code> affect
+    the behaviour of the ODE solver: see details in
+    <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run a constant rate birth-death model on a
+  phylogenetic tree.  This fits the Nee et al. 1994 equation,
+  duplicating the <code>birthdeath</code> function in ape.  Differences with
+  that function include (1) the function is not constrained to positive
+  diversification rates (mu can exceed lambda), (2) [eventual] support
+  for both random taxon sampling and unresolved terminal clades (but see
+  <code>bd.ext</code>), and (3) run both MCMC and MLE fits to birth death
+  trees.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><code>make.bd</code> returns a function of class <code>bd</code>.
+  This function has argument list (and default values)
+  <pre>
+    f(pars, prior=NULL, condition.surv=TRUE)
+  </pre>
+  The arguments are interpreted as
+  <ul>
+<li> <code>pars</code> A vector of two parameters, in the order
+    <code>lambda</code>, <code>mu</code>.
+    </li>
+<li> <code>prior</code>: a valid prior.  See <code><a href='make.prior.html'>make.prior</a></code> for
+    more information.
+    </li>
+<li> <code>condition.surv</code> (logical): should the likelihood
+    calculation condition on survival of two lineages and the speciation
+    event subtending them?  This is done by default, following Nee et
+    al. 1994.
+  </li>
+</ul></p>
+  
+      <p>The function "ode" method is included for completeness, but should not
+  be taken too seriously.  It uses an alternative ODE-based approach,
+  more similar to most diversitree models, to compute the likelihood.
+  It exists so that other models that extend the birth-death models may
+  be tested.</p>
+  
+      <p></p>
+  
+    </div>
+
+    <div class="References">
+      <h2>References</h2>
+      
+      <p>Nee S., May R.M., and Harvey P.H. 1994. The reconstructed
+  evolutionary process. Philos.  Trans. R. Soc. Lond. B
+  Biol. Sci. 344:305-311.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Simulate a tree under a constant rates birth-death model and look at
+## the maximum likelihood speciation/extinction parameters:
+set.seed(1)
+phy &lt;- trees(c(.1, .03), &quot;bd&quot;, max.taxa=25)[[1]]
+lik &lt;- make.bd(phy)
+
+## By default, optimisation gives a lambda close to 0.1 and extremely
+## small mu:
+fit &lt;- find.mle(lik, c(.1, .03))
+coef(fit)
+</div>
+<div class='output'>      lambda           mu 
+1.021010e-01 6.107215e-07 
+</div>
+<div class='input'>
+## The above optimisation uses the algorithm \link{nlm} for
+## compatibility with ape&#39;s \link{birthdeath}.  This can be slightly
+## improved by using \link{optim} for the optimisation, which allows
+## bounds to be specified:
+fit.o &lt;- find.mle(lik, c(.1, .03), method=&quot;optim&quot;, lower=0)
+coef(fit.o)
+</div>
+<div class='output'>    lambda         mu 
+0.09613913 0.00000000 
+</div>
+<div class='input'>
+logLik(fit.o) - logLik(fit) # slight improvement
+</div>
+<div class='output'>&#39;log Lik.&#39; 0.04247715 (df=2)
+</div>
+<div class='input'>
+## Special case methods are worked out for the Yule model, for which
+## analytic solutions are available.  Compare a direct fit of the Yule
+## model with one where mu is constrained to be zero:
+lik.yule &lt;- make.yule(phy)
+lik.mu0 &lt;- constrain(lik, mu ~ 0)
+
+## The same to a reasonable tolerance:
+fit.yule &lt;- find.mle(lik.yule, .1)
+fit.mu0 &lt;- find.mle(lik.mu0, .1)
+all.equal(fit.yule[1:2], fit.mu0[1:2], tolerance=1e-6)
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## There is no significant improvement in the fit by including the mu
+## parameter (unsurprising as the ML value was zero)
+anova(fit.o, yule=fit.yule)
+</div>
+<div class='output'>     Df  lnLik    AIC      ChiSq Pr(&gt;|Chi|)
+full  2 -22.08 48.161                      
+yule  1 -22.08 46.161 3.0127e-12          1
+</div>
+<div class='input'>
+## Optimisation can be done without conditioning on survival:
+fit.nosurv &lt;- find.mle(lik, c(.1, .03), method=&quot;optim&quot;, lower=0,
+                       condition.surv=FALSE)
+coef(fit.nosurv) # higher lambda than before
+</div>
+<div class='output'>   lambda        mu 
+0.1003191 0.0000000 
+</div>
+<div class='input'>
+## Look at the marginal likelihoods, computed through MCMC (see
+## \link{mcmc} for details, and increase nsteps for smoother
+## plots [takes longer]).
+samples &lt;- mcmc(lik, fit$par, nsteps=500,
+                lower=c(-Inf, -Inf), upper=c(Inf, Inf), w=c(.1, .1),
+                fail.value=-Inf, print.every=100)
+</div>
+<div class='output'>100: {0.2099, 0.1296} -&gt; -25.08160
+200: {0.1453, 0.0975} -&gt; -23.46928
+300: {0.1183, 0.0465} -&gt; -22.59005
+400: {0.1451, 0.0135} -&gt; -23.85709
+500: {0.1416, 0.0799} -&gt; -23.13356
+</div>
+<div class='input'>samples$r &lt;- with(samples, lambda - mu)
+
+## Plot the profiles (see \link{profiles.plot}).
+## The vertical lines are the simulated parameters, which match fairly
+## well with the estimated ones.
+col &lt;- c(&quot;red&quot;, &quot;blue&quot;, &quot;green3&quot;)
+profiles.plot(samples[c(&quot;lambda&quot;, &quot;mu&quot;, &quot;r&quot;)], col.line=col, las=1,
+              legend=&quot;topright&quot;)
+</div>
+<p><img src='make.bd-16.png' alt='' width='400' height='400' /></p>
+<div class='input'>abline(v=0, lty=2)
+</div>
+<p><img src='make.bd-18.png' alt='' width='400' height='400' /></p>
+<div class='input'>abline(v=c(.1, .03, .07), col=col)
+</div>
+<p><img src='make.bd-20.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Sample the phylogeny to include 20 of the species, and run the
+## likelihood search assuming random sampling:
+set.seed(1)
+phy2 &lt;- drop.tip(phy, sample(25, 5))
+lik2 &lt;- make.bd(phy2, sampling.f=20/25)
+fit2 &lt;- find.mle(lik2, c(.1, .03))
+
+## The ODE based version gives comparable results.  However, it is
+## about 55x slower.
+lik.ode &lt;- make.bd(phy, control=list(method=&quot;ode&quot;))
+all.equal(lik.ode(coef(fit)), lik(coef(fit)), tolerance=2e-7)
+</div>
+<div class='output'>[1] TRUE
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.bd</li><li>make.yule</li><li>starting.point.bd</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='constrain.html'>constrain</a></code> for making submodels, <code><a href='find.mle.html'>find.mle</a></code>
+  for ML parameter estimation, <code><a href='mcmc.html'>mcmc</a></code> for MCMC integration,
+  and <code><a href='make.bisse.html'>make.bisse</a></code> for state-dependent birth-death models.
+
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

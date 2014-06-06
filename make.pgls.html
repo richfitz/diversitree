@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.pgls. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Phylogenetic Generalised Least Squares</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.pgls(tree, formula, data, control=list())</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>A bifurcating phylogenetic tree, in <code>ape</code>
+    &#147;phylo&#148; format.</dd>
+      <dt>formula</dt>
+      <dd>A model formula; see <code><a href='http://www.inside-r.org/packages/cran/stats/docs/lm'>lm</a></code> for details on
+    formulae; the interface is the same here.</dd>
+      <dt>data</dt>
+      <dd>A data frame containing the variables in the model.  If
+    not found in <code>data</code>, the variables are taken from
+    <code>environment(formula)</code>, typically the environment from
+    which this function is called.  That may perform badly with
+    reconciling with species names, however.</dd>
+      <dt>control</dt>
+      <dd>A list of control parameters.  Currently the only
+    option is the key &#147;method&#148; which can be <code>"vcv"</code> for the
+    traditional variance-covariance approach (slow for large trees) or
+    <code>"contrasts"</code> for the contrasts-based approach outlined in
+    Freckleton (2012).</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Generate the likelihood function that underlies PGLS
+  (Phylogenetic Generalised Least Squares).  This is a bit of a misnomer
+  here, as you may not be interested in least squares (e.g., if using
+  this with <code><a href='mcmc.html'>mcmc</a></code> for Bayesian inference).</p>
+  
+    </div>
+
+    <div class="References">
+      <h2>References</h2>
+      
+      <p>Freckleton R.P. 2012. Fast likelihood calculations for comparative
+  analyses. Methods in Ecology and Evolution 3: 940-947.</p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.pgls</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

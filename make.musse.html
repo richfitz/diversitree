@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.musse. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>MuSSE: Multi-State Speciation and Extinction</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.musse(tree, states, k, sampling.f=NULL, strict=TRUE, control=list())
+starting.point.musse(tree, k, q.div=5, yule=FALSE)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be an
+    integer between 1 and <code>k</code>.  This vector must have names that
+    correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).  For tips corresponding to unresolved
+    clades, the state should be <code>NA</code>.</dd>
+      <dt>k</dt>
+      <dd>The number of states.</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length <code>k</code> where <code>sampling.f[i]</code>
+    is the proportion of species in state <code>i</code> that are present in
+    the phylogeny.  A value of <code>c(0.5, 0.75, 1)</code> means that half of
+    species in state 1, three quarters of species in state 2, and all
+    species in state 3 are included in the phylogeny.  By default all
+    species are assumed to be known</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are integers on <code>1:k</code>.  If <code>strict</code> is
+    <code>TRUE</code> (the default), then the additional check is made that
+    <em>every</em> state is present.  The likelihood models tend to be
+    poorly behaved where states are missing, but there are cases
+    (missing intermediate states for meristic characters) where allowing
+    such models may be useful.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>q.div</dt>
+      <dd>Ratio of diversification rate to character change rate.
+    Eventually this will be changed to allow for Mk2 to be used for
+    estimating q parameters.</dd>
+      <dt>yule</dt>
+      <dd>Logical: should starting parameters be Yule estimates
+    rather than birth-death estimates?</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run MuSSE (Multi-State Speciation and
+  Extinction) on a phylogenetic tree and character distribution.  This
+  function creates a likelihood function that can be used in
+  <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+      <p>MuSSE is agnostic as to whether multiple states or multiple traits are
+  modelled (following Pagel 1994).  Instead, a transition rate matrix
+  amongst possible trait/state combinations is constructed and the
+  analysis is conducted on this.</p>
+  
+      <p>The helper function <code><a href='make.musse.multitrait.html'>make.musse.multitrait</a></code> wraps the
+  basic MuSSE model for the case of a combination of several binary
+  traits; its argument handling are a little different; please see the
+  help page for more information.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>With more than 9 states, qij can be ambiguous (e.g. is q113 1->13 or
+  11->3?).  To avoid this, the numbers are zero padded (so that the
+  above would be q0113 or q1103 for 1->13 and 11->3 respectively).  It
+  might be easier to rename the arguments in practice though.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## 1: BiSSE equivalence
+pars &lt;- c(.1, .2, .03, .04, 0.05, 0.1)
+set.seed(2)
+phy &lt;- tree.musse(pars, 20, x0=1)
+
+## Show that the likelihood functions give the same answers.  Ignore the
+## warning when creating the MuSSE function.
+lik.b &lt;- make.bisse(phy, phy$tip.state-1)
+lik.m &lt;- make.musse(phy, phy$tip.state, 2)
+all.equal(lik.b(pars), lik.m(pars), tolerance=1e-7)
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## Notice that default argument names are different between BiSSE and
+## MuSSE, but that the order is the same.
+argnames(lik.b) # BiSSE: 0/1
+</div>
+<div class='output'>[1] &quot;lambda0&quot; &quot;lambda1&quot; &quot;mu0&quot;     &quot;mu1&quot;     &quot;q01&quot;     &quot;q10&quot;    
+</div>
+<div class='input'>argnames(lik.m) # MuSSE: 1/2
+</div>
+<div class='output'>[1] &quot;lambda1&quot; &quot;lambda2&quot; &quot;mu1&quot;     &quot;mu2&quot;     &quot;q12&quot;     &quot;q21&quot;    
+</div>
+<div class='input'>
+## 2: A 3-state example where movement is only allowed between
+## neighbouring states (1 &lt;-&gt; 2 &lt;-&gt; 3), and where speciation and
+## extinction rates increase moving from 1 -&gt; 2 -&gt; 3:
+
+## You can get the expected argument order for any number of states
+## this way (sorry - clunky).  The help file also lists the order.
+diversitree:::default.argnames.musse(3)
+</div>
+<div class='output'> [1] &quot;lambda1&quot; &quot;lambda2&quot; &quot;lambda3&quot; &quot;mu1&quot;     &quot;mu2&quot;     &quot;mu3&quot;     &quot;q12&quot;    
+ [8] &quot;q13&quot;     &quot;q21&quot;     &quot;q23&quot;     &quot;q31&quot;     &quot;q32&quot;    
+</div>
+<div class='input'>
+## Here are the parameters:
+pars &lt;- c(.1,  .15,  .2,  # lambda 1, 2, 3
+          .03, .045, .06, # mu 1, 2, 3
+          .05, 0,         # q12, q13
+          .05, .05,       # q21, q23
+          0,   .05)       # q31, q32
+
+set.seed(2)
+phy &lt;- tree.musse(pars, 30, x0=1)
+
+## Extract history from simulated tree and plot
+## (colours are 1: black, 2: red, 3: blue)
+col &lt;- c(&quot;blue&quot;, &quot;orange&quot;, &quot;red&quot;)
+h &lt;- history.from.sim.discrete(phy, 1:3)
+plot(h, phy, cex=.7, col=col)
+</div>
+<p><img src='make.musse-10.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## The states are numbered 1:3, rather than 0:1 in bisse.
+states &lt;- phy$tip.state
+table(states)
+</div>
+<div class='output'>states
+ 1  2  3 
+13 13  4 
+</div>
+<div class='input'>
+## 2: Likelihood
+## Making a likelihood function is basically identical to bisse.  The
+## third argument needs to be the number of states.  In a future
+## version this will probably be max(states), but there are some
+## pitfalls about this that I am still worried about.
+lik &lt;- make.musse(phy, states, 3)
+
+## Here are the arguments.  Even with three states, this is getting
+## ridiculous.
+argnames(lik)
+</div>
+<div class='output'> [1] &quot;lambda1&quot; &quot;lambda2&quot; &quot;lambda3&quot; &quot;mu1&quot;     &quot;mu2&quot;     &quot;mu3&quot;     &quot;q12&quot;    
+ [8] &quot;q13&quot;     &quot;q21&quot;     &quot;q23&quot;     &quot;q31&quot;     &quot;q32&quot;    
+</div>
+<div class='input'>
+## Start with a fully constrained model, but still enforcing stepwise
+## changes (disallowing 1 &lt;-&gt; 3 shifts)
+lik.base &lt;- constrain(lik, lambda2 ~ lambda1, lambda3 ~ lambda1,
+                      mu2 ~ mu1, mu3 ~ mu1,
+                      q13 ~ 0, q21 ~ q12, q23 ~ q12, q31 ~ 0, q32 ~ q12)
+
+p &lt;- starting.point.musse(phy, 3)
+fit.base &lt;- find.mle(lik.base, p[argnames(lik.base)])
+
+## Now, allow the speciation rates to vary:
+lik.lambda &lt;- constrain(lik, mu2 ~ mu1, mu3 ~ mu1,
+                        q13 ~ 0, q21 ~ q12, q23 ~ q12, q31 ~ 0, q32 ~ q12)
+fit.lambda &lt;- find.mle(lik.lambda, p[argnames(lik.lambda)])
+
+## Very little improvement in fit (this *is* a small tree)
+anova(fit.base, lambda=fit.lambda)
+</div>
+<div class='output'>        Df   lnLik    AIC   ChiSq Pr(&gt;|Chi|)
+minimal  3 -110.64 227.27                   
+lambda   5 -110.21 230.42 0.84603     0.6551
+</div>
+<div class='input'>
+## Run an MCMC with this set.  Priors will be necessary (using the
+## usual exponential with mean of 2r)
+prior &lt;- make.prior.exponential(1 / (2 * (p[1] - p[4])))
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# samples &lt;- mcmc(lik.lambda, coef(fit.lambda), nstep=1000, w=1,
+#                 prior=prior, print.every=50)
+# 
+# ## Posterior probability profile plots for the three speciation rates.
+# profiles.plot(samples[2:4], col)
+# abline(v=c(.1, .15, .2), col=col)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.musse</li><li>starting.point.musse</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='make.bisse.html'>make.bisse</a></code> for the basic binary model, and
+  <code><a href='make.musse.multitrait.html'>make.musse.multitrait</a></code> for the case where the data are
+  really combinations of binary traits.
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

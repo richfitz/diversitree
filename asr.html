@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>asr. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Ancestral State Reconstruction</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>asr.marginal(lik, pars, nodes=NULL, ...)
+asr.joint(lik, pars, n=1, ...)
+asr.stoch(lik, pars, n=1, ...) </div>
+<div>make.asr.marginal(lik, ...)
+make.asr.joint(lik, ...)
+make.asr.stoch(lik, ...)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>lik</dt>
+      <dd>A likelihood function.</dd>
+      <dt>pars</dt>
+      <dd>A vector of parameters, suitable for <code>lik</code>.</dd>
+      <dt>nodes</dt>
+      <dd>For <code>asr.marginal</code> only; an optional vector of
+    nodes to return ancestral states for (using ape's index).  By
+    default, all nodes are returned.</dd>
+      <dt>n</dt>
+      <dd>The number of samples to draw from the joint distribution, or
+    number of stochastic reconstructions to make.</dd>
+      <dt>...</dt>
+      <dd>Additional arguments passed through to future methods</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Perform ancestral state reconstruction.  These functions
+  are all generic and will dispatch on the class of the given likelihood
+  functions.  Currently methods exist for all generics for Mk2, and
+  marginal ancestral state reconstructions are supported for BiSSE.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>These three functions compute marginal, joint, and stochastic
+  ancestral reconstructions.  The <code>make</code> versions return functions
+  that can efficiently be used many times over.</p>
+  
+    </div>
+
+    <div class="Value">
+      <h2>Value</h2>
+      
+      <p>The return values of the functions are likely to change in the near
+  future.  Watch out!</p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>asr</li><li>asr.marginal</li><li>asr.joint</li><li>asr.stoch</li><li>make.asr.marginal</li><li>make.asr.joint</li><li>make.asr.stoch</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <a href='asr-mkn.html'>asr.mkn</a> and <a href='asr-bisse.html'>asr.bisse</a> for methods specific to particular
+  classes, with examples of use.
+
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

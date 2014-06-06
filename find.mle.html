@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>find.mle. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Maximimum Likelihood Inference</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>find.mle(func, x.init, method, ...)
+"coef"(object, full=FALSE, extra=FALSE, ...)
+"logLik"(object, ...)
+"anova"(object, ..., sequential=FALSE)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>func</dt>
+      <dd>A likelihood function.  This is assumed to return the log
+    likelihood (see Details).  The function must take a vector of
+    parameters as the first argument.</dd>
+      <dt>x.init</dt>
+      <dd>Initial starting point for the optimisation.</dd>
+      <dt>method</dt>
+      <dd>Method to use for optimisation.  May be one of "optim",
+    "subplex", "nlminb", "nlm" (partial unambigious string is allowed).</dd>
+      <dt>...</dt>
+      <dd>For <code>find.mle</code>, additional arguments passed through to
+    the methods, optimisation routines, or to the likelihood function
+    <code>func</code> - see Details.  For <code>anova</code>, this is one or more
+    models to compare against the model <code>object</code> (either submodels
+    or supermodels or the test is meaningless).</dd>
+      <dt>object</dt>
+      <dd>A fitted model, returned by <code>find.mle</code>.</dd>
+      <dt>full</dt>
+      <dd>When returning the coefficients for a constrained model,
+    should be coefficients for the underlying constrained model be
+    returned?</dd>
+      <dt>extra</dt>
+      <dd>When returning the coefficients for a constrained model,
+    should dummy &#147;extra&#148; parameters be returned as well?</dd>
+      <dt>sequential</dt>
+      <dd>Should <code>anova</code> treat the models as a series of
+    increasing complexity?  Currently this is a little overzealous in
+    checking and will refuse to work if the likelihood values are not
+    strictly increasing.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Find the maximum likelihood point of a model by nonlinear
+  optimisation.  <code>find.mle</code> is generic, and allows different
+  default behaviour for different likelihood functions.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><code>find.mle</code> starts a search for the maximum likelihood (ML)
+  parameters from a starting point <code>x.init</code>.  <code>x.init</code> should
+  be the correct length for <code>func</code>, so that <code>func(x.init)</code>
+  returns a valid likelihood.  However, if <code>func</code> is a constrained
+  function (via <code><a href='constrain.html'>constrain</a></code>) and <code>x.init</code> is the
+  correct length for the unconstrained function then an attempt will be
+  made to guess a valid starting point.  This will often do poorly and a
+  warning will be given.</p>
+  
+      <p>Different methods will be dispatched for different types of likelihood
+  functions.  Currently all models in <code>diversitree</code> are supported
+  (<code>bisse</code>, <code>geosse</code>, <code>mk2</code>, <code>mkn</code>, <code>bd</code>, and 
+  <code>yule</code>).  With the exception of the Yule pure-birth process, these
+  methods just specify different default arguments for the underlying
+  optimisation routines (the Yule model has an analytical solution, and no
+  optimisation step is required).  Generally, it will not be necessary
+  to specify the <code>method</code> argument to <code>find.mle</code> as a sensible
+  method is chosen during dispatch.</p>
+  
+      <p>The <code>...</code> argument may contain additional arguments for the
+  function <code>func</code>.  This includes things like <code>condition.surv</code>
+  for conditioning on survival in BiSSE, birth-death, and Yule models.
+  Specify this as
+  <pre>
+    find.mle(lik, x.init, condition.surv=TRUE)
+  </pre>
+  (see the Examples).</p>
+  
+      <p>Different <code>method</code> arguments take different arguments passed
+  through <code>...</code> to control their behaviour:</p>
+  
+      <p><code>method="optim"</code>: Uses <span style="R">R</span>'s <code><a href='http://www.inside-r.org/packages/cran/stats/docs/optim'>optim</a></code> function for the
+  optimisation.  This allows access to a variety of general purpose
+  optimisation algorithms.  The method <em>within</em> <code>optim</code> can be
+  chosen via the argument <code>optim.method</code>, which is set to
+  "L-BFGS-B" by default (box constrained quasi-Newton optimisation).
+  This should be suitable for most uses.  See the <code>method</code> argument
+  of <code><a href='http://www.inside-r.org/packages/cran/stats/docs/optim'>optim</a></code> for other possibilities.  If <code>"L-BFGS-B"</code>
+  is used, then upper and lower bounds may be specified by the arguments
+  <code>lower</code> and <code>upper</code>.  The argument <code>control</code> can be
+  used to specify other control parameters for the algorithms - see
+  <code><a href='http://www.inside-r.org/packages/cran/stats/docs/optim'>optim</a></code> for details.  Most of the <code>optim</code> algorithms
+  require finite values be returned at every evaluated point.  This is
+  often not possible (extreme values of parameters or particular
+  combinations may have zero likelihood and therefore -Inf
+  log-likelihood).  To get around this, the argument <code>fail.value</code>
+  can be used to specify a fallback value.  By default this is set to
+  <code>func(x.init) - 1000</code>, which should work reasonably well for most
+  cases.</p>
+  
+      <p><code>method="subplex"</code>: Uses the "subplex" algorithm (a variant of
+  the downhill simplex/Nelder-Mead algorithm that uses Nelder-Mead on a
+  sequence of subspaces).  This algorithm generally requires more
+  evaluations than <code>optim</code>-based optimisation, but does not require
+  approximation of derivatives and seems to find the global optimum more
+  reliably (though often less precisely).  Additional arguments are
+  <code>control</code> to control aspects of the search (see
+  <code><a href='http://www.inside-r.org/packages/cran/subplex/docs/subplex'>subplex</a></code> for details).  The argument <code>fail.value</code>
+  can be used as in <code>method="optim"</code>, but by default <code>-Inf</code>
+  will be used on failure to evaluate, which is generally appropriate.</p>
+  
+      <p><code>method="nlminb"</code>: Uses the function <code><a href='http://www.inside-r.org/packages/cran/stats/docs/nlminb'>nlminb</a></code> for
+  optimisation, so that optimising a Mk2/Mkn likelihood function behaves
+  as similarly as possible to <code>ape</code>'s <code><a href='http://www.inside-r.org/packages/cran/ape/docs/ace'>ace</a></code> function.
+  As for <code>method="optim"</code>, lower and upper bounds on parameters may
+  be specified via <code>lower</code> and <code>upper</code>.  <code>fail.value</code> can
+  be used to control behaviour on evaluation failure, but like
+  <code>method="subplex"</code>, <code>-Inf</code> is used which should work in most
+  cases.  Additional control parameters may be passed via <code>control</code>
+  - see <code>link{nlminb} for details</code>.  This function is not generally
+  recommended for use.</p>
+  
+      <p><code>method="nlm"</code>: Uses the function <code><a href='http://www.inside-r.org/packages/cran/stats/docs/nlm'>nlm</a></code> for
+  optimisation, so that optimising a birth-death likelihood function
+  behaves as similarly as possible to <code>ape</code>'s
+  <code><a href='http://www.inside-r.org/packages/cran/ape/docs/birthdeath'>birthdeath</a></code> function.  Takes the same additional
+  arguments as <code>method="nlminb"</code> (except that <code>fail.value</code>
+  behaves as for <code>method="optim"</code>).  Like <code>method="nlminb"</code>,
+  this is not recommended for general use.</p>
+  
+      <p><code>code</code> and <code>logLik</code> methods exist for <code>fit.mle</code> objects
+  so that parameters and log-likelihoods may be extracted.  This also
+  allows use with <code><a href='http://www.inside-r.org/packages/cran/stats/docs/AIC'>AIC</a></code>.</p>
+  
+      <p>Simple model comparison by way of likelihood ratio tests can be
+  performed with <code><a href='http://www.inside-r.org/packages/cran/stats/docs/anova'>anova</a></code>.  See Examples for usage.</p>
+  
+    </div>
+
+    <div class="Model comparison">
+      <h2>Model comparison</h2>
+      
+      <p>The <code><a href='http://www.inside-r.org/packages/cran/stats/docs/anova'>anova</a></code> function carries out likelihood ratio tests.
+  There are a few possible configurations.</p>
+  
+      <p>First, the first fit provided could be the focal fit, and all other
+  fits are either special cases of it (every additional model is nested
+  within the focal model) or generalisations of it (the focal model is
+  nested within every additional model).</p>
+  
+      <p>Second, the models could be sequential series of fits (if
+  <code>sequential=TRUE</code>), such that models (A, B, C, D) are to be
+  compared A vs. B, B vs. C, C vs. D.  The models can either be strictly
+  increasing in parameters (A nested in B, B nested in C, ...) or
+  strictly decreasing in parameters (D nested in C, C nested in B, ...).</p>
+  
+      <p>In both cases, nestedness is checked.  First, the "class" of the
+  fitted object must match.  Second, the <code><a href='argnames.html'>argnames</a></code> of the
+  likelihood function of a sub model must all appear in the
+  <code>argnames</code> of the parent model.  There are some cases where this
+  second condition may not be satisfied and yet the comparison is valid
+  (e.g., comparing a time-varying model against a non time varying
+  model, and some <code>make.quasse</code> fits).  We attempt to detect this
+  but it may fail on some valid comparisons and silently allow some
+  invalid comparisons.</p>
+  
+    </div>
+
+    <div class="Value">
+      <h2>Value</h2>
+      
+      <p>A list of class <code>fit.mle</code>, with at least the components
+  <ul>
+<li> <code>par</code> The estimated parameters.
+    </li>
+<li> <code>lnLik</code> The log likelihood at the ML point.
+    </li>
+<li> <code>counts</code> The number of function evaluations performed
+    during the search.
+    </li>
+<li> <code>code</code> Convergence code.  See the documentation for the
+    underlying optimisation method for meaning, but "0" is usually good.
+    </li>
+<li> <code>func</code> The likelihood function used in the fit.
+    </li>
+<li> <code>method</code> The optimisation method used.
+  </li>
+</ul></p>
+  
+      <p></p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(2)
+phy &lt;- tree.bisse(pars, max.t=60, x0=0)
+
+## Here is the 203 species tree with the true character history coded.
+## Red is state &#39;1&#39;, which has twice the speciation rate of black (state
+## &#39;0&#39;).
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy, cex=.5, show.node.state=FALSE)
+</div>
+<p><img src='find.mle-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Make a BiSSE likelihood function
+lik &lt;- make.bisse(phy, phy$tip.state)
+lik(pars)
+</div>
+<div class='output'>[1] -660.0223
+</div>
+<div class='input'>
+## This takes ~30s to run, so is not enabled by default
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# ## Fit the full six-parameter model
+# fit &lt;- find.mle(lik, pars)
+# fit[1:2]
+# 
+# coef(fit)   # Named vector of six parameters
+# logLik(fit) # -659.93
+# AIC(fit)    # 1331.86
+# 
+# ## find.mle works with constrained models (see \link{constrain}).  Here
+# ## the two speciation rates are constrained to be the same as each
+# ## other.
+# lik.l &lt;- constrain(lik, lambda0 ~ lambda1)
+# fit.l &lt;- find.mle(lik.l, pars[-2])
+# logLik(fit.l) # 663.41
+# 
+# ## Compare the models with \link{anova} - this shows that the more
+# ## complicated model with two separate speciation rates fits
+# ## significantly better than the simpler model with equal rates
+# ## (p=0.008).
+# anova(fit, equal.lambda=fit.l)
+# 
+# ## You can return the parameters for the full six parameter model from
+# ## the fitted five parameter model - this makes a good starting point
+# ## for a ML search.
+# coef(fit.l, full=TRUE)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>find.mle</li><li>coef.fit.mle</li><li>logLik.fit.mle</li><li>anova.fit.mle</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

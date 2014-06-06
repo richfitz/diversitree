@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.geosse.t. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Jonathan Rolland">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Geographic State Speciation and Extinction Model: Time Dependent
+  Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.geosse.t(tree, states, functions, sampling.f=NULL, strict=TRUE, control=list(), truncate=FALSE, spline.data=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>A phylogenetic tree, in <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be 0
+    (in both regions/widespread; AB), 1 or 2 (endemic to one region; A or
+    B), or <code>NA</code> if the state is unknown.  This vector must have names
+    that correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).</dd>
+      <dt>functions</dt>
+      <dd>A named character vector of functions of time.  See
+    details.</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length 3 with the estimated proportion of
+    extant species in states 0, 1 and 2 that are included in the
+    phylogeny.  A value of <code>c(0.5, 0.75, 1)</code> means that half of
+    species in state 0, three quarters of species in state 1, and all the
+    species in state 2 are included in the phylogeny.  By default all
+    species are assumed to be known.</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are 0, 1 and 2 only. If <code>strict</code> is <code>TRUE</code>
+    (the default), then the additional check is made that <em>every</em>
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>truncate</dt>
+      <dd>Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 7).</dd>
+      <dt>spline.data</dt>
+      <dd>List of data for spline-based time functions.  See
+    details in <code><a href='make.bisse.td.html'>make.bisse.t</a></code></dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run time dependent GeoSSE (Geographic State
+  Speciation and Extinction) on a phylogenetic tree and character
+  distribution. This function creates a likelihood function that can be
+  used in <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Please see <code><a href='make.bisse.td.html'>make.bisse.t</a></code> for further details.</p>
+  
+      <p><code>make.geosse.t</code> returns a function of class <code>geosse.t</code>.</p>
+  
+      <p>The <code>funtions</code> is a vector of named functions of time.  For
+  example, to have speciation rates be linear functions of time, while
+  the extinction and dispersal rates be constant with respect to time,
+  one can do <pre>functions=rep(c("linear.t", "constant.t"),
+  c(3, 4))</pre>.  The functions here must have <code>t</code> as their first
+  argument, interpreted as time back from the present.  See
+  <code><a href='make.bisse.td.html'>make.bisse.t</a></code> for more information, and for some
+  potentially useful time functions.</p>
+  
+      <p>The function has argument list (and default values):</p>
+  
+      <p><pre>
+    f(pars, condition.surv=FALSE, root=ROOT.OBS, root.p=NULL,
+      intermediates=FALSE)
+  </pre></p>
+  
+      <p>The parameter vector pars is ordered <code>sA</code>, <code>sB</code>, <code>sAB</code>,
+  <code>xA</code>, <code>xB</code>, <code>dA</code>, <code>dB</code>. Unresolved clade methods
+  are not available for GeoSSE. With three states, it would rapidly
+  become computationally infeasible.  The arguments of this function are
+  also explained in <code><a href='make.bisse.html'>make.bisse</a></code>.</p>
+  
+      <p><code>starting.point.geosse</code> produces a first-guess set of parameters,
+  ignoring character states.</p>
+  
+    </div>
+
+    <div class="Warning">
+      <h2>Warning</h2>
+      
+      <p>This computer intensive code is experimental!</p>
+  
+    </div>
+
+    <div class="References">
+      <h2>References</h2>
+      
+      <p>FitzJohn R.G. 2012. Diversitree: comparative phylogenetic analyses of 
+  diversification in R. Methods in Ecology and Evolution. 3, 1084-1092.</p>
+  
+      <p>FitzJohn R.G., Maddison W.P., and Otto S.P. 2009. Estimating
+  trait-dependent speciation and extinction rates from incompletely
+  resolved phylogenies. Syst. Biol. 58:595-611.</p>
+  
+      <p>Goldberg E.E., Lancaster L.T., and Ree R.H. 2011. Phylogenetic
+  inference of reciprocal effects between geographic range evolution and
+  diversification. Syst. Biol. 60:451-465.</p>
+  
+      <p>Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating
+  a binary character's effect on speciation and
+  extinction. Syst. Biol. 56:701-710.</p>
+  
+      <p>Nee S., May R.M., and Harvey P.H. 1994. The reconstructed
+  evolutionary process. Philos.  Trans. R. Soc. Lond. B
+  Biol. Sci. 344:305-311.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Parameter values
+pars &lt;- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
+names(pars) &lt;- diversitree:::default.argnames.geosse()
+
+## Simulate a tree
+set.seed(5)
+phy &lt;- tree.geosse(pars, max.t=4, x0=0)
+
+## See the data
+statecols &lt;- c(&quot;AB&quot;=&quot;purple&quot;, &quot;A&quot;=&quot;blue&quot;, &quot;B&quot;=&quot;red&quot;)
+plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5)
+</div>
+<p><img src='make.geosse.t-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Create your list of functions. Its length corresponds to the number
+## of parameters (speciation, extinction and dispersal) you want to
+## estimate.
+## For an unconstrained model, at least 7 parameters are estimated for
+## sA, sB, sAB, xA, xB, dA, dB.
+## In the case you want to define a model with linear functions of
+## speciation and extinction, and constant dispersal:
+functions &lt;- rep(c(&quot;linear.t&quot;, &quot;constant.t&quot;), c(5, 2))
+
+## Create the likelihood function
+lik &lt;- make.geosse.t(phy, phy$tip.state, functions)
+
+## This function will estimate a likelihood from 12 parameters.
+argnames(lik)
+</div>
+<div class='output'> [1] &quot;sA.c&quot;  &quot;sA.m&quot;  &quot;sB.c&quot;  &quot;sB.m&quot;  &quot;sAB.c&quot; &quot;sAB.m&quot; &quot;xA.c&quot;  &quot;xA.m&quot;  &quot;xB.c&quot; 
+[10] &quot;xB.m&quot;  &quot;dA&quot;    &quot;dB&quot;   
+</div>
+<div class='input'>
+## Imagine that you want to get an estimate of the likelihood from a
+## known set of parameters.
+pars &lt;- c(0.01,0.001,0.01,0.001,0.01,0.001,0.02,0.002,0.02,0.002,0.1,0.1)
+names(pars)&lt;-argnames(lik)
+lik(pars) # -640.1644
+</div>
+<div class='output'>[1] -571.0267
+</div>
+<div class='input'>
+## A guess at a starting point from character independent birth-death
+## model (constant across time) .
+p &lt;- starting.point.geosse(phy)
+
+#it only gives 7 parameters for time-constant model.
+names(p)
+</div>
+<div class='output'>[1] &quot;sA&quot;  &quot;sB&quot;  &quot;sAB&quot; &quot;xA&quot;  &quot;xB&quot;  &quot;dA&quot;  &quot;dB&quot; 
+</div>
+<div class='input'>
+## it can be modified for time-dependent with a guess on the slopes of
+## speciation and extinction rates.
+p.t&lt;-c(p[1],0.001,p[2],0.001,p[3],0.001,p[4],0.001,p[5],0.001,p[6],p[7])
+names(p.t)&lt;-argnames(lik)
+
+## Start an ML search from this point (takes from one minute to a very
+## long time depending on your computer).
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# fit &lt;- find.mle(lik, p.t, method=&quot;subplex&quot;)
+# fit$logLik
+# coef(fit)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+
+## A model with constraints on the dispersal rates.
+lik.d &lt;- constrain(lik, dA ~ dB)
+
+##Now dA and dB are the same parameter dB.
+argnames(lik.d)
+</div>
+<div class='output'> [1] &quot;sA.c&quot;  &quot;sA.m&quot;  &quot;sB.c&quot;  &quot;sB.m&quot;  &quot;sAB.c&quot; &quot;sAB.m&quot; &quot;xA.c&quot;  &quot;xA.m&quot;  &quot;xB.c&quot; 
+[10] &quot;xB.m&quot;  &quot;dB&quot;   
+</div>
+<div class='input'>
+##The parameter dA must be removed from maximum likelihood initial parameters
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# fit.d &lt;- find.mle(lik.d, p.t[-which(names(p.t)==&quot;dA&quot;)])
+# fit$logLik
+# coef(fit)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.geosse.t</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='constrain.html'>constrain</a></code> for making submodels and reduce number
+  of parameters, <code><a href='find.mle.html'>find.mle</a></code> for ML parameter estimation,
+  <code><a href='mcmc.html'>mcmc</a></code> for MCMC integration, <code><a href='make.bisse.html'>make.bisse</a></code> and
+  <code><a href='make.bisse.td.html'>make.bisse.t</a></code> for further relevant examples.
+
+  The help page for <code><a href='find.mle.html'>find.mle</a></code> has further examples of ML
+  searches on full and constrained BiSSE models.  Things work similarly
+  for GeoSSE and GeoSSE.t, just with different parameters.
+
+  See <code><a href='make.geosse.html'>make.geosse</a></code> for explanation of the base model.
+
+    
+    <h2>Author</h2>
+    Jonathan Rolland
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

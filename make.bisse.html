@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.bisse. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Binary State Speciation and Extinction Model</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.bisse(tree, states, unresolved=NULL, sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())
+starting.point.bisse(tree, q.div=5, yule=FALSE)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be 0 or
+    1, or <code>NA</code> if the state is unknown.  This vector must have
+    names that correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).  For tips
+    corresponding to unresolved clades, the state should be <code>NA</code>.</dd>
+      <dt>unresolved</dt>
+      <dd>Unresolved clade information: see section below for
+    structure.</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length 2 with the estimated proportion of
+    extant species in state 0 and 1 that are included in the phylogeny.
+    A value of <code>c(0.5, 0.75)</code> means that half of species in state 0
+    and three quarters of species in state 1 are included in the
+    phylogeny.  By default all species are assumed to be known.</dd>
+      <dt>nt.extra</dt>
+      <dd>The number of species modelled in unresolved clades
+    (this is in addition to the largest observed clade).</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details below.</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are 0 and 1 only.  If <code>strict</code> is <code>TRUE</code>
+    (the default), then the additional check is made that <em>every</em>
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing.</dd>
+      <dt>q.div</dt>
+      <dd>Ratio of diversification rate to character change rate.
+    Eventually this will be changed to allow for Mk2 to be used for
+    estimating q parameters.</dd>
+      <dt>yule</dt>
+      <dd>Logical: should starting parameters be Yule estimates
+    rather than birth-death estimates?</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run BiSSE (Binary State Speciation and
+  Extinction) on a phylogenetic tree and character distribution.  This
+  function creates a likelihood function that can be used in
+  <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><code>make.bisse</code> returns a function of class <code>bisse</code>.  This
+  function has argument list (and default values)</p>
+  
+      <p><pre>
+    f(pars, condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
+      intermediates=FALSE)
+  </pre></p>
+  
+      <p>The arguments are interpreted as
+  <ul>
+<li> <code>pars</code> A vector of six parameters, in the order
+    <code>lambda0</code>, <code>lambda1</code>, <code>mu0</code>, <code>mu1</code>,
+    <code>q01</code>, <code>q10</code>.
+    </li>
+<li> <code>condition.surv</code> (logical): should the likelihood
+    calculation condition on survival of two lineages and the speciation
+    event subtending them?  This is done by default, following Nee et
+    al. 1994.
+    </li>
+<li> <code>root</code>: Behaviour at the root (see Maddison et al. 2007,
+    FitzJohn et al. 2009).  The possible options are
+    <ul>
+<li> <code>ROOT.FLAT</code>: A flat prior, weighting
+      <code class = 'eq'>D0</code> and <code class = 'eq'>D1</code> equally.
+      </li>
+<li> <code>ROOT.EQUI</code>: Use the equilibrium distribution
+      of the model, as described in Maddison et al. (2007).
+      </li>
+<li> <code>ROOT.OBS</code>: Weight <code class = 'eq'>D0</code> and
+      <code class = 'eq'>D1</code> by their relative probability of observing the
+      data, following FitzJohn et al. 2009:
+      <pre class = 'eq'>
+ 	D = D0 * D0/(D0 + D1) + D1 * D1/(D0 + D1)</pre>
+      </li>
+<li> <code>ROOT.GIVEN</code>: Root will be in state 0
+      with probability <code>root.p[1]</code>, and in state 1 with
+      probability <code>root.p[2]</code>.
+      </li>
+<li> <code>ROOT.BOTH</code>: Don't do anything at the root,
+      and return both values.  (Note that this will not give you a
+      likelihood!).
+    </li>
+</ul></p>
+  
+      <p></li>
+<li> <code>root.p</code>: Root weightings for use when
+    <code>root=ROOT.GIVEN</code>.  <code>sum(root.p)</code> should equal 1.
+    </li>
+<li> <code>intermediates</code>: Add intermediates to the returned value as
+    attributes:
+    <ul>
+<li> <code>cache</code>: Cached tree traversal information.
+      </li>
+<li> <code>intermediates</code>: Mostly branch end information.
+      </li>
+<li> <code>vals</code>: Root <code class = 'eq'>D</code> values.
+    </li>
+</ul></p>
+  
+      <p>At this point, you will have to poke about in the source for more
+    information on these.
+  </li>
+</ul></p>
+  
+      <p><code>starting.point.bisse</code> produces a heuristic starting point to
+  start from, based on the character-independent birth-death model.  You
+  can probably do better than this; see the vignette, for example.
+  <code>bisse.starting.point</code> is the same code, but deprecated in favour
+  of <code>starting.point.bisse</code> - it will be removed in a future
+  version.</p>
+  
+    </div>
+
+    <div class="Unresolved clade information">
+      <h2>Unresolved clade information</h2>
+      
+      <p>This must be a <code><a href='http://www.inside-r.org/packages/cran/base/docs/data.frame'>data.frame</a></code> with at least the four columns
+  <ul>
+<li> <code>tip.label</code>, giving the name of the tip to which the data
+    applies
+    </li>
+<li> <code>Nc</code>, giving the number of species in the clade
+    </li>
+<li> <code>n0</code>, <code>n1</code>, giving the number of species known to be
+    in state 0 and 1, respectively.
+  </li>
+</ul></p>
+  
+      <p>These columns may be in any order, and additional columns will be
+  ignored.  (Note that column names are case sensitive).</p>
+  
+      <p>An alternative way of specifying unresolved clade information is to
+  use the function <code><a href='make.clade.tree.html'>make.clade.tree</a></code> to construct a tree
+  where tips that represent clades contain information about which
+  species are contained within the clades.  With a <code>clade.tree</code>,
+  the <code>unresolved</code> object will be automatically constructed from
+  the state information in <code>states</code>.  (In this case, <code>states</code>
+  must contain state information for the species contained within the
+  unresolved clades.)</p>
+  
+    </div>
+
+    <div class="ODE solver control">
+      <h2>ODE solver control</h2>
+      
+      <p>The differential equations that define the
+  BiSSE model are solved numerically using ODE solvers from the GSL
+  library or deSolve's LSODA.  The <code>control</code> argument to
+  <code>make.bisse</code> controls the behaviour of the integrator.  This is a
+  list that may contain elements:</p>
+  
+      <p><ul>
+<li><code>tol</code>: Numerical tolerance used for the calculations.
+      The default value of <code>1e-8</code> should be a reasonable trade-off
+      between speed and accuracy.  Do not expect too much more than this
+      from the abilities of most machines!</p>
+  
+      <p></li>
+<li><code>eps</code>: A value that when the sum of the D values drops
+      below, the integration results will be discarded and the
+      integration will be attempted again (the second-chance integration
+      will divide a branch in two and try again, recursively until the
+      desired accuracy is reached).  The default value of <code>0</code> will
+      only discard integration results when the parameters go negative.
+      However, for some problems more restrictive values (on the order
+      of <code>control$tol</code>) will give better stability.</p>
+  
+      <p></li>
+<li><code>backend</code>: Select the solver.  The three options here are
+      <ul>
+<li><code>gslode</code>: (the default).  Use the GSL solvers, by
+	  default a Runge Kutta Kash Carp stepper.
+	</li>
+<li><code>deSolve</code>: Use the LSODA solver from the
+	  <code>deSolve</code> package.  This is quite a bit slower at the
+	  moment.
+    </li>
+</ul></p>
+  
+      <p></li>
+</ul></p>
+  
+      <p><code>deSolve</code> is the only supported backend on Windows.</p>
+  
+    </div>
+
+    <div class="References">
+      <h2>References</h2>
+      
+      <p>FitzJohn R.G., Maddison W.P., and Otto S.P. 2009. Estimating
+  trait-dependent speciation and extinction rates from incompletely
+  resolved phylogenies. Syst. Biol. 58:595-611.</p>
+  
+      <p>Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating
+  a binary character's effect on speciation and
+  extinction. Syst. Biol. 56:701-710.</p>
+  
+      <p>Nee S., May R.M., and Harvey P.H. 1994. The reconstructed
+  evolutionary process. Philos.  Trans. R. Soc. Lond. B
+  Biol. Sci. 344:305-311.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(4)
+phy &lt;- tree.bisse(pars, max.t=30, x0=0)
+
+## Here is the 52 species tree with the true character history coded.
+## Red is state &#39;1&#39;, which has twice the speciation rate of black (state
+## &#39;0&#39;).
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy)
+</div>
+<p><img src='make.bisse-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+lik &lt;- make.bisse(phy, phy$tip.state)
+lik(pars) # -159.71
+</div>
+<div class='output'>[1] -159.71
+</div>
+<div class='input'>
+## Heuristic guess at a starting point, based on the constant-rate
+## birth-death model (uses \link{make.bd}).
+p &lt;- starting.point.bisse(phy)
+
+## Start an ML search from this point.  This takes some time (~7s)
+fit &lt;- find.mle(lik, p, method=&quot;subplex&quot;)
+logLik(fit) # -158.6875
+</div>
+<div class='output'>&#39;log Lik.&#39; -158.6875 (df=6)
+</div>
+<div class='input'>
+## The estimated parameters aren&#39;t too far away from the real ones, even
+## with such a small tree
+rbind(real=pars,
+      estimated=round(coef(fit), 2))
+</div>
+<div class='output'>          lambda0 lambda1  mu0  mu1  q01  q10
+real         0.10    0.20 0.03 0.03 0.01 0.01
+estimated    0.14    0.18 0.12 0.04 0.00 0.02
+</div>
+<div class='input'>
+## Test a constrained model where the speciation rates are set equal
+## (takes ~4s).
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# lik.l &lt;- constrain(lik, lambda1 ~ lambda0)
+# fit.l &lt;- find.mle(lik.l, p[-1], method=&quot;subplex&quot;)
+# logLik(fit.l) # -158.7357
+# 
+# ## Despite the difference in the estimated parameters, there is no
+# ## statistical support for this difference:
+# anova(fit, equal.lambda=fit.l)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+
+## Run an MCMC.  Because we are fitting six parameters to a tree with
+## only 50 species, priors will be needed.  I will use an exponential
+## prior with rate 1/(2r), where r is the character independent
+## diversificiation rate:
+prior &lt;- make.prior.exponential(1 / (2 * (p[1] - p[3])))
+
+## This takes quite a while to run, so is not run by default
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# tmp &lt;- mcmc(lik, fit$par, nsteps=100, prior=prior, w=.1, print.every=0)
+# 
+# w &lt;- diff(sapply(tmp[2:7], range))
+# samples &lt;- mcmc(lik, fit$par, nsteps=1000, prior=prior, w=w,
+#                 print.every=100)
+# 
+# ## See \link{profiles.plot} for more information on plotting these
+# ## profiles.
+# col &lt;- c(&quot;blue&quot;, &quot;red&quot;)
+# profiles.plot(samples[c(&quot;lambda0&quot;, &quot;lambda1&quot;)], col.line=col, las=1,
+#               xlab=&quot;Speciation rate&quot;, legend=&quot;topright&quot;)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+
+## BiSSE reduces to the birth-death model and Mk2 when diversification
+## is state independent (i.e., lambda0 ~ lambda1 and mu0 ~ mu1).
+lik.mk2 &lt;- make.mk2(phy, phy$tip.state)
+lik.bd &lt;- make.bd(phy)
+
+## 1. BiSSE / Birth-Death
+## Set the q01 and q10 parameters to arbitrary numbers (need not be
+## symmetric), and constrain the lambdas and mus to be the same for each
+## state.  The likelihood function now has just two parameters and
+## will be proprtional to Nee&#39;s birth-death based likelihood:
+lik.bisse.bd &lt;- constrain(lik,
+                          lambda1 ~ lambda0, mu1 ~ mu0,
+                          q01 ~ .01, q10 ~ .02)
+pars &lt;- c(.1, .03)
+## These differ by -167.3861 for both parameter sets:
+lik.bisse.bd(pars)   - lik.bd(pars)
+</div>
+<div class='output'>[1] -167.3861
+</div>
+<div class='input'>lik.bisse.bd(2*pars) - lik.bd(2*pars)
+</div>
+<div class='output'>[1] -167.3861
+</div>
+<div class='input'>
+## 2. BiSSE / Mk2
+## Same idea as above: set all diversification parameters to arbitrary
+## values (but symmetric this time):
+lik.bisse.mk2 &lt;- constrain(lik,
+                           lambda0 ~ .1, lambda1 ~ .1,
+                           mu0 ~ .03, mu1 ~ .03)
+## Differ by -150.4740 for both parameter sets.
+lik.bisse.mk2(pars)   - lik.mk2(pars)
+</div>
+<div class='output'>[1] -150.474
+</div>
+<div class='input'>lik.bisse.mk2(2*pars) - lik.mk2(2*pars)
+</div>
+<div class='output'>[1] -150.474
+</div>
+<div class='input'>
+## 3. Sampled BiSSE / Birth-Death
+## Pretend that the tree is only .6 sampled:
+lik.bd2 &lt;- make.bd(phy, sampling.f=.6)
+lik.bisse2 &lt;- make.bisse(phy, phy$tip.state, sampling.f=c(.6, .6))
+lik.bisse2.bd &lt;- constrain(lik.bisse2,
+                           lambda1 ~ lambda0, mu1 ~ mu0,
+                           q01 ~ .01, q10 ~ .01)
+
+## Difference of -167.2876
+lik.bisse2.bd(pars)   - lik.bd2(pars)
+</div>
+<div class='output'>[1] -167.2876
+</div>
+<div class='input'>lik.bisse2.bd(2*pars) - lik.bd2(2*pars)
+</div>
+<div class='output'>[1] -167.2876
+</div>
+<div class='input'>
+## 4. Unresolved clade BiSSE / Birth-Death
+set.seed(1)
+unresolved &lt;- data.frame(tip.label=I(sample(phy$tip.label, 5)),
+                         Nc=sample(2:10, 5), n0=0, n1=0)
+unresolved.bd &lt;- structure(unresolved$Nc, names=unresolved$tip.label)
+lik.bisse3 &lt;- make.bisse(phy, phy$tip.state, unresolved)
+lik.bisse3.bd &lt;- constrain(lik.bisse3,
+                           lambda1 ~ lambda0, mu1 ~ mu0,
+                           q01 ~ .01, q10 ~ .01)
+lik.bd3 &lt;- make.bd(phy, unresolved=unresolved.bd)
+
+## Difference of -167.1523
+lik.bisse3.bd(pars) - lik.bd3(pars)
+</div>
+<div class='output'>[1] -167.1523
+</div>
+<div class='input'>lik.bisse3.bd(pars*2) - lik.bd3(pars*2)
+</div>
+<div class='output'>[1] -167.1523
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.bisse</li><li>starting.point.bisse</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='constrain.html'>constrain</a></code> for making submodels, <code><a href='find.mle.html'>find.mle</a></code>
+  for ML parameter estimation, <code><a href='mcmc.html'>mcmc</a></code> for MCMC integration,
+  and <code><a href='make.bd.html'>make.bd</a></code> for state-independent birth-death models.
+
+  The help pages for <code><a href='find.mle.html'>find.mle</a></code> has further examples of ML
+  searches on full and constrained BiSSE models.
+
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

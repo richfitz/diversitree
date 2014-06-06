@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.musse.multitrait. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>MuSSE: Multi-State Speciation and Extinction (Multiple Binary Traits
+  Version)</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.musse.multitrait(tree, states, sampling.f=NULL, depth=NULL, allow.multistep=FALSE, strict=TRUE, control=list())
+make.mkn.multitrait(tree, states, depth=NULL, allow.multistep=FALSE, strict=TRUE, control=list())</div>
+<div>musse.multitrait.translate(n.trait, depth=NULL, names=NULL, allow.multistep=FALSE)
+mkn.multitrait.translate(n.trait, depth=NULL, names=NULL, allow.multistep=FALSE)</div>
+<div>starting.point.musse.multitrait(tree, lik, q.div=5, yule=FALSE)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A <code>data.frame</code> of character states, each column of
+    which represents a different binary state (with values 0 or 1), and
+    each row of which represents a taxon.  The row names of
+    <code>states</code> must be the names that correspond to the tip labels in
+    the phylogenetic tree (<code>tree$tip.label</code>).  The column names
+    must be unique and a single character long.  The character "0"
+    (zero) is reserved and may not be used. <code>NA</code> values are allowed
+    in one or more columns when one or more traits is unknown for a
+    taxon.</dd>
+      <dt>depth</dt>
+      <dd>A scalar or vector of length 3 indicating the depth of
+    interactions to include in the model.  See Details.</dd>
+      <dt>allow.multistep</dt>
+      <dd>Should transition rates be included that imply
+    simultaneous changes in more than one trait?  By default this is not
+    allowed, but if set to <code>TRUE</code> these rates are included at the
+    end of the parameter vector.  Warning: treatment of these will
+    change in future versions!</dd>
+      <dt>sampling.f</dt>
+      <dd>Scalar with the estimated proportion of extant
+    species that are included in the phylogeny.  A value of <code>0.75</code>
+    means that three quarters of extant species are included in the
+    phylogeny.  By default all species are assumed to be known.  In the
+    future, this will expand to allow state-specific sampling rates.</dd>
+      <dt>strict</dt>
+      <dd>Each column in <code>states</code> is always checked to make
+    sure that the values are 0 or 1.  If <code>strict</code> is <code>TRUE</code>
+    (the default), then the additional check is made that <em>every</em>
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing, but there are cases (missing intermediate
+    states for meristic characters) where allowing such models may be
+    useful.  Note that this model may misbehave even if this check is
+    met, due to combinations of traits being absent.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>lik</dt>
+      <dd>A likelihood function created by
+    <code>make.musse.multitrait</code>.</dd>
+      <dt>q.div</dt>
+      <dd>Ratio of diversification rate to character change rate.
+    Eventually this will be changed to allow for Mk2 to be used for
+    estimating q parameters.</dd>
+      <dt>yule</dt>
+      <dd>Logical: should starting parameters be Yule estimates
+    rather than birth-death estimates?</dd>
+      <dt>n.trait</dt>
+      <dd>Number of binary traits.</dd>
+      <dt>names</dt>
+      <dd>Vector of names for the traits when using
+    musse.multitrait.translate (optional).</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run MuSSE or Mkn (Multi-State Speciation and
+  Extinction) on a phylogenetic tree and character distribution.  This
+  function creates a likelihood function that can be used in
+  <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+      <p>This is a helper function that wraps the basic MuSSE/Mkn models for
+  the case of a combination of several binary traits; its
+  parametrisation and argument handling are a little different to the
+  other models in diversitree.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Suppose that you have two binary traits that may affect speciation and
+  extinction.  In previous versions of diversitree, you had to code the
+  possible combinations as states 1, 2, 3, 4, which makes the
+  interpretation of the speciation rates (<code>lambda1</code>,
+  <code>lambda2</code>, etc) unintuitive.</p>
+  
+      <p>Let <code>states</code> is a data.frame with columns "A" and "B",
+  representing the two binary traits.  We can write the speciation rate
+  as</p>
+  
+      <p><pre class = 'eq'>
+    lambda_0 + lambda_A * X_A + lambda_B * X_B + lambda_AB * X_A * X_B</pre></p>
+  
+      <p>where <code class = 'eq'>X_A</code> and <code class = 'eq'>X_B</code> are indicator variables that take the
+  value of trait A and B respectively (with values 0 or 1).  In this
+  form, <code class = 'eq'>lambda_0</code> is the intercept,
+  <code class = 'eq'>lambda_A</code> and <code class = 'eq'>lambda_B</code> are "main
+  effects" of traits A and B, and <code class = 'eq'>lambda_AB</code> is the
+  "interaction" between these.  We can do a similar trick for the
+  extinction rates.</p>
+  
+      <p>For character transition rates, we first consider changes only in a
+  single trait.  For our two trait case we have four "types" of
+  character change allowed (A 0->1, A 1->0, B 0->1, and B 1->0), but the
+  rates of change for trait A might depend on the current state of trait
+  B (and vice versa).  So we have, for the A0->1 trait change
+  <code class = 'eq'>qA01.0 + qA01.B * X_B</code>.  Note that one fewer levels of
+  interaction are possible for these character changes than for the
+  speciation/extinction parameters.</p>
+  
+      <p>It may sometimes be desirable to have the multi-trait changes in the
+  model.  At present, if <code>allow.multistep</code> is <code>TRUE</code>, all the
+  multiple change transitions are included at the end of the parameter
+  vector.  For the two trait case these are labelled <code>q00.11</code>,
+  <code>q10.01</code>, <code>q01.10</code>, and <code>q11.00</code>, where <code>qij.kl</code>
+  represents a change from (A=i, B=j) to (C=k, D=l).  The argument name,
+  and treatment, of these may change in future.</p>
+  
+      <p>This approach generalises out to more than two traits.  For <code>N</code>
+  traits, interactions are possible up to the <code>N</code>th order for
+  lambda and mu, and up to the <code>N-1</code>th order for q.  The
+  <code>depth</code> argument controls how many of these are returned.  If
+  this is a scalar, then the same level is used for <code>lambda</code>,
+  <code>mu</code> and <code>q</code>.  If it is a vector of length 3, then different
+  depths are used for these three types of parameters.  By default, all
+  possible interactions are returned and the model has the same number
+  of degrees of freedom as the models returned by <code>make.musse</code>
+  (except for a reduction in the possible q parameters when
+  <code>allow.multistep</code> is <code>FALSE</code>).  Parameters can then be
+  further refined with <code>constrain</code>.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## The translation between these two bases is fairly straightforward; if
+## we have a vector of parameters in our new basis &#39;p&#39; we can convert it
+## into the original MuSSE basis (&#39;q&#39;) through this matrix:
+tr &lt;- musse.multitrait.translate(2)
+tr
+</div>
+<div class='output'>         lambda0 lambdaA lambdaB lambdaAB mu0 muA muB muAB qA01.0 qA01.B qA10.0
+lambda00       1       0       0        0   0   0   0    0      0      0      0
+lambda10       1       1       0        0   0   0   0    0      0      0      0
+lambda01       1       0       1        0   0   0   0    0      0      0      0
+lambda11       1       1       1        1   0   0   0    0      0      0      0
+mu00           0       0       0        0   1   0   0    0      0      0      0
+mu10           0       0       0        0   1   1   0    0      0      0      0
+mu01           0       0       0        0   1   0   1    0      0      0      0
+mu11           0       0       0        0   1   1   1    1      0      0      0
+q00.10         0       0       0        0   0   0   0    0      1      0      0
+q00.01         0       0       0        0   0   0   0    0      0      0      0
+q00.11         0       0       0        0   0   0   0    0      0      0      0
+q10.00         0       0       0        0   0   0   0    0      0      0      1
+q10.01         0       0       0        0   0   0   0    0      0      0      0
+q10.11         0       0       0        0   0   0   0    0      0      0      0
+q01.00         0       0       0        0   0   0   0    0      0      0      0
+q01.10         0       0       0        0   0   0   0    0      0      0      0
+q01.11         0       0       0        0   0   0   0    0      1      1      0
+q11.00         0       0       0        0   0   0   0    0      0      0      0
+q11.10         0       0       0        0   0   0   0    0      0      0      0
+q11.01         0       0       0        0   0   0   0    0      0      0      1
+         qA10.B qB01.0 qB01.A qB10.0 qB10.A
+lambda00      0      0      0      0      0
+lambda10      0      0      0      0      0
+lambda01      0      0      0      0      0
+lambda11      0      0      0      0      0
+mu00          0      0      0      0      0
+mu10          0      0      0      0      0
+mu01          0      0      0      0      0
+mu11          0      0      0      0      0
+q00.10        0      0      0      0      0
+q00.01        0      1      0      0      0
+q00.11        0      0      0      0      0
+q10.00        0      0      0      0      0
+q10.01        0      0      0      0      0
+q10.11        0      1      1      0      0
+q01.00        0      0      0      1      0
+q01.10        0      0      0      0      0
+q01.11        0      0      0      0      0
+q11.00        0      0      0      0      0
+q11.10        0      0      0      1      1
+q11.01        1      0      0      0      0
+</div>
+<div class='input'>
+## Notice that the rows that correspond to transitions in multiple
+## traits are all zero by default; this means that these q values will
+## be zero regardless of the parameter vector used.
+tr[&quot;q00.11&quot;,]
+</div>
+<div class='output'> lambda0  lambdaA  lambdaB lambdaAB      mu0      muA      muB     muAB 
+       0        0        0        0        0        0        0        0 
+  qA01.0   qA01.B   qA10.0   qA10.B   qB01.0   qB01.A   qB10.0   qB10.A 
+       0        0        0        0        0        0        0        0 
+</div>
+<div class='input'>
+## And here is the section of the transition matrix corresponding to the
+## lambda values; every rate gets a contribution from the intercept term
+## (lambda0), lambda10 and lambda11 get a contribution from lambdaA, etc.
+tr[1:4,1:4]
+</div>
+<div class='output'>         lambda0 lambdaA lambdaB lambdaAB
+lambda00       1       0       0        0
+lambda10       1       1       0        0
+lambda01       1       0       1        0
+lambda11       1       1       1        1
+</div>
+<div class='input'>
+## There is currently no nice simulation support for this, so bear with
+## an ugly script to generate the tree and traits.
+pars &lt;- c(.10, .15, .20, .25, # lambda 00, 10, 01, 11
+          .03, .03, .03, .03, # mu 00, 10, 01, 11
+          .05, .05, .0,       # q00.10, q00.01, q00.11
+          .05, .0,  .05,      # q10.00, q10.01, q10.11
+          .05, .0,  .05,      # q01.00, q01.10, q01.11
+          .0,  .05, .05)      # q11.00, q11.10, q11.01
+set.seed(2)
+phy &lt;- tree.musse(pars, 60, x0=1)
+
+states &lt;- expand.grid(A=0:1, B=0:1)[phy$tip.state,]
+rownames(states) &lt;- phy$tip.label
+
+## Here, states has row names corresponding to the different taxa, and
+## the states of two traits &quot;A&quot; and &quot;B&quot; are recorded in the columns.
+head(states)
+</div>
+<div class='output'>     A B
+sp3  0 0
+sp6  0 1
+sp7  0 1
+sp9  1 0
+sp10 0 1
+sp11 0 1
+</div>
+<div class='input'>
+## Note that transition from the original MuSSE basis to this basis is
+## only possible in general when depth=n.trait and allow.multistep=TRUE
+## (as only this generates a square matrix that is invertible).
+## However, when it is possible to express the set of parameters in the
+## new basis (as it is above), this can be done through a pseudoinverse
+## (here, a left inverse).
+pars2 &lt;- drop(solve(t(tr) %*% tr) %*% t(tr) %*% pars)
+
+## Going from our new basis to the original MuSSE parameters is always
+## straightforward.  This is done automatically in the likelihood
+## function.
+all.equal(drop(tr %*% pars2), pars, check.attributes=FALSE)
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## This shows that the two traits act additively on speciation rate
+## (lambdaAB is zero), that there is no effect of any trait on
+## extinction (the only nonzero mu parameter is mu0) and transition
+## rates for one trait are unaffected by other traits (the only nonzero
+## q parameters are the qXij.0 parameters; qXij.Y parameters are all
+## zero).
+
+## Here is our new MuSSE function parametrised as a multi-trait
+## function:
+lik &lt;- make.musse.multitrait(phy, states)
+
+## Here are the argument names for the likelihood function.
+argnames(lik)
+</div>
+<div class='output'> [1] &quot;lambda0&quot;  &quot;lambdaA&quot;  &quot;lambdaB&quot;  &quot;lambdaAB&quot; &quot;mu0&quot;      &quot;muA&quot;     
+ [7] &quot;muB&quot;      &quot;muAB&quot;     &quot;qA01.0&quot;   &quot;qA01.B&quot;   &quot;qA10.0&quot;   &quot;qA10.B&quot;  
+[13] &quot;qB01.0&quot;   &quot;qB01.A&quot;   &quot;qB10.0&quot;   &quot;qB10.A&quot;  
+</div>
+<div class='input'>
+## Basic MuSSE function for comparison
+lik.m &lt;- make.musse(phy, phy$tip.state, 4)
+argnames(lik.m)
+</div>
+<div class='output'> [1] &quot;lambda1&quot; &quot;lambda2&quot; &quot;lambda3&quot; &quot;lambda4&quot; &quot;mu1&quot;     &quot;mu2&quot;     &quot;mu3&quot;    
+ [8] &quot;mu4&quot;     &quot;q12&quot;     &quot;q13&quot;     &quot;q14&quot;     &quot;q21&quot;     &quot;q23&quot;     &quot;q24&quot;    
+[15] &quot;q31&quot;     &quot;q32&quot;     &quot;q34&quot;     &quot;q41&quot;     &quot;q42&quot;     &quot;q43&quot;    
+</div>
+<div class='input'>
+## Rather than fit this complicated model first, let&#39;s start with a
+## simple model with no state dependent diversification.  This model
+## allows the forwards and backwards transition rates to vary, but the
+## speciation and extinction rates do not depend on the character
+## state:
+lik0 &lt;- make.musse.multitrait(phy, states, depth=0)
+argnames(lik0)
+</div>
+<div class='output'>[1] &quot;lambda0&quot; &quot;mu0&quot;     &quot;qA01.0&quot;  &quot;qA10.0&quot;  &quot;qB01.0&quot;  &quot;qB10.0&quot; 
+</div>
+<div class='input'>
+## This can be used in analyses as usual.  However, this can take a
+## while to run, so is not run by default.
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# p &lt;- starting.point.musse.multitrait(phy, lik0)
+# fit0 &lt;- find.mle(lik0, p)
+# 
+# ## Now, allow the speciation rates to vary additively with both
+# ## character states (extinction and character changes are left as in the
+# ## previous model)
+# lik1 &lt;- make.musse.multitrait(phy, states, depth=c(1, 0, 0))
+# 
+# ## Start from the previous ML point:
+# p &lt;- starting.point.musse.multitrait(phy, lik1)
+# p[names(coef(fit0))] &lt;- coef(fit0)
+# 
+# fit1 &lt;- find.mle(lik1, p)
+# 
+# ## The likelihood improves, but the difference is not statistically
+# ## significant (p = 0.35).
+# anova(fit1, fit0)
+# 
+# ## We can fit an interaction for the speciation rates, too:
+# lik2 &lt;- make.musse.multitrait(phy, states, depth=c(2, 0, 0))
+# p &lt;- starting.point.musse.multitrait(phy, lik2)
+# p[names(coef(fit1))] &lt;- coef(fit1)
+# fit2 &lt;- find.mle(lik2, p)
+# 
+# ## There is next to no support for the interaction term (which is good,
+# ## as the original model did not have any interaction!)
+# anova(fit2, fit1)
+# 
+# ## Constraining also works with these models.  For example, constraining
+# ## the lambdaA parameter to zero:
+# lik1b &lt;- constrain(lik1, lambdaA ~ 0)
+# argnames(lik1b)
+# p &lt;- starting.point.musse.multitrait(phy, lik1b)
+# p[names(coef(fit0))] &lt;- coef(fit0)
+# fit1b &lt;- find.mle(lik1b, p)
+# anova(fit1b, fit0)
+# 
+# ## Or constraining both main effects to take the same value:
+# lik1c &lt;- constrain(lik1, lambdaB ~ lambdaA)
+# argnames(lik1c)
+# p &lt;- starting.point.musse.multitrait(phy, lik1c)
+# p[names(coef(fit0))] &lt;- coef(fit0)
+# fit1c &lt;- find.mle(lik1c, p)
+# anova(fit1c, fit0)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.musse.multitrait</li><li>make.mkn.multitrait</li><li>musse.multitrait.translate</li><li>mkn.multitrait.translate</li><li>starting.point.musse.multitrait</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    <code><a href='make.bisse.html'>make.bisse</a></code> for the basic binary model, and
+  <code><a href='make.musse.html'>make.musse</a></code> for the basic multistate model.
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

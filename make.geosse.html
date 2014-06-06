@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.geosse. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Emma E. Goldberg">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Geographic State Speciation and Extinction Model</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.geosse(tree, states, sampling.f=NULL, strict=TRUE, control=list()) starting.point.geosse(tree, eps=0.5)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be 0
+    (in both regions/widespread; AB), 1 or 2 (endemic to one region; A
+    or B), or <code>NA</code> if the state is unknown.  This vector must have
+    names that correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length 3 with the estimated proportion of
+    extant species in states 0, 1 and 2 that are included in the
+    phylogeny.  A value of <code>c(0.5, 0.75, 1)</code> means that half of
+    species in state 0, three quarters of species in state 1, and all
+    the species in state 2 are included in the phylogeny.  By default
+    all species are assumed to be known.</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are 0, 1 and 2 only.  If <code>strict</code> is
+    <code>TRUE</code> (the default), then the additional check is made that
+    <em>every</em> state is present.  The likelihood models tend to be
+    poorly behaved where states are missing.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>eps</dt>
+      <dd>Ratio of extinction to speciation rates to be used when
+    choosing a starting set of parameters.  The procedure used is based
+    on Magallon & Sanderson (2001).</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run GeoSSE (Geographic State Speciation and
+  Extinction) on a phylogenetic tree and character distribution.  This
+  function creates a likelihood function that can be used in
+  <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><code>make.geosse</code> returns a function of class <code>geosse</code>.  The
+  arguments and default values for this function are:</p>
+  
+      <p><pre>
+    f(pars, condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
+      intermediates=FALSE)
+  </pre></p>
+  
+      <p>The arguments of this function are explained in <a href='make.bisse.html'>make.bisse</a>.
+  The parameter vector <code>pars</code> is ordered <code>sA</code>, <code>sB</code>,
+  <code>sAB</code>, <code>xA</code>, <code>xB</code>, <code>dA</code>, <code>dB</code>.</p>
+  
+      <p>Unresolved clade methods are not available for GeoSSE.  With three
+  states, it would rapidly become computationally infeasible.</p>
+  
+    </div>
+
+    <div class="References">
+      <h2>References</h2>
+      
+      <p>FitzJohn R.G., Maddison W.P., and Otto S.P. 2009. Estimating
+  trait-dependent speciation and extinction rates from incompletely
+  resolved phylogenies. Syst. Biol. 58:595-611.</p>
+  
+      <p>Goldberg E.E., Lancaster L.T., and Ree R.H. 2011. Phylogenetic
+  inference of reciprocal effects between geographic range evolution and
+  diversification. Syst. Biol. 60:451-465.</p>
+  
+      <p>Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating a binary
+  character's effect on speciation and extinction. Syst. Biol.
+  56:701-710.</p>
+  
+      <p>Magallon S. and Sanderson M.J. 2001. Absolute diversification rates
+  in angiospem clades. Evol. 55:1762-1780.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Parameter values
+pars &lt;- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
+names(pars) &lt;- diversitree:::default.argnames.geosse()
+
+## Simulate a tree
+set.seed(5)
+phy &lt;- tree.geosse(pars, max.t=4, x0=0)
+
+## See the data
+statecols &lt;- c(&quot;AB&quot;=&quot;purple&quot;, &quot;A&quot;=&quot;blue&quot;, &quot;B&quot;=&quot;red&quot;)
+plot(phy, tip.color=statecols[phy$tip.state+1], cex=0.5)
+</div>
+<p><img src='make.geosse-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## The likelihood function
+lik &lt;- make.geosse(phy, phy$tip.state)
+
+## With &quot;true&quot; parameter values
+lik(pars) # -168.4791
+</div>
+<div class='output'>[1] -168.4791
+</div>
+<div class='input'>
+## A guess at a starting point.
+p &lt;- starting.point.geosse(phy)
+
+## Start an ML search from this point (takes a couple minutes to run).
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# fit &lt;- find.mle(lik, p, method=&quot;subplex&quot;)
+# logLik(fit) # -165.9965
+# 
+# ## Compare with sim values.
+# rbind(real=pars, estimated=round(coef(fit), 2))
+# 
+# ## A model with constraints on the dispersal rates.
+# lik.d &lt;- constrain(lik, dA ~ dB)
+# fit.d &lt;- find.mle(lik.d, p[-7])
+# logLik(fit.d) # -166.7076
+# 
+# ## A model with constraints on the speciation rates.
+# lik.s &lt;- constrain(lik, sA ~ sB, sAB ~ 0)
+# fit.s &lt;- find.mle(lik.s, p[-c(2,3)])
+# logLik(fit.s) # -169.0123
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+
+## &quot;Skeletal tree&quot; sampling is supported.  For example, if your tree
+## includes all AB species, half of A species, and a third of B species,
+## create the likelihood function like this:
+lik.f &lt;- make.geosse(phy, phy$tip.state, sampling.f=c(1, 0.5, 1/3))
+
+## If you have external evidence that the base of your tree must have
+## been in state 1, say (endemic to region A), you can fix the root 
+## when computing the likelihood, like this:
+lik(pars, root=ROOT.GIVEN, root.p=c(0,1,0))
+</div>
+<div class='output'>[1] -168.3042
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.geosse</li><li>starting.point.geosse</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='constrain.html'>constrain</a></code> for making submodels, <code><a href='find.mle.html'>find.mle</a></code>
+  for ML parameter estimation, <code><a href='mcmc.html'>mcmc</a></code> for MCMC integration,
+  <code><a href='make.bisse.html'>make.bisse</a></code> for further relevant examples.
+
+  The help page for <code><a href='find.mle.html'>find.mle</a></code> has further examples of ML
+  searches on full and constrained BiSSE models.  Things work similarly
+  for GeoSSE, just with different parameters.
+
+    
+    <h2>Author</h2>
+    Emma E. Goldberg
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

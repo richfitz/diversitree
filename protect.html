@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>protect. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Protect Function Evaluations</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>protect(f, fail.value.default=NULL)
+invert(f)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>f</dt>
+      <dd>A function.</dd>
+      <dt>fail.value.default</dt>
+      <dd>Value that will be used as on failure of
+    <code>f</code>, if not overridden.  The default here (<code>NULL</code>) will
+    allow failure.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Ensures non-failure and possibly finite-ness of a function
+  evaluation.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><code>protect</code> returns a function with arguments
+  <pre>
+    g(..., fail.value=fail.value.default, finite=NULL)
+  </pre>
+  The <code>...</code> arguments are all passed through to the underlying
+  function <code>f</code>, <code>fail.value</code> contains the value to return in
+  the event of a failure (e.g., an error occuring).  If <code>finite</code> is
+  <code>TRUE</code>, then <code>fail.value</code> is also returned where the value
+  is <code>NA</code>, <code>NaN</code> or infinite.</p>
+  
+      <p>Some functions, such as <code><a href='http://www.inside-r.org/packages/cran/stats/docs/optim'>optim</a></code> with method
+  <code>L-BFGS-B</code> (and therefore <code><a href='find.mle.html'>find.mle</a></code>), require that
+  every value is finite.  Optimisation with these functions also
+  requires that the target functions to not generate errors.
+  <code>protect</code> catches these issues, returning the value of
+  <code>fail.value</code> instead.</p>
+  
+      <p>No check is made that <code>f</code> returns a single value, but it should.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>f &lt;- function(x) log(x)
+g &lt;- protect(f)
+f(0) # -Inf
+</div>
+<div class='output'>[1] -Inf
+</div>
+<div class='input'>g(0, fail.value=-999) # -999
+</div>
+<div class='output'>[1] -999
+</div>
+<div class='input'>
+f &lt;- function(x) {
+  if ( x &lt; 1 )
+    stop(&quot;dummmy error&quot;)
+  x
+}
+g &lt;- protect(f)
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# f(0) # error
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+g(0, fail.value=-999) # -999
+</div>
+<div class='output'>[1] -999
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>protect</li><li>invert</li>
+    </ul>
+    <ul>
+      <li>programming</li><li>internal</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

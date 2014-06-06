@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.mkn. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Mk2 and Mk-n Models of character evolution</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.mk2(tree, states, strict=TRUE, control=list())
+make.mkn(tree, states, k, strict=TRUE, control=list())
+make.mkn.meristic(tree, states, k, control=list())</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be 0 or
+    1 for <code>make.mk2</code> or 1 to <code>k</code> for <code>make.mkn</code>.</dd>
+      <dt>k</dt>
+      <dd>Number of states to model.</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are integers on <code>0:1</code> (<code>mk2</code>) or
+    <code>1:k</code> (<code>mkn</code>).  If <code>strict</code> is <code>TRUE</code> (the
+    default), then the additional check is made that <em>every</em> state
+    is present.  The likelihood models tend to be poorly behaved where
+    states are missing, but there are cases (missing intermediate states
+    for meristic characters) where allowing such models may be useful.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    Details below.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run a Mk2/Mk-n model on a phylogenetic tree and
+  binary/discrete trait data.  This fits the Pagel 1994 model,
+  duplicating the <code>ace</code> function in ape.  Differences with that
+  function include (1) alternative root treatments are possible, (2)
+  easier to tweak parameter combinations through
+  <code><a href='constrain.html'>constrain</a></code>, and (3) run both MCMC and MLE fits to
+  parameters.  Rather than exponentiate the Q matrix, this
+  implementation solves the ODEs that this matrix defines.  This may or
+  may not be robust on trees leading to low probabilities.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><code>make.mk2</code> and <code>make.mkn</code> return functions of class <code>mkn</code>.
+  These functions have argument list (and default values)
+  <pre>
+    f(pars, pars, prior=NULL, root=ROOT.OBS, root.p=NULL, fail.value=NULL)
+  </pre></p>
+  
+      <p>The arguments are interpreted as
+  <ul>
+<li> <code>pars</code> For <code>make.mk2</code>, a vector of two parameters,
+    in the order <code>q01</code>, <code>q10</code>.  For <code>make.mkn</code>, a
+    vector of <code>k(k-1)</code> parameters, in the order
+    <code>q12,q13,...q1k, q21,q23,...,q2k,...qk(k-1)</code>, corresponding
+    to the off-diagonal elements of the <code>Q</code> matrix in row order.
+    The order of parameters can be seen by running
+    <code><a href='argnames.html'>argnames</a>(f)</code>.</p>
+  
+      <p></li>
+<li> <code>prior</code>: a valid prior.  See <code><a href='make.prior.html'>make.prior</a></code> for
+    more information.</p>
+  
+      <p></li>
+<li> <code>root</code>: Behaviour at the root (see Maddison et al. 2007,
+    FitzJohn et al. 2009).  The possible options are
+    <ul>
+<li> <code>ROOT.FLAT</code>: A flat prior, weighting all variables
+      equally.
+      </li>
+<li> <code>ROOT.EQUI</code>: Use the equilibrium distribution
+      of the model (not yet implemented).
+      </li>
+<li> <code>ROOT.OBS</code>: Weight <code class = 'eq'>D0</code> and
+      <code class = 'eq'>D1</code> by their relative probability of observing the
+      data, following FitzJohn et al. 2009:
+      <pre class = 'eq'>
+	D = sum_i D_i * (D_i / (sum_j D_j))</pre>
+      </li>
+<li> <code>ROOT.GIVEN</code>: Root will be in state i
+      with probability <code>root.p[i]</code>.
+      </li>
+<li> <code>ROOT.BOTH</code>: Don't do anything at the root,
+      and return both values.  (Note that this will not give you a
+      likelihood for use with ML or MCMC functions!).
+    </li>
+</ul></p>
+  
+      <p></li>
+<li> <code>root.p</code>Vector of probabilities/weights to use when
+      <code>ROOT.GIVEN</code> is specified.  Must be of length <code>k</code> (2 for
+      <code>make.mk2</code>).</p>
+  
+      <p></li>
+<li> <code>intermediates</code>: Add intermediates to the returned value as
+    attributes.  Currently undocumented.
+  </li>
+</ul></p>
+  
+      <p>With more than 9 states, qij can be ambiguous (e.g. is q113 1->13 or
+  11->3?).  To avoid this, the numbers are zero padded (so that the
+  above would be q0113 or q1103 for 1->13 and 11->3 respectively).  It
+  might be easier to rename the arguments in practice though.</p>
+  
+      <p>The <code>control</code> argument controls how the calculations will be
+  carried out.  It is a list, which may contain elements in
+  <code><a href='make.bisse.html'>make.bisse</a></code>.  In addition, the list element <code>method</code>
+  may be present, which selects between three different ways of
+  computing the likelihood:
+  <ul>
+<li> <code>method="exp"</code>: Uses a matrix exponentiation approach,
+    where all transition probabilities are computed (i.e., for a rate
+    matrix <code class = 'eq'>Q</code> and time interval <code class = 'eq'>t</code>, it computes <code class = 'eq'>P =
+      exp(Qt)</code>).</p>
+  
+      <p></li>
+<li> <code>method="mk2"</code>: As for <code>exp</code>, but for 2 states only.
+    Faster, direct, calculations are available here, rather than
+    numerically computing the exponentiation.</p>
+  
+      <p></li>
+<li> <code>method="ode"</code>: Uses an ODE-based approach to compute
+    only the <code class = 'eq'>k</code> variables over time, rather than the <code class = 'eq'>k^2</code>
+    transition probabilities in the <code>exp</code> approach.  This will be
+    much more efficient when <code>k</code> is large.
+  </li>
+</ul></p>
+  
+      <p></p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Simulate a tree and character distribution.  This is on a birth-death
+## tree, with high rates of character evolution and an asymmetry in the
+## character transition rates.
+pars &lt;- c(.1, .1, .03, .03, .1, .2)
+set.seed(3)
+phy &lt;- trees(pars, &quot;bisse&quot;, max.taxa=25, max.t=Inf, x0=0)[[1]]
+
+## Here is the 25 species tree with the true character history coded.
+## Red is state &#39;1&#39;, which has twice the character transition rate of
+## black (state &#39;0&#39;).
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy)
+</div>
+<p><img src='make.mkn-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Maximum likelihood parameter estimation:
+p &lt;- c(.1, .1) # initial parameter guess
+
+lik &lt;- make.mk2(phy, phy$tip.state)
+fit.mk2 &lt;- find.mle(lik, p)
+coef(fit.mk2)   # q10 &gt;&gt; q01
+</div>
+<div class='output'>      q01       q10 
+0.1527166 0.7705360 
+</div>
+<div class='input'>logLik(fit.mk2) # -10.9057
+</div>
+<div class='output'>&#39;log Lik.&#39; -10.9057 (df=2)
+</div>
+<div class='input'>
+## This can also be done using the more general Mk-n.
+## This uses an approximation for the likelihood calculations.  make.mkn
+## assumes that states are numbered 1, 2, ..., k, so 1 needs to be added
+## to the states returned by trees.
+lik.mkn &lt;- make.mkn(phy, phy$tip.state + 1, 2)
+fit.mkn &lt;- find.mle(lik.mkn, p)
+fit.mkn[1:2]
+</div>
+<div class='output'>$par
+      q12       q21 
+0.1527166 0.7705360 
+
+$lnLik
+[1] -10.9057
+
+</div>
+<div class='input'>
+## These are the same (except for the naming of arguments)
+all.equal(fit.mkn[-7], fit.mk2[-7], check.attr=FALSE, tolerance=1e-7)
+</div>
+<div class='output'>[1] &quot;Component “par”: Names: 2 string mismatches&quot;
+</div>
+<div class='input'>
+## Equivalence to ape&#39;s \link{ace} function:
+model &lt;- matrix(c(0, 2, 1, 0), 2)
+fit.ape &lt;- ace(phy$tip.state, phy, &quot;discrete&quot;, model=model, ip=p)
+
+## To do the comparison, we need to rerun the diversitree version with
+## the same root conditions as ape.
+fit.mk2 &lt;- find.mle(lik, p, root=ROOT.GIVEN, root.p=c(1,1))
+
+## These are the same to a reasonable degree of accuracy, too (the
+## matrix exponentiation is slightly less accurate than the ODE
+## solving approach.  The make.mk2 version is exact)
+all.equal(fit.ape[c(&quot;rates&quot;, &quot;loglik&quot;)], fit.mk2[1:2],
+          check.attributes=FALSE, tolerance=1e-4)
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## The ODE calculation method may be useful when there are a large
+## number of possible states (say, over 20).
+lik.ode &lt;- make.mkn(phy, phy$tip.state + 1, 2,
+                    control=list(method=&quot;ode&quot;))
+fit.ode &lt;- find.mle(lik.ode, p)
+fit.ode[1:2]
+</div>
+<div class='output'>$par
+      q12       q21 
+0.1527166 0.7705360 
+
+$lnLik
+[1] -10.9057
+
+</div>
+<div class='input'>
+all.equal(fit.ode[-7], fit.mkn[-7], tolerance=1e-7)
+</div>
+<div class='output'>[1] TRUE
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.mkn</li><li>make.mk2</li><li>make.mkn.meristic</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='constrain.html'>constrain</a></code> for making submodels, <code><a href='find.mle.html'>find.mle</a></code>
+  for ML parameter estimation, <code><a href='mcmc.html'>mcmc</a></code> for MCMC integration,
+  and <code><a href='make.bisse.html'>make.bisse</a></code> for state-dependent birth-death models.
+
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

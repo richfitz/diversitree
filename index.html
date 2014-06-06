@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>Index. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn &lt;fitzjohn@zoology.ubc.ca&gt;, with GeoSSE and
+ClaSSE by Emma E. Goldberg &lt;eeg@uic.edu&gt;, and BiSSE-ness by Karen
+Magnuson-Ford.">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <div class="row">
+  <div class="span8">
+    <h1>diversitree: comparative phylogenetic analyses of diversification</h1>
+
+<p><a href="https://travis-ci.org/richfitz/diversitree"><img src="https://travis-ci.org/richfitz/diversitree.png?branch=master" alt="Build Status"/></a></p>
+
+<p>This repository contains &ldquo;diversitree&rdquo;.  It is my experimental sources
+though, and may not compile or work for you.  You may prefer the
+released version from CRAN:</p>
+
+<pre><code>&gt; install.packages(&quot;diversitree&quot;)
+</code></pre>
+
+<p>The interesting directories are:</p>
+
+<ul>
+<li>inst/tests: testing functions that exercise most of the
+package&#39;s main features.  Running <code>./run_tests.R</code> will run the tests.  These take too long to run on CRAN (over a minute), so are not set up in the usual way.</li>
+<li>doc: Vignettes, and their required data files.</li>
+</ul>
+
+<h2>Installing diversitree</h2>
+
+<p>Clone the repository with</p>
+
+<pre><code>git clone git://github.com/richfitz/diversitree.git
+</code></pre>
+
+<p>The package should then be installable the usual way.  You&#39;ll need a C, C++ and Fortran compiler.</p>
+
+<p>To install and specify the location of the fftw library in a
+non-standard place, a line like this is required:
+  R CMD INSTALL diversitree &ndash;configure-args=&#39;&ndash;with-fftw=/path/to/fftw&#39;
+where the path will be the path so that the files
+  /path/to/fftw/include/fftw3.h
+  /path/to/fftw/lib/lib/fftw3.so
+exist.</p>
+
+<p>On Windows, set the environment variable LIB_FFTW to point to the
+directory that contains include/fftw.h, and install the package.</p>
+
+<p>If fftw is not found, installation will continue, but the (relatively)
+fast C based QuaSSE integration will not be available.  The R based
+fft integrator and the method-of-lines integrator will be available.</p>
+
+<h2>Branches</h2>
+
+<p>The &ldquo;master&rdquo; branch contains the bleeding edge version of diversitree.
+It may or may not work for you.  The &ldquo;release&rdquo; branch contains stable
+releases.</p>
+
+
+    <h2>Help topics</h2>
+
+    <h3></h3>
+    
+    
+    <ul class="index">
+        
+      <li>
+        <code><a href="argnames.html">argnames</a></code>(argnames&lt;-, argnames.constrained, argnames&lt;-.constrained)<br />Argument Names for Vector-Argument Functions</li>
+            
+      <li>
+        <code><a href="asr.html">asr</a></code>(asr.marginal, asr.joint, asr.stoch, make.asr.marginal, make.asr.joint, make.asr.stoch)<br />Ancestral State Reconstruction</li>
+            
+      <li>
+        <code><a href="asr-bisse.html">asr-bisse</a></code>(asr.bisse, asr.musse, asr.marginal.bisse, asr.marginal.musse, make.asr.marginal.bisse, make.asr.marginal.musse)<br />Ancestral State Reconstruction Under BiSSE</li>
+            
+      <li>
+        <code><a href="asr-mkn.html">asr-mkn</a></code>(asr.mkn, make.asr.marginal.mk2, make.asr.joint.mk2, make.asr.stoch.mk2, make.asr.marginal.mkn, make.asr.joint.mkn, make.asr.stoch.mkn)<br />Ancestral State Reconstruction Under Mk2/Mkn</li>
+            
+      <li>
+        <code><a href="check.html">check</a></code>(check.fftC)<br />Check Capabilities of the Diversitree Install</li>
+            
+      <li>
+        <code><a href="combine.html">combine</a></code><br />Combine Several Likelihood Functions Multiplicatively</li>
+            
+      <li>
+        <code><a href="constrain.html">constrain</a></code>(constrain.i)<br />Constrain Parameters of a Model</li>
+            
+      <li>
+        <code><a href="find.mle.html">find.mle</a></code>(coef.fit.mle, logLik.fit.mle, anova.fit.mle)<br />Maximimum Likelihood Inference</li>
+            
+      <li>
+        <code><a href="geosse.phy.html">geosse.phy</a></code><br />Example GeoSSE Tree</li>
+            
+      <li>
+        <code><a href="history.from.sim.html">history.from.sim</a></code>(history.from.sim.discrete)<br />Extract Character Histories From Simulations</li>
+            
+      <li>
+        <code><a href="make.bd.html">make.bd</a></code>(make.yule, starting.point.bd)<br />Constant Rate Birth-Death Models</li>
+            
+      <li>
+        <code><a href="make.bd.split.html">make.bd.split</a></code><br />Constant Rate Birth-Death Models: Split Models</li>
+            
+      <li>
+        <code><a href="make.bd.t.html">make.bd.t</a></code><br />Time-varing Birth-Death Models</li>
+            
+      <li>
+        <code><a href="make.bisse.html">make.bisse</a></code>(starting.point.bisse)<br />Binary State Speciation and Extinction Model</li>
+            
+      <li>
+        <code><a href="make.bisse.split.html">make.bisse.split</a></code>(make.bisse.uneven)<br />Binary State Speciation and Extinction Model: Split Models</li>
+            
+      <li>
+        <code><a href="make.bisse.td.html">make.bisse.td</a></code>(make.bisse.t)<br />Binary State Speciation and Extinction Model: Time Dependant
+</li>
+            
+      <li>
+        <code><a href="make.bisseness.html">make.bisseness</a></code><br />Binary State Speciation and Extinction (Node Enhanced State Shift) Model</li>
+            
+      <li>
+        <code><a href="make.bm.html">make.bm</a></code>(make.ou, make.eb, make.lambda)<br />Brownian Motion and Related Models of Character Evolution</li>
+            
+      <li>
+        <code><a href="make.clade.tree.html">make.clade.tree</a></code>(clades.from.polytomies, clades.from.classification)<br />Make a "Clade Tree"</li>
+            
+      <li>
+        <code><a href="make.classe.html">make.classe</a></code>(starting.point.classe)<br />Cladogenetic State change Speciation and Extinction Model</li>
+            
+      <li>
+        <code><a href="make.geosse.html">make.geosse</a></code>(starting.point.geosse)<br />Geographic State Speciation and Extinction Model</li>
+            
+      <li>
+        <code><a href="make.geosse.split.html">make.geosse.split</a></code>(make.geosse.uneven)<br />Geographic State Speciation and Extinction Model: Split Models</li>
+            
+      <li>
+        <code><a href="make.geosse.t.html">make.geosse.t</a></code><br />Geographic State Speciation and Extinction Model: Time Dependent
+</li>
+            
+      <li>
+        <code><a href="make.mkn.html">make.mkn</a></code>(make.mk2, make.mkn.meristic)<br />Mk2 and Mk-n Models of character evolution</li>
+            
+      <li>
+        <code><a href="make.musse.html">make.musse</a></code>(starting.point.musse)<br />MuSSE: Multi-State Speciation and Extinction</li>
+            
+      <li>
+        <code><a href="make.musse.multitrait.html">make.musse.multitrait</a></code>(make.mkn.multitrait, musse.multitrait.translate, mkn.multitrait.translate, starting.point.musse.multitrait)<br />MuSSE: Multi-State Speciation and Extinction (Multiple Binary Traits
+</li>
+            
+      <li>
+        <code><a href="make.musse.split.html">make.musse.split</a></code><br />Multiple State Speciation and Extinction Model: Split Models</li>
+            
+      <li>
+        <code><a href="make.musse.td.html">make.musse.td</a></code>(make.musse.t)<br />Multiple State Speciation and Extinction Model: Time Dependent
+</li>
+            
+      <li>
+        <code><a href="make.pgls.html">make.pgls</a></code><br />Phylogenetic Generalised Least Squares</li>
+            
+      <li>
+        <code><a href="make.prior.html">make.prior</a></code>(make.prior.exponential, make.prior.uniform)<br />Simple Prior Functions</li>
+            
+      <li>
+        <code><a href="make.quasse.html">make.quasse</a></code>(starting.point.quasse)<br />Quantitative State Speciation and Extinction Model</li>
+            
+      <li>
+        <code><a href="make.quasse.split.html">make.quasse.split</a></code><br />Quantitative State Speciation and Extinction Model: Split Models</li>
+            
+      <li>
+        <code><a href="mcmc.html">mcmc</a></code>(mcmc.default, sampler.slice, sampler.norm)<br />Simple Markov Chain Monte Carlo with Slice Sampling</li>
+            
+      <li>
+        <code><a href="plot.history.html">plot.history</a></code><br />Plot Character History</li>
+            
+      <li>
+        <code><a href="profiles.plot.html">profiles.plot</a></code><br />Plot Marginal Distributions from MCMC</li>
+            
+      <li>
+        <code><a href="quasse-common.html">quasse-common</a></code>(constant.x, make.linear.x, sigmoid.x, sigmoid2.x, stepf.x, noroptimal.x, make.brownian.with.drift)<br />Support Functions for QuaSSE Models</li>
+            
+      <li>
+        <code><a href="set.defaults.html">set.defaults</a></code><br />Set Default Arguments of a Function</li>
+            
+      <li>
+        <code><a href="sim.character.html">sim.character</a></code>(make.sim.character)<br />Simulate a Character Distribution on a Tree</li>
+            
+      <li>
+        <code><a href="simulate.html">simulate</a></code>(trees, tree.bd, tree.bisse, tree.bisseness, tree.classe, tree.geosse, tree.musse, tree.musse.multitrait, tree.quasse, tree.yule, prune)<br />Evolve Birth-Death Trees</li>
+            
+      <li>
+        <code><a href="trait.plot.html">trait.plot</a></code><br />Plot a Phylogeny and Traits</li>
+            
+      <li>
+        <code><a href="utils.html">utilities</a></code>(get.descendants, run.cached, expand.parameters, drop.likelihood, get.likelihood)<br />Utility Functions</li>
+    
+    </ul>
+  </div>
+  
+  <div class="span3 offset1">
+        
+    <h2>Dependencies</h2>
+    <ul>
+      <li><strong>Depends</strong>: deSolve, ape, subplex, methods, Rcpp</li>
+      <li><strong>Imports</strong>: </li>
+      <li><strong>Suggests</strong>: numDeriv, minqa, lubridate, expm, caper, geiger</li>
+      <li><strong>Extends</strong>: </li>
+    </ul>
+     
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

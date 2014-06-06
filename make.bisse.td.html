@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.bisse.td. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Binary State Speciation and Extinction Model: Time Dependant
+  Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.bisse.td(tree, states, n.epoch, unresolved=NULL, sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())</div>
+<div>make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL, strict=TRUE, control=list(), truncate=FALSE, spline.data=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be 0 or
+    1, or <code>NA</code> if the state is unknown.  This vector must have
+    names that correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).  For tips
+    corresponding to unresolved clades, the state should be <code>NA</code>.</dd>
+      <dt>n.epoch</dt>
+      <dd>Number of epochs.  1 corresponds to plain BiSSE, so
+    this will generally be an integer at least 2.</dd>
+      <dt>functions</dt>
+      <dd>A named character vector of functions of time.  See
+    details.</dd>
+      <dt>unresolved</dt>
+      <dd>Unresolved clade information: see
+    <code><a href='make.bisse.html'>make.bisse</a></code>. (Currently this is not supported.)</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length 2 with the estimated proportion of
+    extant species in state 0 and 1 that are included in the phylogeny.
+    See <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>nt.extra</dt>
+      <dd>The number of species modelled in unresolved clades
+    (this is in addition to the largest observed clade).</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are 0 and 1 only.  If <code>strict</code> is <code>TRUE</code>
+    (the default), then the additional check is made that <em>every</em>
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>truncate</dt>
+      <dd>Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 6).</dd>
+      <dt>spline.data</dt>
+      <dd>List of data for spline-based time functions.  See
+    details</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for a BiSSE model where
+  different chunks of time have different parameters.  This code is
+  experimental!</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>This builds a BiSSE likelihood function where different regions of
+  time (epochs) have different parameter sets.  By default, all
+  parameters are free to vary between epochs, so some constraining will
+  probably be required to get reasonable answers.</p>
+  
+      <p>For <code>n</code> epochs, there are <code>n-1</code> time points; the first
+  <code>n-1</code> elements of the likelihood's parameter vector are these
+  points.  These are measured from the present at time zero, with time
+  increasing towards the base of the tree.  The rest of the parameter
+  vector are BiSSE parameters; the elements <code>n:(n+6)</code> are for the
+  first epoch (closest to the present), elements <code>(n+7):(n+13)</code> are
+  for the second epoch, and so on.</p>
+  
+      <p>For <code>make.bisse.t</code>, the <code>funtions</code> is a vector of names of
+  functions of time.
+  For example, to have speciation rates be linear functions of
+  time, while the extinction and character change rates be constant with
+  respect to time, one can do
+  <pre>functions=rep(c("linear.t", "constant.t"), c(2, 4))</pre>
+  The functions here must have <code>t</code> as their first argument,
+  interpreted as time back from the present.  Other possible functions
+  are "sigmoid.t", "stepf.t", "spline.t", and "spline.linear.t".
+  Unfortunately, documentation is still pending.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>set.seed(4)
+pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+phy &lt;- tree.bisse(pars, max.t=30, x0=0)
+
+## Suppose we want to see if diversification is different in the most
+## recent 3 time units, compared with the rest of the tree (yes, this is
+## a totally contrived example!):
+plot(phy)
+</div>
+<p><img src='make.bisse.td-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>axisPhylo()
+</div>
+<p><img src='make.bisse.td-4.png' alt='' width='400' height='400' /></p>
+<div class='input'>abline(v=max(branching.times(phy)) - 3, col=&quot;red&quot;, lty=3)
+</div>
+<p><img src='make.bisse.td-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## For comparison, make a plain BiSSE likelihood function
+lik.b &lt;- make.bisse(phy, phy$tip.state)
+
+## Create the time-dependent likelihood function.  The final argument
+## here is the number of &#39;epochs&#39; that are allowed.  Two epochs is one
+## switch point.
+lik.t &lt;- make.bisse.td(phy, phy$tip.state, 2)
+
+## The switch point is the first argument.  The remaining 12 parameters
+## are the BiSSE parameters, with the first 6 being the most recent
+## epoch.
+argnames(lik.t)
+</div>
+<div class='output'> [1] &quot;t.1&quot;       &quot;lambda0.1&quot; &quot;lambda1.1&quot; &quot;mu0.1&quot;     &quot;mu1.1&quot;     &quot;q01.1&quot;    
+ [7] &quot;q10.1&quot;     &quot;lambda0.2&quot; &quot;lambda1.2&quot; &quot;mu0.2&quot;     &quot;mu1.2&quot;     &quot;q01.2&quot;    
+[13] &quot;q10.2&quot;    
+</div>
+<div class='input'>
+pars.t &lt;- c(3, pars, pars)
+names(pars.t) &lt;- argnames(lik.t)
+
+## Calculations are identical to a reasonable tolerance:
+lik.b(pars) - lik.t(pars.t)
+</div>
+<div class='output'>[1] -2.052648e-07
+</div>
+<div class='input'>
+## It will often be useful to constrain the time as a fixed quantity.
+lik.t2 &lt;- constrain(lik.t, t.1 ~ 3)
+
+## Parameter estimation under maximum likelihood.  This is marked &quot;don&#39;t
+## run&quot; because the time-dependent fit takes a few minutes.
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# ## Fit the BiSSE ML model
+# fit.b &lt;- find.mle(lik.b, pars)
+# 
+# ## And fit the BiSSE/td model
+# fit.t &lt;- find.mle(lik.t2, pars.t[argnames(lik.t2)],
+#                   control=list(maxit=20000))
+# 
+# ## Compare these two fits with a likelihood ratio test (lik.t2 is nested
+# ## within lik.b)
+# anova(fit.b, td=fit.t)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+
+## The time varying model (bisse.t)  is more general, but substantially
+## slower.  Here, I will show that the two functions are equivalent for
+## step function models.  We&#39;ll constrain all the non-lambda parameters
+## to be the same over a time-switch at t=5.  This leaves 8 parameters.
+lik.td &lt;- make.bisse.td(phy, phy$tip.state, 2)
+lik.td2 &lt;- constrain(lik.td, t.1 ~ 5,          
+                     mu0.2 ~ mu0.1, mu1.2 ~ mu1.1,
+                     q01.2 ~ q01.1, q10.2 ~ q10.1)
+
+lik.t &lt;- make.bisse.t(phy, phy$tip.state,
+                      rep(c(&quot;stepf.t&quot;, &quot;constant.t&quot;), c(2, 4)))
+lik.t2 &lt;- constrain(lik.t, lambda0.tc ~ 5, lambda1.tc ~ 5)
+
+## Note that the argument names for these functions are different from
+## one another.  This reflects different ways that the functions will
+## tend to be used, but is potentially confusing here.
+argnames(lik.td2)
+</div>
+<div class='output'>[1] &quot;lambda0.1&quot; &quot;lambda1.1&quot; &quot;mu0.1&quot;     &quot;mu1.1&quot;     &quot;q01.1&quot;     &quot;q10.1&quot;    
+[7] &quot;lambda0.2&quot; &quot;lambda1.2&quot;
+</div>
+<div class='input'>argnames(lik.t2)
+</div>
+<div class='output'>[1] &quot;lambda0.y0&quot; &quot;lambda0.y1&quot; &quot;lambda1.y0&quot; &quot;lambda1.y1&quot; &quot;mu0&quot;       
+[6] &quot;mu1&quot;        &quot;q01&quot;        &quot;q10&quot;       
+</div>
+<div class='input'>
+## First, evaluate the functions with no time effect and check that they
+## are the same as the base BiSSE model
+p.td &lt;- c(pars, pars[1:2])
+p.t &lt;- pars[c(1, 1, 2, 2, 3:6)]
+
+## All agree:
+lik.b(pars)   # -159.7128
+</div>
+<div class='output'>[1] -159.71
+</div>
+<div class='input'>lik.td2(p.td) # -159.7128
+</div>
+<div class='output'>[1] -159.71
+</div>
+<div class='input'>lik.t2(p.t)   # -159.7128
+</div>
+<div class='output'>[1] -159.71
+</div>
+<div class='input'>
+## In fact, the time-varying BiSSE will tend to be identical to plain
+## BiSSE where the functions to not change:
+lik.b(pars) - lik.t2(p.t)
+</div>
+<div class='output'>[1] 0
+</div>
+<div class='input'>
+## Slight numerical differences are typical for the time-chunk BiSSE,
+## because it forces the integration to be carried out more carefully
+## around the switch point.
+lik.b(pars) - lik.td2(p.td)
+</div>
+<div class='output'>[1] -2.52191e-07
+</div>
+<div class='input'>
+## Next, evaluate the functions with a time effect (5 time units ago,
+## speciation rates were twice the contemporary rate)
+p.td2 &lt;- c(pars, pars[1:2]*2)
+p.t2 &lt;- c(pars[1], pars[1]*2, pars[2], pars[2]*2, pars[3:6])
+
+## Huge drop in the likelihood (from -159.7128 to -172.7874)
+lik.b(pars)
+</div>
+<div class='output'>[1] -159.71
+</div>
+<div class='input'>lik.td2(p.td2)
+</div>
+<div class='output'>[1] -172.7696
+</div>
+<div class='input'>lik.t2(p.t2)
+</div>
+<div class='output'>[1] -172.7696
+</div>
+<div class='input'>
+## The small difference remains between the two approaches, but they are
+## basically the same.
+lik.td2(p.td2) - lik.t2(p.t2)
+</div>
+<div class='output'>[1] 1.564434e-05
+</div>
+<div class='input'>
+## There is a small time cost to both time-dependent methods, 
+## heavily paid for the time-chunk case:
+system.time(lik.b(pars))
+</div>
+<div class='output'>   user  system elapsed 
+  0.005   0.000   0.005 
+</div>
+<div class='input'>system.time(lik.td2(p.td))  # 1.9x slower than plain BiSSE
+</div>
+<div class='output'>   user  system elapsed 
+  0.017   0.000   0.017 
+</div>
+<div class='input'>system.time(lik.td2(p.td2)) # 1.9x slower than plain BiSSE
+</div>
+<div class='output'>   user  system elapsed 
+   0.01    0.00    0.01 
+</div>
+<div class='input'>system.time(lik.t2(p.t))    # about the same speed
+</div>
+<div class='output'>   user  system elapsed 
+  0.008   0.000   0.008 
+</div>
+<div class='input'>system.time(lik.t2(p.t2))   # about the same speed
+</div>
+<div class='output'>   user  system elapsed 
+  0.009   0.000   0.009 
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.bisse.t</li><li>make.bisse.td</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

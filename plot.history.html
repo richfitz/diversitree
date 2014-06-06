@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>plot.history. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Plot Character History</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>"plot"(x, phy, cols=seq_along(states), states=x$states, xlim=NULL, ylim=NULL, show.tip.label=TRUE, show.node.label=FALSE, show.tip.state=TRUE, show.node.state=TRUE, no.margin=FALSE, cex=1, font=3, srt=0, adj=0, label.offset=NA, lwd=1, ...)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>x</dt>
+      <dd>An object of class <code>history.discrete</code> containing a
+    discrete character history.  This could be made by
+    <code><a href='history.from.sim.html'>history.from.sim.discrete</a></code>.</dd>
+      <dt>phy</dt>
+      <dd>The phylogeny used to generate the history.  Few checks are
+    made to make sure that this is really correct, and all manner of
+    terrible things might happen if these are not compatible.  This may
+    change in future.</dd>
+      <dt>cols</dt>
+      <dd>A vector of colours.</dd>
+      <dt>states</dt>
+      <dd>The different state types.  Probably best to leave
+    alone.</dd>
+      <dt>xlim</dt>
+      <dd>Plot x-limits (optional).</dd>
+      <dt>ylim</dt>
+      <dd>Plot y-limits (optional).</dd>
+      <dt>show.tip.label</dt>
+      <dd>Logical: show the species tip labels?</dd>
+      <dt>show.node.label</dt>
+      <dd>Logical: show the species node labels?</dd>
+      <dt>show.tip.state</dt>
+      <dd>Logical: draw a symbol at the tips to indicate
+    tip state?</dd>
+      <dt>show.node.state</dt>
+      <dd>Logical: draw a symbol at the nodes to indicate
+    node state?</dd>
+      <dt>no.margin</dt>
+      <dd>Supress drawing of margins around the plot</dd>
+      <dt>cex</dt>
+      <dd>Font and symbol scaling factor.</dd>
+      <dt>font</dt>
+      <dd>Font used for tip and node labels (see
+    <code><a href='http://www.inside-r.org/packages/cran/graphics/docs/par'>par</a></code>).</dd>
+      <dt>srt</dt>
+      <dd>String rotation for tip and node labels.</dd>
+      <dt>adj</dt>
+      <dd>Label <code>adj</code>ustment (see <code><a href='http://www.inside-r.org/packages/cran/graphics/docs/par'>par</a></code>).</dd>
+      <dt>label.offset</dt>
+      <dd>Horizontal offset of tip and node labels, in
+    branch length units.</dd>
+      <dt>lwd</dt>
+      <dd>Line width</dd>
+      <dt>...</dt>
+      <dd>Additional arguments (currently ignored)</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Both stochastic character mapping and simulation may create
+  character histories.  This function plots these histories</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>This attempts to be as compatible with <code>ape</code>'s plotting functions
+  as possible, but currently implements only right-facing cladegrams.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Simulate a tree, but retain extinct species.
+pars &lt;- c(.1, .2, .03, .04, 0.05, 0.1) # BiSSE pars
+set.seed(2)
+phy &lt;- tree.bisse(pars, 20, x0=0, include.extinct=TRUE)
+
+## Create a &#39;history&#39; from the information produced by the simulation
+## and plot this
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy, cex=.7)
+</div>
+<p><img src='plot.history-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Prune the extinct taxa.
+phy2 &lt;- prune(phy)
+
+## The history must be recreated for this pruned tree:
+h2 &lt;- history.from.sim.discrete(phy2, 0:1)
+plot(h2, phy2, cex=.7)
+</div>
+<p><img src='plot.history-4.png' alt='' width='400' height='400' /></p></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>plot.history</li>
+    </ul>
+    <ul>
+      <li>hplot</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

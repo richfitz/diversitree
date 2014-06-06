@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>quasse-common. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Support Functions for QuaSSE Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>constant.x(x, c)
+sigmoid.x(x, y0, y1, xmid, r)
+stepf.x(x, y0, y1, xmid)
+noroptimal.x(x, y0, y1, xmid, s2)</div>
+<div>make.linear.x(x0, x1)</div>
+<div>make.brownian.with.drift(drift, diffusion)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>x</dt>
+      <dd>Character state</dd>
+      <dt>c</dt>
+      <dd>Constant.</dd>
+      <dt>y0</dt>
+      <dd>y value at very small <code>x</code> (limit as <code>x</code> tends to
+    negative infinity)</dd>
+      <dt>y1</dt>
+      <dd>y value at very large <code>x</code> (limit as <code>x</code> tends to
+    infinity).  For <code>noroptimal.x</code>, this is the y value at
+    <code>xmid</code>.</dd>
+      <dt>xmid</dt>
+      <dd>Midpoint (inflection point) of sigmoid or step function</dd>
+      <dt>r</dt>
+      <dd>Rate at which exponential decay occurs or sigmoid changes -
+    higher values are steeper</dd>
+      <dt>s2</dt>
+      <dd>Variance of the normal distribution specified by
+    <code>noroptimal.x</code>.</dd>
+      <dt>x0</dt>
+      <dd>Lower x limit for the linear function: y will take value at
+    x0 for all x smaller than this</dd>
+      <dt>x1</dt>
+      <dd>Upper x limit for the linear function: y will take value at
+    x1 for all x greater than this</dd>
+      <dt>drift</dt>
+      <dd>Rate of drift</dd>
+      <dt>diffusion</dt>
+      <dd>Rate of diffusion (positive)</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Utility functions for working with QuaSSE models.  These
+  provide a minimal set of state-varying functions, suitable for use
+  with <code><a href='make.quasse.html'>make.quasse</a></code>, and simulation assistance functions
+  for use with <code><a href='simulate.html'>tree.quasse</a></code>.</p>
+  
+      <p>This is currently poorly explained!</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The linear function returned by  (<code>make.linear.x</code>) will go to
+  zero wherever negative.  This may not always be desired, but is
+  required for valid likelihood calculations under QuaSSE.</p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>constant.x</li><li>make.linear.x</li><li>sigmoid.x</li><li>sigmoid2.x</li><li>stepf.x</li><li>noroptimal.x</li><li>make.brownian.with.drift</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

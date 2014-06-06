@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>asr-bisse. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Ancestral State Reconstruction Under BiSSE</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>"make.asr.marginal"(lik, ...)
+"make.asr.marginal"(lik, ...)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>lik</dt>
+      <dd>A likelihood function, returned by <code>make.mk2</code> or
+    <code>make.mkn</code>.</dd>
+      <dt>...</dt>
+      <dd>Additional arguments passed through to future methods.
+    Currently unused.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Perform ancestral state reconstruction under BiSSE and
+  other constant rate Markov models.  Marginal reconstructions are
+  supported (c.f. <code><a href='asr.html'>asr</a></code>).  Documentation is still in an
+  early stage, and mostly in terms of examples.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Start with a simple tree evolved under a BiSSE with all rates
+## asymmetric:
+pars &lt;- c(.1, .2, .03, .06, .01, .02)
+set.seed(3)
+phy &lt;- trees(pars, &quot;bisse&quot;, max.taxa=50, max.t=Inf, x0=0)[[1]]
+
+## Here is the true history
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy, main=&quot;True history&quot;)
+</div>
+<p><img src='asr-bisse-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## BiSSE ancestral state reconstructions under the ML model
+lik &lt;- make.bisse(phy, phy$tip.state)
+fit &lt;- find.mle(lik, pars, method=&quot;subplex&quot;)
+st &lt;- asr.marginal(lik, coef(fit))
+nodelabels(thermo=t(st), piecol=1:2, cex=.5)
+</div>
+<p><img src='asr-bisse-4.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Mk2 ancestral state reconstructions, ignoring the shifts in
+## diversification rates:
+lik.m &lt;- make.mk2(phy, phy$tip.state)
+fit.m &lt;- find.mle(lik.m, pars[5:6], method=&quot;subplex&quot;)
+st.m &lt;- asr.marginal(lik.m, coef(fit.m))
+## The Mk2 results have more uncertainty at the root, but both are
+## similar.
+nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
+</div>
+<p><img src='asr-bisse-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# ## (This section will take 10 or so minutes to run.)
+# ## Try integrating over parameter uncertainty and comparing the BiSSE
+# ## with Mk2 output:
+# prior &lt;- make.prior.exponential(2)
+# samples &lt;- mcmc(lik, coef(fit), 1000, w=1, prior=prior,
+#                 print.every=100)
+# st.b &lt;- apply(samples[2:7], 1, function(x) asr.marginal(lik, x)[2,])
+# st.b.avg &lt;- rowMeans(st.b)
+# 
+# samples.m &lt;- mcmc(lik.m, coef(fit.m), 1000, w=1, prior=prior,
+#                   print.every=100)
+# st.m &lt;- apply(samples.m[2:3], 1, function(x) asr.marginal(lik.m, x)[2,])
+# st.m.avg &lt;- rowMeans(st.m)
+# 
+# ## These end up being more striking in their similarity than their
+# ## differences, except for the root node, where BiSSE remains more sure
+# ## that is in state 0 (there is about 0.05 red there).
+# plot(h, phy, main=&quot;Marginal ASR, BiSSE (left), Mk2 (right)&quot;,
+#      show.node.state=FALSE)
+# nodelabels(thermo=1-st.b.avg, piecol=1:2, cex=.5)
+# nodelabels(thermo=1-st.m.avg, piecol=1:2, cex=.5, adj=-.5)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+
+## Equivalency of Mk2 and BiSSE where diversification is state
+## independent.  For any values of lambda/mu (here .1 and .03) where
+## these do not vary across character states, these two methods will
+## give essentially identical marginal ancestral state reconstructions.
+st.id &lt;- asr.marginal(lik, c(.1, .1, .03, .03, coef(fit.m)))
+st.id.m &lt;- asr.marginal(lik.m, coef(fit.m))
+
+## Reconstructions are identical to a relative tolerance of 1e-7
+## (0.0000001), which is similar to the expected tolerance of the BiSSE
+## calculations.
+all.equal(st.id, st.id.m, tolerance=1e-7)
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## Equivalency of BiSSE and MuSSE reconstructions for two states:
+lik.b &lt;- make.bisse(phy, phy$tip.state)
+lik.m &lt;- make.musse(phy, phy$tip.state + 1, 2)
+
+st.b &lt;- asr.marginal(lik.b, coef(fit))
+st.m &lt;- asr.marginal(lik.m, coef(fit))
+
+all.equal(st.b, st.m)
+</div>
+<div class='output'>[1] TRUE
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>asr.bisse</li><li>asr.musse</li><li>asr.marginal.bisse</li><li>asr.marginal.musse</li><li>make.asr.marginal.bisse</li><li>make.asr.marginal.musse</li>
+    </ul>
+    <ul>
+      <li>model</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

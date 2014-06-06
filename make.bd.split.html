@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.bd.split. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Constant Rate Birth-Death Models: Split Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.bd.split(tree, nodes, split.t, sampling.f=NULL, unresolved=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>nodes</dt>
+      <dd>Vector of nodes that will be split (see Details).</dd>
+      <dt>split.t</dt>
+      <dd>Vector of split times, same length as <code>nodes</code> (see
+    Details).</dd>
+      <dt>sampling.f</dt>
+      <dd>Probability of an extant species being included in
+    the phylogeny (sampling fraction).  By default, all extant species are
+    assumed to be included.</dd>
+      <dt>unresolved</dt>
+      <dd>Unresolved clade information.  This is a named
+    vector, with the number of species as the value and names
+    corresponding to tip labels.  Tips that represent a single species
+    should not be included in this vector.  For example
+    <code>sp1=10, sp2=2</code>, would mean that <code>sp1</code> represents 10
+    species, while <code>sp2</code> represents two.  These labels must exist
+    in <code>tree$tip.label</code> and all other tips are assumed to
+    represent one species.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for a birth-death model where
+  the tree is partitioned into regions with different parameters.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Branching times can be controlled with the <code>split.t</code>
+argument.  If this is <code>Inf</code>, split at the base of the branch (as in
+MEDUSA).  If <code>0</code>, split at the top (closest to the present, as in
+the new option for MEDUSA).  If <code>0 < split.t < Inf</code> then we split
+at that time on the tree (zero is the present, with time growing
+backwards).</p>
+  
+      <p>This function is related to MEDUSA (Alfaro et al. 2009), but does not
+include any of the code for efficiently moving between different splits
+(split creation here is fairly slow).  The primary use for this model is
+for generating starting points for state dependent split models (e.g.,
+<code><a href='make.bisse.split.html'>make.bisse.split</a></code>) and testing <em>a priori</em> splits.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>set.seed(1)
+pars &lt;- c(.1, .03)
+phy &lt;- trees(pars, &quot;bd&quot;, max.taxa=30)[[1]]
+
+## Here is the phylogeny:
+plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
+     no.margin=TRUE)
+</div>
+<p><img src='make.bd.split-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Construct the plain likelihood function as a benchmark:
+lik &lt;- make.bd(phy)
+lik(pars) # -21.74554
+</div>
+<div class='output'>[1] -21.74554
+</div>
+<div class='input'>
+## Split this phylogeny at three points: nd11, nd13 and nd26
+nodes &lt;- c(&quot;nd11&quot;, &quot;nd13&quot;, &quot;nd26&quot;)
+
+## This is the index in ape&#39;s node indexing:
+nodes.i &lt;- match(nodes, phy$node.label) + length(phy$tip.label)
+
+nodelabels(node=nodes.i, pch=19, cex=2, col=&quot;#FF000099&quot;)
+</div>
+<p><img src='make.bd.split-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## To make a split likelihood function, pass the node locations and times in:
+lik.s &lt;- make.bd.split(phy, nodes)
+
+## The parameters must be a list of the same length as the number of
+## partitions.  Partition &#39;1&#39; is the root partition, and partition i is
+## the partition rooted at the node[i-1]
+pars4 &lt;- rep(pars, 4)
+names(pars4) &lt;- argnames(lik.s)
+
+## Run the likelihod calculation:
+lik.s(pars4) # -21.74554
+</div>
+<div class='output'>[1] -21.74554
+</div>
+<div class='input'>
+## These are basically identical (to acceptable tolerance)
+lik.s(pars4) - lik(pars)
+</div>
+<div class='output'>[1] 0
+</div>
+<div class='input'>
+## You can use the labelled nodes rather than indices:
+lik.s2 &lt;- make.bd.split(phy, nodes)
+identical(lik.s(pars4), lik.s2(pars4))
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## All the usual ML/MCMC functions work as before:
+fit &lt;- find.mle(lik.s, pars4)
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.bd.split</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

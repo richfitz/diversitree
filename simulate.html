@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>simulate. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Evolve Birth-Death Trees</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>trees(pars, type=c("bisse", "bisseness", "bd", "classe", "geosse", "musse", "quasse", "yule"), n=1, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, ...)</div>
+<div>tree.bisse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA)
+tree.musse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA)
+tree.musse.multitrait(pars, n.trait, depth, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA)</div>
+<div>tree.quasse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA, single.lineage=TRUE, verbose=FALSE)</div>
+<div>tree.bisseness(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA)</div>
+<div>tree.classe(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA)</div>
+<div>tree.geosse(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE, x0=NA)</div>
+<div>tree.bd(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)
+tree.yule(pars, max.taxa=Inf, max.t=Inf, include.extinct=FALSE)</div>
+<div>prune(phy, to.drop=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>pars</dt>
+      <dd>Vector of parameters.  The parameters must be in the same
+    order as an unconstrained likelihood function returned by
+    <code>make.x</code>, for tree type x.  The MuSSE simulator automatically
+    detects the appropriate number of states, given a parameter vector.</dd>
+      <dt>type</dt>
+      <dd>Type of tree to generate: May be "bisse" or "bd".</dd>
+      <dt>n</dt>
+      <dd>How many trees to generate?</dd>
+      <dt>max.taxa</dt>
+      <dd>Maximum number of taxa to include in the tree.  If
+    <code>Inf</code>, then the tree will be evolved until <code>max.t</code> time
+    has passed.</dd>
+      <dt>max.t</dt>
+      <dd>Maximum length to evolve the phylogeny over.  If
+    <code>Inf</code> (the default), then the tree will evolve until
+    <code>max.taxa</code> extant taxa are present.</dd>
+      <dt>include.extinct</dt>
+      <dd>Logical: should extinct taxa be included in
+    the final phylogeny?  And should extinct trees be returned by
+    <code>trees</code>?</dd>
+      <dt>x0</dt>
+      <dd>Initial character state at the root (state 0 or 1).  A value
+    of <code>NA</code> will randomly choose a state from the model's
+    equilibrium distribution for a BiSSE, ClaSSE, or GeoSSE model, but a
+    non-NA value must be specified for MuSSE and QuaSSE.</dd>
+      <dt>n.trait, depth</dt>
+      <dd>For <code>tree.musse.multitrait</code> only, these
+    specify the number of binary traits and the style of parameters
+    (with the same meaning as in <code><a href='make.musse.multitrait.html'>make.musse.multitrait</a></code>).
+    The <code>pars</code> argument then needs to be in the same order as a
+    likelihood function created by <code>make.musse.multitrait</code> with
+    these arguments (this interface may be improved in future -- email
+    me if you find this annoying).</dd>
+      <dt>single.lineage</dt>
+      <dd>(<code>tree.quasse</code> only): Start simulation with
+    a single lineage?  If <code>FALSE</code>, then the simulation starts with
+    two lineages in state <code>x0</code> (i.e., immediately following a
+    speciation event).</dd>
+      <dt>verbose</dt>
+      <dd>(<code>tree.quasse</code> only): print verbose details about
+    tree simuations.  This can be reassuring for really large trees.</dd>
+      <dt>...</dt>
+      <dd>Additional arguments</dd>
+      <dt>phy</dt>
+      <dd>A phylogeny, possibly with extinct species, produced by one
+    of the tree evolving functions.</dd>
+      <dt>to.drop</dt>
+      <dd>Optional vector with the species names to drop.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Evolves one or more trees under the BiSSE (Binary State
+  Speciation and Extinction), MuSSE (Multi-State Speciation and
+  Extinction), BiSSE-ness (BiSSE-node enhanced state shift), ClaSSE
+  (Cladogenetic State change Speciation and Extinction), or GeoSSE
+  (Geographic State Speciation and Extinction) model, or a simple
+  character independent birth-death model.  For the SSE models, it
+  simultaneously evolves a character that affects speciation and/or
+  extinction, and the tree itself.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The phylogeny will begin from a single lineage in state <code>x0</code>, but
+  the final phylogeny will include only branches above the first split.</p>
+  
+      <p><code>tree.bisse</code> may return an extinct phylogeny, and <code>trees</code>
+  might return extinct phylogenies if <code>include.extinct</code> is
+  <code>TRUE</code>.</p>
+  
+    </div>
+
+    <div class="Note">
+      <h2>Note</h2>
+      
+      <p>There are some logic problems around the creation of zero and one
+  species trees; this will cause occasional errors when running the
+  above functions.  Things will change to fix this soon.  All these
+  functions may change in the near future.</p>
+  
+    </div>
+
+    <div class="Value">
+      <h2>Value</h2>
+      
+      <p>A <code>phylo</code> phylogenetic tree (ape format), or for
+  <code>bisse.trees</code>, a <code>list</code> of <code>phylo</code> trees.</p>
+  
+      <p>The trees will have an element <code>tip.state</code> that contains the
+  binary state information.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(3)
+phy &lt;- tree.bisse(pars, max.taxa=30, x0=0)
+phy$tip.state
+</div>
+<div class='output'> sp7  sp8 sp10 sp11 sp12 sp13 sp14 sp16 sp17 sp18 sp19 sp20 sp21 sp22 sp24 sp25 
+   0    0    0    0    1    1    0    1    1    1    1    1    0    0    1    1 
+sp26 sp27 sp28 sp29 sp30 sp31 sp32 sp33 sp34 sp35 sp36 sp37 sp38 sp39 
+   1    1    1    1    1    1    1    1    1    1    1    1    1    1 
+</div>
+<div class='input'>
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy)
+</div>
+<p><img src='simulate-4.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Retain extinct species:
+set.seed(3)
+phy2 &lt;- tree.bisse(pars, max.taxa=30, x0=0, include.extinct=TRUE)
+h2 &lt;- history.from.sim.discrete(phy2, 0:1)
+plot(h2, phy2)
+</div>
+<p><img src='simulate-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+#### MuSSE:
+## Two states
+pars &lt;- c(.1, .2, .03, .04, 0.05, 0.1)
+set.seed(2)
+phy &lt;- tree.musse(pars, 20, x0=1)
+
+h &lt;- history.from.sim.discrete(phy, 1:2)
+plot(h, phy)
+</div>
+<p><img src='simulate-8.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## A 3-state example where movement is only allowed between neighbouring
+## states (1 &lt;-&gt; 2 &lt;-&gt; 3), and where speciation and extinction rates
+## increase moving from 1 -&gt; 2 -&gt; 3:
+pars &lt;- c(.1,  .15,  .2,  # lambda 1, 2, 3
+          .03, .045, .06, # mu 1, 2, 3
+          .05, 0,         # q12, q13
+          .05, .05,       # q21, q23
+          0,   .05)       # q31, q32
+
+set.seed(2)
+phy &lt;- tree.musse(pars, 30, x0=1, include.extinct=TRUE)
+
+h &lt;- history.from.sim.discrete(phy, 1:3)
+plot(h, phy, cex=.7)
+</div>
+<p><img src='simulate-10.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## And with extinct taxa pruned:
+phy2 &lt;- prune(phy)
+h2 &lt;- history.from.sim.discrete(phy2, 1:3)
+plot(h2, phy2, cex=.7)
+</div>
+<p><img src='simulate-12.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## This can all be done in one step (and is by default):
+set.seed(2)
+phy &lt;- tree.musse(pars, 30, x0=1)
+h &lt;- history.from.sim.discrete(phy, 1:3)
+plot(h, phy, cex=.7)
+</div>
+<p><img src='simulate-14.png' alt='' width='400' height='400' /></p></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>trees</li><li>tree.bd</li><li>tree.bisse</li><li>tree.bisseness</li><li>tree.classe</li><li>tree.geosse</li><li>tree.musse</li><li>tree.musse.multitrait</li><li>tree.quasse</li><li>tree.yule</li><li>prune</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

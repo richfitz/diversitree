@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>constrain. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Constrain Parameters of a Model</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>constrain(f, ..., formulae=NULL, names=argnames(f), extra=NULL)
+constrain.i(f, p, i.free)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>f</dt>
+      <dd>A function to constrain.</dd>
+      <dt>...</dt>
+      <dd>Formulae indicating how the function should be constrained
+    (see Details and Examples).</dd>
+      <dt>formulae</dt>
+      <dd>Optional list of constraints, possibly in addition to
+    those in <code>...</code></dd>
+      <dt>names</dt>
+      <dd>Optional Character vector of names, the same length as
+    the number of parameters in <code>x</code>.  Use this only if
+    <code><a href='argnames.html'>argnames</a></code> does not return a vector for your function.
+    Generally this should not be used.</dd>
+      <dt>extra</dt>
+      <dd>Optional vector of additional names that might appear on
+    the RHS of constraints but do not represent names in the function's
+    <code>argnames</code>.  This can be used to set up dummy variables
+    (example coming later).</dd>
+      <dt>p</dt>
+      <dd>A parameter vector (for <code>constrain.i</code>) indicating values
+    for all parameters.</dd>
+      <dt>i.free</dt>
+      <dd>Indices of the parameters that are <strong>not</strong>
+    constrained.  Other indices will get the value in <code>p</code>.  The
+    element of <code>p[i.free]</code> will never be used and can be zero,
+    <code>NA</code>, or any other value.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Constrain a model to make submodels with fewer parameters.
+  If <code>f</code> is a function that takes a vector <code>x</code> as its first
+  argument, this function returns a new function that takes a
+  shorter vector <code>x</code> with some elements constrained in some way;
+  parameters can be fixed to particular values, constrained to be the
+  same as other parameters, or arbitrary expressions of free
+  parameters.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The relationships are specified in the form <code>target ~ rel</code>, where
+  <code>target</code> is the name of a vector to be constrained, and
+  <code>rel</code> is some relationship.  For example <code>lambda0 ~ lambda1</code>
+  would have the effect of making the parameters <code>lambda0</code> and
+  <code>lambda1</code> take the same value.</p>
+  
+      <p>The <code>rel</code> term can be a constant (e.g., <code>target ~ 0</code>),
+  another parameter (as above) or some expression of the parameters
+  (e.g., <code>lambda0 ~ 2 * lambda1</code> or
+  <code>lambda0 ~ lambda1 - mu1</code>).</p>
+  
+      <p>Terms that appear on the right hand side of an expression may not be
+  constrained in another expression, and no term may be constrained
+  twice.</p>
+  
+    </div>
+
+    <div class="Warning">
+      <h2>Warning</h2>
+      
+      <p>Only a few checks are done to ensure that the resulting function makes
+  any sense; it is possible that I have missed some cases.  There is
+  currently no way of modifying constrained functions to remove the
+  constraints.  These weaknesses will be addressed in a future version.</p>
+  
+    </div>
+
+    <div class="Value">
+      <h2>Value</h2>
+      
+      <p>This function returns a constrained function that can be passed
+  through to <code><a href='find.mle.html'>find.mle</a></code> and <code>mcmc</code>.  It will behave
+  like any other function.  However, it has a modified <code>class</code>
+  attribute so that some methods will dispatch differently
+  (<code>argnames</code>, for example).  All arguments in addition to <code>x</code>
+  will be passed through to the original function <code>f</code>.</p>
+  
+      <p>For help in designing constrained models, the returned function has
+  an additional argument <code>pars.only</code>, when this is <code>TRUE</code> the
+  function will return a named vector of arguments rather than evaluate
+  the function (see Examples).</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Same example likelihood function as for \link{find.mle} - BiSSE on a
+## tree with 203 species, generated with an asymmetry in the speciation
+## rates.
+pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(2)
+phy &lt;- tree.bisse(pars, max.t=60, x0=0)
+lik &lt;- make.bisse(phy, phy$tip.state)
+
+argnames(lik) # Canonical argument names
+</div>
+<div class='output'>[1] &quot;lambda0&quot; &quot;lambda1&quot; &quot;mu0&quot;     &quot;mu1&quot;     &quot;q01&quot;     &quot;q10&quot;    
+</div>
+<div class='input'>
+## Specify equal speciation rates
+lik.2 &lt;- constrain(lik, lambda0 ~ lambda1)
+argnames(lik.2) # Note lambda0 now missing
+</div>
+<div class='output'>[1] &quot;lambda1&quot; &quot;mu0&quot;     &quot;mu1&quot;     &quot;q01&quot;     &quot;q10&quot;    
+</div>
+<div class='input'>
+## On constrained functions, use the &quot;pars.only&quot; argument to see what
+## the full argument list would be:
+lik.2(c(.1, pars[3:6]), pars.only=TRUE)
+</div>
+<div class='output'>lambda0 lambda1     mu0     mu1     q01     q10 
+   0.10    0.10    0.03    0.03    0.01    0.01 
+</div>
+<div class='input'>
+## Check this works:
+lik(c(.1, .1, pars[3:6])) == lik.2(c(.1, pars[3:6]))
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## For optimisation of these functions, see \link{find.mle}, which
+## includes an example.
+
+## More complicated; constrain lambda0 to half of lambda1, constrain mu0
+## to be the same mu1, and set q01 equal to zero.
+lik.3 &lt;- constrain(lik, lambda0 ~ lambda1 / 2, mu0 ~ mu1, q01 ~ 0)
+argnames(lik.3) # lambda1, mu1, q10
+</div>
+<div class='output'>[1] &quot;lambda1&quot; &quot;mu1&quot;     &quot;q10&quot;    
+</div>
+<div class='input'>lik(c(.1, .2, .03, .03, 0, .01)) == lik.3(c(.2, .03, .01))
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## Alternatively, coefficients can be specified using a list of
+## constraints:
+cons &lt;- list(lambda1 ~ lambda0, mu1 ~ mu0, q10 ~ q01)
+constrain(lik, formulae=cons)
+</div>
+<div class='output'>BiSSE likelihood function:
+  * Parameter vector takes 3 elements:
+     - lambda0, mu0, q01
+  * Function constrained (original took 6 elements):
+     - lambda1 ~ lambda0
+     - mu1 ~ mu0
+     - q10 ~ q01
+  * Function takes arguments (with defaults)
+     - pars: Parameter vector
+     - ...: Additional arguments to underlying function
+     - pars.only [FALSE]: Return full parameter vector?
+  * Phylogeny with 203 tips and 202 nodes
+     - Taxa: sp1, sp27, sp29, sp31, sp41, sp43, sp46, sp47, sp48, ...
+  * References:
+     - Maddison et al. (2007) doi:10.1080/10635150701607033
+     - FitzJohn et al. (2009) doi:10.1093/sysbio/syp067
+R definition:
+function (pars, ..., pars.only = FALSE)  
+</div>
+<div class='input'>
+## Using the &quot;extra&quot; argument allows recasting things to dummy
+## parameters.  Here both lambda0 and lambda1 are mapped to the
+## parameter &quot;lambda&quot;:
+lik.4 &lt;- constrain(lik, lambda0 ~ lambda, lambda1 ~ lambda, extra=&quot;lambda&quot;)
+argnames(lik.4)
+</div>
+<div class='output'>[1] &quot;lambda&quot; &quot;mu0&quot;    &quot;mu1&quot;    &quot;q01&quot;    &quot;q10&quot;   
+</div>
+<div class='input'>
+## constrain.i can be useful for setting a number of values at once.
+## Suppose we wanted to look at the shape of the likelihood surface with
+## respect to one parameter around the ML point.  For this tree, the ML
+## point is approximately:
+p.ml &lt;- c(0.09934, 0.19606, 0.02382, 0.03208, 0.01005, 0.00982)
+
+## Leaving just lambda1 (which is parameter number 2) free:
+lik.l1 &lt;- constrain.i(lik, p.ml, 2)
+
+## The function now reports that five of the parameters are constrained,
+## with one free (lambda1)
+lik.l1
+</div>
+<div class='output'>BiSSE likelihood function:
+  * Parameter vector takes 1 elements:
+     - lambda1
+  * Function constrained (original took 6 elements):
+     - lambda0 ~ 0.09934
+     - mu0 ~ 0.02382
+     - mu1 ~ 0.03208
+     - q01 ~ 0.01005
+     - q10 ~ 0.00982
+  * Function takes arguments (with defaults)
+     - pars: Parameter vector
+     - ...: Additional arguments to underlying function
+     - pars.only [FALSE]: Return full parameter vector?
+  * Phylogeny with 203 tips and 202 nodes
+     - Taxa: sp1, sp27, sp29, sp31, sp41, sp43, sp46, sp47, sp48, ...
+  * References:
+     - Maddison et al. (2007) doi:10.1080/10635150701607033
+     - FitzJohn et al. (2009) doi:10.1093/sysbio/syp067
+R definition:
+function (pars, ..., pars.only = FALSE)  
+</div>
+<div class='input'>
+## Likewise:
+argnames(lik.l1)
+</div>
+<div class='output'>[1] &quot;lambda1&quot;
+</div>
+<div class='input'>
+## Looking in the neighbourhood of the ML point, the likelihood surface
+## is approximately quadratic:
+pp &lt;- seq(p.ml[2] - .02, p.ml[2] + .02, length.out=15)
+yy &lt;- sapply(pp, lik.l1)
+plot(yy ~ pp, type=&quot;b&quot;, xlab=&quot;lambda 1&quot;, ylab=&quot;Log likelihood&quot;)
+</div>
+<p><img src='constrain-22.png' alt='' width='400' height='400' /></p>
+<div class='input'>abline(v=p.ml[2], col=&quot;red&quot;, lty=2)
+</div>
+<p><img src='constrain-24.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## pars.only works as above, returning the full parameter vector
+lik.l1(p.ml[2], pars.only=TRUE)
+</div>
+<div class='output'>[1] 0.09934 0.19606 0.02382 0.03208 0.01005 0.00982
+</div>
+<div class='input'>identical(p.ml, lik.l1(p.ml[2], pars.only=TRUE))
+</div>
+<div class='output'>[1] TRUE
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>constrain</li><li>constrain.i</li>
+    </ul>
+    <ul>
+      <li>programming</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

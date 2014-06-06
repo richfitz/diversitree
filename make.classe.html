@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.classe. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Emma E. Goldberg">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Cladogenetic State change Speciation and Extinction Model</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.classe(tree, states, k, sampling.f=NULL, strict=TRUE, control=list()) starting.point.classe(tree, k, eps=0.5)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be an
+    integer between 1 and <code>k</code>.  This vector must have names that
+    correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).</dd>
+      <dt>k</dt>
+      <dd>The number of states.  (The maximum now is 31, but that can
+    easily be increased if necessary.)</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length <code>k</code> where <code>sampling.f[i]</code>
+    is the proportion of species in state <code>i</code> that are present in
+    the phylogeny.  A value of <code>c(0.5, 0.75, 1)</code> means that half of
+    species in state 1, three quarters of species in state 2, and all
+    species in state 3 are included in the phylogeny.  By default all
+    species are assumed to be known</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are integers on <code>1:k</code>.  If <code>strict</code> is
+    <code>TRUE</code> (the default), then the additional check is made that
+    <em>every</em> state is present.  The likelihood models tend to be
+    poorly behaved where states are missing, but there are cases
+    (missing intermediate states for meristic characters) where allowing
+    such models may be useful.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>eps</dt>
+      <dd>Ratio of extinction to speciation rates to be used when
+    choosing a starting set of parameters.  The procedure used is based
+    on Magallon & Sanderson (2001).</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run ClaSSE (Cladogenetic State change
+  Speciation and Extinction) on a phylogenetic tree and character
+  distribution.  This function creates a likelihood function that can be
+  used in <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The ClaSSE model with <code>k = 2</code> is equivalent to but a different
+  parameterization than the <a href='make.bisseness.html'>BiSSE-ness</a> model.
+  The <a href='make.geosse.html'>GeoSSE</a> model can be constructed from ClaSSE
+  with <code>k = 3</code>; see the example below.</p>
+  
+      <p><code>make.classe</code> returns a function of class <code>classe</code>.  The
+  arguments and default values for this function are:</p>
+  
+      <p><pre>
+    f(pars, condition.surv=TRUE, root=ROOT.OBS, root.p=NULL,
+      intermediates=FALSE)
+  </pre></p>
+  
+      <p>The arguments of this function are explained in <a href='make.bisse.html'>make.bisse</a>.
+  The speciation rate parameters are lambda_ijk, ordered with k changing
+  fastest and insisting on j < k.</p>
+  
+      <p>With more than 9 states, lambda_ijk and q_ij can be ambiguous (e.g. is
+  q113 1->13 or 11->3?).  To avoid this, the numbers are zero padded (so
+  that the above would be q0113 or q1103 for 1->13 and 11->3
+  respectively).  It might be easier to rename the arguments in practice
+  though.  More human-friendly handling of large speciation rate arrays
+  is in the works.</p>
+  
+      <p><code>starting.point.classe</code> produces a first-guess set of parameters,
+    ignoring character states.</p>
+  
+      <p>Unresolved clade methods are not available for ClaSSE.</p>
+  
+      <p>Tree simulation methods are not yet available for ClaSSE.</p>
+  
+    </div>
+
+    <div class="References">
+      <h2>References</h2>
+      
+      <p>FitzJohn R.G., Maddison W.P., and Otto S.P. 2009. Estimating
+  trait-dependent speciation and extinction rates from incompletely
+  resolved phylogenies. Syst. Biol. 58:595-611.</p>
+  
+      <p>Goldberg E.E. and Igic B. Tempo and mode in plant breeding system
+  evolution. In review.</p>
+  
+      <p>Maddison W.P., Midford P.E., and Otto S.P. 2007. Estimating a binary
+  character's effect on speciation and extinction. Syst. Biol.
+  56:701-710.</p>
+  
+      <p>Magallon S. and Sanderson M.J. 2001. Absolute diversification rates in
+  angiospem clades. Evol. 55:1762-1780.</p>
+  
+      <p>Magnuson-Ford, K., and Otto, S.P. 2012. Linking the investigations of
+  character evolution and species diversification.  American Naturalist,
+  in press.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## GeoSSE equivalence
+## Same tree simulated in ?make.geosse
+pars &lt;- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
+names(pars) &lt;- diversitree:::default.argnames.geosse()
+set.seed(5)
+phy &lt;- tree.geosse(pars, max.t=4, x0=0)
+
+lik.g &lt;- make.geosse(phy, phy$tip.state)
+pars.g &lt;- c(1.5, 0.5, 1.0, 0.7, 0.7, 1.4, 1.3)
+names(pars.g) &lt;- argnames(lik.g)
+
+lik.c &lt;- make.classe(phy, phy$tip.state+1, 3)
+pars.c &lt;- 0 * starting.point.classe(phy, 3)
+pars.c[&#39;lambda222&#39;] &lt;- pars.c[&#39;lambda112&#39;] &lt;- pars.g[&#39;sA&#39;]
+pars.c[&#39;lambda333&#39;] &lt;- pars.c[&#39;lambda113&#39;] &lt;- pars.g[&#39;sB&#39;]
+pars.c[&#39;lambda123&#39;] &lt;-  pars.g[&#39;sAB&#39;]
+pars.c[&#39;mu2&#39;] &lt;- pars.c[&#39;q13&#39;] &lt;- pars.g[&#39;xA&#39;]
+pars.c[&#39;mu3&#39;] &lt;- pars.c[&#39;q12&#39;] &lt;- pars.g[&#39;xB&#39;]
+pars.c[&#39;q21&#39;] &lt;- pars.g[&#39;dA&#39;]
+pars.c[&#39;q31&#39;] &lt;- pars.g[&#39;dB&#39;]
+
+lik.g(pars.g)   # -175.7685
+</div>
+<div class='output'>[1] -175.7685
+</div>
+<div class='input'>lik.c(pars.c)   # -175.7685
+</div>
+<div class='output'>[1] -175.7685
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.classe</li><li>starting.point.classe</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code><a href='constrain.html'>constrain</a></code> for making submodels, <code><a href='find.mle.html'>find.mle</a></code>
+  for ML parameter estimation, and <code><a href='mcmc.html'>mcmc</a></code> for MCMC
+  integration.  The help page for <code><a href='find.mle.html'>find.mle</a></code> has further
+  examples of ML searches on full and constrained BiSSE models.  Things
+  work similarly for ClaSSE, just with different speciation parameters.
+  	
+  <code><a href='make.bisse.html'>make.bisse</a></code>, <code><a href='make.bisseness.html'>make.bisseness</a></code>,
+  <code><a href='make.geosse.html'>make.geosse</a></code>, <code><a href='make.musse.html'>make.musse</a></code> for similar models
+  and further relevant examples.
+
+    
+    <h2>Author</h2>
+    Emma E. Goldberg
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

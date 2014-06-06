@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>asr-mkn. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Ancestral State Reconstruction Under Mk2/Mkn</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>"make.asr.marginal"(lik, ...)
+"make.asr.joint"(lik, ...)
+"make.asr.stoch"(lik, slim=FALSE, ...)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>lik</dt>
+      <dd>A likelihood function, returned by <code>make.mk2</code> or
+    <code>make.mkn</code>.</dd>
+      <dt>slim</dt>
+      <dd>Should the history object be slimmed down?</dd>
+      <dt>...</dt>
+      <dd>Additional arguments; currently ignored.</dd>
+    </dl>
+    
+    <div class="Ancestral State Reconstruction Under Mk2/Mkn">
+      <h2>Ancestral State Reconstruction Under Mk2/Mkn</h2>
+      
+    </div>
+
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Perform ancestral state reconstruction under Mk2 and other
+  constant rate Markov models.  Marginal, joint, and stochastic
+  reconstructions are supported.  Documentation is still in an early
+  stage, and mostly in terms of examples.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Output will differ slightly when <code>mk2</code> and <code>mkn</code> models are
+  used as <code>lik</code>, as <code>mk2</code> uses states 0/1, while 2-state
+  <code>mkn</code> uses 1/2.</p>
+  
+      <p>This is all quite slow.  Faster versions are coming eventually.</p>
+  
+      <p>These functions all return functions that generate different types of
+  ancestral reconstruction.</p>
+  
+      <p></p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Start with a simple tree evolved under a constant rates birth-death
+## model with asymetric character evolution
+pars &lt;- c(.1, .1, .03, .03, .03, .06)
+set.seed(1)
+phy &lt;- trees(pars, &quot;bisse&quot;, max.taxa=50, max.t=Inf, x0=0)[[1]]
+
+## Here is the true history.  The root node appears to be state 1 (red)
+## at the root, despite specifying a root of state 0 (x0=0, in statement
+## above).  This is because the tree started with a single lineage, but
+## had changed state by the time the first speciation event happened.
+h &lt;- history.from.sim.discrete(phy, 0:1)
+plot(h, phy, main=&quot;True history&quot;)
+</div>
+<p><img src='asr-mkn-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## All of the methods need a likelihood function; build a mk2 function:
+lik &lt;- make.mk2(phy, phy$tip.state)
+
+## Using the true parameters, compute the marginal ancestral state
+## reconstructions:
+st.m &lt;- asr.marginal(lik, pars[5:6])
+
+## There is still not a good stand-alone plotting command for nodes.
+## For now, use ape&#39;s nodelabels().
+plot(h, phy, main=&quot;Marginal ASR&quot;, show.node.state=FALSE)
+</div>
+<p><img src='asr-mkn-4.png' alt='' width='400' height='400' /></p>
+<div class='input'>nodelabels(thermo=t(st.m), piecol=1:2, cex=.5)
+</div>
+<p><img src='asr-mkn-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Again, with the true parameters, a sample from the joint
+## distribution:
+st.j &lt;- asr.joint(lik, pars[5:6])
+
+## Plotting this sample against the true values.
+plot(h, phy, main=&quot;Joint ASR&quot;, show.node.state=FALSE)
+</div>
+<p><img src='asr-mkn-8.png' alt='' width='400' height='400' /></p>
+<div class='input'>nodelabels(pch=19, col=st.j + 1)
+</div>
+<p><img src='asr-mkn-10.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## This is just one sample, and is not very accurate in this case!  Make
+## 1,000 such samples and average them:
+st.j2 &lt;- asr.joint(lik, pars[5:6], 1000)
+st.j2.mean &lt;- colMeans(st.j2)
+
+plot(h, phy, main=&quot;Joint ASR (averaged)&quot;, show.node.state=FALSE)
+</div>
+<p><img src='asr-mkn-12.png' alt='' width='400' height='400' /></p>
+<div class='input'>nodelabels(thermo=1-st.j2.mean, piecol=1:2, cex=.5)
+</div>
+<p><img src='asr-mkn-14.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Check the estimates against one another:
+plot(st.m[2,], st.j2.mean, xlab=&quot;Marginal&quot;, ylab=&quot;Joint&quot;, las=1)
+</div>
+<p><img src='asr-mkn-16.png' alt='' width='400' height='400' /></p>
+<div class='input'>abline(0, 1)
+</div>
+<p><img src='asr-mkn-18.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Finally, the stochastic character mapping.  This uses samples from
+## the joint distribution at its core.
+st.s &lt;- asr.stoch(lik, pars[5:6])
+plot(st.s, phy)
+</div>
+<p><img src='asr-mkn-20.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Again, multiple samples can be done at once.  There is a function for
+## summarising histories, but it is still in the works.
+
+## Repeating the above with a two-state mkn model:
+lik2 &lt;- make.mkn(phy, phy$tip.state + 1, 2, FALSE)
+
+## Everything works:
+st2.m &lt;- asr.marginal(lik2, pars[5:6])
+st2.j &lt;- asr.joint(lik2, pars[5:6], 100)
+st2.s &lt;- asr.stoch(lik2, pars[5:6])
+
+## Marginal likelihoods agree:
+all.equal(st.m, st2.m)
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>## Joint reconstructions are stochastic, so just check with a
+## regression:
+summary(lm(colMeans(st2.j) - 1 ~ colMeans(st.j2) - 1))
+</div>
+<div class='output'>
+Call:
+lm(formula = colMeans(st2.j) - 1 ~ colMeans(st.j2) - 1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.3366 -0.3185 -0.1182  0.1363  0.3410 
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)    
+colMeans(st.j2)  0.33133    0.02555   12.97   &lt;2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.2576 on 48 degrees of freedom
+Multiple R-squared:  0.778,	Adjusted R-squared:  0.7734 
+F-statistic: 168.2 on 1 and 48 DF,  p-value: &lt; 2.2e-16
+
+</div>
+<div class='input'>
+## Integrate parameter uncertainty, and see how far down the tree there
+## is any real information on parameter states for this tree (this takes
+## about 6s)
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# set.seed(1)
+# prior &lt;- make.prior.exponential(.5)
+# samples &lt;- mcmc(lik, pars[5:6], 1000, w=1, prior=prior, print.every=100)
+# st.m.avg &lt;- rowMeans(apply(samples[2:3], 1, asr.joint, lik=lik))
+# 
+# plot(h, phy, main=&quot;MCMC Averaged ASR&quot;, show.node.state=FALSE)
+# nodelabels(thermo=1 - st.m.avg, piecol=1:2, cex=.5)
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>asr.mkn</li><li>make.asr.marginal.mk2</li><li>make.asr.joint.mk2</li><li>make.asr.stoch.mk2</li><li>make.asr.marginal.mkn</li><li>make.asr.joint.mkn</li><li>make.asr.stoch.mkn</li>
+    </ul>
+    <ul>
+      <li>model</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

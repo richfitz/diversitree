@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.geosse.split. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Emma E. Goldberg">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Geographic State Speciation and Extinction Model: Split Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.geosse.split(tree, states, nodes, split.t, sampling.f=NULL, strict=TRUE, control=list())
+make.geosse.uneven(tree, states, nodes, split.t, sampling.f=NULL, strict=TRUE, control=list())</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be an
+    integer between 0 and 2: see <code><a href='make.geosse.html'>make.geosse</a></code>.  This vector
+    must have names that correspond to the tip labels in the
+    phylogenetic tree (<code>tree$tip.label</code>).  Unresolved clades are
+    not supported.</dd>
+      <dt>nodes</dt>
+      <dd>Vector of nodes that will be split (see Details).</dd>
+      <dt>split.t</dt>
+      <dd>Vector of split times, same length as <code>nodes</code> (see
+    Details).</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length 3 where <code>sampling.f[i]</code>
+    is the proportion of species in state <code>i</code> that are present in
+    the phylogeny.  A value of <code>c(0.5, 0.75, 1)</code> means that half of
+    species in state 0, three quarters of species in state 1, and all
+    species in state 2 are included in the phylogeny.  By default all
+    species are assumed to be known.</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are integers on <code>0:2</code>.  If <code>strict</code> is
+    <code>TRUE</code> (the default), then the additional check is made that
+    <em>every</em> state is present.  The likelihood models tend to be
+    poorly behaved where states are missing, but there are cases
+    (missing intermediate states for meristic characters) where allowing
+    such models may be useful.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for a GeoSSE model where the
+  tree is partitioned into regions with different parameters.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Branching times can be controlled with the <code>split.t</code>
+argument.  If this is <code>Inf</code>, split at the base of the branch (as in
+MEDUSA).  If <code>0</code>, split at the top (closest to the present, as in
+the new option for MEDUSA).  If <code>0 < split.t < Inf</code> then we split
+at that time on the tree (zero is the present, with time growing
+backwards).</p>
+  
+      <p>The <code>nodes</code> at the top of the split location are specified as a
+vector of node names.  For example, a value of <code>c("nd10",
+"nd12")</code> means that the splits are along the branches leading from each
+of these nodes towards the root.</p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.geosse.split</li><li>make.geosse.uneven</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Emma E. Goldberg
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

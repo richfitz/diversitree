@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>set.defaults. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Set Default Arguments of a Function</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>set.defaults(f, ..., defaults)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>f</dt>
+      <dd>A function</dd>
+      <dt>...</dt>
+      <dd>Named arguments to be set</dd>
+      <dt>defaults</dt>
+      <dd>A named list of arguments</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Set the default values of formal arguments of a function.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The repetitive argument lists of many of diversitree's
+  likelihood functions are the motivation for this function.</p>
+  
+      <p>For example, the likelihood function that <code>make.bisse</code> produces
+  takes arguments <code>condition.surv</code>, <code>root</code>, and <code>root.p</code>,
+  each with default values.  If you dislike the defaults, you can change
+  them by passing in alternative values when computing likelihoods, or
+  when doing an ML search.  However, this can get tedious if you are
+  using a function a lot, and your code will get cluttered with lots of
+  statements like <code>condition.surv=FALSE</code>, some of which you may
+  forget.  See the example below for how to avoid this.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(4)
+phy &lt;- tree.bisse(pars, max.t=30, x0=0)
+lik &lt;- make.bisse(phy, phy$tip.state)
+
+## default arguments:
+args(lik)
+</div>
+<div class='output'>function (pars, condition.surv = TRUE, root = ROOT.OBS, root.p = NULL, 
+    intermediates = FALSE) 
+NULL
+</div>
+<div class='input'>
+lik.no.cond &lt;- set.defaults(lik, condition.surv=FALSE)
+args(lik.no.cond)
+</div>
+<div class='output'>function (pars, condition.surv = FALSE, root = ROOT.OBS, root.p = NULL, 
+    intermediates = FALSE) 
+NULL
+</div>
+<div class='input'>
+## Multiple arguments at once:
+lik2 &lt;- set.defaults(lik, root=ROOT.GIVEN, root.p=c(0, 1))
+args(lik2)
+</div>
+<div class='output'>function (pars, condition.surv = TRUE, root = ROOT.GIVEN, root.p = c(0, 
+    1), intermediates = FALSE) 
+NULL
+</div>
+<div class='input'>
+## Equivalently (using alist, not list -- see ?alist)
+defaults &lt;- alist(root=ROOT.GIVEN, root.p=c(0, 1))
+lik3 &lt;- set.defaults(lik, defaults=defaults)
+identical(lik2, lik3)
+</div>
+<div class='output'>[1] TRUE
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>set.defaults</li>
+    </ul>
+    <ul>
+      <li>programming</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

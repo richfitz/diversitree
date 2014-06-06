@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.quasse. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Quantitative State Speciation and Extinction Model</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.quasse(tree, states, states.sd, lambda, mu, control, sampling.f=NULL)
+starting.point.quasse(tree, states, states.sd=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be a
+    numeric real values.  Missing values (<code>NA</code>) are not yet handled.
+    This vector must have names that correspond to the tip labels in the
+    phylogenetic tree  (<code>tree$tip.label</code>).</dd>
+      <dt>states.sd</dt>
+      <dd>A scalar or vector corresponding to the standard
+    error around the mean in states (the initial probability
+    distribution is assumed to be normal).</dd>
+      <dt>lambda</dt>
+      <dd>A function to use as the speciation function.  The first
+    argument of this must be <code>x</code> (see Details).</dd>
+      <dt>mu</dt>
+      <dd>A function to use as the extinction function.  The first
+    argument of this must be <code>x</code> (see Details.)</dd>
+      <dt>control</dt>
+      <dd>A list of parameters for tuning the performance of the
+    integrator.  A guess at reasonble values will be made here.  See
+    Details for possible entries.</dd>
+      <dt>sampling.f</dt>
+      <dd>Scalar with the estimated proportion of extant
+    species that are included in the phylogeny.  A value of <code>0.75</code>
+    means that three quarters of extant species are included in the
+    phylogeny.  By default all species are assumed to be known.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Prepare to run QuaSSE (Quantitative State Speciation and
+  Extinction) on a phylogenetic tree and character distribution.  This
+  function creates a likelihood function that can be used in
+  <a href='find.mle.html'>maximum likelihood</a> or <a href='mcmc.html'>Bayesian</a>
+  inference.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The <code>control</code> list may contain the following elements:</p>
+  
+      <p><ul>
+<li> <code>method</code>: one of <code>fftC</code> or <code>fftR</code> to switch
+    between <code>C</code> (fast) and <span style="R">R</span> (slow) backends for the integration.
+    Both use non-adaptive fft-based convolutions.  Eventually, an
+    adaptive methods-of-lines approach will be available.</p>
+  
+      <p></li>
+<li> <code>dt.max</code>: Maximum time step to use for the integration.
+    By default, this will be set to 1/1000 of the tree depth.  Smaller
+    values will slow down calculations, but improve accuracy.</p>
+  
+      <p></li>
+<li> <code>nx</code>: The number of bins into which the character space
+    is divided (default=1024).  Larger values will be slower and more
+    accurate.  For the <code>fftC</code> integration method, this should be an
+    integer power of 2 (512, 2048, etc).</p>
+  
+      <p></li>
+<li> <code>r</code>: Scaling factor that multiplies <code>nx</code> for a "high
+    resolution" section at the tips of the tree (default=4, giving a
+    high resolution character space divided into 4096 bins).  This helps
+    improve accuracy while possibly tight initial probability
+    distributions flatten out as time progresses towards the root.
+    Larger values will be slower and more accurate.  For the <code>fftC</code>
+    integration method, this should be a power of 2 (2, 4, 8, so that
+    <code>nx*r</code> is a power of 2).</p>
+  
+      <p></li>
+<li> <code>tc</code>: where in the tree to switch to the low-resolution
+    integration (zero corresponds to the present, larger numbers moving
+    towards the root).  By default, this happens at 10% of the tree
+    depth.  Smaller values will be faster, but less accurate.</p>
+  
+      <p></li>
+<li> <code>xmid</code>: Mid point to center the character space.  By
+    default this is at the mid point of the extremes of the character
+    states.</p>
+  
+      <p></li>
+<li> <code>tips.combined</code>: Get a modest speed-up by simultaneously
+    integrating all tips?  By default, this is <code>FALSE</code>, but
+    speedups of up to 25% are possible with this set to <code>TRUE</code>.</p>
+  
+      <p></li>
+<li> <code>w</code>: Number of standard deviations of the normal
+    distribution induced by Brownian motion to use when doing the
+    convolutions (default=5).  Probably best to leave this one alone.
+  </li>
+</ul></p>
+  
+      <p></p>
+  
+    </div>
+
+    <div class="Warning">
+      <h2>Warning</h2>
+      
+      <p>In an attempt at being computationally efficient, a substantial amount
+  of information is cached in memory so that it does not have to be
+  created each time.  However, this can interact poorly with the
+  <code>multicore</code> package.  In particular, likelihood functions should
+  not be made within a call to <code>mclapply</code>, or they will not share
+  memory with the main <span style="R">R</span> thread, and will not work (this will cause an
+  error, but should no longer crash <span style="R">R</span>).</p>
+  
+      <p>The method has less general testing than BiSSE, and is a little more
+  fragile.  In particular, because of the way that I chose to implement
+  the integrator, there is a very real chance of likelihood calculation
+  failure when your data are a poor fit to the model; this can be
+  annoyingly difficult to diagnose (you will just get a <code>-Inf</code> log
+  likelihood, but the problem is often just caused by two sister species
+  on short branches with quite different states).  There are also a
+  large number of options for fine tuning the integration, but these
+  aren't really discussed in any great detail anywhere.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## Example showing simple integration with two different backends,
+## plus the splits.
+lambda &lt;- function(x) sigmoid.x(x, 0.1, 0.2,  0, 2.5)
+mu &lt;- function(x) constant.x(x, 0.03)
+char &lt;- make.brownian.with.drift(0, 0.025)
+
+set.seed(1)
+phy &lt;- tree.quasse(c(lambda, mu, char), max.taxa=15, x0=0,
+                   single.lineage=FALSE, verbose=TRUE)
+</div>
+<div class='output'>+: 3 [1.012]
++: 4 [1.584]
++: 5 [3.616]
++: 6 [6.170]
+-: 5 [6.201]
++: 6 [6.927]
++: 7 [7.912]
++: 8 [9.209]
++: 9 [9.463]
++: 10 [9.823]
+-: 9 [10.944]
++: 10 [11.295]
++: 11 [11.620]
++: 12 [11.715]
++: 13 [12.604]
++: 14 [12.883]
++: 15 [13.473]
++: 16 [13.773]
+</div>
+<div class='input'>
+nodes &lt;- c(&quot;nd13&quot;, &quot;nd9&quot;, &quot;nd5&quot;)
+split.t &lt;- Inf
+
+pars &lt;- c(.1, .2, 0, 2.5, .03, 0, .01)
+pars4 &lt;- unlist(rep(list(pars), 4))
+
+sd &lt;- 1/200
+control.C.1 &lt;- list(dt.max=1/200)
+
+
+control.R.1 &lt;- list(dt.max=1/200, method=&quot;fftR&quot;)
+lik.C.1 &lt;- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.1)
+(ll.C.1 &lt;- lik.C.1(pars)) # -62.06409
+</div>
+<div class='output'>[1] -62.06409
+</div>
+<div class='input'>
+
+
+
+## &lt;strong&gt;Not run&lt;/strong&gt;: 
+# ## slow...
+# lik.R.1 &lt;- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.R.1)
+# (ll.R.1 &lt;- lik.R.1(pars)) # -62.06409
+# 
+# lik.s.C.1 &lt;- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x, constant.x,
+#                                nodes, split.t, control.C.1)
+# (ll.s.C.1 &lt;- lik.s.C.1(pars4)) # -62.06409
+# ## &lt;strong&gt;End(Not run)&lt;/strong&gt;
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.quasse</li><li>starting.point.quasse</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

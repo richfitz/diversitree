@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.clade.tree. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Make a "Clade Tree"</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.clade.tree(tree, clades)
+clades.from.polytomies(tree)
+clades.from.classification(tree, class, check=TRUE)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric phylogenetic tree, in <code>ape</code>
+    &#147;phylo&#148; format.</dd>
+      <dt>clades</dt>
+      <dd>A list, where the name of each element represents a tip
+    in <code>tree</code> and each element is a character vector containing the
+    names of species contained within that clade.</dd>
+      <dt>class</dt>
+      <dd>A vector along <code>tree$tip.label</code>, indicating the
+    class to which each tip belongs.</dd>
+      <dt>check</dt>
+      <dd>Logical, indicating whether a (potentially slow) check
+    will be done to ensure that all resulting clades are reciprocally
+    monophyletic within the tree.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>This function makes a &#147;clade tree&#148;, where tips
+  represent clades.  It is designed to make working with unresolved
+  clade information in <code><a href='make.bisse.html'>make.bisse</a></code> more straightforward.
+  <code>clade.tree</code> objects have their own plotting methods.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>The idea here is that <code>make.bisse</code> takes a tree and a named
+  character state vector.  If the phylogenetic tree contains information
+  about the membership of clades, then the unresolved clade information
+  can be constructed automatically.  The names chosen should therefore
+  reflect the names used in the state information.</p>
+  
+    </div>
+
+    <div class="Note">
+      <h2>Note</h2>
+      
+      <p>Currently, <code>clade.tree</code> objects work poorly with some <code>ape</code>
+  functions.</p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.clade.tree</li><li>clades.from.polytomies</li><li>clades.from.classification</li>
+    </ul>
+    <ul>
+      <li>manip</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

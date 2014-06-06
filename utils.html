@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>utilities. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Utility Functions</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>get.descendants(node, tree, tips.only=FALSE, edge.index=FALSE)
+run.cached(filename, expr, regenerate=FALSE)
+expand.parameters(p, lik.new, repl=0, target=argnames(lik.new))
+get.likelihood(object)
+drop.likelihood(object)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>node</dt>
+      <dd>A node, either a name in <code>tree$node.label</code>, an
+    integer in <code>1..tree$Nnode</code>, or in
+    <code>length(tree$tip.label)..(length(tree$tip.label)+tree$Nnode)</code>.</dd>
+      <dt>tree</dt>
+      <dd>A phylogenetic tree, in ape's <code>phylo</code> format.</dd>
+      <dt>tips.only</dt>
+      <dd>Logical: return only descendant indices of tip
+    species?</dd>
+      <dt>edge.index</dt>
+      <dd>Logical: return the row indices in the edge matrix?</dd>
+      <dt>filename</dt>
+      <dd>Name of the file to store cached results</dd>
+      <dt>expr</dt>
+      <dd>Expression to evaluate</dd>
+      <dt>regenerate</dt>
+      <dd>Logical: force re-evaluation of expr and
+    regeneration of filename?</dd>
+      <dt>object</dt>
+      <dd>For <code>drop.likelihood</code>, an object that has a
+    <code>likelihood</code> attribute to be removed (saves space on object
+    save); for <code>get.likelihood</code>, retrieves the function.</dd>
+      <dt>p, lik.new, repl, target</dt>
+      <dd>Undocumented currently</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>These are utility functions that are used internally by diversitree,
+  but which might be more generally useful.</p>
+  
+      <p>Currently only <code>get.descendants</code> docuemnted here, which
+  determines which species or nodes are descended from a particular
+  node.</p>
+  
+      <p></p>
+  
+    </div>
+      </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>get.descendants</li><li>run.cached</li><li>expand.parameters</li><li>drop.likelihood</li><li>get.likelihood</li>
+    </ul>
+    <ul>
+      <li>utilities</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

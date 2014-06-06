@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.bisse.split. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Binary State Speciation and Extinction Model: Split Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.bisse.split(tree, states, nodes, split.t, unresolved=NULL, sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())
+make.bisse.uneven(tree, states, nodes, split.t, unresolved=NULL, sampling.f=NULL, nt.extra=10, strict=TRUE, control=list())</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>states</dt>
+      <dd>A vector of character states, each of which must be 0 or
+    1, or <code>NA</code> if the state is unknown.  This vector must have
+    names that correspond to the tip labels in the phylogenetic tree
+    (<code>tree$tip.label</code>).  For tips
+    corresponding to unresolved clades, the state should be <code>NA</code>.</dd>
+      <dt>nodes</dt>
+      <dd>Vector of nodes that will be split (see Details).</dd>
+      <dt>split.t</dt>
+      <dd>Vector of split times, same length as <code>nodes</code> (see
+    Details).</dd>
+      <dt>unresolved</dt>
+      <dd>Unresolved clade information: see section below for
+    structure.</dd>
+      <dt>sampling.f</dt>
+      <dd>Vector of length 2 with the estimated proportion of
+    extant species in state 0 and 1 that are included in the phylogeny.
+    A value of <code>c(0.5, 0.75)</code> means that half of species in state 0
+    and three quarters of species in state 1 are included in the
+    phylogeny.  By default all species are assumed to be known.
+    Alternatively, with split models this can be a list of length
+    <code>(length(nodes) + 1)</code>, each element of which is a vector of
+    length 2.  The first element is the sampling fraction for the
+    &#147;background&#148; group, the second element corresponds to the
+    clade subtended by <code>nodes[1]</code>, and the <code>i</code>th element
+    corresponding to the clade subtended by <code>nodes[i+1]</code>.</dd>
+      <dt>nt.extra</dt>
+      <dd>The number of species modelled in unresolved clades
+    (this is in addition to the largest observed clade).</dd>
+      <dt>strict</dt>
+      <dd>The <code>states</code> vector is always checked to make sure
+    that the values are 0 and 1 only.  If <code>strict</code> is <code>TRUE</code>
+    (the default), then the additional check is made that <em>every</em>
+    state is present.  The likelihood models tend to be poorly behaved
+    where states are missing.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for a BiSSE model where the
+  tree is partitioned into regions with different parameters.
+  Alternatively, <code>make.bisse.uneven</code> can be used where different
+  regions of the tree have different fractions of species known.</p>
+  
+    </div>
+
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p>Branching times can be controlled with the <code>split.t</code>
+argument.  If this is <code>Inf</code>, split at the base of the branch (as in
+MEDUSA).  If <code>0</code>, split at the top (closest to the present, as in
+the new option for MEDUSA).  If <code>0 < split.t < Inf</code> then we split
+at that time on the tree (zero is the present, with time growing
+backwards).</p>
+  
+      <p>TODO: Describe <code>nodes</code> and <code>split.t</code> here.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>pars &lt;- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
+set.seed(546)
+phy &lt;- tree.bisse(pars, max.taxa=30, x0=0)
+
+## Here is the phylogeny:
+plot(phy, show.node.label=TRUE, label.offset=.1, font=1, cex=.75,
+     no.margin=TRUE)
+</div>
+<p><img src='make.bisse.split-2.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## Here is a plain BiSSE function for comparison:
+lik.b &lt;- make.bisse(phy, phy$tip.state)
+lik.b(pars) # -93.62479
+</div>
+<div class='output'>[1] -93.62479
+</div>
+<div class='input'>
+## Split this phylogeny at three points: nd15, nd18 and nd26
+nodes &lt;- c(&quot;nd15&quot;, &quot;nd18&quot;, &quot;nd26&quot;)
+
+## This is the index in ape&#39;s node indexing:
+nodes.i &lt;- match(nodes, phy$node.label) + length(phy$tip.label)
+
+nodelabels(node=nodes.i, pch=19, cex=2, col=&quot;#FF000099&quot;)
+</div>
+<p><img src='make.bisse.split-6.png' alt='' width='400' height='400' /></p>
+<div class='input'>
+## To make a split BiSSE function, pass the node locations and times in:
+lik.s &lt;- make.bisse.split(phy, phy$tip.state, nodes.i)
+
+## The parameters must be a list of the same length as the number of
+## partitions.  Partition &#39;1&#39; is the root partition, and partition i is
+## the partition rooted at the node[i-1]
+pars4 &lt;- rep(pars, 4)
+pars4
+</div>
+<div class='output'> [1] 0.10 0.20 0.03 0.03 0.01 0.01 0.10 0.20 0.03 0.03 0.01 0.01 0.10 0.20 0.03
+[16] 0.03 0.01 0.01 0.10 0.20 0.03 0.03 0.01 0.01
+</div>
+<div class='input'>
+## Run the likelihod calculation:
+lik.s(pars4) # -93.62479
+</div>
+<div class='output'>[1] -93.62479
+</div>
+<div class='input'>
+## These are basically identical (to acceptable tolerance)
+lik.s(pars4) - lik.b(pars)
+</div>
+<div class='output'>[1] -1.397798e-08
+</div>
+<div class='input'>
+## You can use the labelled nodes rather than indices:
+lik.s2 &lt;- make.bisse.split(phy, phy$tip.state, nodes)
+identical(lik.s(pars4), lik.s2(pars4))
+</div>
+<div class='output'>[1] TRUE
+</div>
+<div class='input'>
+## This also works where some tips are unresolved clades.  Here are a
+## few:
+unresolved &lt;-
+  data.frame(tip.label=c(&quot;sp12&quot;, &quot;sp32&quot;, &quot;sp9&quot;, &quot;sp22&quot;, &quot;sp11&quot;),
+             Nc=c(2,5,3,2,5), n0=c(1, 4, 3, 2, 4), n1=c(1, 1, 0, 0, 1))
+
+## Plain BiSSE with unresolved clades:
+lik.u.b &lt;- make.bisse(phy, phy$tip.state, unresolved=unresolved)
+lik.u.b(pars) # -139.3688
+</div>
+<div class='output'>[1] -139.3688
+</div>
+<div class='input'>
+## Split BiSSE with unresolved clades:
+lik.u.s &lt;- make.bisse.split(phy, phy$tip.state, nodes,
+                            unresolved=unresolved)
+lik.u.s(pars4) # -139.3688
+</div>
+<div class='output'>[1] -139.3688
+</div>
+<div class='input'>
+lik.u.b(pars) - lik.u.s(pars4) # numerical error only
+</div>
+<div class='output'>[1] 3.914209e-09
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.bisse.split</li><li>make.bisse.uneven</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

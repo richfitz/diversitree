@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>make.bd.t. diversitree 0.9-7</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Richard G. FitzJohn">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">diversitree 0.9-7</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Time-varing Birth-Death Models</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>make.bd.t(tree, functions, sampling.f=NULL, unresolved=NULL, control=list(), truncate=FALSE, spline.data=NULL)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>tree</dt>
+      <dd>An ultrametric bifurcating phylogenetic tree, in
+    <code>ape</code> &#147;phylo&#148; format.</dd>
+      <dt>functions</dt>
+      <dd>A named list of functions of time.  See details.</dd>
+      <dt>sampling.f</dt>
+      <dd>Probability of an extant species being included in
+    the phylogeny (sampling fraction).  By default, all extant species are
+    assumed to be included.</dd>
+      <dt>unresolved</dt>
+      <dd>Not yet included: present in the argument list for
+    future compatibility with <code><a href='make.bd.html'>make.bd</a></code>.</dd>
+      <dt>control</dt>
+      <dd>List of control parameters for the ODE solver.  See
+    details in <code><a href='make.bisse.html'>make.bisse</a></code>.</dd>
+      <dt>truncate</dt>
+      <dd>Logical, indicating if functions should be truncated
+    to zero when negative (rather than causing an error).  May be
+    scalar (applying to all functions) or a vector (of length 2).</dd>
+      <dt>spline.data</dt>
+      <dd>List of data for spline-based time functions.  See
+    details</dd>
+    </dl>
+    
+    <div class="Description">
+      <h2>Description</h2>
+      
+      <p>Create a likelihood function for the birth-death model,
+  where birth and/or death rates are arbitrary functions of time.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>## First, show equivalence to the plain Birth-death model.  This is not
+## a very interesting use of the functions, but it serves as a useful
+## check.
+
+## Here is a simulated 25 species tree for testing.
+set.seed(1)
+pars &lt;- c(.1, .03)
+phy &lt;- trees(pars, &quot;bd&quot;, max.taxa=25)[[1]]
+
+## Next, make three different likelihood functions: a &quot;normal&quot; one that
+## uses the direct birth-death calculation, an &quot;ode&quot; based one (that
+## uses numerical integration to compute the likelihood, and is
+## therefore not exact), and one that is time-varying, but that the
+## time-dependent functions are constant.t().
+lik.direct &lt;- make.bd(phy)
+lik.ode &lt;- make.bd(phy, control=list(method=&quot;ode&quot;))
+lik.t &lt;- make.bd.t(phy, c(&quot;constant.t&quot;, &quot;constant.t&quot;))
+
+lik.direct(pars) # -22.50267
+</div>
+<div class='output'>[1] -22.50267
+</div>
+<div class='input'>
+## ODE-based likelihood calculations are correct to about 1e-6.
+lik.direct(pars) - lik.ode(pars)
+</div>
+<div class='output'>[1] 3.429109e-08
+</div>
+<div class='input'>
+## The ODE calculation agrees exactly with the time-varying (but
+## constant) calculation.
+lik.ode(pars) - lik.t(pars)
+</div>
+<div class='output'>[1] 0
+</div>
+<div class='input'>
+## Next, make a real case, where speciation is a linear function of
+## time.
+lik.t2 &lt;- make.bd.t(phy, c(&quot;linear.t&quot;, &quot;constant.t&quot;))
+
+## Confirm that this agrees with the previous calculations when the
+## slope is zero
+pars2 &lt;- c(pars[1], 0, pars[2])
+lik.t2(pars2) - lik.t(pars)
+</div>
+<div class='output'>[1] 0
+</div>
+<div class='input'>
+## The time penalty comes from moving to the ODE-based solution, not
+## from the time dependence.
+system.time(lik.direct(pars)) # ~ 0.000
+</div>
+<div class='output'>   user  system elapsed 
+  0.001   0.000   0.000 
+</div>
+<div class='input'>system.time(lik.ode(pars))    # ~ 0.003
+</div>
+<div class='output'>   user  system elapsed 
+  0.002   0.000   0.003 
+</div>
+<div class='input'>system.time(lik.t(pars))      # ~ 0.003
+</div>
+<div class='output'>   user  system elapsed 
+  0.006   0.000   0.007 
+</div>
+<div class='input'>system.time(lik.t2(pars2))    # ~ 0.003
+</div>
+<div class='output'>   user  system elapsed 
+  0.007   0.000   0.007 
+</div>
+<div class='input'>
+fit &lt;- find.mle(lik.direct, pars)
+fit.t2 &lt;- find.mle(lik.t2, pars2)
+
+## No significant improvement in model fit:
+anova(fit, time.varying=fit.t2)
+</div>
+<div class='output'>             Df   lnLik    AIC   ChiSq Pr(&gt;|Chi|)
+minimal       2 -22.123 48.246                   
+time.varying  3 -21.953 49.905 0.34067     0.5594
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>make.bd.t</li>
+    </ul>
+    <ul>
+      <li>models</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    Richard G. FitzJohn
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>
