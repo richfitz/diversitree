@@ -1,18 +1,37 @@
+PACKAGE := $(shell grep '^Package:' DESCRIPTION | sed -E 's/^Package:[[:space:]]+//')
+
+all:
+	make -C src
+
+attributes:
+	Rscript -e "Rcpp::compileAttributes()"
+
+staticdocs:
+	@mkdir -p inst/staticdocs
+	Rscript -e "library(methods); staticdocs::build_site()"
+
+publish_pages:
+	cd inst && ./update-gh-pages.sh
+
 install:
 	R CMD INSTALL .
 
 clean:
-	rm -f src/*.o src/diversitree.so
-
-test:
-	./run_tests.R
+	make -C src clean
 
 build:
 	R CMD build .
 
 check: build
-	R CMD check --no-manual `ls -1tr diversitree*gz | tail -n1`
-	@rm -f `ls -1tr diversitree*gz | tail -n1`
-	@rm -rf forest.Rcheck
+	R CMD check --no-manual `ls -1tr ${PACKAGE}*gz | tail -n1`
+	@rm -f `ls -1tr ${PACKAGE}*gz | tail -n1`
+	@rm -rf ${PACKAGE}.Rcheck
 
-.PHONY: all build install clean test
+test:
+	./check.sh
+	make -C tests/testthat
+
+run_examples: install
+	make -C inst/examples
+
+.PHONY: attributes document roxygen staticdocs publish_pages install clean build check
