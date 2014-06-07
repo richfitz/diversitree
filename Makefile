@@ -28,7 +28,7 @@ check: build
 	@rm -rf ${PACKAGE}.Rcheck
 
 test:
-	make -C tests/testthat
+	./run_tests.R
 
 run_examples: install
 	make -C inst/examples
