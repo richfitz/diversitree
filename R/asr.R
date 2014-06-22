@@ -109,7 +109,7 @@ make.do.asr.marginal <- function(all.branches, rootfunc) {
   eb <- environment(all.branches)
   cache <- eb$cache
   states.idx <- cache$info$idx.d
-  if (cache$info$partitioned) {
+  if (isTRUE(cache$info$partitioned, TRUE)) {
     branches <- eb$branches.split
     initial.conditions <- eb$initial.conditions.split
   } else {
