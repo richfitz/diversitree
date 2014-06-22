@@ -107,11 +107,15 @@ do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
 
 make.do.asr.marginal <- function(all.branches, rootfunc) {
   eb <- environment(all.branches)
-
   cache <- eb$cache
   states.idx <- cache$info$idx.d
-  branches <- eb$branches
-  initial.conditions <- eb$initial.conditions
+  if (cache$info$partitioned) {
+    branches <- eb$branches.split
+    initial.conditions <- eb$initial.conditions.split
+  } else {
+    branches <- eb$branches
+    initial.conditions <- eb$initial.conditions
+  }
   function(pars, nodes, preset, ...) {
     root.f <- function(res, pars)
       rootfunc(res, pars, ...)
