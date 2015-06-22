@@ -170,7 +170,7 @@ make.all.branches.pgls.contrasts <- function(cache, control) {
 
 check.data.pgls <- function(tree, formula, data, allow.unnamed=FALSE) {
   if (!inherits(formula, "formula"))
-    stop("'formula' must be a formua object")
+    stop("'formula' must be a formula object")
   if (!is.data.frame(data))
     stop("'data' must be a data.frame")
 
