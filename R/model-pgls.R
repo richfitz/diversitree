@@ -270,11 +270,11 @@ fitted.pgls.dt <- function(object, p, ...) {
 }
 
 fitted.fit.mle.pgls <- function(object, ...) {
-  fitted(get.likelihood(object), coef(object, ...))
+  fitted(get.likelihood(object), stats::coef(object, ...))
 }
 
 fitted.mcmcsamples.pgls <- function(object, ...) {
-  p <- coef(object, ...)
+  p <- stats::coef(object, ...)
   lik <- get.likelihood(object)
   ret <- apply(p, 1, function(x) fitted(lik, x))
   rownames(ret) <- rownames(get.cache(lik)$predictors)

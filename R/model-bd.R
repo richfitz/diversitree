@@ -103,12 +103,12 @@ make.cache.bd <- function(tree, sampling.f, unresolved, times,
 ######################################################################
 ## Extra functions
 starting.point.bd <- function(tree, yule=FALSE) {
-  p.yule <- c(coef(suppressWarnings(find.mle(make.yule(tree), .1))), 0)
+  p.yule <- c(stats::coef(suppressWarnings(find.mle(make.yule(tree), .1))), 0)
   names(p.yule) <- default.argnames.bd()
   if (yule)
     p.yule
   else
-    suppressWarnings(coef(find.mle(make.bd(tree), p.yule)))
+    suppressWarnings(stats::coef(find.mle(make.bd(tree), p.yule)))
 }
 
 ## Checking

@@ -288,7 +288,7 @@ pp.clades.phylogram <- function(phy, xy, xy.seg, border, fill, lwd) {
   y0 <- ym - dy
   y1 <- ym + dy
 
-  polygon(rbind(x0, x1, x1, x0, NA), 
+  graphics::polygon(rbind(x0, x1, x1, x0, NA), 
           rbind(ym, y0, y1, ym, NA),
           border=border[i], col=fill[i], lwd=lwd[i])
 }

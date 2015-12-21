@@ -76,7 +76,7 @@ do.mle.search <- function(func, x.init, method, fail.value=-Inf,
     cat("\n")
 
   if ( hessian ) {
-    if ( !requireNamespace(numDeriv) )
+    if ( !requireNamespace("numDeriv") )
       warning("The package numDeriv is required to compute the hessian")
     else
       ans$hessian <- numDeriv::hessian(func2, ans$par)
@@ -123,7 +123,7 @@ coef.fit.mle <- function(object, full=FALSE, extra=FALSE, ...) {
 }
 
 extractAIC.fit.mle <- function(fit, scale, k=2, ...)
-  c(length(coef(fit)), AIC(fit))
+  c(length(stats::coef(fit)), AIC(fit))
 
 ## Code based on MASS:::anova.negbin and ape:::anova.ace
 ## 
@@ -155,14 +155,14 @@ anova.fit.mle <- function(object, ..., sequential=FALSE) {
   
   ## Next, extract the log-likelihoods and degrees of freedom from
   ## each model.
-  ll <- lapply(mlist, logLik)
+  ll <- lapply(mlist, stats::logLik)
   df <- sapply(ll, attr, "df")
   ll.val <- sapply(ll, as.numeric)
 
   ## Check if a model 'sub' appears to be nested within a model
   ## 'full'.
   check <- function(full, sub) {
-    if ( all(names(coef(sub)) %in% names(coef(full))) ) {
+    if ( all(names(stats::coef(sub)) %in% names(stats::coef(full))) ) {
       TRUE
     } else {
       drop <- c("constrained", "function")

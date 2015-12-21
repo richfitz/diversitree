@@ -50,11 +50,11 @@ mcmc.default <- function(lik, x.init, nsteps, w, prior=NULL,
     }
     if ( !is.null(x.init) )
       stop("x.init must be NULL if continuing")
-    npar <- ncol(coef(previous)) # tons of repetition here.
+    npar <- ncol(stats::coef(previous)) # tons of repetition here.
     hist.pars <- matrix(NA, ncol=npar, nrow=nsteps)
     hist.prob <- rep(NA, nsteps)
     
-    hist.pars[seq_len(n.previous),] <- coef(previous)
+    hist.pars[seq_len(n.previous),] <- stats::coef(previous)
     hist.prob[seq_len(n.previous)]  <- previous$p
 
     x.init <- hist.pars[n.previous,]
@@ -265,7 +265,7 @@ make.every.so.often <- function(iterations=1, dt=NULL) {
   i <- 0 # counter, will be updated
   
   if ( !is.null(dt) ) {
-    requireNamespace(lubridate)
+    requireNamespace("lubridate")
     if ( !inherits(dt, "Period") )
       stop("dt must be a Period object")
     t.next <- lubridate::now() + dt

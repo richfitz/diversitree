@@ -74,16 +74,16 @@ add.profile.shading <- function(h, ci, col) {
   xs <- rep(c(ci[1], xx[i], ci[2]), each=2)
   j <- if ( length(i) > 1 ) max(1, min(i) - 1) else 1
   ys <- c(0, rep(h$density[c(j, i)], each=2), 0)
-  polygon(xs, ys, col=col, border=NA)
+  graphics::polygon(xs, ys, col=col, border=NA)
 }
 add.profile.outline <- function(h, col, vertical=FALSE, ...) {
   dx <- diff(h$mids[1:2])
   if (vertical)
-    lines(h, freq=FALSE, col=col)
+    graphics::lines(h, freq=FALSE, col=col)
   else {
     xx <- rep(with(h, c(mids-dx/2, mids[length(mids)]+dx/2)), each=2)
     yy <- c(0, rep(h$density, each=2), 0)
-    lines(xx, yy, col=col, ...)
+    graphics::lines(xx, yy, col=col, ...)
   }
 }
 
@@ -109,8 +109,8 @@ add.alpha <- function(col, alpha=.5) {
     ret[ok] <- add.alpha(col[ok], alpha[ok])
     ret
   } else {
-    tmp <- col2rgb(col)/255
-    rgb(tmp[1,], tmp[2,], tmp[3,], alpha=alpha)
+    tmp <- grDevices::col2rgb(col)/255
+    grDevices::rgb(tmp[1,], tmp[2,], tmp[3,], alpha=alpha)
   }
 }
 

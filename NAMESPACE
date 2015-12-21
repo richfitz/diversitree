@@ -8,6 +8,18 @@ import(ape)
 import(deSolve)
 import(subplex)
 
+importFrom("grDevices", "col2rgb", "heat.colors", "rgb")
+importFrom("graphics", "arrows", "hist", "legend", "lines", "par",
+           "plot", "points", "polygon", "rect", "segments", "strwidth",
+           "text")
+importFrom("stats", "AIC", "approxfun", "as.formula", "coef", "dbeta",
+           "dexp", "dhyper", "dnorm", "ecdf", "fft", "fitted",
+           "logLik", "mahalanobis", "model.frame", "model.matrix",
+           "na.fail", "na.omit", "nlm", "nlminb", "optim", "optimize",
+           "pchisq", "predict", "quantile", "reorder", "rexp", "rnorm",
+           "runif", "spline")
+importFrom("utils", "combn", "modifyList", "write.csv")
+
 ## 1. make
 export(make.bd)
 export(make.bd.split)

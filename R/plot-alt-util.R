@@ -60,7 +60,7 @@ sectors <- function(theta0, theta1, r0, r1, ..., np=1000) {
   xx <- unlist(rr) * cos(unlist(tt))
   yy <- unlist(rr) * sin(unlist(tt))
 
-  polygon(xx, yy, ...)
+  graphics::polygon(xx, yy, ...)
 }
 
 radial.text <- function(r, theta, labels, cex=1, col="black",
@@ -98,5 +98,5 @@ filled.arcs <- function(theta0, theta1, r, w, col=par("fg"), np=1000) {
           c(r[i] * sin(t), (r[i] + w) * sin(rev(t)), NA))
   }
   tmp <- do.call(rbind, lapply(which(!is.na(col)), f))
-  polygon(tmp, col=col[!is.na(col)], border=NA)
+  graphics::polygon(tmp, col=col[!is.na(col)], border=NA)
 }

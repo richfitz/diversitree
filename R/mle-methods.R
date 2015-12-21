@@ -87,7 +87,7 @@ do.mle.search.nlm <- function(func, x.init, control, lower, upper) {
 }
 
 do.mle.search.minqa <- function(func, x.init, control, lower, upper) {
-  if ( !requireNamespace(minqa) )
+  if ( !requireNamespace("minqa") )
     stop("This method requires the minqa package")
   
   control <- modifyList(list(minqa.method="newuoa"), control)

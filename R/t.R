@@ -80,7 +80,7 @@ predict.dtlik.t <- function(object, p, t, nt=101, v=NULL, thin=10,
     ## TODO: Improve the coef.mcmcsamples to allow full, here, then
     ## use full.  Possibly add a 'lik' function in that can do the
     ## resolution below?
-    p <- coef(p)
+    p <- stats::coef(p)
   if ( missing(t) )
     t <- seq(min(cache$depth), max(cache$depth), length.out=nt)
   if ( is.null(v) )
@@ -143,10 +143,10 @@ plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
     plot(NA, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, las=1)
     tt <- c(xy$t, rev(xy$t))
     for ( i in rev(v) )
-      polygon(tt, c(xy$y[[i]][,"lower"], rev(xy$y[[i]][,"upper"])),
-              col=fill[i], border=NA)
+      graphics::polygon(tt, c(xy$y[[i]][,"lower"], rev(xy$y[[i]][,"upper"])),
+                        col=fill[i], border=NA)
     for ( i in rev(v) )
-      lines(xy$t, xy$y[[i]][,"mean"], col=col[i])
+      graphics::lines(xy$t, xy$y[[i]][,"mean"], col=col[i])
   } else {
     v <- colnames(xy$y)
     if ( is.null(col) )

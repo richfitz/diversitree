@@ -36,7 +36,7 @@ starting.point.quasse <- function(tree, states, states.sd=NULL) {
 
   lik.bm <- make.bm(tree, states, states.sd,
                     control=list(method="pruning", backend="C"))
-  c(p.bd, diffusion=as.numeric(coef(find.mle(lik.bm, .1))))
+  c(p.bd, diffusion=as.numeric(stats::coef(find.mle(lik.bm, .1))))
 }
 
 load.wisdom <- function(file="wisdom") {

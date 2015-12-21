@@ -132,6 +132,7 @@ sd <- 1/200
 control.C.1 <- list(dt.max=1/200)
 % control.C.2 <- c(control.C.1, tips.combined=TRUE)
 
+\dontrun{
 control.R.1 <- list(dt.max=1/200, method="fftR")
 lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.1)
 (ll.C.1 <- lik.C.1(pars)) # -62.06409
@@ -139,7 +140,6 @@ lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.
 % lik.C.2 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.C.2)
 % (ll.C.2 <- lik.C.2(pars)) # -62.06409
 
-\dontrun{
 ## slow...
 lik.R.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x, control.R.1)
 (ll.R.1 <- lik.R.1(pars)) # -62.06409

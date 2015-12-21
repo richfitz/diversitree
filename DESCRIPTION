@@ -6,7 +6,14 @@ Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with GeoSSE and
   ClaSSE by Emma E. Goldberg <eeg@uic.edu>, and BiSSE-ness by Karen
   Magnuson-Ford.
 Maintainer: Richard G. FitzJohn <rich.fitzjohn@gmail.com>
-Depends: R (>= 2.10), deSolve (>= 1.7), ape, subplex, methods, Rcpp (>= 0.10.0)
+Depends: R (>= 2.10), methods, ape
+Imports: 
+  deSolve (>= 1.7),
+  graphics,
+  grDevices,
+  stats,
+  subplex,
+  Rcpp (>= 0.10.0)
 Suggests: numDeriv, minqa, lubridate, expm, caper, geiger
 LinkingTo: Rcpp
 RcppModules: diversitree
