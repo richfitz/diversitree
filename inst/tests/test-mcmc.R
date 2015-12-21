@@ -57,7 +57,7 @@ test_that("Likelihood function is saved with fit", {
   samples <- mcmc(lik, c(0, 0), 10, 1, print.every=0)
   expect_that(samples, has_attribute("func"))
   expect_that(attr(samples, "func"), is_a("function"))
-  expect_that(attr(samples, "func"), is_identical_to(lik))
+  expect_that(attr(samples, "func"), equals(lik))
 
   samples.no.func <- mcmc(lik, c(0, 0), 10, 1, print.every=0,
                           keep.func=FALSE)

@@ -65,6 +65,10 @@ for ( drift in c(0, .01) ) {
   expect_that(pars.fft$lo[1:5],          equals(pars.mol$lo[1:5]))
   expect_that(pars.fft$lo[1:5], is_identical_to(pars.mol$lo[1:5]))
 
+  ## Bail here if no FFTW support, even though we could do most of this.
+  if (!check.fftC(FALSE)) {
+    next
+  }
   pde.fftC <- with(control.fft, make.pde.quasse.fftC(nx, dx, dt.max, 2L, flags))
   pde.fftR <- with(control.fft, make.pde.quasse.fftR(nx, dx, dt.max, 2L))
   pde.mol <- with(control.mol, make.pde.quasse.mol(ndat, dx, 2L, atol, rtol))

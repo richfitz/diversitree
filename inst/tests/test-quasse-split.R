@@ -21,6 +21,7 @@ control.C.2 <- c(control.C.1, tips.combined=TRUE)
 control.M.1 <- list(method="mol")
 control.R.1 <- list(dt.max=1/200, method="fftR")
 
+if (check.fftC(FALSE)) {
 lik.s <- make.quasse.split(phy, phy$tip.state, sd, sigmoid.x,
                            constant.x, "nd5", Inf, control.C.1)
 lik.q <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x,
@@ -41,3 +42,4 @@ expect_that(lik.s(pars2.s), equals(ll.q))
 
 pars3.s <- pars + runif(length(pars.s), 0, .05)
 expect_that(lik.s(pars3.s), equals(-54.47383577050427))
+}

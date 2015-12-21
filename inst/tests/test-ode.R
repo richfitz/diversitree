@@ -28,8 +28,8 @@ control.gslode.R <- check.control.ode(list(backend="gslode",
 control.deSolve <- check.control.ode(list(backend="deSolve"))
 
 ## Run the calculations with deSolve's lsoda (no clever tricks)
-res.ref <- lsoda(y, tt, derivs.for.deSolve(derivs), pars,
-                 atol=control.deSolve$tol, rtol=control.deSolve$tol)
+res.ref <- deSolve::lsoda(y, tt, derivs.for.deSolve(derivs), pars,
+                          atol=control.deSolve$tol, rtol=control.deSolve$tol)
 ## Convert this to the format that we expect (drop time column and
 ## transpose data).
 res.ref <- unname(t(res.ref[-1,-1,drop=FALSE]))
@@ -80,8 +80,8 @@ tm$set(pars.t)
 ## changes to tm.
 derivs.t <- make.derivs.t(derivs, tm)
 
-res.t.ref <- lsoda(y, tt, derivs.for.deSolve(derivs.t), pars,
-                   atol=control.deSolve$tol, rtol=control.deSolve$tol)
+res.t.ref <- deSolve::lsoda(y, tt, derivs.for.deSolve(derivs.t), pars,
+                            atol=control.deSolve$tol, rtol=control.deSolve$tol)
 res.t.ref <- unname(t(res.t.ref[-1,-1,drop=FALSE]))
 
 ## Quick check that this agrees with the original reference set, as
@@ -141,8 +141,8 @@ pars.t[c(2,4)] <- .01
 tm$set(pars.t)
 
 ## Rerun the above code
-res.t.ref <- lsoda(y, tt, derivs.for.deSolve(derivs.t), pars,
-                   atol=control.deSolve$tol, rtol=control.deSolve$tol)
+res.t.ref <- deSolve::lsoda(y, tt, derivs.for.deSolve(derivs.t), pars,
+                            atol=control.deSolve$tol, rtol=control.deSolve$tol)
 res.t.ref <- unname(t(res.t.ref[-1,-1,drop=FALSE]))
 
 ## Check that the reference example differs:

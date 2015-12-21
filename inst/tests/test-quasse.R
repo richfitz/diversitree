@@ -20,6 +20,7 @@ control.C.2 <- c(control.C.1, tips.combined=TRUE)
 control.M.1 <- list(method="mol")
 control.R.1 <- list(dt.max=1/200, method="fftR")
 
+if (check.fftC(FALSE)) {
 lik.C.1 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x,
                        control.C.1)
 ##lik.C.2 <- make.quasse(phy, phy$tip.state, sd, sigmoid.x, constant.x,
@@ -45,3 +46,4 @@ expect_that(lik.C.1(pars, root=ROOT.GIVEN, root.f=root.f),
 pars2 <- pars
 pars2[6] <- 0.01
 expect_that(lik.C.1(pars2), equals(-62.040165682569537))
+}
