@@ -65,7 +65,7 @@ int main() {
    if ((sscanf(gslv, "%d.%d", &major, &minor)) != 2) {
      exit (1);
    }
-   exit (minor < 12);
+   exit (major == 1 && minor < 12);
 #else
   exit(1);
 #endif
