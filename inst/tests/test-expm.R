@@ -36,7 +36,7 @@ ans.s <- c(diversitree:::expmv.expokit.sparse(Q2, t, v, tol=1e-10))
 expect_that(ans.s, equals(ans.d))
 
 ## Then, with a vector of times:
-tt <- seq(0, t, length=11)[-1]
+tt <- seq(0, t, length.out=11)[-1]
 
 ans.ee <- sapply(tt, function(t) c(expm(Q2*t) %*% v))
 ans.dd <- diversitree:::expmv.expokit.dense(Q2, tt, v)

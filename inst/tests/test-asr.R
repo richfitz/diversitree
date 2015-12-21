@@ -43,11 +43,11 @@ lik.b.g <- make.bisse(phy, phy$tip.state, control=control.g)
 lik.b.G <- make.bisse(phy, phy$tip.state, control=control.G)
 
 ## The non-compiled versions are quite slow.
-expect_that(asr.marginal(lik.b.d, p), equals(st, tol=5e-7))
+expect_that(asr.marginal(lik.b.d, p), equals(st, tolerance=5e-7))
 expect_that(asr.marginal(lik.b.g, p), equals(st))
 expect_that(asr.marginal(lik.b.G, p), equals(st))
 
-expect_that(asr.marginal(lik.b.d, p2), equals(st2, tol=5e-7))
+expect_that(asr.marginal(lik.b.d, p2), equals(st2, tolerance=5e-7))
 expect_that(asr.marginal(lik.b.g, p2), equals(st2))
 expect_that(asr.marginal(lik.b.G, p2), equals(st2))
 

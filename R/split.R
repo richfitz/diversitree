@@ -160,7 +160,7 @@ make.rootfunc.split <- function(cache, rootfunc) {
 ## Augment the usual cache vector with some extra information:
 make.cache.split <- function(phy, cache, nodes, split.t) {
   tmp <- split.group(phy, nodes, split.t)
-  nodes <- tmp$node
+  nodes <- tmp$nodes
 
   cache$nodes <- tmp$nodes
   cache$group.nodes <- tmp$group.nodes
@@ -178,7 +178,11 @@ make.cache.split <- function(phy, cache, nodes, split.t) {
 
 update.info.split <- function(info, nodes) {
   n.part <- length(nodes)
- 
+
+  ## To catch an issue with bd.split
+  if (is.null(info$name)) {
+    info$name <- info$name.pretty
+  }
   info$partitioned <- TRUE
   info$argnames <- argnames.twopart(info$argnames, n.part)
   info$name.ode <- info$name

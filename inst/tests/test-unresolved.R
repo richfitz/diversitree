@@ -13,7 +13,7 @@ info.n <- diversitree:::make.info.bisseness(NULL)
 branches.b <- make.branches.dtlik(info.b, control)
 branches.n <- make.branches.dtlik(info.n, control)
 
-tt <- seq(0, 5, length=21)
+tt <- seq(0, 5, length.out=21)
 y0 <- c(0, 0, 1, 0)
 y1 <- c(0, 0, 0, 1)
 u0 <- c(as.list(data.frame(Nc=1L, k=0L, nsc=1L, len=tt)), list(nt.extra=20))

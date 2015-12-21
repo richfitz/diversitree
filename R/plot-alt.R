@@ -141,7 +141,7 @@ plot2.phylo <- function(x, type="phylogram", use.edge.length=TRUE,
 ## This is derived from ape's nodeDepth
 pp.node.coords <- function(phy) {
   phy.p <- reorder(phy, "pruningwise")
-  if ( is.null(phy.p$edge.len) )
+  if ( is.null(phy.p$edge.length) )
     xx <- node.depth(phy.p)
   else
     xx <- node.depth.edgelength(phy.p)

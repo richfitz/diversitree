@@ -40,7 +40,7 @@ expect_that(tm$get(10), is_identical_to(p2.0[c(1,3)]))
 
 tm$set(p2.1)
 
-tt <- seq(0, 10, length=101)
+tt <- seq(0, 10, length.out=101)
 
 tmp <- t(sapply(tt, tm$get))
 expect_that(all(sapply(tmp[,2], identical, p2.0[3])), is_true())

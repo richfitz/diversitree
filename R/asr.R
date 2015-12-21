@@ -62,7 +62,7 @@ do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
   len <- cache$len
   depth <- cache$depth
   root.idx <- cache$root
-  anc <- cache$anc
+  anc <- cache$ancestors
 
   if ( is.null(nodes) )
     nodes <- root.idx:max(cache$order)

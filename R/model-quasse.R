@@ -281,7 +281,7 @@ check.pars.quasse <- function(lambda.x, mu.x, drift, diffusion) {
   
 ##   if ( missing(x) ) {
 ##     r <- range(cache$states, na.rm=TRUE)
-##     x <- seq(r[1], r[2], length=nx)
+##     x <- seq(r[1], r[2], length.out=nx)
 ##   }
 ##   if ( is.null(v) )
 ##     v <- c("lambda", "mu")

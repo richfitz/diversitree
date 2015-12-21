@@ -244,7 +244,7 @@ pgls.root.var.bm <- function(tree) {
   x <- rep(1, n.spp)
   tmp <- pic(x, tree, var.contrasts=TRUE, rescaled.tree=TRUE)
   idx <- tmp$rescaled.tree$edge[,1] == n.spp + 1
-  root.v <- tmp$rescaled.tree$edge.len[idx]
+  root.v <- tmp$rescaled.tree$edge.length[idx]
   prod(root.v)/sum(root.v)
 }
 

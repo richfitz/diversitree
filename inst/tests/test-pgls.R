@@ -28,7 +28,7 @@ fit.gls.yab <- gls(y ~ a + b, data, corBrownian(1, phy), method="ML")
 pgls.contrasts <- function(formula, data, phylo) {
   cdata <- data.frame(apply(data, 2, pic, phylo))
   fm <- lm(formula, cdata, y=TRUE)
-  vars <- pic(data[[1]], phylo, var=TRUE)[,2]
+  vars <- pic(data[[1]], phylo, var.contrasts=TRUE)[,2]
   V <- diversitree:::pgls.root.var.bm(phylo)
   u <- residuals(fm) 
   n <- length(u)
