@@ -260,21 +260,21 @@ as.mcmcsamples <- function(x, ...) {
   x
 }
 
-## This is a bit 
+## This is a bit of an overkill because
 make.every.so.often <- function(iterations=1, dt=NULL) {
   i <- 0 # counter, will be updated
   
   if ( !is.null(dt) ) {
-    require(lubridate)
+    requireNamespace(lubridate)
     if ( !inherits(dt, "Period") )
       stop("dt must be a Period object")
-    t.next <- now() + dt
+    t.next <- lubridate::now() + dt
     ## Note use of 'or' here, not 'and'.
     check <- function() {
       i <<- i + 1
-      ok <- (iterations > 0 && i %% iterations == 0) || now() > t.next
+      ok <- (iterations > 0 && i %% iterations == 0) || lubridate::now() > t.next
       if ( ok )
-        t.next <<- now() + dt
+        t.next <<- lubridate::now() + dt
       ok
     }
   } else if ( iterations > 0 ) {

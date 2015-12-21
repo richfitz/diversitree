@@ -76,10 +76,10 @@ do.mle.search <- function(func, x.init, method, fail.value=-Inf,
     cat("\n")
 
   if ( hessian ) {
-    if ( !require(numDeriv) )
+    if ( !requireNamespace(numDeriv) )
       warning("The package numDeriv is required to compute the hessian")
     else
-      ans$hessian <- hessian(func2, ans$par)
+      ans$hessian <- numDeriv::hessian(func2, ans$par)
   }
 
   ## TODO: For constrained cases, store the full parameter vector

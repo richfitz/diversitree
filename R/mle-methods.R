@@ -87,7 +87,7 @@ do.mle.search.nlm <- function(func, x.init, control, lower, upper) {
 }
 
 do.mle.search.minqa <- function(func, x.init, control, lower, upper) {
-  if ( !require(minqa) )
+  if ( !requireNamespace(minqa) )
     stop("This method requires the minqa package")
   
   control <- modifyList(list(minqa.method="newuoa"), control)
@@ -104,7 +104,7 @@ do.mle.search.minqa <- function(func, x.init, control, lower, upper) {
   else
     func2 <- invert(func)
 
-  opt <- get(minqa.method, "package:minqa")
+  opt <- getExportedValue("minqa", minqa.method)
   if ( minqa.method == "bobyqa" )
     ans <- opt(x.init, func2, lower=lower, upper=upper,
                control=control.minqa)
