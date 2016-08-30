@@ -1,7 +1,12 @@
 PACKAGE := $(shell grep '^Package:' DESCRIPTION | sed -E 's/^Package:[[:space:]]+//')
 
-all:
-	make -C src
+all: compile_dll
+
+compile_dll:
+	Rscript -e "devtools::compile_dll()"
+
+clean:
+	rm -f src/*.o src/*.so src/*.dll
 
 attributes:
 	Rscript -e "Rcpp::compileAttributes()"
@@ -15,9 +20,6 @@ publish_pages:
 
 install:
 	R CMD INSTALL .
-
-clean:
-	make -C src clean
 
 build:
 	R CMD build .
