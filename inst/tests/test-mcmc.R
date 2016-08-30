@@ -55,7 +55,8 @@ test_that("Continuing a mcmc chain works", {
 
 test_that("Likelihood function is saved with fit", {
   samples <- mcmc(lik, c(0, 0), 10, 1, print.every=0)
-  expect_that(samples, has_attribute("func"))
+  at <- attributes(samples)
+  expect_true("func" %in% names(at))
   expect_that(attr(samples, "func"), is_a("function"))
   expect_that(attr(samples, "func"), equals(lik))
 
@@ -91,14 +92,10 @@ test_that("Argument modification is saved at function save", {
 
   samples <- mcmc(lik, pars, 10, w=1, print.every=0,
                   condition.surv=FALSE)
-  expect_that(samples, has_attribute("func"))
+  expect_true("func" %in% names(attributes(samples)))
   expect_that(formals(attr(samples, "func"))$condition.surv,
               is_false())
 
-  expect_that(samples, has_attribute("func"))
-  expect_that(formals(attr(samples, "func"))$condition.surv,
-              is_false())
-  ## Will be simplified by the new "devtools::not()".
   expect_that(identical(attr(samples, "func"), lik), is_false())
 })
 

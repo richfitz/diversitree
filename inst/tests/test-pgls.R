@@ -14,9 +14,11 @@ data <- data.frame(a=ta, b=tb, y=ty, row.names=names(ty))
 ## Fit the model using standard approaches:
 ## 1. caper::pgls
 cdata <- comparative.data(phy, cbind(data, species=phy$tip.label),
-                          "species")
-fit.caper.ya  <- pgls(y ~ a, cdata)
-fit.caper.yab <- pgls(y ~ a + b, cdata)
+                                 "species")
+suppressWarnings({
+  fit.caper.ya  <- pgls(y ~ a, cdata)
+  fit.caper.yab <- pgls(y ~ a + b, cdata)
+})
 
 ## 2. nlme::gls
 fit.gls.ya  <- gls(y ~ a,     data, corBrownian(1, phy), method="ML")
@@ -126,14 +128,19 @@ test_that("Fitted values are correct", {
 })
 
 test_that("Residuals values are correct", {
-  expect_that(resid(lik.vcv.ya, p.ya),     equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.con.ya, p.ya),     equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.pru.R.ya, p.ya),   equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.pru.C.ya, p.ya),   equals(resid(fit.caper.ya)))
-  expect_that(resid(lik.vcv.yab, p.yab),   equals(resid(fit.caper.yab)))
-  expect_that(resid(lik.con.yab, p.yab),   equals(resid(fit.caper.yab)))
-  expect_that(resid(lik.pru.R.yab, p.yab), equals(resid(fit.caper.yab)))
-  expect_that(resid(lik.pru.C.yab, p.yab), equals(resid(fit.caper.yab)))
+  cresid <- function(x) {
+    oo <- options(warnPartialMatchDollar=FALSE)
+    on.exit(options(oo))
+    resid(x)
+  }
+  expect_that(resid(lik.vcv.ya, p.ya),     equals(cresid(fit.caper.ya)))
+  expect_that(resid(lik.con.ya, p.ya),     equals(cresid(fit.caper.ya)))
+  expect_that(resid(lik.pru.R.ya, p.ya),   equals(cresid(fit.caper.ya)))
+  expect_that(resid(lik.pru.C.ya, p.ya),   equals(cresid(fit.caper.ya)))
+  expect_that(resid(lik.vcv.yab, p.yab),   equals(cresid(fit.caper.yab)))
+  expect_that(resid(lik.con.yab, p.yab),   equals(cresid(fit.caper.yab)))
+  expect_that(resid(lik.pru.R.yab, p.yab), equals(cresid(fit.caper.yab)))
+  expect_that(resid(lik.pru.C.yab, p.yab), equals(cresid(fit.caper.yab)))
 })
 
 fit.ya  <- find.mle(lik.con.ya, p.ya)

@@ -73,4 +73,3 @@ expect_that(lik.s.n(p, condition.surv=FALSE), equals(ll))
 expect_that(lik.s.d(p, condition.surv=FALSE), equals(ll, tolerance=1e-6))
 expect_that(lik.s.g(p, condition.surv=FALSE), equals(ll))
 expect_that(lik.s.G(p, condition.surv=FALSE), equals(ll))
-

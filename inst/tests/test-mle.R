@@ -133,7 +133,7 @@ test_that("Likelihood function is saved with fit", {
   lik <- make.bd(phy)
   pars <- c(0.1, 0.03)  
   fit <- find.mle(lik, pars)
-  expect_that(fit, has_attribute("func"))
+  expect_true("func" %in% names(attributes(fit)))
   expect_that(attr(fit, "func"), is_a("function"))
   expect_that(attr(fit, "func"), is_identical_to(lik))
 
@@ -155,7 +155,7 @@ test_that("Argument modification is saved at function save", {
   
   pars <- c(0.1, 0.03)  
   fit <- find.mle(lik, pars, condition.surv=FALSE)
-  expect_that(fit, has_attribute("func"))
+  expect_true("func" %in% names(attributes(fit)))
   expect_that(formals(attr(fit, "func"))$condition.surv,
               is_false())
 
