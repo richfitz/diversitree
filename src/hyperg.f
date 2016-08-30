@@ -2,7 +2,7 @@
 *     http://www.kurims.kyoto-u.ac.jp/~ooura/gamerf.html
 *     log Gamma function in double precision
       function dlgamma(x)
-      implicit real*8 (a - h, o - z)
+      implicit double precision (a - h, o - z)
       dimension a(0 : 21), b(0 : 97), c(0 : 64), d(0 : 6)
       parameter (pi = 3.141592653589793238d0)
       data (a(i), i = 0, 10) / 

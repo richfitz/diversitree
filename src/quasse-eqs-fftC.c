@@ -455,4 +455,6 @@ int lookup(int x, int *v, int len) {
   return idx;
 }
 
+#else
+typedef int make_iso_compilers_happy;
 #endif

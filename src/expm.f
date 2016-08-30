@@ -10,7 +10,7 @@
 *     **** Sparse
       subroutine DSEXPMV(Q, n, ia, ja, nz, qnorm, v, t, tol, out, iflag)
       implicit none
-      integer n, ia(nz), ja(nz), nz
+      integer n, nz, ia(nz), ja(nz)
       double precision Q(nz), qnorm, v(n), t
 
       integer nmax, nzmax, mmax
@@ -20,7 +20,7 @@
       parameter(lwsp=nmax*(mmax+1)+nmax+5*(mmax+2)**2+7,liwsp=nmax+2)
 
       integer m, itrace, iflag, iwsp(liwsp)
-      double precision tol, anorm, wsp(lwsp), scal
+      double precision tol, wsp(lwsp), scal
 
       double precision out(n)
 
@@ -48,11 +48,10 @@
       double precision t, Q(n,n), v(n), out(n)
 
       double precision alpha, beta
-      integer          iZERO, iONE
       integer ideg, iexp, ns, lwsp, nmax
       parameter( nmax=64 )
       parameter( ideg=6, lwsp=4*nmax*nmax+ideg+1 )
-      parameter( alpha=1.0d0, beta=0.0d0, iZERO=0, iONE=1 )
+      parameter( alpha=1.0d0, beta=0.0d0 )
 
       double precision wsp(lwsp)
       integer ipiv(n)
@@ -64,20 +63,18 @@
 *     compute y = alpha*A*x + beta * y
 *              TRANS  M x N  ALPHA A         LDA  X  INCX  BETA  Y    INCY
       call DGEMV('n', n,  n, alpha,wsp(iexp), n,  v, 1,    beta, out, 1)
-      
+
       end
 
 *     **** Full
       subroutine DEXPMF(Q, n, t, out, iflag)
       implicit none
       integer n, iflag
-      double precision t, Q(n,n), v(n), out(n*n)
+      double precision t, Q(n,n), out(n*n)
 
-      double precision ZERO, ONE
       integer ideg, iexp, ns, lwsp, nmax
       parameter( nmax=64 )
       parameter( ideg=6, lwsp=4*nmax*nmax+ideg+1 )
-      parameter( ZERO=0.0d0, ONE=1.0d0 )
 
       double precision wsp(lwsp)
       integer i, ipiv(n)
@@ -95,16 +92,16 @@
       subroutine DSEXPMVI(Q, n, ia, ja, nz, qnorm, v, t,lt, tol, 
      .     out, iflag)
       implicit none
-      integer n, ia(nz), ja(nz), nz, lt
+      integer n, nz, ia(nz), ja(nz), lt
       double precision Q(nz), qnorm, v(n), t
 
-      integer nmax, nzmax, mmax
-      parameter( nmax=1024, nzmax=102400, mmax=30 )
+      integer nmax, mmax
+      parameter( nmax=1024, mmax=30 )
       integer lwsp, liwsp
       parameter(lwsp=nmax*(mmax+1)+nmax+5*(mmax+2)**2+7,liwsp=nmax+2)
 
       integer m, itrace, iflag, iwsp(liwsp)
-      double precision tol, anorm, wsp(lwsp), scal
+      double precision tol, wsp(lwsp), scal
 
       double precision out(n*lt)
 

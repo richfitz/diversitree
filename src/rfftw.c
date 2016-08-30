@@ -163,4 +163,6 @@ SEXP r_set_wisdom(SEXP r_wisdom) {
   return ret;
 }
 
+#else
+typedef int make_iso_compilers_happy;
 #endif
