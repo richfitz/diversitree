@@ -25,7 +25,7 @@ build:
 	R CMD build .
 
 check: build
-	R CMD check --no-manual `ls -1tr ${PACKAGE}*gz | tail -n1`
+	R CMD check --as-cran --no-manual `ls -1tr ${PACKAGE}*gz | tail -n1`
 	@rm -f `ls -1tr ${PACKAGE}*gz | tail -n1`
 	@rm -rf ${PACKAGE}.Rcheck
 

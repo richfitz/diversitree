@@ -1,7 +1,6 @@
 Package: diversitree
 Title: Comparative Phylogenetic Analyses of Diversification
-Version: 0.9-8
-Date: 2015-12-21
+Version: 0.9-9
 Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with 'GeoSSE' and
   'ClaSSE' by Emma E. Goldberg <eeg@uic.edu>, and 'BiSSE-ness' by Karen
   Magnuson-Ford.
