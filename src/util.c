@@ -1,4 +1,5 @@
 #include <R.h>
+#include <Rversion.h>
 #include <Rinternals.h>
 #include <R_ext/BLAS.h>
 #include <gsl/gsl_errno.h>
@@ -237,5 +238,13 @@ SEXP set_sane_gsl_error_handling() {
    attempt to keep the package meeting requirements.
 */
 deriv_func* get_deriv_func_from_ptr(SEXP extPtr) {
-  return (deriv_func *) R_ExternalPtrAddr(extPtr);
+  return (deriv_func *) get_func_from_ptr(extPtr);
+}
+
+DL_FUNC get_func_from_ptr(SEXP extPtr) {
+#if defined(R_VERSION) && R_VERSION >= R_Version(3, 4, 0)
+  return R_ExternalPtrAddrFn(extPtr);
+#else
+  return (DL_FUNC) R_ExternalPtrAddr(extPtr);
+#endif
 }

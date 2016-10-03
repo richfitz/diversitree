@@ -12,8 +12,8 @@ SEXP r_make_dt_obj_cont(SEXP cache, SEXP r_ic, SEXP r_br) {
     neq = INTEGER(getListElement(info, "ny"))[0], 
     np  = INTEGER(getListElement(info, "np"))[0];
   /* Initial conditions and branches functions */
-  DtIcFun ic = (DtIcFun) R_ExternalPtrAddr(r_ic);
-  DtBrFun br = (DtBrFun) R_ExternalPtrAddr(r_br);
+  DtIcFun ic = (DtIcFun) get_func_from_ptr(r_ic);
+  DtBrFun br = (DtBrFun) get_func_from_ptr(r_br);
 
   /* Return object */
   dt_obj_cont *obj;
