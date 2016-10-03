@@ -151,8 +151,8 @@ plot.dtlik.t <- function(x, p, xlab="Time", ylab="Parameter",
     v <- colnames(xy$y)
     if ( is.null(col) )
       col <- seq_along(v)
-    matplot(xy$t, xy$y, type="l", xlim=xlim, las=1, lty=lty,
-            col=col, xlab=xlab, ylab=ylab, lwd=lwd, ...)
+    graphics::matplot(xy$t, xy$y, type="l", xlim=xlim, las=1, lty=lty,
+                      col=col, xlab=xlab, ylab=ylab, lwd=lwd, ...)
   }
   if ( !is.null(legend.pos) )
     legend(legend.pos, v, col=col, lty=lty, lwd=lwd, bty="n")
