@@ -91,6 +91,7 @@ set.seed(1)
 x <- structure(rnorm(length(bird.orders$tip.label)),
                names=bird.orders$tip.label)
 
+\dontrun{
 ## With the VCV approach
 fit1 <- find.mle(make.bm(bird.orders, x), .1)
 
@@ -103,7 +104,6 @@ all.equal(fit1[-7], fit2[-7])
 
 ## If this is the same as the estimates from Geiger, to within the
 ## tolerances expected for the calculation and optimisation:
-\dontrun{
 fit3 <- fitContinuous(bird.orders, x)
 all.equal(fit3$Trait1$lnl, fit1$lnLik)
 all.equal(fit3$Trait1$beta, fit1$par, check.attributes=FALSE)

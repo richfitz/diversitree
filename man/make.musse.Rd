@@ -139,6 +139,7 @@ lik.base <- constrain(lik, lambda2 ~ lambda1, lambda3 ~ lambda1,
                       mu2 ~ mu1, mu3 ~ mu1,
                       q13 ~ 0, q21 ~ q12, q23 ~ q12, q31 ~ 0, q32 ~ q12)
 
+\dontrun{
 p <- starting.point.musse(phy, 3)
 fit.base <- find.mle(lik.base, p[argnames(lik.base)])
 
@@ -153,7 +154,6 @@ anova(fit.base, lambda=fit.lambda)
 ## Run an MCMC with this set.  Priors will be necessary (using the
 ## usual exponential with mean of 2r)
 prior <- make.prior.exponential(1 / (2 * (p[1] - p[4])))
-\dontrun{
 samples <- mcmc(lik.lambda, coef(fit.lambda), nstep=1000, w=1,
                 prior=prior, print.every=50)
 

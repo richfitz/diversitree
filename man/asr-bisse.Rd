@@ -54,6 +54,7 @@ phy <- trees(pars, "bisse", max.taxa=50, max.t=Inf, x0=0)[[1]]
 h <- history.from.sim.discrete(phy, 0:1)
 plot(h, phy, main="True history")
 
+\dontrun{
 ## BiSSE ancestral state reconstructions under the ML model
 lik <- make.bisse(phy, phy$tip.state)
 fit <- find.mle(lik, pars, method="subplex")
@@ -69,7 +70,6 @@ st.m <- asr.marginal(lik.m, coef(fit.m))
 ## similar.
 nodelabels(thermo=t(st.m), piecol=1:2, cex=.5, adj=-.5)
 
-\dontrun{
 ## (This section will take 10 or so minutes to run.)
 ## Try integrating over parameter uncertainty and comparing the BiSSE
 ## with Mk2 output:
@@ -91,7 +91,6 @@ plot(h, phy, main="Marginal ASR, BiSSE (left), Mk2 (right)",
      show.node.state=FALSE)
 nodelabels(thermo=1-st.b.avg, piecol=1:2, cex=.5)
 nodelabels(thermo=1-st.m.avg, piecol=1:2, cex=.5, adj=-.5)
-}
 
 ## Equivalency of Mk2 and BiSSE where diversification is state
 ## independent.  For any values of lambda/mu (here .1 and .03) where
@@ -113,6 +112,7 @@ st.b <- asr.marginal(lik.b, coef(fit))
 st.m <- asr.marginal(lik.m, coef(fit))
 
 all.equal(st.b, st.m)
+}
 }
 
 \author{Richard G. FitzJohn}

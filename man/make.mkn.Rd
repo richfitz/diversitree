@@ -141,6 +141,7 @@ plot(h, phy)
 ## Maximum likelihood parameter estimation:
 p <- c(.1, .1) # initial parameter guess
 
+\dontrun{
 lik <- make.mk2(phy, phy$tip.state)
 fit.mk2 <- find.mle(lik, p)
 coef(fit.mk2)   # q10 >> q01
@@ -179,6 +180,7 @@ fit.ode <- find.mle(lik.ode, p)
 fit.ode[1:2]
 
 all.equal(fit.ode[-7], fit.mkn[-7], tolerance=1e-7)
+}
 }
 
 \author{Richard G. FitzJohn}

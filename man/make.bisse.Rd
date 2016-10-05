@@ -197,6 +197,7 @@ lik(pars) # -159.71
 ## birth-death model (uses \link{make.bd}).
 p <- starting.point.bisse(phy)
 
+\dontrun{
 ## Start an ML search from this point.  This takes some time (~7s)
 fit <- find.mle(lik, p, method="subplex")
 logLik(fit) # -158.6875
@@ -208,7 +209,6 @@ rbind(real=pars,
 
 ## Test a constrained model where the speciation rates are set equal
 ## (takes ~4s).
-\dontrun{
 lik.l <- constrain(lik, lambda1 ~ lambda0)
 fit.l <- find.mle(lik.l, p[-1], method="subplex")
 logLik(fit.l) # -158.7357
@@ -216,7 +216,6 @@ logLik(fit.l) # -158.7357
 ## Despite the difference in the estimated parameters, there is no
 ## statistical support for this difference:
 anova(fit, equal.lambda=fit.l)
-}
 
 ## Run an MCMC.  Because we are fitting six parameters to a tree with
 ## only 50 species, priors will be needed.  I will use an exponential
@@ -225,7 +224,6 @@ anova(fit, equal.lambda=fit.l)
 prior <- make.prior.exponential(1 / (2 * (p[1] - p[3])))
 
 ## This takes quite a while to run, so is not run by default
-\dontrun{
 tmp <- mcmc(lik, fit$par, nsteps=100, prior=prior, w=.1, print.every=0)
 
 w <- diff(sapply(tmp[2:7], range))

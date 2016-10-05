@@ -79,11 +79,13 @@ system.time(lik.ode(pars))    # ~ 0.003
 system.time(lik.t(pars))      # ~ 0.003
 system.time(lik.t2(pars2))    # ~ 0.003
 
+\dontrun{
 fit <- find.mle(lik.direct, pars)
 fit.t2 <- find.mle(lik.t2, pars2)
 
 ## No significant improvement in model fit:
 anova(fit, time.varying=fit.t2)
+}
 }
 
 \author{Richard G. FitzJohn}
