@@ -7,7 +7,7 @@ expmv.expokit.dense <- function(Q, t, v) {
     ret <- matrix(0, length(v), nt)
     for ( i in seq_len(nt) ) {
       res <- .Fortran("ddexpmv", Q, n, v, t[i], out=numeric(n),
-                      iflag=numeric(1), package="diversitree")
+                      iflag=numeric(1), PACKAGE="diversitree")
       if ( res$iflag != 0 )
         stop("Expokit failed with code ", res$iflag)
       ret[,i] <- res$out
