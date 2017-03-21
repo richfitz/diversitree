@@ -333,7 +333,7 @@ make.all.branches.pgls.pruning.phylo <- function(cache, control) {
 
     function(pars, residuals) {
       y[1,] <- residuals
-      .Call("r_dt_cont_reset_tips", ptr, y, PACKAGE="diversitree")
+      .Call(r_dt_cont_reset_tips, ptr, y)
       all.branches(pars)
     }
   }

@@ -16,21 +16,21 @@ descendants.C <- function(node, edge, n.tip) {
   storage.mode(edge) <- "integer"
   storage.mode(node) <- "integer"
   storage.mode(n.tip) <- "integer"
-  .Call("r_descendants", node, edge, n.tip, PACKAGE="diversitree")
+  .Call(r_descendants, node, edge, n.tip)
 }
 
 descendants.flag.C <- function(node, edge, n.tip) {
   storage.mode(edge) <- "integer"
   storage.mode(node) <- "integer"
   storage.mode(n.tip) <- "integer"
-  .Call("r_descendants_flag", node, edge, n.tip, PACKAGE="diversitree")
+  .Call(r_descendants_flag, node, edge, n.tip)
 }
 
 descendants.idx.C <- function(node, edge, n.tip) {
   storage.mode(edge) <- "integer"
   storage.mode(node) <- "integer"
   storage.mode(n.tip) <- "integer"
-  .Call("r_descendants_idx", node, edge, n.tip, PACKAGE="diversitree")
+  .Call(r_descendants_idx, node, edge, n.tip)
 }
 
 get.children <- function(edge, n.tip) {

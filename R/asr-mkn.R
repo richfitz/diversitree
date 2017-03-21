@@ -24,8 +24,8 @@ make.asr.marginal.mkn <- function(lik, ...) {
       rootfunc.mkn(list(vals=vals, lq=lq), pars, root, root.p, FALSE)
     
     res <- all.branches(pars2, TRUE, NULL)
-    .Call("r_asr_marginal_mkn", k, pars2, nodes.C, cache.C, res,
-          root.f, env, PACKAGE="diversitree")
+    .Call(r_asr_marginal_mkn, k, pars2, nodes.C, cache.C, res,
+          root.f, env)
   }
 }
 
@@ -66,7 +66,7 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
   joint <- make.asr.joint(lik)
 
   ## Single branch simulator
-  ptr <- .Call("r_smkn_alloc", k, 100L, PACKAGE="diversitree")
+  ptr <- .Call(r_smkn_alloc, k, 100L)
 
   function(pars, n=1, ...) {
     if ( n > 1 )
@@ -85,9 +85,8 @@ make.asr.stoch.mkn <- function(lik, slim=FALSE, ...) {
     ## 2: Simulate branches.
     state.beg <- anc.state[edge.1]
     state.end <- anc.state[edge.2]
-    history <- .Call("r_smkn_scm_run_all", ptr, pars, edge.length,
-                     state.beg, state.end, is.mk2, slim,
-                     PACKAGE="diversitree")
+    history <- .Call(r_smkn_scm_run_all, ptr, pars, edge.length,
+                     state.beg, state.end, is.mk2, slim)
 
     if ( slim ) {
       ret <- list(node.state=node.state, history=history)

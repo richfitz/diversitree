@@ -301,4 +301,4 @@ check.nonpositive <- function(x, msg=NULL) {
 
 ## Check that a pointer is not NULL.
 check.ptr <- function(ptr)
-  .Call("check_ptr_not_null", ptr)
+  .Call(r_check_ptr_not_null, ptr)

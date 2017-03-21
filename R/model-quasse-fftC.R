@@ -25,9 +25,8 @@ make.branches.quasse.fftC <- function(control) {
 }
 
 make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
-  ptr <- .Call("r_make_quasse_fft", as.integer(nx), as.numeric(dx),
-               as.integer(nd), as.integer(flags),
-               PACKAGE="diversitree")
+  ptr <- .Call(r_make_quasse_fft, as.integer(nx), as.numeric(dx),
+               as.integer(nd), as.integer(flags))
   function(y, len, pars, t0, dt=dt.max) {
     nt <- as.integer(ceiling(len / dt.max))
     dt <- len / nt
@@ -41,10 +40,10 @@ make.pde.quasse.fftC <- function(nx, dx, dt.max, nd, flags) {
     if ( pars$diffusion <= 0 )
       stop("Invalid diffusion parameter")
     
-    ans <- .Call("r_do_integrate",
+    ans <- .Call(r_do_integrate,
                  ptr, y, pars$lambda, pars$mu,
                  pars$drift, pars$diffusion,
-                 nt, dt, pars$padding, PACKAGE="diversitree")
+                 nt, dt, pars$padding)
 
     ## Do the log compensation here, to make the careful calcuations
     ## easier later.
@@ -91,12 +90,10 @@ make.tips.quasse.fftC <- function(control, t, tips) {
   nt.lo <- as.integer(ceiling(len.lo / dt.max))
   dt.lo <- len.lo / nt.lo
   
-  ptr.hi <- .Call("r_make_quasse_fft", as.integer(nx*r), as.numeric(dx/r),
-                  as.integer(nd.hi), as.integer(flags),
-                  PACKAGE="diversitree")
-  ptr.lo <- .Call("r_make_quasse_fft", as.integer(nx), as.numeric(dx),
-                  as.integer(nd.lo), as.integer(flags),
-                  PACKAGE="diversitree")
+  ptr.hi <- .Call(r_make_quasse_fft, as.integer(nx*r), as.numeric(dx/r),
+                  as.integer(nd.hi), as.integer(flags))
+  ptr.lo <- .Call(r_make_quasse_fft, as.integer(nx), as.numeric(dx),
+                  as.integer(nd.lo), as.integer(flags))
 
   dx.v <- rep(c(dx/r, dx), c(length(nd.hi)-1, length(nd.lo)))
   
@@ -116,20 +113,18 @@ make.tips.quasse.fftC <- function(control, t, tips) {
     ## The columns need to be reversed...
     y.hi <- y[,c(1,rev(2:ncol(y)))]
     
-    ret.hi <- .Call("r_do_tips",
+    ret.hi <- .Call(r_do_tips,
                     ptr.hi, y.hi, pars$hi$lambda, pars$hi$mu,
                     pars$hi$drift, pars$hi$diffusion, nt.hi, dt.hi,
-                    as.integer(pars$hi$padding),
-                    PACKAGE="diversitree")
+                    as.integer(pars$hi$padding))
 
     y.lo <- rbind(ret.hi[[j]][pars$tr,],
                   matrix(0, nx - length(pars$tr), nd.lo[1]))
 
-    ret.lo <- .Call("r_do_tips",
+    ret.lo <- .Call(r_do_tips,
                     ptr.lo, y.lo, pars$lo$lambda, pars$lo$mu,
                     pars$lo$drift, pars$lo$diffusion, nt.lo, dt.lo,
-                    as.integer(pars$lo$padding),
-                    PACKAGE="diversitree")
+                    as.integer(pars$lo$padding))
 
     base <- c(ret.hi[-j], ret.lo)
     lq <- numeric(length(base))

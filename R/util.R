@@ -101,7 +101,7 @@ matrix.to.list <- function(m) {
 
 matrix.to.list <- function(m) {
   storage.mode(m) <- "double"
-  .Call("matrix_to_list", m)
+  .Call(r_matrix_to_list, m)
 }
 
 argnames.twopart <- function(base, n.level) {

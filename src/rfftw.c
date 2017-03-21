@@ -1,9 +1,10 @@
 #include "config.h"
 
-#ifdef HAVE_FFTW3_H
-
 #include <R.h>
 #include <Rdefines.h>
+
+#ifdef HAVE_FFTW3_H
+
 #include <complex.h>
 #include <fftw3.h>
 #include "rfftw.h"
@@ -164,5 +165,10 @@ SEXP r_set_wisdom(SEXP r_wisdom) {
 }
 
 #else
-typedef int make_iso_compilers_happy;
+SEXP r_get_wisdom() {
+  Rf_error("FFTW support not included");
+}
+SEXP r_set_wisdom(SEXP r_wisdom) {
+  Rf_error("FFTW support not included");
+}
 #endif

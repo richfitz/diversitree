@@ -1,10 +1,11 @@
 #include "config.h"
-#ifdef HAVE_FFTW3_H
 
 #include <R.h>
 #include <Rdefines.h>
 #include <R_ext/Utils.h> /* why? */
 #include <Rmath.h> /* for dnorm() */
+
+#ifdef HAVE_FFTW3_H
 #include <complex.h>
 #include <fftw3.h>
 #include "rfftw.h"
@@ -456,5 +457,17 @@ int lookup(int x, int *v, int len) {
 }
 
 #else
-typedef int make_iso_compilers_happy;
+SEXP r_do_integrate(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
+		    SEXP drift, SEXP diffusion, SEXP nt, SEXP dt,
+		    SEXP padding) {
+  Rf_error("FFTW support not included");
+}
+SEXP r_do_tips(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
+	       SEXP drift, SEXP diffusion, SEXP nt, SEXP dt,
+	       SEXP padding) {
+  Rf_error("FFTW support not included");
+}
+SEXP r_make_quasse_fft(SEXP r_nx, SEXP r_dx, SEXP r_nd, SEXP r_flags) {
+  Rf_error("FFTW support not included");
+}
 #endif

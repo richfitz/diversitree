@@ -36,18 +36,16 @@ make.all.branches.continuous <- function(cache, control) {
   ## Hard coded now, as bm and ou share.
   ic <- getNativeSymbolInfo("initial_conditions_bm")$address
   
-  ptr <- .Call("r_make_dt_obj_cont", cache.C, ic, br,
-               PACKAGE="diversitree")
+  ptr <- .Call(r_make_dt_obj_cont, cache.C, ic, br)
   
   function(pars, intermediates=FALSE, preset=NULL) {
     if ( !is.null(preset) )
       stop("Don't know how to deal with preset values yet")
-    res <- .Call("r_all_branches_cont", ptr, pars,
-                 PACKAGE="diversitree")
+    res <- .Call(r_all_branches_cont, ptr, pars)
     names(res) <- c("lq", "vals")
     if ( intermediates ) {
       vals <- res$vals
-      res <- .Call("r_get_vals_cont", ptr, PACKAGE="diversitree")
+      res <- .Call(r_get_vals_cont, ptr)
       names(res) <- c("init", "base", "lq")
       res$vals <- vals
     }

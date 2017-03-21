@@ -13,7 +13,7 @@ static double fn(double p, void *data) {
     dt_spline_eval1(spline, p);
 }
 
-SEXP hdr(SEXP x, SEXP y, SEXP alpha) {
+SEXP r_hdr(SEXP x, SEXP y, SEXP alpha) {
   double xl, tol = 1e-8, a = REAL(alpha)[0];
   HDRStruct dat = (HDRStruct) R_alloc(1, sizeof(hdr_struct));
   SEXP ret;

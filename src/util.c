@@ -52,7 +52,7 @@ void r_gemm2(double *x, int *nrx, int *ncx,
   do_gemm2(x, *nrx, *ncx, y, *nry, *ncy, z);
 }
 
-SEXP matrix_to_list(SEXP r_m) {
+SEXP r_matrix_to_list(SEXP r_m) {
   SEXP ret, tmp;
   int i, j, k, nr = nrows(r_m), nc = ncols(r_m);
   double *in, *out;
@@ -206,7 +206,7 @@ SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip) {
   return ret;
 }
 
-SEXP check_ptr_not_null(SEXP extPtr) {
+SEXP r_check_ptr_not_null(SEXP extPtr) {
   if ( TYPEOF(extPtr) != EXTPTRSXP )
     error("Recieved non-pointer");
   if ( R_ExternalPtrAddr(extPtr) == NULL )

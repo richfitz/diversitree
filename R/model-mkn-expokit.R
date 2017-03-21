@@ -4,7 +4,7 @@ make.branches.mkn.expokit <- function(cache, control) {
   m <- control$m
   
   function(y, len, pars, t0, idx) {
-    .Call("r_branches_mkn_expokit",
+    .Call(r_branches_mkn_expokit,
           pars[["Q"]], pars[["iq"]], pars[["jq"]], pars[["qnorm"]],
           len, y, m, tol)
   }

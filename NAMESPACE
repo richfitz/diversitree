@@ -1,6 +1,6 @@
 ## NAMESPACE
 
-useDynLib(diversitree)
+useDynLib(diversitree, .registration = TRUE)
 
 import(methods)
 import(Rcpp)

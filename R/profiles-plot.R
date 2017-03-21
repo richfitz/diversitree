@@ -140,5 +140,5 @@ hdr.new <- function(z, alpha=0.05, lim=NULL) {
   ez <- ecdf(z)
   sz <- environment(ez)$x
   tmp <- spline.prep(ez(sz), sz)
-  .Call("hdr", tmp$x, tmp$y, alpha)
+  .Call(r_hdr, tmp$x, tmp$y, alpha)
 }

@@ -145,12 +145,12 @@ do.asr.joint <- function(n, k, order.C, parent.C, li, pij, root.p,
   if ( n > 1 ) {
     ret <- matrix(NA, n, length(order.C))
     for ( i in seq_len(n) )
-      ret[i,] <- .Call("r_do_asr_joint", k, order.C, parent.C, li,
-                       pij, root.p, as.01, PACKAGE="diversitree")
+      ret[i,] <- .Call(r_do_asr_joint, k, order.C, parent.C, li,
+                       pij, root.p, as.01)
     ret
   } else {
-    .Call("r_do_asr_joint", k, order.C, parent.C, li,
-          pij, root.p, as.01, PACKAGE="diversitree")
+    .Call(r_do_asr_joint, k, order.C, parent.C, li,
+          pij, root.p, as.01)
   }
 }
 
