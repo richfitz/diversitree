@@ -1,4 +1,5 @@
 source("helper-diversitree.R")
+if (FALSE) {
 
 ## Will be useful to have a function for testing tolerance to within
 ## 1e-7, as that works out to be how accurate most things actually
@@ -271,3 +272,4 @@ phy <- tree.classe(pars2.classe, max.t=3)
 expect_that(as.numeric(table(phy$tip.state)), equals(c(19, 39, 17)))
 
 
+}
