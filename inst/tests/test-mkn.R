@@ -2,6 +2,7 @@ source("helper-diversitree.R")
 
 context("Mkn")
 
+test_that("mkn",{
 ## Simulate a tree and character distribution.  This is on a birth-death
 ## tree, with high rates of character evolution and an asymmetry in the
 ## character transition rates.
@@ -72,4 +73,4 @@ expect_that(lik.m.0(pars.m), equals(ll.o))
 expect_that(lik.m.d(pars.m), equals(ll.o, tolerance=1e-7))
 expect_that(lik.m.g(pars.m), equals(ll.o))
 expect_that(lik.m.G(pars.m), equals(ll.o))
-
+})

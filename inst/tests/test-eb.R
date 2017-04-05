@@ -2,6 +2,7 @@ source("helper-diversitree.R")
 
 context("Early Burst")
 
+test_that("eb", {
 data(bird.orders)
 set.seed(1)
 x <- structure(rnorm(length(bird.orders$tip.label)),
@@ -58,3 +59,4 @@ expect_that(lik.pruning.C(p2), equals(l2))
 
 ## These are quite different -- more than I'd expect.
 expect_that(lik.pruning(p2), equals(lik.pruning.C(p2)))
+})

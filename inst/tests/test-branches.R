@@ -3,6 +3,7 @@ source("helper-diversitree.R")
 
 context("Branches")
 
+test_that("branches", {
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(4)
 phy <- tree.bisse(pars, max.t=30, x0=0)
@@ -29,3 +30,4 @@ ans <- all.branches.matrix(pars.use, cache, initial.conditions,
 v <- intersect(names(ans), names(cmp))
 expect_that(ans[v],
             equals(cmp[v]))
+})

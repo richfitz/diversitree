@@ -1,6 +1,7 @@
 ## TODO: Could do with more extensive tests here.
 source("helper-diversitree.R")
 
+test_that("bd-t", {
 ## Will be useful to have a function for testing tolerance to within
 ## 1e-7, as that works out to be how accurate most things actually
 ## are.
@@ -97,4 +98,4 @@ lik5 <- make.bd.t(phy, c("spline.t", "constant.t"),
                   spline.data=spline.data)
 expect_that(lik5(p3.t), equals(ll0))
 expect_that(lik5(p4.t), equals(-23.0593116707151))
-
+})

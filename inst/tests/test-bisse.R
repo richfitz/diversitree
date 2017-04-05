@@ -8,6 +8,7 @@ equals7 <- function(...)
 
 context("BiSSE")
 
+test_that("bisse", {
 ## Basic simulated tree, 30 taxa.
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(4)
@@ -80,3 +81,4 @@ expect_that(lik.u.0(pars2), equals(lik.0(pars2), tolerance=3e-6))
 expect_that(lik.u.d(pars2), equals(lik.0(pars2), tolerance=3e-6))
 expect_that(lik.u.g(pars2), equals(lik.0(pars2), tolerance=3e-6))
 expect_that(lik.u.G(pars2), equals(lik.0(pars2), tolerance=3e-6))
+})

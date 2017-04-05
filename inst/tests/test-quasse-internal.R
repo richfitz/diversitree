@@ -2,6 +2,8 @@ source("helper-diversitree.R")
 
 context("QuaSSE (internal)")
 
+test_that("quasse-internal", {
+
 ## Imports that are generally hidden.
 quasse.extent <- diversitree:::quasse.extent
 expand.pars.quasse <- diversitree:::expand.pars.quasse
@@ -111,3 +113,4 @@ for ( drift in c(0, .01) ) {
                 equals(ans.b.mol, tolerance=0.00015))
   }
 }
+})

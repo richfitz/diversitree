@@ -2,6 +2,8 @@ source("helper-diversitree.R")
 
 context("Unresolved clades (BiSSE + BiSSE-ness)")
 
+test_that("unresolved", {
+
 make.branches.dtlik <- diversitree:::make.branches.dtlik
 unresolv.b <- diversitree:::branches.unresolved.bisse
 unresolv.n <- diversitree:::branches.unresolved.bisseness
@@ -38,3 +40,4 @@ expect_that(out.0.b.b, equals(out.0.b.u[2:3], check.attributes=FALSE))
 out.1.n.b <- branches.n(y1, tt, pars.n, 0, NA)
 out.1.n.u <- unresolv.n(pars.n, u1)
 expect_that(out.1.b.b, equals(out.1.b.u[2:3], check.attributes=FALSE))
+})

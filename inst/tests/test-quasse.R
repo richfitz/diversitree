@@ -2,6 +2,8 @@ source("helper-diversitree.R")
 
 context("QuaSSE")
 
+test_that("quasse", {
+
 ## Build tree:
 lambda <- function(x) sigmoid.x(x, 0.1, 0.2,  0, 2.5)
 mu <- function(x) constant.x(x, 0.03)
@@ -47,3 +49,4 @@ pars2 <- pars
 pars2[6] <- 0.01
 expect_that(lik.C.1(pars2), equals(-62.040165682569537))
 }
+})

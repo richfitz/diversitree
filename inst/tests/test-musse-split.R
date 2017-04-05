@@ -1,12 +1,14 @@
 source("helper-diversitree.R")
 
+context("MuSSE (split)")
+
+test_that("musse-split", {
+
 ## Different control parameters
 control.d <- list(backend="deSolve")
 control.g <- list(backend="gslode", compiled=FALSE)
 control.G <- list(backend="gslode", compiled=TRUE)
 control.i <- list(backend="invalid_backend")
-
-context("MuSSE (split)")
 
 pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3
           .03, .045, .06, # mu 1, 2, 3
@@ -61,3 +63,4 @@ expect_that(lik.s.0(pars.s2), equals(ll))
 expect_that(lik.s.d(pars.s2), equals(ll, tolerance=1e-7))
 expect_that(lik.s.g(pars.s2), equals(ll))
 expect_that(lik.s.G(pars.s2), equals(ll))
+})

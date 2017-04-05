@@ -1,6 +1,8 @@
 source("helper-diversitree.R")
 context("Tree rescaling")
 
+test_that("rescale", {
+
 ## Here is some rescaling functions I trust.
 if (suppressWarnings(require("arbutus", quietly=TRUE))) {
   set.seed(1)
@@ -112,3 +114,4 @@ if (suppressWarnings(require("arbutus", quietly=TRUE))) {
                 equals(arbutus:::model.phylo.se(phy, list(SE=.1))))
   })
 }
+})

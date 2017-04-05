@@ -2,6 +2,8 @@ source("helper-diversitree.R")
 
 context("Time machine")
 
+test_that("time machine", {
+
 make.time.machine <- diversitree:::make.time.machine
 functions <- c(lambda="linear.t", mu="constant.t")
 t.max <- 10
@@ -162,3 +164,4 @@ p4.2 <- p4.1
 p4.2[7] <- -.1
 tm$set(p4.2)
 expect_that(tm$get(0)[10], is_identical_to(-.1))
+})

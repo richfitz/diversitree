@@ -1,5 +1,7 @@
 source("helper-diversitree.R")
 
+test_that("bisse-split", {
+
 context("BiSSE (split)")
 
 ## Different control parameters
@@ -103,3 +105,4 @@ expect_that(lik.u.s.0(pars3.s), equals(ll))
 expect_that(lik.u.s.d(pars3.s), equals(ll, tolerance=1e-7))
 expect_that(lik.u.s.g(pars3.s), equals(ll))
 expect_that(lik.u.s.G(pars3.s), equals(ll))
+})

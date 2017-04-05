@@ -1,6 +1,7 @@
 ## TODO: Could do with more extensive tests here.
 source("helper-diversitree.R")
 
+test_that("bd-split", {
 ## Will be useful to have a function for testing tolerance to within
 ## 1e-7, as that works out to be how accurate most things actually
 ## are.
@@ -51,4 +52,4 @@ expect_that(lik.s(pars4), is_identical_to(lik.s2(pars4)))
 ## All the usual ML/MCMC functions work as before:
 fit <- find.mle(lik.s, pars4)
 expect_that(fit$lnLik, equals(-19.65871005552911))
-
+})

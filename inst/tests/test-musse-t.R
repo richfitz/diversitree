@@ -8,6 +8,8 @@ equals7 <- function(...)
 
 context("MuSSE (time-dependent)")
 
+test_that("musse-t", {
+
 pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3
           .03, .045, .06, # mu 1, 2, 3
           .05, 0,         # q12, q13
@@ -71,3 +73,4 @@ expect_that(lik.g(p3.t), equals(ll))
 expect_that(lik.G(p3.t), equals(ll))
 
 ## TODO: Repeat but for variation in Q matrix?
+})

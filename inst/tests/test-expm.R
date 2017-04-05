@@ -2,6 +2,7 @@ source("helper-diversitree.R")
 
 context("Matrix exponentials")
 
+test_that("expm", {
 set.seed(1)
 n <- 64L
 Q <- diversitree:::mkn.Q(runif(n*(n-1)))
@@ -44,3 +45,4 @@ ans.ss <- diversitree:::expmv.expokit.sparse(Q2.sparse, tt, v, tol=1e-10)
 
 expect_that(ans.ee, equals(ans.dd))
 expect_that(ans.ee, equals(ans.ss))
+})

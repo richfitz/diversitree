@@ -2,6 +2,8 @@ source("helper-diversitree.R")
 
 context("BiSSE (time chunks)")
 
+test_that("bisse-td", {
+
 set.seed(4)
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 phy <- tree.bisse(pars, max.t=30, x0=0)
@@ -42,9 +44,11 @@ p3.t <- c(p[1,], t,
 names(p3.t) <- argnames(lik.t)
 names(p3.td) <- argnames(lik.td)
 expect_that(lik.t(p3.t), equals(lik.td(p3.td)))
+})
 
 context("MuSSE (time chunks)")
 
+test_that("musse td", {
 pars <- c(.1,  .15,  .2,  # lambda 1, 2, 3
           .03, .045, .06, # mu 1, 2, 3
           .05, 0,         # q12, q13
@@ -78,3 +82,4 @@ expect_that(lik.td(p2.td), equals(lik.m(pars2)))
 set.seed(1)
 p3.td <- p2.td + runif(length(p2.td), 0, .2)
 expect_that(lik.td(p3.td), equals(-122.524082065168))
+})

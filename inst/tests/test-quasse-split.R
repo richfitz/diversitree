@@ -2,6 +2,8 @@ source("helper-diversitree.R")
 
 context("QuaSSE (split)")
 
+test_that("quasse-split", {
+
 ## Build tree:
 lambda <- function(x) sigmoid.x(x, 0.1, 0.2,  0, 2.5)
 mu <- function(x) constant.x(x, 0.03)
@@ -43,3 +45,4 @@ expect_that(lik.s(pars2.s), equals(ll.q))
 pars3.s <- pars + runif(length(pars.s), 0, .05)
 expect_that(lik.s(pars3.s), equals(-54.47383577050427))
 }
+})

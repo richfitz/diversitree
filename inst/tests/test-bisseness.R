@@ -8,6 +8,8 @@ equals7 <- function(...)
 
 context("BiSSE-ness")
 
+test_that("bisseness", {
+
 ## First we simulat a 50 species tree, assuming cladogenetic shifts in 
 ## the trait (i.e., the trait only changes at speciation).
 ## Red is state '1', black is state '0', and we let red lineages
@@ -72,3 +74,4 @@ lik.unresolved <-
 ## e.g., the likelihood of the true parameters is:
 expect_that(lik.unresolved(pars), equals(-174.657490373083))
 expect_that(lik.unresolved(pars2), equals(-178.182216187058))
+})
