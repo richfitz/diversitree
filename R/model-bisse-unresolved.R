@@ -21,7 +21,7 @@ bucexp <- function(nt, la0, la1, mu0, mu1, q01, q10, t, scal=1,
   stopifnot(scal >= 1)
   stopifnot(m > 1)
   n <- (nt*(nt+1)/2+1)
-  res <- .Fortran("bucexp",
+  res <- .Fortran(f_bucexp,
                   nt   = as.integer(nt),
                   la0  = as.numeric(la0),
                   la1  = as.numeric(la1),
@@ -62,7 +62,7 @@ bucexpl <- function(nt, la0, la1, mu0, mu1, q01, q10, t, Nc, nsc, k,
             all(nsc <= Nc), all(nsc >= 0), all(k <= nsc),
             scal >= 1, m > 1)
 
-  res <- .Fortran("bucexpl",
+  res <- .Fortran(f_bucexpl,
                   nt   = as.integer(nt),
                   la0  = as.numeric(la0),
                   la1  = as.numeric(la1),

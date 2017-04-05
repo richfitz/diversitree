@@ -189,7 +189,7 @@ make.tree.bisse.C.core <- function(pars, max.taxa, max.t, x0, n=100,
   ## Because this is an exponential growth, 10 iterations gets very
   ## large!  Starting at 100 and doubling each time 
   for ( attempt in 1:10 ) {
-    ans <- .C("r_simulate_bisse", pars=pars2, max.taxa=max.taxa,
+    ans <- .C(r_simulate_bisse, pars=pars2, max.taxa=max.taxa,
               max.t=max.t, parent=parent, states=states,
               extinct=extinct, split=split, start=start, len=len,
               hist=hist, hist.t=hist.t, n.info=n.info,

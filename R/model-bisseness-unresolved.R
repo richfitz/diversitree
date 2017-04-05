@@ -21,7 +21,7 @@ nucexp <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
   stopifnot(scal >= 1)
   stopifnot(m > 1)
   n <- (nt*(nt+1)/2+1)
-  res <- .Fortran("nucexp",
+  res <- .Fortran(f_nucexp,
                   nt   = as.integer(nt),
                   la0  = as.numeric(la0),
                   la1  = as.numeric(la1),
@@ -66,7 +66,7 @@ nucexpl <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
             all(nsc <= Nc), all(nsc >= 0), all(k <= nsc),
             scal >= 1, m > 1)
 
-  res <- .Fortran("nucexpl",
+  res <- .Fortran(f_nucexpl,
                   nt   = as.integer(nt),
                   la0  = as.numeric(la0),
                   la1  = as.numeric(la1),

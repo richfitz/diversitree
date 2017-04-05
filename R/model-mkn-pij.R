@@ -37,7 +37,7 @@ make.all.branches.mkn.pij <- function(cache, control) {
     branch.base[,seq_len(n.tip)] <- t.default(ans/q)
     lq[seq_len(n.tip)] <- log(q)
 
-    ans <- .C("r_mkn_core",
+    ans <- .C(r_mkn_core,
               k        = as.integer(k),
               n        = length(order.C) - 1L,
               order    = order.C,
@@ -46,7 +46,7 @@ make.all.branches.mkn.pij <- function(cache, control) {
               init     = branch.init,
               base     = branch.base,
               lq       = lq,
-              NAOK=TRUE, PACKAGE="diversitree")
+              NAOK=TRUE)
     list(init=ans$init,
          base=ans$base,
          lq=ans$lq,
