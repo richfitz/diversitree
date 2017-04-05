@@ -3,6 +3,30 @@
 #include <Rversion.h>
 
 #define CALLDEF(name, n)  {#name, (DL_FUNC) &name, n}
+#define GSLODEFUN(name)  {#name, (DL_FUNC) &name, 5, NULL, NULL}
+#define BRANCHESFUN(name)  {#name, (DL_FUNC) &name, 6, NULL, NULL}
+
+SEXP _rcpp_module_boot_diversitree(SEXP);
+
+void derivs_bisse_gslode(int, double, double*, const double *, double *);
+void derivs_bisse_aux_gslode(int, double, double*, const double *, double *);
+void derivs_bd_gslode(int, double, double*, const double *, double *);
+void derivs_bisseness_gslode(int, double, double*, const double *, double *);
+void derivs_classe_gslode(int, double, double*, const double *, double *);
+void derivs_geosse_gslode(int, double, double*, const double *, double *);
+void derivs_geosse_aux_gslode(int, double, double*, const double *, double *);
+void derivs_mknode_gslode(int, double, double*, const double *, double *);
+void derivs_mkn_meristic_gslode(int, double, double*, const double *, double *);
+void derivs_mknpij_gslode(int, double, double*, const double *, double *);
+void derivs_musse_gslode(int, double, double*, const double *, double *);
+void derivs_musse_aux_gslode(int, double, double*, const double *, double *);
+
+void branches_bm(double *, double, double *, double, int, double *);
+void branches_ou_opt(double *, double, double *, double, int, double *);
+void branches_ou_noopt(double *, double, double *, double, int, double *);
+void branches_eb(double *, double, double *, double, int, double *);
+void branches_lambda(double *, double, double *, double, int, double *);
+void initial_conditions_bm(int, double *, double *, double *, double, double *);
 
 static R_CallMethodDef R_CallDef[] = {
    CALLDEF(r_all_branches_cont, 2),
@@ -25,12 +49,33 @@ static R_CallMethodDef R_CallDef[] = {
    CALLDEF(r_set_wisdom, 1),
    CALLDEF(r_smkn_alloc, 2),
    CALLDEF(r_smkn_scm_run_all, 7),
+   CALLDEF(_rcpp_module_boot_diversitree, 1),
    {NULL, NULL, 0}
 };
 
 static R_CMethodDef R_CDef[] = {
   {"r_mkn_core",       (DL_FUNC) &r_mkn_core,       8,  NULL, NULL},
   {"r_simulate_bisse", (DL_FUNC) &r_simulate_bisse, 15, NULL, NULL},
+  // ode things:
+  GSLODEFUN(derivs_bisse_gslode),
+  GSLODEFUN(derivs_bisse_aux_gslode),
+  GSLODEFUN(derivs_bd_gslode),
+  GSLODEFUN(derivs_bisseness_gslode),
+  GSLODEFUN(derivs_classe_gslode),
+  GSLODEFUN(derivs_geosse_gslode),
+  GSLODEFUN(derivs_geosse_aux_gslode),
+  GSLODEFUN(derivs_mknode_gslode),
+  GSLODEFUN(derivs_mkn_meristic_gslode),
+  GSLODEFUN(derivs_mknpij_gslode),
+  GSLODEFUN(derivs_musse_gslode),
+  GSLODEFUN(derivs_musse_aux_gslode),
+  // continuous things
+  BRANCHESFUN(branches_bm),
+  BRANCHESFUN(branches_ou_opt),
+  BRANCHESFUN(branches_ou_noopt),
+  BRANCHESFUN(branches_eb),
+  BRANCHESFUN(branches_lambda),
+  {"initial_conditions_bm", (DL_FUNC) &initial_conditions_bm, 6, NULL, NULL},
   {NULL, NULL, 0, NULL, NULL}
 };
 
@@ -52,7 +97,7 @@ static R_FortranMethodDef R_FortranDef[] = {
 void R_init_diversitree(DllInfo *dll) {
   R_registerRoutines(dll, R_CDef, R_CallDef, R_FortranDef, NULL);
 #if defined(R_VERSION) && R_VERSION >= R_Version(3, 3, 0)
-  //  R_useDynamicSymbols(dll, FALSE);
+  R_useDynamicSymbols(dll, FALSE);
 #endif
   set_sane_gsl_error_handling();
 }
