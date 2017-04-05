@@ -8,6 +8,8 @@ source("helper-diversitree.R")
 ## specified.
 context("Solving ODEs")
 
+test_that("ode", {
+
 derivs <- diversitree:::derivs.bisse
 derivs.for.deSolve <- diversitree:::derivs.for.deSolve
 
@@ -160,3 +162,4 @@ expect_that(identical(res.t.gslode.R, res.t.ref), is_false())
 expect_that(res.t.gslode.R, equals(res.t.ref))
 expect_that(res.t.gslode.C, equals(res.t.ref))
 expect_that(res.t.gslode.R, is_identical_to(res.t.gslode.C))
+})

@@ -8,6 +8,8 @@ equals7 <- function(...)
 
 context("BiSSE (time-dependent)")
 
+test_that("bisse-t", {
+
 set.seed(4)
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 phy <- tree.bisse(pars, max.t=30, x0=0)
@@ -64,3 +66,4 @@ expect_that(lik.d(p3.t), equals7(ll))
 expect_that(lik.g(p3.t), equals(ll))
 expect_that(lik.G(p3.t), equals(ll))
 
+})

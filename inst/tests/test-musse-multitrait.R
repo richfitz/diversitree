@@ -5,6 +5,8 @@ equals7 <- function(...)
 
 context("MuSSE (multitrait)")
 
+test_that("musse-multitrait", {
+
 tr <- musse.multitrait.translate(2)
 pars <- c(.10, .15, .20, .25, # lambda 00, 10, 01, 11
           .03, .03, .03, .03, # mu 00, 10, 01, 11
@@ -70,3 +72,4 @@ for ( f in liks ) {
   expect_that(f(pars2, root=ROOT.OBS,  condition.surv=TRUE),
               equals7(lik.b.0(pars,  root=ROOT.OBS,  condition.surv=TRUE)))
 }
+})

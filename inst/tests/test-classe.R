@@ -8,7 +8,7 @@ equals7 <- function(...)
   equals(..., tolerance=1e-7)
 
 context("ClaSSE")
-
+test_that({
 read.ttn <- function(treefile)
 {
     treestr <- readLines(treefile, n=1)
@@ -271,5 +271,5 @@ set.seed(3)
 phy <- tree.classe(pars2.classe, max.t=3)
 expect_that(as.numeric(table(phy$tip.state)), equals(c(19, 39, 17)))
 
-
+})
 }

@@ -8,6 +8,8 @@ no.stdout <- function(expr) {
 
 context("Brownian motion")
 
+test_that("bm", {
+
 ## Simulated tree and traits:
 set.seed(1)
 phy <- tree.bd(pars=c(1,0), max.taxa=100)
@@ -170,4 +172,5 @@ test_that("Can fit models with ML (with SE)", {
   expect_that(fit.vcv$par, equals(fit.geiger$opt$sigsq,
                                   tolerance=1e-4,
                                   check.attributes=FALSE))
+})
 })

@@ -8,6 +8,8 @@ equals7 <- function(...)
 
 context("MuSSE")
 
+test_that("musse", {
+
 ## 1: BiSSE equivalence
 pars <- c(.1, .2, .03, .04, 0.05, 0.1)
 set.seed(2)
@@ -79,3 +81,4 @@ lik.lambda <- constrain(lik, mu2 ~ mu1, mu3 ~ mu1,
                         q13 ~ 0, q21 ~ q12, q23 ~ q12, q31 ~ 0, q32 ~ q12)
 fit.lambda <- find.mle(lik.lambda, p[argnames(lik.lambda)])
 expect_that(fit.lambda$lnLik, equals(-110.211741798546))
+})
