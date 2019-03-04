@@ -89,7 +89,7 @@ make.cache.bisse <- function(tree, states, unresolved=NULL,
   }
 
   if ( strict && !is.null(unresolved) ) {
-    seen <- ((0:1) %in% unique(na.omit(cache$states)) ||
+    seen <- ((0:1) %in% unique(na.omit(cache$states)) |
              sapply(cache$unresolved[c("n0", "n1")], sum) > 0)
     if ( !all(seen) )
       stop("Because strict state checking requested, all (and only) ",
