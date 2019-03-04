@@ -278,9 +278,9 @@ lik.bisse2.bd(pars)   - lik.bd2(pars)
 lik.bisse2.bd(2*pars) - lik.bd2(2*pars)
 
 ## 4. Unresolved clade BiSSE / Birth-Death
-set.seed(1)
-unresolved <- data.frame(tip.label=I(sample(phy$tip.label, 5)),
-                         Nc=sample(2:10, 5), n0=0, n1=0)
+unresolved <- data.frame(tip.label=I(c("sp25", "sp30", "sp40", "sp56", "sp20")),
+                         Nc =c(10, 9, 6, 5, 2),
+                         n0=0, n1=0)
 unresolved.bd <- structure(unresolved$Nc, names=unresolved$tip.label)
 lik.bisse3 <- make.bisse(phy, phy$tip.state, unresolved)
 lik.bisse3.bd <- constrain(lik.bisse3,
