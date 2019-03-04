@@ -17,7 +17,11 @@ void GslOdeR::clear_pars() {
 // TODO: Not sure that this actually belongs here, rather than in
 // derivs() below.
 SEXP GslOdeR::target(double t, SEXP y) {
-  return Rf_eval(Rf_lang4(fun, Rf_ScalarReal(t), y, pars), env);
+  SEXP tt = PROTECT(Rf_ScalarReal(t));
+  SEXP expr = PROTECT(Rf_lang4(fun, tt, y, pars));
+  SEXP result = PROTECT(Rf_eval(expr, env));
+  UNPROTECT(3);
+  return result;
 }
 
 void GslOdeR::derivs(double t, const double y[], double dydt[]) {
