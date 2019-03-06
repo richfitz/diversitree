@@ -15,7 +15,7 @@ check.tree <- function(tree, ultrametric=TRUE, bifurcating=TRUE,
   ## ape's is.binary.tree() can let a few nasties through - for
   ## e.g. each tritomy, an unbranched node and this gets through.
   ## This expression is a little stricter, even if a touch slower.
-  if ( bifurcating && (!is.binary.tree(tree) ||
+  if ( bifurcating && (!is.binary(tree) ||
                        any(tabulate(tree$edge[, 1]) == 1)) )
     stop("'tree must be bifurcating (no polytomies or unbranched nodes)'")
 
