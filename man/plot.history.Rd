@@ -51,6 +51,12 @@
 }
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## Simulate a tree, but retain extinct species.
 pars <- c(.1, .2, .03, .04, 0.05, 0.1) # BiSSE pars
 set.seed(2)

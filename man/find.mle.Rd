@@ -172,6 +172,12 @@ find.mle(func, x.init, method, ...)
 
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 set.seed(2)
 phy <- tree.bisse(pars, max.t=60, x0=0)

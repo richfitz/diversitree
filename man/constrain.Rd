@@ -83,6 +83,12 @@ constrain.i(f, p, i.free)
 }
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## Same example likelihood function as for \link{find.mle} - BiSSE on a
 ## tree with 203 species, generated with an asymmetry in the speciation
 ## rates.

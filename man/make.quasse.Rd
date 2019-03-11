@@ -112,6 +112,12 @@ starting.point.quasse(tree, states, states.sd=NULL)
 }
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## Example showing simple integration with two different backends,
 ## plus the splits.
 lambda <- function(x) sigmoid.x(x, 0.1, 0.2,  0, 2.5)

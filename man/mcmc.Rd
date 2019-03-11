@@ -136,6 +136,12 @@ only to be passed in to \code{mcmc}.
 }
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## To demonstrate, start with a simple bivariate normal.  The function
 ## 'make.mvn' creates likelihood function for the multivariate normal
 ## distribution given 'mean' (a vector) and 'vcv' (the variance

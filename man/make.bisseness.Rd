@@ -141,7 +141,13 @@ make.bisseness(tree, states, unresolved=NULL, sampling.f=NULL,
 }
 
 \examples{
-## First we simulat a 50 species tree, assuming cladogenetic shifts in 
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
+## First we simulate a 50 species tree, assuming cladogenetic shifts in
 ## the trait (i.e., the trait only changes at speciation).
 ## Red is state '1', black is state '0', and we let red lineages
 ## speciate at twice the rate of black lineages.

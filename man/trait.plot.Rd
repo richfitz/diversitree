@@ -67,6 +67,12 @@ trait.plot(tree, dat, cols, lab=names(cols), str=NULL,
 
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## These are the parameters: they are a single speciation and extinction
 ## rate, then 0->1 (trait A), 1->0 (A), 0->1 (B) and 1->0 (B).
 colnames(musse.multitrait.translate(2, depth=0))

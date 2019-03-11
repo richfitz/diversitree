@@ -87,6 +87,12 @@ make.bisse.t(tree, states, functions, unresolved=NULL, sampling.f=NULL,
 }
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 set.seed(4)
 pars <- c(0.1, 0.2, 0.03, 0.03, 0.01, 0.01)
 phy <- tree.bisse(pars, max.t=30, x0=0)

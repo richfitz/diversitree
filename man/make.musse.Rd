@@ -78,6 +78,12 @@ starting.point.musse(tree, k, q.div=5, yule=FALSE)
   really combinations of binary traits.}
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## 1: BiSSE equivalence
 pars <- c(.1, .2, .03, .04, 0.05, 0.1)
 set.seed(2)

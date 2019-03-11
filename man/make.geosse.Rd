@@ -76,6 +76,12 @@
 }
 
 \examples{
+## Due to a change in sample() behaviour in newer R it is necessary to
+## use an older algorithm to replicate the previous examples
+if (getRversion() >= "3.6.0") {
+  RNGkind(sample.kind = "Rounding")
+}
+
 ## Parameter values
 pars <- c(1.5, 0.5, 1.0, 0.7, 0.7, 2.5, 0.5)
 names(pars) <- diversitree:::default.argnames.geosse()
