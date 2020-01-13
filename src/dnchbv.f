@@ -3,7 +3,7 @@
       implicit none
       integer          m, ldh
       double precision t, H(ldh,m), y(m)
-      double complex   wsp(m*(m+2))
+      complex(kind=kind(0.0d0))   wsp(m*(m+2))
 
 *-----Purpose----------------------------------------------------------|
 *
@@ -34,11 +34,11 @@
 *     ACM - Transactions On Mathematical Software, 24(1):130-156, 1998
 *----------------------------------------------------------------------|
 *
-      double complex ZERO
+      complex(kind=kind(0.0d0)) ZERO
       integer ndeg, i, j, k, ip, ih, iy, iz
       parameter ( ndeg=7, ZERO=(0.0d0,0.0d0) )
       double precision alpha0
-      double complex alpha(ndeg), theta(ndeg), tmpc
+      complex(kind=kind(0.0d0)) alpha(ndeg), theta(ndeg), tmpc
 
       intrinsic ABS,DBLE,MIN
       
