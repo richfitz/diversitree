@@ -28,3 +28,4 @@ Description: Contains a number of comparative 'phylogenetic' methods,
   'speciation' and extinction.
 License: GPL (>= 2)
 URL: http://www.zoology.ubc.ca/prog/diversitree
+LazyData: true
