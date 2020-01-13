@@ -1,6 +1,13 @@
 /* Utilities for working with matrix multiplication */
-#include <R.h>
+
+#define USE_FC_LEN_T
+#include <Rconfig.h>
 #include <R_ext/BLAS.h>
+#ifndef FCONE
+# define FCONE
+#endif
+
+#include <R.h>
 #include "util-matrix.h"
 
 /* The routines are 
@@ -29,7 +36,7 @@ void mult_mv(int n, double *A, double *v, double beta, double *out) {
   int one = 1;
   double alpha = 1.0;
   F77_CALL(dgemm)(trans, trans, &n, &one, &n, &alpha,
-                  A, &n, v, &n, &beta, out, &n);
+                  A, &n, v, &n, &beta, out, &n FCONE FCONE);
 }
 
 /* Compute out = A * B for two n x n matrices */
@@ -37,7 +44,7 @@ void mult_mm(int n, double *A, double *B, double *out) {
   const char *trans = "N";
   double alpha = 1.0, beta = 0.0;
   F77_CALL(dgemm)(trans, trans, &n, &n, &n, &alpha,
-                  A, &n, B, &n, &beta, out, &n);
+                  A, &n, B, &n, &beta, out, &n FCONE FCONE);
 }
 
 /* This computes 
