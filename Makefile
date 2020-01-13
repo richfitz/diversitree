@@ -1,7 +1,7 @@
 all: compile_dll
 
 compile_dll:
-	Rscript -e "devtools::compile_dll()"
+	Rscript -e "pkgbuild::compile_dll()"
 
 clean:
 	rm -f src/*.o src/*.so src/*.dll
