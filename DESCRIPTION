@@ -1,7 +1,7 @@
 Package: diversitree
 Version: 0.9-13
 Title: Comparative 'Phylogenetic' Analyses of Diversification
-Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
+Authors@R: c(person("Richard G.", "FitzJohn", role = c("aut", "cre"),
     email = "rich.fitzjohn@gmail.com"),
     person("Emma", "Goldberg", role = "aut"),
     person("Karen", "Magnuson-Ford", role = "aut"),
