@@ -1,10 +1,11 @@
 Package: diversitree
 Version: 0.9-12
 Title: Comparative 'Phylogenetic' Analyses of Diversification
-Author: Richard G. FitzJohn <fitzjohn@zoology.ubc.ca>, with 'GeoSSE' and
-  'ClaSSE' by Emma E. Goldberg <eeg@uic.edu>, and 'BiSSE-ness' by Karen
-  Magnuson-Ford.
-Maintainer: Richard G. FitzJohn <rich.fitzjohn@gmail.com>
+Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
+    email = "rich.fitzjohn@gmail.com"),
+    person("Emma", "Goldberg", role = "aut"),
+    person("Karen", "Magnuson-Ford", role = "aut"),
+    person("Roger", "Sidje", role = "aut"))
 Depends: R (>= 2.10), methods, ape
 Imports: 
   deSolve (>= 1.7),
