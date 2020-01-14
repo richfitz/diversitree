@@ -146,8 +146,9 @@ test_that("Can fit models with ML", {
   expect_that(fit.pru.C, equals(fit.vcv))
   expect_that(fit.con,   equals(fit.vcv))
 
+  skip_if_not_installed("geiger")
   x <- structure(as.numeric(states), names=names(states))
-  fit.geiger <- no.stdout(fitContinuous(phy, x,
+  fit.geiger <- no.stdout(geiger::fitContinuous(phy, x,
                                         control=list(niter=5)))
   expect_that(fit.vcv$lnLik, equals(fit.geiger$opt$lnL))
   expect_that(fit.vcv$par, equals(fit.geiger$opt$sigsq,
@@ -165,8 +166,9 @@ test_that("Can fit models with ML (with SE)", {
   expect_that(fit.pru.C, equals(fit.vcv))
   # expect_that(fit.con,   equals(fit.vcv))
 
+  skip_if_not_installed("geiger")
   x <- structure(as.numeric(states), names=names(states))
-  fit.geiger <- no.stdout(fitContinuous(phy, x, SE=se,
+  fit.geiger <- no.stdout(geiger::fitContinuous(phy, x, SE=se,
                                         control=list(niter=5)))
   expect_that(fit.vcv$lnLik, equals(fit.geiger$opt$lnL))
   expect_that(fit.vcv$par, equals(fit.geiger$opt$sigsq,

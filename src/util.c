@@ -1,7 +1,13 @@
+#define USE_FC_LEN_T
+#include <Rconfig.h>
+#include <R_ext/BLAS.h>
+#ifndef FCONE
+# define FCONE
+#endif
 #include <R.h>
+
 #include <Rversion.h>
 #include <Rinternals.h>
-#include <R_ext/BLAS.h>
 #include <gsl/gsl_errno.h>
 #include "util.h"
 
@@ -19,7 +25,7 @@ void do_gemm(const double *x, int nrx, int ncx,
   const char *trans = "N";
   double alpha = 1.0, beta = 0.0;
   F77_CALL(dgemm)(trans, trans, &nrx, &ncy, &ncx, &alpha,
-                  x, &nrx, y, &nry, &beta, z, &nrx);
+                  x, &nrx, y, &nry, &beta, z, &nrx FCONE FCONE);
 }
 
 void do_gemm2(const double *x, int nrx, int ncx,
@@ -28,7 +34,7 @@ void do_gemm2(const double *x, int nrx, int ncx,
   const char *trans = "N";
   double alpha = 1.0, beta = 1.0;
   F77_CALL(dgemm)(trans, trans, &nrx, &ncy, &ncx, &alpha,
-                  x, &nrx, y, &nry, &beta, z, &nrx);
+                  x, &nrx, y, &nry, &beta, z, &nrx FCONE FCONE);
 }
 
 void do_gemm3(double *x, int nrx, int ncx,
@@ -37,7 +43,7 @@ void do_gemm3(double *x, int nrx, int ncx,
   const char *trans = "N";
   double alpha = 1.0;
   F77_CALL(dgemm)(trans, trans, &nrx, &ncy, &ncx, &alpha,
-                  x, &nrx, y, &nry, &beta, z, &nrx);
+                  x, &nrx, y, &nry, &beta, z, &nrx FCONE FCONE);
 }
 
 void r_gemm(double *x, int *nrx, int *ncx,

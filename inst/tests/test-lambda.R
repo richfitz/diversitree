@@ -149,9 +149,10 @@ test_that("Can fit models with ML", {
 
   ## Geiger does a surprisingly terrible job of fitting the model,
   ## finding a ML point that is way worse than the global optimum.
+  skip_if_not_installed("geiger")
   x <- structure(as.numeric(states), names=names(states))
   fit.geiger <-
-    no.stdout(suppressWarnings(fitContinuous(phy, x, model="lambda",
+    no.stdout(suppressWarnings(geiger::fitContinuous(phy, x, model="lambda",
                                              control=list(niter=5))))
 
   ## Even though we don't agree on where the ML point is, let's check
@@ -180,9 +181,10 @@ test_that("Can fit models with ML (with SE)", {
   expect_that(fit.pru.C, equals(fit.vcv))
   ## expect_that(fit.con,   equals(fit.vcv))
 
+  skip_if_not_installed("geiger")
   x <- structure(as.numeric(states), names=names(states))
   fit.geiger <-
-    no.stdout(suppressWarnings(fitContinuous(phy, x, SE=se, model="lambda",
+    no.stdout(suppressWarnings(geiger::fitContinuous(phy, x, SE=se, model="lambda",
                                              control=list(niter=5))))
 
   ## Even though we don't agree on where the ML point is, let's check

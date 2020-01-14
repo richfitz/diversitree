@@ -36,8 +36,9 @@ expect_that(coef(fit1), equals(coef(fit2), tolerance=0.002))
 expect_that(coef(fit2), equals(coef(fit3), tolerance=0.002))
 
 ## Compare against geiger:
+skip_if_not_installed("geiger")
 set.seed(1)
-fit4 <- suppressWarnings(fitContinuous(bird.orders, x, model="EB",
+fit4 <- suppressWarnings(geiger::fitContinuous(bird.orders, x, model="EB",
                                        control=list(niter=5)))
 expect_that(fit4$opt$lnL, equals(fit1$lnLik, tolerance=1e-6))
 p.g <- coef(fit4)[2:1]

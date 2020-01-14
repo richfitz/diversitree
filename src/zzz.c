@@ -3,10 +3,10 @@
 #include <Rversion.h>
 
 #define CALLDEF(name, n)  {#name, (DL_FUNC) &name, n}
-#define GSLODEFUN(name)  {#name, (DL_FUNC) &name, 5, NULL, NULL}
-#define BRANCHESFUN(name)  {#name, (DL_FUNC) &name, 6, NULL, NULL}
+#define GSLODEFUN(name)  {#name, (DL_FUNC) &name, 5, NULL}
+#define BRANCHESFUN(name)  {#name, (DL_FUNC) &name, 6, NULL}
 
-SEXP _rcpp_module_boot_diversitree(SEXP);
+SEXP _rcpp_module_boot_diversitree(void);
 
 void derivs_bisse_gslode(int, double, double*, const double *, double *);
 void derivs_bisse_aux_gslode(int, double, double*, const double *, double *);
@@ -54,8 +54,8 @@ static R_CallMethodDef R_CallDef[] = {
 };
 
 static R_CMethodDef R_CDef[] = {
-  {"r_mkn_core",       (DL_FUNC) &r_mkn_core,       8,  NULL, NULL},
-  {"r_simulate_bisse", (DL_FUNC) &r_simulate_bisse, 15, NULL, NULL},
+  {"r_mkn_core",       (DL_FUNC) &r_mkn_core,       8,  NULL},
+  {"r_simulate_bisse", (DL_FUNC) &r_simulate_bisse, 15, NULL},
   // ode things:
   GSLODEFUN(derivs_bisse_gslode),
   GSLODEFUN(derivs_bisse_aux_gslode),
@@ -75,23 +75,23 @@ static R_CMethodDef R_CDef[] = {
   BRANCHESFUN(branches_ou_noopt),
   BRANCHESFUN(branches_eb),
   BRANCHESFUN(branches_lambda),
-  {"initial_conditions_bm", (DL_FUNC) &initial_conditions_bm, 6, NULL, NULL},
-  {NULL, NULL, 0, NULL, NULL}
+  {"initial_conditions_bm", (DL_FUNC) &initial_conditions_bm, 6, NULL},
+  {NULL, NULL, 0, NULL}
 };
 
 // ddexpmv
 // dsexpmvi
 // dexpmf
 static R_FortranMethodDef R_FortranDef[] = {
-  {"f_bucexp",  (DL_FUNC) &F77_SUB(bucexp),  14, NULL, NULL},
-  {"f_bucexpl", (DL_FUNC) &F77_SUB(bucexpl), 19, NULL, NULL},
-  {"f_nucexp",  (DL_FUNC) &F77_SUB(nucexp),  18, NULL, NULL},
-  {"f_nucexpl", (DL_FUNC) &F77_SUB(nucexpl), 23, NULL, NULL},
+  {"f_bucexp",  (DL_FUNC) &F77_SUB(bucexp),  14, NULL},
+  {"f_bucexpl", (DL_FUNC) &F77_SUB(bucexpl), 19, NULL},
+  {"f_nucexp",  (DL_FUNC) &F77_SUB(nucexp),  18, NULL},
+  {"f_nucexpl", (DL_FUNC) &F77_SUB(nucexpl), 23, NULL},
   //
-  {"f_ddexpmv",  (DL_FUNC) &F77_SUB(ddexpmv),   6, NULL, NULL},
-  {"f_dsexpmvi", (DL_FUNC) &F77_SUB(dsexpmvi), 12, NULL, NULL},
-  {"f_dexpmf",   (DL_FUNC) &F77_SUB(dexpmf),    5, NULL, NULL},
-  {NULL, NULL, 0, NULL, NULL}
+  {"f_ddexpmv",  (DL_FUNC) &F77_SUB(ddexpmv),   6, NULL},
+  {"f_dsexpmvi", (DL_FUNC) &F77_SUB(dsexpmvi), 12, NULL},
+  {"f_dexpmf",   (DL_FUNC) &F77_SUB(dexpmf),    5, NULL},
+  {NULL, NULL, 0, NULL}
 };
 
 void R_init_diversitree(DllInfo *dll) {

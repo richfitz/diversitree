@@ -1,7 +1,6 @@
 suppressMessages({
   library(testthat)
   library(diversitree)
-  library(geiger)
   library(parallel)
   library(expm)
   library(caper)
