@@ -7,3 +7,4 @@ run_tests.R
 .travis.yml
 diversitree_.*\.tar.gz
 src/GNUmakefile
+^\.github$

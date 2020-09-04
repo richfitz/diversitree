@@ -1,6 +1,7 @@
 # diversitree: comparative phylogenetic analyses of diversification
 
 [![Build Status](https://travis-ci.org/richfitz/diversitree.png?branch=master)](https://travis-ci.org/richfitz/diversitree)
+[![R build status](https://github.com/richfitz/diversitree/workflows/R-CMD-check/badge.svg)](https://github.com/richfitz/diversitree/actions)
 
 This repository contains "diversitree".  It is my experimental sources
 though, and may not compile or work for you.  You may prefer the
