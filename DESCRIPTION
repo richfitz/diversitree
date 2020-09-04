@@ -27,5 +27,5 @@ Description: Contains a number of comparative 'phylogenetic' methods,
   models of discrete and continuous trait evolution and constant rate
   'speciation' and extinction.
 License: GPL (>= 2)
-URL: http://www.zoology.ubc.ca/prog/diversitree
+URL: https://www.zoology.ubc.ca/prog/diversitree
 LazyData: true
