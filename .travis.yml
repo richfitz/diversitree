@@ -5,3 +5,4 @@ addons:
   apt:
     packages:
       - libgsl-dev
+      - libmagick++-dev
