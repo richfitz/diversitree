@@ -3289,6 +3289,7 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <gsl/gsl_version.h>
 int main() {

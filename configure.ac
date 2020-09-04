@@ -55,6 +55,7 @@ fi
 
 AC_MSG_CHECKING([if GSL version >= 1.15])
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <stdlib.h>
 #include <string.h>
 #include <gsl/gsl_version.h>
 int main() {

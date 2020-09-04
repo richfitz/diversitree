@@ -79,7 +79,7 @@ make.lambda(tree, states, states.sd=0, control=list())
 
 \seealso{
   See
-  \url{http://www.zoology.ubc.ca/prog/diversitree/examples/ou-nonultrametric/}
+  \url{https://www.zoology.ubc.ca/prog/diversitree/examples/ou-nonultrametric/}
   for a discussion about calculations on non-ultrametric trees.
 }
 
