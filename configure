@@ -3291,6 +3291,7 @@ else
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <gsl/gsl_version.h>
 int main() {
 #ifdef GSL_VERSION
