@@ -13,7 +13,7 @@
 ##   stationary.freq
 ##   starting.point
 ##   branches
-make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
+make.bd <- function(tree=NULL, sampling.f=NULL, unresolved=NULL,
                     times=NULL, control=list()) {
   control <- check.control.bd(control, times)
   cache <- make.cache.bd(tree, sampling.f, unresolved, times, control)
@@ -40,7 +40,7 @@ make.bd <- function(tree, sampling.f=NULL, unresolved=NULL,
 ## Yule is somewhat weird, as we allow likelihood calculations, but
 ## cheat on the ML search and go straight for the ML point.  Well, we
 ## used to, but that is currently broken.
-make.yule <- function(tree, sampling.f=NULL, unresolved=NULL,
+make.yule <- function(tree=NULL, sampling.f=NULL, unresolved=NULL,
                       times=NULL, control=list()) {
   control <- check.control.bd(control)
   ll.bd <- make.bd(tree, sampling.f, unresolved, times, control)
