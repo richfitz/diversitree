@@ -3281,6 +3281,9 @@ else
    as_fn_error $? "gsl-config not found, is GSL installed?" "$LINENO" 5
 fi
 
+CPPFLAGS="${CPPFLAGS} ${GSL_CFLAGS}"
+PKG_LIBS="${PKG_LIBS} ${GSL_LIBS}"
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if GSL version >= 1.15" >&5
 $as_echo_n "checking if GSL version >= 1.15... " >&6; }
 if test "$cross_compiling" = yes; then :

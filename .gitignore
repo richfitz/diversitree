@@ -57,6 +57,8 @@ src/Makevars
 src/config.h
 config.log
 
+src/*.o
+src/*.so
 diversitree/config.log
 diversitree/src/*.o
 diversitree/src/*.so

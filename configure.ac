@@ -53,6 +53,9 @@ else
    AC_MSG_ERROR([gsl-config not found, is GSL installed?])
 fi
 
+CPPFLAGS="${CPPFLAGS} ${GSL_CFLAGS}"
+PKG_LIBS="${PKG_LIBS} ${GSL_LIBS}"
+
 AC_MSG_CHECKING([if GSL version >= 1.15])
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
