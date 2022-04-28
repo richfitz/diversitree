@@ -123,7 +123,7 @@ get.descendants <- function(node, tree, tips.only=FALSE,
   if ( is.character(node) ) {
     node <- match(node, tree$node.label) + n.tip
     if ( is.na(node) )
-      stop(sprintf("Node '%s' not found in tree"), node)
+      stop(sprintf("Node '%s' not found in tree", node))
   } else {
     node <- check.integer(node)
     if ( node >= 1 && node < tree$Nnode ) # on 1..(n.node), probably
