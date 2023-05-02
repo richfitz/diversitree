@@ -228,7 +228,7 @@ void handler_pass_to_R(const char *reason,
 }
 
 /* Pass GSL errors back to R -- don't just quit */
-SEXP set_sane_gsl_error_handling() {
+SEXP set_sane_gsl_error_handling(void) {
   gsl_set_error_handler(&handler_pass_to_R);
   return R_NilValue;
 }
