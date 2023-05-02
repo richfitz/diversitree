@@ -131,7 +131,7 @@ ancestors2 <- function(x, tree, tips.only=FALSE) {
 clades.from.classification <- function(tree, class, check=TRUE) {
   n.tip <- length(tree$tip.label)
 
-  if ( class(class) != "character" )
+  if ( !is.character(class) )
     stop("'class' must be a character vector")
   if ( length(class) != n.tip )
     stop("'class' must be the same length as the tip.labels")
