@@ -1,11 +1,11 @@
-make.all.branches.t.dtlik <- function(cache, control,
+make.all_branches.t.dtlik <- function(cache, control,
                                       initial.conditions.base) {
   control <- check.control.ode(control)
   branches <- make.branches.dtlik(cache$info, control)
   initial.conditions <-
     make.initial.conditions.t(cache$info, initial.conditions.base)
   function(pars, intermediates, preset=NULL)
-    all.branches.matrix(pars, cache, initial.conditions,
+    all_branches_matrix(pars, cache, initial.conditions,
                           branches, preset)
 }
 

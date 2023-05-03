@@ -1,4 +1,4 @@
-make.all.branches.mkn.pij <- function(cache, control) {
+make.all_branches.mkn.pij <- function(cache, control) {
   k <- cache$info$k
   
   f.pij <- make.pij.mkn(cache$info, control)

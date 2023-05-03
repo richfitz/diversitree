@@ -62,7 +62,7 @@ clades.from.polytomies <- function(tree) {
 
   ## Drop all but the representative species from each clade.
   clades.drop <- sort(unlist(lapply(clades, "[", -1)))
-  tree2 <- drop.tip.fixed(tree, clades.drop)
+  tree2 <- drop_tip_fixed(tree, clades.drop)
 
   make.clade.tree(tree2, clades.spp)
 }
@@ -98,7 +98,7 @@ clades.from.sample <- function(phy, p) {
     }
   }
 
-  make.clade.tree(drop.tip.fixed(phy, drop), clades)
+  make.clade.tree(drop_tip_fixed(phy, drop), clades)
 }
 
 
@@ -131,7 +131,7 @@ ancestors2 <- function(x, tree, tips.only=FALSE) {
 clades.from.classification <- function(tree, class, check=TRUE) {
   n.tip <- length(tree$tip.label)
 
-  if ( class(class) != "character" )
+  if ( !is.character(class) )
     stop("'class' must be a character vector")
   if ( length(class) != n.tip )
     stop("'class' must be the same length as the tip.labels")
@@ -154,7 +154,7 @@ clades.from.classification <- function(tree, class, check=TRUE) {
            paste(names(desc)[!ok], collapse=", "))
       i <- which(!ok)[1]
       to.drop <- setdiff(tree$tip.label, chk[[i]])
-      tmp <- drop.tip.fixed(tree, setdiff(tree$tip.label, chk[[i]]))
+      tmp <- drop_tip_fixed(tree, setdiff(tree$tip.label, chk[[i]]))
       col <- (tmp$tip.label %in% tree$tip.label[class == names(chk)[i]])+1
       plot2.phylo(tmp, type="f", cex=.5, label.offset=1, font=1,
                   tip.color=col, no.margin=TRUE)
@@ -164,7 +164,7 @@ clades.from.classification <- function(tree, class, check=TRUE) {
 
   to.drop <- unlist(lapply(spp.cl, "[", -1))
   if ( length(to.drop) > 0 )
-    tree.cl <- drop.tip.fixed(tree, unlist(lapply(spp.cl, "[", -1)))
+    tree.cl <- drop_tip_fixed(tree, unlist(lapply(spp.cl, "[", -1)))
   else
     tree.cl <- tree
   tmp <- sapply(spp.cl, "[[", 1)

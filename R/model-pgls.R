@@ -9,16 +9,16 @@ make.pgls <- function(tree, formula, data, control=list()) {
   control <- check.control.pgls(control)
   cache <- make.cache.pgls(tree, formula, data, control)
   if (control$method == "vcv")
-    all.branches <- make.all.branches.pgls.vcv(cache, control)
+    all_branches <- make.all_branches.pgls.vcv(cache, control)
   else if (control$method == "pruning")
-    all.branches <- make.all.branches.pgls.pruning(cache, control)
+    all_branches <- make.all_branches.pgls.pruning(cache, control)
   else if (control$method == "contrasts")
-    all.branches <- make.all.branches.pgls.contrasts(cache, control)
+    all_branches <- make.all_branches.pgls.contrasts(cache, control)
   check.pars <- make.check.pars.pgls(cache$info$np)
 
   ll <- function(pars) {
     check.pars(pars)
-    all.branches(pars)
+    all_branches(pars)
   }
   ## NOTE: using pgls.dt here to distinguish this from caper's pgls
   ## class so that 'print' works.
@@ -87,7 +87,7 @@ make.info.pgls <- function(phy, predictors, phylo.model.info) {
 default.argnames.pgls <- function(predictors)
   c(colnames(predictors), "s2")
 
-make.all.branches.pgls.vcv <- function(cache, control) {
+make.all_branches.pgls.vcv <- function(cache, control) {
   X <- cache$X
   Y <- cache$Y
   n <- cache$n
@@ -117,7 +117,7 @@ make.all.branches.pgls.vcv <- function(cache, control) {
   }
 }
 
-make.all.branches.pgls.pruning <- function(cache, control) {
+make.all_branches.pgls.pruning <- function(cache, control) {
   X <- cache$X
   Y <- cache$Y
 
@@ -126,17 +126,17 @@ make.all.branches.pgls.pruning <- function(cache, control) {
   i.linear <- seq_len(cache$info$np - cache$phylo.model.info$np)
   i.phylo  <- -i.linear
 
-  all.branches <- make.all.branches.pgls.pruning.phylo(cache, control)
+  all_branches <- make.all_branches.pgls.pruning.phylo(cache, control)
 
   function(pars) {
     b <- pars[i.linear]
     z <- as.numeric(Y - X %*% b)
-    res <- all.branches(pars[i.phylo], z)
+    res <- all_branches(pars[i.phylo], z)
     rootfunc.pgls.pruning(res)
   }
 }
 
-make.all.branches.pgls.contrasts <- function(cache, control) {
+make.all_branches.pgls.contrasts <- function(cache, control) {
   u.x    <- cache$u.x
   u.y    <- cache$u.y
   np     <- cache$info$np
@@ -291,7 +291,7 @@ residuals.fit.mle.pgls <- function(object, ...) {
 }
 residuals.mcmcsamples.pgls <- residuals.fit.mle.pgls
 
-## This organises wrapping around the normal "all.branches" functions,
+## This organises wrapping around the normal "all_branches" functions,
 ## from the point of view of:
 ##
 ## * only some of the parameters belong to a phylogenetic model
@@ -304,11 +304,11 @@ residuals.mcmcsamples.pgls <- residuals.fit.mle.pgls
 ##
 ## To make that make sense, we need extra elements in the cache
 ## object.
-make.all.branches.pgls.pruning.phylo <- function(cache, control) {
+make.all_branches.pgls.pruning.phylo <- function(cache, control) {
   ## Dummy variable, needed for initial.tip.bm.pruning()
   cache$states <- cache[["Y"]]
 
-  ## This is needed by make.all.branches.continuous to set up
+  ## This is needed by make.all_branches.continuous to set up
   ## initial tip memory:
   cache$y <- initial.tip.bm.pruning(cache)
 
@@ -316,25 +316,25 @@ make.all.branches.pgls.pruning.phylo <- function(cache, control) {
   ## container.
   cache$info <- cache$phylo.model.info
 
-  all.branches <- make.all.branches.bm.pruning(cache, control)
+  all_branches <- make.all_branches.bm.pruning(cache, control)
 
   if (control$backend == "R") {
-    y <- get.cache(all.branches)$y$y
+    y <- get.cache(all_branches)$y$y
     idx <- match(seq_len(cache$n), cache$y$target)
     function(pars, residuals) {
       y[1,idx] <- residuals
-      environment(all.branches)$cache$y$y <- y
-      all.branches(pars)
+      environment(all_branches)$cache$y$y <- y
+      all_branches(pars)
     }
   } else { # backend "C"
-    ptr <- environment(all.branches)$ptr
+    ptr <- environment(all_branches)$ptr
     ## NOTE: We need the mangled version here - differently ordered!
-    y <- environment(all.branches)$cache.C$y$y
+    y <- environment(all_branches)$cache.C$y$y
 
     function(pars, residuals) {
       y[1,] <- residuals
       .Call(r_dt_cont_reset_tips, ptr, y)
-      all.branches(pars)
+      all_branches(pars)
     }
   }
 }

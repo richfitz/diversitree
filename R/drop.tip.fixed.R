@@ -2,7 +2,7 @@
 ## the correct order.  Otherwise it is exactly the same as the
 ## drop.tip in ape version 2.4-1 (right down to the use of dim(x)[1]
 ## instead of nrow(x)).  See REMOVE/REPLACE/DONE at the end for changes.
-drop.tip.fixed <- function(phy, tip, trim.internal = TRUE, subtree =
+drop_tip_fixed <- function(phy, tip, trim.internal = TRUE, subtree =
                            FALSE, root.edge = 0, rooted = is.rooted(phy)) {
   if (!inherits(phy, "phylo")) 
     stop("object \"phy\" is not of class \"phylo\"")

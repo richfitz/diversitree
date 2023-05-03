@@ -4,13 +4,13 @@ make.bisse.t <- function(tree, states, functions, unresolved=NULL,
   cache <- make.cache.bisse.t(tree, states, functions,
                               unresolved, sampling.f, strict,
                               truncate, spline.data)
-  all.branches <- make.all.branches.t.dtlik(cache, control,
+  all_branches <- make.all_branches.t.dtlik(cache, control,
                                             initial.conditions.bisse)
   rootfunc <- make.rootfunc.t(cache, rootfunc.musse)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("bisse.t", "bisse", "dtlik.t", "dtlik", "function")

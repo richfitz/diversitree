@@ -7,7 +7,7 @@ SEXP r_matrix_to_list(SEXP r_m);
 SEXP r_descendants(SEXP node, SEXP edge, SEXP ntip);
 SEXP r_descendants_flag(SEXP node, SEXP edge, SEXP ntip);
 SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip);
-SEXP set_sane_gsl_error_handling();
+SEXP set_sane_gsl_error_handling(void);
 
 // hdr.c
 SEXP r_hdr(SEXP x, SEXP y, SEXP alpha);
@@ -41,7 +41,7 @@ SEXP r_do_tips(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
 SEXP r_make_quasse_fft(SEXP r_nx, SEXP r_dx, SEXP r_nd, SEXP r_flags);
 
 // rfftw.h
-SEXP r_get_wisdom();
+SEXP r_get_wisdom(void);
 SEXP r_set_wisdom(SEXP r_wisdom);
 
 // scm-mkn.c

@@ -13,12 +13,12 @@
 ## mkn.multitrait, this does not actually use the mkn code (much).
 make.mkn.meristic <- function(tree, states, k, control=list()) {
   cache <- make.cache.mkn.meristic(tree, states, k, control)
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions.mkn)
   rootfunc <- rootfunc.mkn
 
   ll <- function(pars, root=ROOT.OBS, root.p=NULL, intermediates=FALSE) {
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, root, root.p, intermediates)
   }
   class(ll) <- c("mkn.meristic", "mkn", "dtlik", "function")

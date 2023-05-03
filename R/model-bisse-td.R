@@ -3,7 +3,7 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
                               strict=TRUE, control=list()) {
   cache <- make.cache.bisse.td(tree, states, n.epoch, unresolved,
                                sampling.f, nt.extra, strict)
-  all.branches <- make.all.branches.td.dtlik(cache, control,
+  all_branches <- make.all_branches.td.dtlik(cache, control,
                                              initial.conditions.bisse)
   rootfunc <- make.rootfunc.td(cache, rootfunc.musse)
   f.pars <- make.pars.bisse.td(n.epoch)
@@ -11,7 +11,7 @@ make.bisse.td <- function(tree, states, n.epoch, unresolved=NULL,
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("bisse.td", "bisse", "dtlik", "function")

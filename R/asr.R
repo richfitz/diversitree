@@ -51,8 +51,8 @@ make.asr.stoch.constrained <- function(lik, ...) {
 }
 
 ## Next, the utility functions for the different types of models This
-## is to asr.marginal what all.branches is for the core models.  Here,
-## the argument 'res' is the result of running all.branches
+## is to asr.marginal what all_branches is for the core models.  Here,
+## the argument 'res' is the result of running all_branches
 do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
                               initial.conditions, branches, root,
                               ...) {
@@ -105,8 +105,8 @@ do.asr.marginal.R <- function(pars, cache, res, nodes, states.idx,
   matrix(unlist(lapply(nodes, f)), ncol=length(nodes))
 }
 
-make.do.asr.marginal <- function(all.branches, rootfunc) {
-  eb <- environment(all.branches)
+make.do.asr.marginal <- function(all_branches, rootfunc) {
+  eb <- environment(all_branches)
   cache <- eb$cache
   states.idx <- cache$info$idx.d
   if (isTRUE(cache$info$partitioned)) {
@@ -119,7 +119,7 @@ make.do.asr.marginal <- function(all.branches, rootfunc) {
   function(pars, nodes, preset, ...) {
     root.f <- function(res, pars)
       rootfunc(res, pars, ...)
-    res <- all.branches(pars, TRUE, preset)
+    res <- all_branches(pars, TRUE, preset)
     do.asr.marginal.R(pars, cache, res, nodes, states.idx,
                       initial.conditions, branches, root.f)
   }

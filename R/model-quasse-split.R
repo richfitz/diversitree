@@ -7,14 +7,14 @@ make.quasse.split <- function(tree, states, states.sd, lambda, mu,
                                    control, sampling.f)
   n.part <- cache$n.part
 
-  all.branches <- make.all.branches.quasse.split(cache, cache$control)
+  all_branches <- make.all_branches.quasse.split(cache, cache$control)
   rootfunc <- make.rootfunc.split(cache, make.rootfunc.quasse(cache))
   f.pars <- make.pars.quasse.split(cache)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.f=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.f, intermediates)
   }
 
@@ -77,13 +77,13 @@ initial.tip.quasse.split <- function(cache, control, x) {
   dt.tips.ordered(y, tips, cache$len[tips])
 }
 
-## This is almost identical to make.all.branches.split.dtlik except:
+## This is almost identical to make.all_branches.split.dtlik except:
 ## 1. We make initial.conditions inside this function
 ## 2. No ode check
 ## 3. make.branches.quasse not make.branches.dtlik (also for aux)
 ## 4. The initial tip conditions are computed at the beginning of the
 ##    function.
-make.all.branches.quasse.split <- function(cache, control) {
+make.all_branches.quasse.split <- function(cache, control) {
   control <- check.control.split(control)
   caching.branches <- control$caching.branches
   initial.conditions <- make.initial.conditions.quasse(control)
@@ -99,7 +99,7 @@ make.all.branches.quasse.split <- function(cache, control) {
     if ( caching.branches )
       caching.branches.set.pars(pars, branches.split)
     cache$y <- initial.tip.quasse.split(cache, control, pars[[1]]$hi$x)
-    all.branches.list(pars, cache,
+    all_branches.list(pars, cache,
                       initial.conditions.split,
                       branches.split, preset)
   }

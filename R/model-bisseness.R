@@ -77,7 +77,7 @@ make.bisseness <- function(tree, states, unresolved=NULL, sampling.f=NULL,
     warning(paste("BiSSE-ness with unresolved clades has",
                   "not yet been extensively tested"))
 
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions.bisseness)
   rootfunc <- rootfunc.bisseness
 
@@ -85,7 +85,7 @@ make.bisseness <- function(tree, states, unresolved=NULL, sampling.f=NULL,
                  root.p=NULL, intermediates=FALSE) {
     check.pars.bisseness(pars)
     preset <- branches.unresolved.bisseness(pars, unresolved)
-    ans <- all.branches(pars, intermediates, preset)
+    ans <- all_branches(pars, intermediates, preset)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("bisseness", "dtlik", "function")
@@ -152,7 +152,7 @@ rootfunc.bisseness <- function(res, pars, condition.surv, root, root.p,
 
   d.root <- vals[3:4]
 
-  root.p <- root.p.calc(d.root, pars, root, root.p,
+  root.p <- root_p_calc(d.root, pars, root, root.p,
                         stationary.freq.bisseness)
   if ( condition.surv ) {
     lambda <- pars[1:2]

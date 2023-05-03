@@ -3,7 +3,7 @@ make.asr.marginal.mkn <- function(lik, ...) {
     stop("ASR not yet possible with ode-based Mkn")
   e <- environment(lik)
   f.pars <- e$f.pars
-  all.branches <- e$all.branches
+  all_branches <- e$all_branches
   cache <- e$cache
   
   info <- get.info(lik)
@@ -23,7 +23,7 @@ make.asr.marginal.mkn <- function(lik, ...) {
     root.f <- function(pars, vals, lq)
       rootfunc.mkn(list(vals=vals, lq=lq), pars, root, root.p, FALSE)
     
-    res <- all.branches(pars2, TRUE, NULL)
+    res <- all_branches(pars2, TRUE, NULL)
     .Call(r_asr_marginal_mkn, k, pars2, nodes.C, cache.C, res,
           root.f, env)
   }

@@ -12,13 +12,13 @@
 make.mkn <- function(tree, states, k, strict=TRUE, control=list()) {
   control <- check.control.mkn(control, k)
   cache <- make.cache.mkn(tree, states, k, strict, control)
-  all.branches <- make.all.branches.mkn(cache, control)
+  all_branches <- make.all_branches.mkn(cache, control)
   rootfunc <- rootfunc.mkn
   f.pars <- make.pars.mkn(k)
 
   ll <- function(pars, root=ROOT.OBS, root.p=NULL, intermediates=FALSE) {
     qmat <- f.pars(pars)
-    ans <- all.branches(qmat, intermediates)
+    ans <- all_branches(qmat, intermediates)
     rootfunc(ans, qmat, root, root.p, intermediates)
   }
   class(ll) <- c("mkn", "dtlik", "function")
@@ -113,7 +113,7 @@ rootfunc.mkn <- function(res, pars, root, root.p, intermediates) {
   lq <- res$lq
   k <- length(d.root)
 
-  root.p <- root.p.calc(d.root, pars, root, root.p,
+  root.p <- root_p_calc(d.root, pars, root, root.p,
                         stationary.freq.mkn)
   if ( root == ROOT.ALL )
     loglik <- log(d.root) + sum(lq)
@@ -129,14 +129,14 @@ rootfunc.mkn <- function(res, pars, root, root.p, intermediates) {
   loglik
 }
 
-make.all.branches.mkn <- function(cache, control) {
+make.all_branches.mkn <- function(cache, control) {
   if ( control$method == "ode" ) {
     if ( !is.null(control$backend) && control$backend == "expokit" )
-      make.all.branches.mkn.expokit(cache, control)
+      make.all_branches.mkn.expokit(cache, control)
     else
-      make.all.branches.dtlik(cache, control, initial.conditions.mkn)
+      make.all_branches.dtlik(cache, control, initial.conditions.mkn)
   } else { # method == "pij"
-    make.all.branches.mkn.pij(cache, control)
+    make.all_branches.mkn.pij(cache, control)
   }
 }
 

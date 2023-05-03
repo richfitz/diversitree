@@ -1,7 +1,7 @@
-make.asr.marginal.dtlik.t <- function(lik, ...) {
+make_asr_marginal_dtlik_t <- function(lik, ...) {
   e <- environment(lik)
   cache <- get.cache(lik)
-  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc)
+  do.asr <- make.do.asr.marginal(e$all_branches, e$rootfunc)
   preset <- NULL
 
   ## Slightly different prototypes will be needed for different
@@ -16,6 +16,6 @@ make.asr.marginal.dtlik.t <- function(lik, ...) {
   asr
 }
 
-make.asr.marginal.bisse.t <- make.asr.marginal.dtlik.t
-make.asr.marginal.musse.t <- make.asr.marginal.dtlik.t
+make.asr.marginal.bisse.t <- make_asr_marginal_dtlik_t
+make.asr.marginal.musse.t <- make_asr_marginal_dtlik_t
 

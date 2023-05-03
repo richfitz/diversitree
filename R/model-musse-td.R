@@ -2,7 +2,7 @@ make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
                           strict=TRUE, control=list()) {
   cache <- make.cache.musse.td(tree, states, k, n.epoch,
                                sampling.f, strict)
-  all.branches <- make.all.branches.td.dtlik(cache, control,
+  all_branches <- make.all_branches.td.dtlik(cache, control,
                                              initial.conditions.musse)
   rootfunc <- make.rootfunc.td(cache, rootfunc.musse)
   f.pars <- make.pars.musse.td(n.epoch, k)
@@ -10,7 +10,7 @@ make.musse.td <- function(tree, states, k, n.epoch, sampling.f=NULL,
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("musse.td", "musse", "dtlik", "function")

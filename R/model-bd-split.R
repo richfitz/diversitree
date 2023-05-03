@@ -16,12 +16,12 @@ make.bd.split <- function(tree, nodes, split.t=Inf, sampling.f=NULL,
                                unresolved)
   n.part <- cache$n.part
 
-  all.branches <- make.all.branches.bd.split(cache)
+  all_branches <- make.all_branches.bd.split(cache)
   rootfunc <- make.rootfunc.bd.split(cache)
 
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
     pars <- check.pars.bd.split(pars, n.part)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, intermediates)
   }
   class(ll) <- c("bd.split", "bd", "dtlik", "function")
@@ -83,7 +83,7 @@ make.cache.bd.split <- function(tree, nodes, split.t=Inf,
   obj
 }
 
-make.all.branches.bd.split <- function(cache) {
+make.all_branches.bd.split <- function(cache) {
   n.part <- cache$n.part
   ll.part <- lapply(seq_len(n.part), make.bd.split.part, cache=cache)
 

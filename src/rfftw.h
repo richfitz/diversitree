@@ -31,5 +31,5 @@ rfftw_plan_real* make_rfftw_plan_real(int nd, int nx, int dir,
 SEXP r_make_rfftw_plan_real(SEXP r_nd, SEXP r_nx, SEXP r_dir);
 SEXP r_rfftw_forw(SEXP extPtr, SEXP r_x_in);
 SEXP r_rfftw_back(SEXP extPtr, SEXP r_y_in);
-SEXP r_get_wisdom();
+SEXP r_get_wisdom(void);
 SEXP r_set_wisdom(SEXP r_wisdom);

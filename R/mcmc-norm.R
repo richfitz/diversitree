@@ -3,7 +3,7 @@
 ## standard deviation of the normal updates.
 sampler.norm <- function(lik, x.init, y.init, w, lower, upper, control) {
   for ( i in seq_along(x.init) ) {
-    xy <- mcmc.norm.1d(make.unipar(lik, x.init, i),
+    xy <- mcmc_norm_1d(make.unipar(lik, x.init, i),
                        x.init[i], y.init, w[i], lower[i], upper[i])
     x.init[i] <- xy[1]
     y.init    <- xy[2]
@@ -12,7 +12,7 @@ sampler.norm <- function(lik, x.init, y.init, w, lower, upper, control) {
   list(x.init, y.init)
 }
 
-mcmc.norm.1d <- function(f, x.init, y.init, w, lower, upper, control) {
+mcmc_norm_1d <- function(f, x.init, y.init, w, lower, upper, control) {
   x.new <- rnorm(1, x.init, w)
 
   if ( x.new < lower || x.new > upper )

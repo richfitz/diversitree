@@ -19,7 +19,7 @@ make.bisse.split <- function(tree, states, nodes, split.t=Inf,
   n.part <- cache$n.part
   unresolved <- cache$unresolved
 
-  all.branches <- make.all.branches.split.dtlik(cache, control,
+  all_branches <- make.all_branches.split.dtlik(cache, control,
                                                 initial.conditions.bisse)
   rootfunc <- make.rootfunc.split(cache, rootfunc.musse)
 
@@ -27,7 +27,7 @@ make.bisse.split <- function(tree, states, nodes, split.t=Inf,
                  root.p=NULL, intermediates=FALSE) {
     pars <- check.pars.bisse.split(pars, n.part)
     preset <- branches.unresolved.bisse.split(pars, unresolved)
-    ans <- all.branches(pars, intermediates, preset)
+    ans <- all_branches(pars, intermediates, preset)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("bisse.split", "bisse", "dtlik", "function")
@@ -46,7 +46,7 @@ make.bisse.uneven <- function(tree, states, nodes, split.t=Inf,
   n.part <- cache$n.part
   unresolved <- cache$unresolved
 
-  all.branches <- make.all.branches.split.dtlik(cache, control,
+  all_branches <- make.all_branches.split.dtlik(cache, control,
                                                 initial.conditions.bisse)
   rootfunc <- make.rootfunc.split(cache, rootfunc.musse)
 
@@ -54,7 +54,7 @@ make.bisse.uneven <- function(tree, states, nodes, split.t=Inf,
                  root.p=NULL, intermediates=FALSE) {
     pars <- rep(list(check.pars.bisse(pars)), n.part)
     preset <- branches.unresolved.bisse.split(pars, unresolved)
-    ans <- all.branches(pars, intermediates, preset)
+    ans <- all_branches(pars, intermediates, preset)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("bisse.uneven", "bisse", "dtlik", "function")

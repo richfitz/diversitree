@@ -31,13 +31,13 @@ make.ou <- function(tree, states, states.sd=0, with.optimum=FALSE,
     stop("Cannot fit a model with optimum using contrasts (use pruning)")
 
   if (control$method == "vcv") {
-    all.branches <- make.all.branches.rescale.vcv(cache, control)
+    all_branches <- make.all_branches.rescale.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else if (control$method == "pruning") {
-    all.branches <- make.all.branches.ou.pruning(cache, control)
+    all_branches <- make.all_branches.ou.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
   } else if (control$method == "contrasts") {
-    all.branches <- make.all.branches.rescale.contrasts(cache, control)
+    all_branches <- make.all_branches.rescale.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
     stop("Unknown method", control$method)
@@ -46,7 +46,7 @@ make.ou <- function(tree, states, states.sd=0, with.optimum=FALSE,
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
                  intermediates=FALSE) {
     check.pars.ou(pars, with.optimum)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, root, root.x, intermediates)
   }
   class(ll) <- c("ou", "dtlik", "function")

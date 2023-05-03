@@ -6,19 +6,19 @@
 ##
 ## One way to look at that is how arbutus:::model.phylo.se() does this.
 
-make.all.branches.bm.contrasts <- function(cache, control) {
+make.all_branches.bm.contrasts <- function(cache, control) {
   states <- cache$states
   if (any(cache$states.sd > 0))
     stop("Cannot (yet) do contrasts based bm models with state error")
 
-  # Same names as make.all.branches.pgls.contrasts
+  # Same names as make.all_branches.pgls.contrasts
   n      <- cache$n  # Number of tips
   u      <- cache$u  # Contrasts for the states
   V      <- cache$V  # Contrast variances
   V0     <- cache$V0 # Root contrast variance
   root.x <- cache$root.x
 
-  ## Note that like all.branches.pgls there are constants here that
+  ## Note that like all_branches.pgls there are constants here that
   ## can be factored out. n*log(2 * pi) + sum(log(V)) + log(V0) is
   ## constant.
 

@@ -3,13 +3,13 @@ make.musse.t <- function(tree, states, k, functions, sampling.f=NULL,
                          truncate=FALSE, spline.data=NULL) {
   cache <- make.cache.musse.t(tree, states, k, functions, sampling.f,
                               strict, truncate, spline.data)
-  all.branches <- make.all.branches.t.dtlik(cache, control,
+  all_branches <- make.all_branches.t.dtlik(cache, control,
                                             initial.conditions.musse)
   rootfunc <- make.rootfunc.t(cache, rootfunc.musse)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("musse.t", "musse", "dtlik.t", "dtlik", "function")

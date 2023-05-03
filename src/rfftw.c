@@ -146,7 +146,7 @@ SEXP r_rfftw_back(SEXP extPtr, SEXP r_y_in) {
 }
 
 /* Simple help for getting and setting wisdom */
-SEXP r_get_wisdom() {
+SEXP r_get_wisdom(void) {
   char *wisdom = fftw_export_wisdom_to_string();
   SEXP ret;
   PROTECT(ret = allocVector(STRSXP, 1));
@@ -165,7 +165,7 @@ SEXP r_set_wisdom(SEXP r_wisdom) {
 }
 
 #else
-SEXP r_get_wisdom() {
+SEXP r_get_wisdom(void) {
   Rf_error("FFTW support not included");
 }
 SEXP r_set_wisdom(SEXP r_wisdom) {

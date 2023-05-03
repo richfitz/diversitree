@@ -15,14 +15,14 @@ make.quasse <- function(tree, states, states.sd, lambda, mu,
                             control=NULL, sampling.f=NULL) {
   cache <- make.cache.quasse(tree, states, states.sd, lambda, mu,
                              control, sampling.f)
-  all.branches <- make.all.branches.quasse(cache, cache$control)
+  all_branches <- make.all_branches.quasse(cache, cache$control)
   rootfunc <- make.rootfunc.quasse(cache)
   f.pars <- make.pars.quasse(cache)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.f=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.f, intermediates)
   }
 
@@ -193,7 +193,7 @@ make.rootfunc.quasse <- function(cache) {
 
     d.root <- vals[,2]
 
-    root.p <- root.p.quasse(d.root, pars$lo, root, root.f)
+    root.p <- root_p_quasse(d.root, pars$lo, root, root.f)
     if ( condition.surv ) {
       lambda <- pars$lo$lambda
       e.root <- vals[,1]
@@ -210,7 +210,7 @@ make.rootfunc.quasse <- function(cache) {
   }
 }
 
-root.p.quasse <- function(d.root, pars, root, root.f) {
+root_p_quasse <- function(d.root, pars, root, root.f) {
   if ( !is.null(root.f) && root != ROOT.GIVEN )
     warning("Ignoring specified root state")
   
@@ -232,14 +232,14 @@ root.p.quasse <- function(d.root, pars, root, root.f) {
 
 ######################################################################
 ## Extra core stuff:
-make.all.branches.quasse <- function(cache, control) {
+make.all_branches.quasse <- function(cache, control) {
   branches <- make.branches.quasse(cache, control)
   initial.conditions <- make.initial.conditions.quasse(control)
   ## TODO: This is where tips.combined goes, *not* in the likelihood
   ## function...
   function(pars, intermediates, preset=NULL) {
     cache$y <- initial.tip.quasse(cache, cache$control, pars[[1]]$x)
-    all.branches.list(pars, cache, initial.conditions,
+    all_branches.list(pars, cache, initial.conditions,
                       branches, preset)
   }
 }

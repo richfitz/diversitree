@@ -1,4 +1,4 @@
-make.all.branches.split.dtlik <- function(cache, control,
+make.all_branches.split.dtlik <- function(cache, control,
                                           initial.conditions) {
   control <- check.control.ode(control)
   control <- check.control.split(control)
@@ -13,7 +13,7 @@ make.all.branches.split.dtlik <- function(cache, control,
   function(pars, intermediates, preset=NULL) {
     if ( caching.branches )
       caching.branches.set.pars(pars, branches.split)
-    all.branches.matrix(pars, cache,
+    all_branches_matrix(pars, cache,
                         initial.conditions.split,
                         branches.split, preset)
   }    
@@ -159,7 +159,7 @@ make.rootfunc.split <- function(cache, rootfunc) {
 ## Determine the group membership of every edge.
 ## Augment the usual cache vector with some extra information:
 make.cache.split <- function(phy, cache, nodes, split.t) {
-  tmp <- split.group(phy, nodes, split.t)
+  tmp <- split_group(phy, nodes, split.t)
   nodes <- tmp$nodes
 
   cache$nodes <- tmp$nodes
@@ -184,7 +184,7 @@ update.info.split <- function(info, nodes) {
     info$name <- info$name.pretty
   }
   info$partitioned <- TRUE
-  info$argnames <- argnames.twopart(info$argnames, n.part)
+  info$argnames <- argnames_twopart(info$argnames, n.part)
   info$name.ode <- info$name
   info$name.pretty <- sprintf("%s (split tree)", info$name.pretty)
   info$name <- sprintf("%s.split", info$name)
@@ -222,7 +222,7 @@ make.cache.split.xxsse <- function(phy, cache, nodes, split.t,
 
 ######################################################################
 ## Utility
-split.group <- function(phy, nodes, split.t) {
+split_group <- function(phy, nodes, split.t) {
   tmp <- check.split(phy, nodes, split.t)
   nodes <- tmp$nodes
   split.with.edge <- tmp$split.with.edge

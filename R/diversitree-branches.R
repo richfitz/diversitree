@@ -10,18 +10,18 @@
 ##   - BD2 (HIV model)
 
 ## I have abstracted most of the calculations in a (hopefully) general
-## way.  The function 'all.branches' does most of the calculations;
+## way.  The function 'all_branches' does most of the calculations;
 ## this looks after all the book-keeping as calculations proceed down
 ## a tree.  Models will generally use this as their main function, but
 ## with additional root state calculations after this calculation has
 ## finished (see model-bisse.R for the canonical example of this).
 
-## all.branches takes arguments
+## all_branches takes arguments
 ##   pars, cache, initial.conditions, branches
 ## These are
 ##
 ##   pars: parameters for the model.  No checks are done at all on the
-##   size or contents of this (all.branches knows nothing about what
+##   size or contents of this (all_branches knows nothing about what
 ##   is appropriate)
 ##
 ##   cache: A cache object produced by make.cache(), possibly
@@ -37,11 +37,11 @@
 ##     'init': a two-row, npar column matrix of initial conditions
 ##     corresponding to the base conditions of the two daugher
 ##     branches.
-##     'pars': the parameters as given into all.branches
+##     'pars': the parameters as given into all_branches
 ##     'is.root': boolean indicating if the node is the root or not
 ##   This function must return a vector of length npar+1.  The first
 ##   of these is the log-compensation value (zero if none applied),
-##   and the rest are the new initial conditions.  all.branches checks
+##   and the rest are the new initial conditions.  all_branches checks
 ##   to make sure that the log-compensation value is finite as a way
 ##   of making sure that the calculations succeeded.
 ##   initial.conditions may produce informative errors instead, or
@@ -54,7 +54,7 @@
 ##   where
 ##     'y': a vector of initial conditions (length npar)
 ##     'len': the length of the branch
-##     'pars': the parameters as passed to all.branches
+##     'pars': the parameters as passed to all_branches
 ##     't0': the time at the tip of the branch
 ##   Note that the base of the branch is at time t0 + len.  This
 ##   function must return a vector of length 'npar', being the
@@ -81,7 +81,7 @@
 ## but I need to be careful with this, as some depths will be
 ## 1e-15 and things like that.  This may not be a problem in reality.
 
-all.branches.matrix <- function(pars, cache, initial.conditions,
+all_branches_matrix <- function(pars, cache, initial.conditions,
                                 branches, preset=NULL) {
   len <- cache$len
   depth <- cache$depth
@@ -146,7 +146,7 @@ all.branches.matrix <- function(pars, cache, initial.conditions,
   list(init=branch.init, base=branch.base, lq=lq, vals=y.in)
 }
 
-all.branches.list <- function(pars, cache, initial.conditions,
+all_branches.list <- function(pars, cache, initial.conditions,
                               branches, preset) {
   len <- cache$len
   depth <- cache$depth
@@ -294,7 +294,7 @@ ROOT.GIVEN <- 4
 ROOT.BOTH  <- 5
 ROOT.MAX   <- 6
 ROOT.ALL   <- ROOT.BOTH
-root.p.calc <- function(vals, pars, root, root.p=NULL,
+root_p_calc <- function(vals, pars, root, root.p=NULL,
                         root.equi=NULL) {
   if ( !is.null(root.p) && root != ROOT.GIVEN )
     warning("Ignoring specified root state")
@@ -378,11 +378,11 @@ make.branches.dtlik <- function(info, control) {
   make.branches.comp(branches, comp.idx, eps)  
 }
 
-make.all.branches.dtlik <- function(cache, control,
+make.all_branches.dtlik <- function(cache, control,
                                     initial.conditions) {
   branches <- make.branches.dtlik(cache$info, control)
   function(pars, intermediates, preset=NULL)
-    all.branches.matrix(pars, cache, initial.conditions,
+    all_branches_matrix(pars, cache, initial.conditions,
                         branches, preset)
 }
 

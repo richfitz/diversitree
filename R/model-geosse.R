@@ -17,14 +17,14 @@ make.geosse <- function(tree, states, sampling.f=NULL, strict=TRUE,
                         control=list()) {
   cache <- make.cache.geosse(tree, states, sampling.f, strict)
 
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions.geosse)
   rootfunc <- rootfunc.geosse
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     check.pars.geosse(pars)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("geosse", "dtlik", "function")
@@ -94,7 +94,7 @@ rootfunc.geosse <- function(res, pars, condition.surv, root, root.p,
   lq <- res$lq
 
   d.root <- vals[4:6]
-  root.p <- root.p.calc(d.root, pars, root, root.p,
+  root.p <- root_p_calc(d.root, pars, root, root.p,
                         stationary.freq.geosse)
   if ( condition.surv ) {
     e.root <- vals[1:3]
