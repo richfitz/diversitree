@@ -1,6 +1,6 @@
 ## Time chunks.
 
-make.all.branches.td.dtlik <- function(cache, control,
+make.all_branches.td.dtlik <- function(cache, control,
                                        initial.conditions) {
   control <- check.control.ode(control)
 
@@ -8,7 +8,7 @@ make.all.branches.td.dtlik <- function(cache, control,
   initial.conditions.td <-
     make.initial.conditions.td(initial.conditions)
   function(pars, intermediates, preset=NULL)
-    all.branches.matrix(pars, cache, initial.conditions.td,
+    all_branches_matrix(pars, cache, initial.conditions.td,
                         branches.td, preset)
 }
 
@@ -87,7 +87,7 @@ make.rootfunc.td <- function(cache, rootfunc) {
 update.info.td <- function(info, n.epoch) {
   n.epoch <- check.n.epoch(n.epoch)
   argnames.td <- c(sprintf("t.%d", seq_len(n.epoch-1)),
-                   argnames.twopart(info$argnames, n.epoch))
+                   argnames_twopart(info$argnames, n.epoch))
 
   info$time.chunks <- TRUE
   info$argnames <- argnames.td

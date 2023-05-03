@@ -22,7 +22,7 @@ make.musse.multitrait <- function(tree, states, sampling.f=NULL,
   cache <- make.cache.musse.multitrait(tree, states, depth,
                                        allow.multistep, sampling.f,
                                        strict)
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions.musse)
   rootfunc <- rootfunc.musse
   f.pars.musse <- make.pars.musse.multitrait(cache)
@@ -35,7 +35,7 @@ make.musse.multitrait <- function(tree, states, sampling.f=NULL,
       return(pars.musse)
     ## Below here is identical to as musse's likelihood function:
     pars2 <- f.pars(pars.musse)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("musse.multitrait", "musse", "dtlik", "function")

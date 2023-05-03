@@ -104,7 +104,7 @@ matrix.to.list <- function(m) {
   .Call(r_matrix_to_list, m)
 }
 
-argnames.twopart <- function(base, n.level) {
+argnames_twopart <- function(base, n.level) {
   levels <- seq_len(n.level)
   paste(base, rep(levels, each=length(base)), sep=".")
 }

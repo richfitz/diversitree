@@ -79,7 +79,7 @@ plot.history <- function(x, phy, cols=seq_along(states),
   discrete <- x$discrete
 
   xy <- pp.node.coords(phy)
-  obj <- plot.history.coords(phy, xy, x)
+  obj <- plot_history_coords(phy, xy, x)
 
   if ( no.margin )
     par(mar=rep(0, 4))
@@ -145,7 +145,7 @@ plot.history <- function(x, phy, cols=seq_along(states),
 ## this may include multiple segments per horizontal branch.  State
 ## information along each branch is also included in the 'state'
 ## column.
-plot.history.coords <- function(phy, xy, hist) {
+plot_history_coords <- function(phy, xy, hist) {
   s <- hist$node.state
   h <- hist$history
 

@@ -1,7 +1,7 @@
 make.asr.marginal.dtlik.t <- function(lik, ...) {
   e <- environment(lik)
   cache <- get.cache(lik)
-  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc)
+  do.asr <- make.do.asr.marginal(e$all_branches, e$rootfunc)
   preset <- NULL
 
   ## Slightly different prototypes will be needed for different

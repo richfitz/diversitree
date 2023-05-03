@@ -14,7 +14,7 @@
 make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
                        control=list()) {
   cache <- make.cache.musse(tree, states, k, sampling.f, strict)
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions.musse)
   rootfunc <- rootfunc.musse
   f.pars <- make.pars.musse(k)
@@ -22,7 +22,7 @@ make.musse <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("musse", "dtlik", "function")
@@ -99,7 +99,7 @@ rootfunc.musse <- function(res, pars, condition.surv, root, root.p,
 
   ## Because this is shared with BiSSE:
   root.equi <- if ( k == 2 ) stationary.freq.bisse else NULL
-  root.p <- root.p.calc(d.root, pars, root, root.p, root.equi)
+  root.p <- root_p_calc(d.root, pars, root, root.p, root.equi)
   if ( condition.surv ) {
     lambda <- pars[i]
     e.root <- vals[i]

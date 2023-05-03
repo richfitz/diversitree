@@ -131,7 +131,7 @@ simplex <- function(func, x.init, scale, max.eval=1000, alpha=1.0,
     x.new <- x.base + coef * (x.base - x.old)
     ## Enforces grid.
     x.new[on.grid] <-
-      round.to.grid(x.new[on.grid], x.init[on.grid], dx[on.grid])
+      round_to_grid(x.new[on.grid], x.init[on.grid], dx[on.grid])
     if ( identical(x.new, x.base) || identical(x.new, x.old) )
       simplexPrecisionError(xx[ind.lo,], yy[ind.lo])
     x.new
@@ -144,7 +144,7 @@ simplex <- function(func, x.init, scale, max.eval=1000, alpha=1.0,
     on.grid <- rep(FALSE, nx)
   } else {
     on.grid <- !is.na(dx) & dx > 0
-    scale[on.grid] <- pmax(round.to.grid(scale[on.grid], 0,
+    scale[on.grid] <- pmax(round_to_grid(scale[on.grid], 0,
                                          dx[on.grid]), dx[on.grid])
   }
 
@@ -293,5 +293,5 @@ partition2 <- function(nx, order.x, delta.x, subspc.min, subspc.max) {
 }
 
 ## xmid may be any point that is on the grid.
-round.to.grid <- function(x, xmid, dx)
+round_to_grid <- function(x, xmid, dx)
   round((x - xmid)/dx)*dx + xmid

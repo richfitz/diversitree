@@ -44,7 +44,7 @@ to.drop <- setdiff(phy$tip.label, unlist(spp2))
 ## Build a new tree (ape's `drop.tip` tends to shuffle node labels, so
 ## using a hacked version -- I've been meaning to do a bug report
 ## around this).
-phy2 <- diversitree:::drop.tip.fixed(phy, to.drop)
+phy2 <- diversitree:::drop_tip_fixed(phy, to.drop)
 
 ##+ fig.cap="Simulated tree, unevenly sampled."
 plot(phy2, type="fan", no.margin=TRUE)

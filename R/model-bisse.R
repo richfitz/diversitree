@@ -16,7 +16,7 @@ make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
   cache <- make.cache.bisse(tree, states, unresolved, sampling.f,
                             nt.extra, strict)
   unresolved <- cache$unresolved
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions.bisse)
   rootfunc <- rootfunc.musse
 
@@ -24,7 +24,7 @@ make.bisse <- function(tree, states, unresolved=NULL, sampling.f=NULL,
                  root.p=NULL, intermediates=FALSE) {
     check.pars.bisse(pars)
     preset <- branches.unresolved.bisse(pars, unresolved)
-    ans <- all.branches(pars, intermediates, preset)
+    ans <- all_branches(pars, intermediates, preset)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
   class(ll) <- c("bisse", "dtlik", "function")

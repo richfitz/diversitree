@@ -14,14 +14,14 @@ make.geosse.split <- function(tree, states, nodes, split.t=Inf,
                                    sampling.f, strict)
   n.part <- cache$n.part
 
-  all.branches <- make.all.branches.split.dtlik(cache, control,
+  all_branches <- make.all_branches.split.dtlik(cache, control,
                                                 initial.conditions.geosse)
   rootfunc <- make.rootfunc.split(cache, rootfunc.geosse)
 
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     pars <- check.pars.geosse.split(pars, n.part)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
   }
  
@@ -37,14 +37,14 @@ make.geosse.uneven <- function(tree, states, nodes, split.t=Inf,
  cache$info <- update.info.uneven(cache$info, make.info.geosse(tree))
  n.part <- cache$n.part
 
- all.branches <- make.all.branches.split.dtlik(cache, control,
+ all_branches <- make.all_branches.split.dtlik(cache, control,
                                                initial.conditions.geosse)
  rootfunc <- make.rootfunc.split(cache, rootfunc.geosse)
 
  ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                 root.p=NULL, intermediates=FALSE) {
    pars <- rep(list(check.pars.geosse(pars)), n.part)
-   ans <- all.branches(pars, intermediates)
+   ans <- all_branches(pars, intermediates)
    rootfunc(ans, pars, condition.surv, root, root.p, intermediates)
  }
  class(ll) <- c("geosse.uneven", "geosse", "dtlik", "function")

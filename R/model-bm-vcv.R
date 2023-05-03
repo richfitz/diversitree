@@ -6,7 +6,7 @@
 ## moment, which might be due to the shift from a log basis to a
 ## linear basis (the log basis is probably "easier", linearising the
 ## effects and helping optimisation).
-make.all.branches.bm.vcv <- function(cache, control) {
+make.all_branches.bm.vcv <- function(cache, control) {
   n.tip <- cache$n.tip
   states <- cache$states
   states.sd <- cache$states.sd

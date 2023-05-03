@@ -56,14 +56,14 @@ rootfunc.bm.pruning <- function(res, pars, root, root.x,
   loglik
 }
 
-make.all.branches.bm.pruning <- function(cache, control) {
+make.all_branches.bm.pruning <- function(cache, control) {
   if ( control$backend == "R" )
     function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache,
+      all_branches_matrix(pars, cache,
                           initial.conditions.bm.pruning,
                           branches.bm.pruning, preset)
   else # backend == "C"
-    make.all.branches.continuous(cache, control)
+    make.all_branches.continuous(cache, control)
 }
 
 ###########################################################################

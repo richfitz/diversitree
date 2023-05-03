@@ -22,7 +22,7 @@ make.classe <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
   ## Note that this uses MuSSE's cache...
   cache <- make.cache.classe(tree, states, k, sampling.f, strict)
   initial.conditions <- make.initial.conditions.classe(k)
-  all.branches <- make.all.branches.dtlik(cache, control,
+  all_branches <- make.all_branches.dtlik(cache, control,
                                           initial.conditions)
   rootfunc <- rootfunc.classe
   f.pars <- make.pars.classe(k)
@@ -30,7 +30,7 @@ make.classe <- function(tree, states, k, sampling.f=NULL, strict=TRUE,
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     ## TODO: This is different to other functions, as the
     ## stationary.freq function assumes the non-expanded case.
     ## However, it would be straightforward to modify stationary.freq
@@ -140,7 +140,7 @@ rootfunc.classe <- function(res, pars, condition.surv, root, root.p,
 
   ## TODO: This could be tidied up:
   root.equi <- function(pars) stationary.freq.classe(pars, k)
-  root.p <- root.p.calc(d.root, pars, root, root.p, root.equi)
+  root.p <- root_p_calc(d.root, pars, root, root.p, root.equi)
  
   if ( condition.surv ) {
     ## species in state i are subject to all lambda_ijk speciation rates

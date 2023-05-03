@@ -7,7 +7,7 @@
 make.asr.marginal.bisse <- function(lik, ...) {
   e <- environment(lik)
   unresolved <- e$unresolved
-  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc)
+  do.asr <- make.do.asr.marginal(e$all_branches, e$rootfunc)
   asr <- function(pars, nodes=NULL, condition.surv=TRUE,
                   root=ROOT.FLAT, root.p=NULL, ...) {
     check.pars.bisse(pars)
@@ -22,7 +22,7 @@ make.asr.marginal.bisse.split <- function(lik, ...) {
   e <- environment(lik)
   unresolved <- e$unresolved
   cache <- get.cache(lik)
-  do.asr <- make.do.asr.marginal(e$all.branches, e$rootfunc)
+  do.asr <- make.do.asr.marginal(e$all_branches, e$rootfunc)
   asr <- function(pars, nodes=NULL, condition.surv=TRUE,
                   root=ROOT.FLAT, root.p=NULL, ...) {
     pars <- check.pars.bisse.split(pars, cache$n.part)

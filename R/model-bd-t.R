@@ -3,12 +3,12 @@ make.bd.t <- function(tree, functions, sampling.f=NULL,
                       truncate=FALSE, spline.data=NULL) {
   cache <- make.cache.bd.t(tree, functions, unresolved, sampling.f,
                            truncate, spline.data)
-  all.branches <- make.all.branches.t.dtlik(cache, control,
+  all_branches <- make.all_branches.t.dtlik(cache, control,
                                             initial.conditions.bd.ode)
   rootfunc <- make.rootfunc.t(cache, rootfunc.bd.ode)
   const <- cache$const
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, intermediates, const)
   }
   class(ll) <- c("bd.t", "bd", "dtlik.t", "dtlik", "function")

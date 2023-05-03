@@ -10,7 +10,7 @@ make.branches.mkn.expokit <- function(cache, control) {
   }
 }
 
-make.all.branches.mkn.expokit <- function(cache, control) {
+make.all_branches.mkn.expokit <- function(cache, control) {
   ## This message is important, as this doesn't always seem to work
   ## (with code -42, which suggests that I've missed something
   ## somewhere).
@@ -18,7 +18,7 @@ make.all.branches.mkn.expokit <- function(cache, control) {
   branches <- make.branches.mkn.expokit(cache, control)
   function(pars, intermediates, preset=NULL) {
     pars.sparse <- expm.expokit.sparse.pars(pars)
-    all.branches.matrix(pars.sparse, cache,
+    all_branches_matrix(pars.sparse, cache,
                         initial.conditions.mkn,
                         branches, preset)
   }

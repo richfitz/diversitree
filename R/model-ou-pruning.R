@@ -1,16 +1,16 @@
-make.all.branches.ou.pruning <- function(cache, control) {
+make.all_branches.ou.pruning <- function(cache, control) {
   if (!is.ultrametric(cache$info$phy))
     warning("I am not sure that OU via pruning on non-ultrametric trees is calculated correctly")
   if (control$backend == "R") {
     branches.ou <- make.branches.ou(cache, control)
     function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache,
+      all_branches_matrix(pars, cache,
                           initial.conditions.bm.pruning,
                           branches.ou, preset)
   } else {
     # Force explicit selection of with- or without optimum functions.
     cache$info$name <- if (cache$with.optimum) "ou_opt" else "ou_noopt"
-    make.all.branches.continuous(cache, control)
+    make.all_branches.continuous(cache, control)
   }
 }
 

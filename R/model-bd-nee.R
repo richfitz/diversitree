@@ -25,7 +25,7 @@ make.cache.bd.nee <- function(tree=NULL, sampling.f=NULL,
        const=const)
 }
 
-make.all.branches.bd.nee <- function(cache, control) {
+make.all_branches.bd.nee <- function(cache, control) {
   N <- cache$N
   x <- cache$x
   f <- cache$f

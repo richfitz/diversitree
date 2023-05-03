@@ -22,9 +22,9 @@ cache <- diversitree:::make.cache.bisse(phy, states)
 initial.conditions <- diversitree:::initial.conditions.bisse
 preset <- NULL
 
-all.branches.matrix <- diversitree:::all.branches.matrix
+all_branches_matrix <- diversitree:::all_branches_matrix
 
-ans <- all.branches.matrix(pars.use, cache, initial.conditions,
+ans <- all_branches_matrix(pars.use, cache, initial.conditions,
                            branches, preset)
 
 v <- intersect(names(ans), names(cmp))

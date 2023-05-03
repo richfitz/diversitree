@@ -4,13 +4,13 @@ make.lambda <- function(tree, states, states.sd=0, control=list()) {
   cache <- make.cache.lambda(tree, states, states.sd, control)
 
   if (control$method == "vcv") {
-    all.branches <- make.all.branches.rescale.vcv(cache, control)
+    all_branches <- make.all_branches.rescale.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else if (control$method == "pruning") {
-    all.branches <- make.all.branches.lambda.pruning(cache, control)
+    all_branches <- make.all_branches.lambda.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
   } else if (control$method == "contrasts") {
-    all.branches <- make.all.branches.rescale.contrasts(cache, control)
+    all_branches <- make.all_branches.rescale.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
     stop("Unknown method", control$method)
@@ -19,7 +19,7 @@ make.lambda <- function(tree, states, states.sd=0, control=list()) {
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
                  intermediates=FALSE) {
     check.pars.lambda(pars)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, root, root.x, intermediates)
   }
   class(ll) <- c("lambda", "dtlik", "function")
@@ -72,22 +72,22 @@ check.pars.lambda <- function(pars) {
   TRUE
 }
 
-make.all.branches.lambda.pruning <- function(cache, control) {
+make.all_branches.lambda.pruning <- function(cache, control) {
   ## NOTE: This is a hack, but allow here for the extra parameters
   cache$info$np <- 4L
 
   pars.extra <- c(max(cache$depth), cache$n.tip)
   
   if (control$backend == "R") {
-    all.branches <- function(pars, intermediates, preset=NULL)
-      all.branches.matrix(pars, cache,
+    all_branches <- function(pars, intermediates, preset=NULL)
+      all_branches_matrix(pars, cache,
                           initial.conditions.bm.pruning,
                           branches.lambda, preset)
   } else {
-    all.branches <- make.all.branches.continuous(cache, control)
+    all_branches <- make.all_branches.continuous(cache, control)
   }
   function(pars, ...)
-    all.branches(c(pars, pars.extra), ...)
+    all_branches(c(pars, pars.extra), ...)
 }
 
 ## I'm not very happy with the extra information coming in here as

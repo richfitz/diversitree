@@ -106,7 +106,7 @@ prune <- function(phy, to.drop=NULL) {
   if ( sum(!to.drop) < 2 ) {
     NULL
   } else if ( any(to.drop) ) {
-    phy2 <- drop.tip.fixed(phy, phy$tip.label[to.drop])
+    phy2 <- drop_tip_fixed(phy, phy$tip.label[to.drop])
     ## phy2$orig <- subset(phy2$orig, !extinct) # Check NOTE
     phy2$orig <- phy2$orig[!phy2$orig$extinct,]
     phy2$tip.state <- phy2$tip.state[!to.drop]

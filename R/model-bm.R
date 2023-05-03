@@ -4,13 +4,13 @@ make.bm <- function(tree, states, states.sd=0, control=list()) {
   cache <- make.cache.bm(tree, states, states.sd, control)
 
   if (control$method == "vcv") {
-    all.branches <- make.all.branches.bm.vcv(cache, control)
+    all_branches <- make.all_branches.bm.vcv(cache, control)
     rootfunc <- rootfunc.bm.vcv
   } else if (control$method == "pruning") {
-    all.branches <- make.all.branches.bm.pruning(cache, control)
+    all_branches <- make.all_branches.bm.pruning(cache, control)
     rootfunc <- rootfunc.bm.pruning
   } else if (control$method == "contrasts") {
-    all.branches <- make.all.branches.bm.contrasts(cache, control)
+    all_branches <- make.all_branches.bm.contrasts(cache, control)
     rootfunc <- rootfunc.bm.contrasts
   } else {
     stop("Unknown method", control$method)
@@ -19,7 +19,7 @@ make.bm <- function(tree, states, states.sd=0, control=list()) {
   ll <- function(pars, root=ROOT.MAX, root.x=NULL,
                  intermediates=FALSE) {
     check.pars.nonnegative(pars, 1)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, root, root.x, intermediates)
   }
   class(ll) <- c("bm", "dtlik", "function")

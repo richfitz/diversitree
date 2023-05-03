@@ -12,7 +12,7 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
                                   sampling.f, strict)
   n.part <- cache$n.part
 
-  all.branches <- make.all.branches.split.dtlik(cache, control,
+  all_branches <- make.all_branches.split.dtlik(cache, control,
                                                 initial.conditions.musse)
   rootfunc <- make.rootfunc.split(cache, rootfunc.musse)
   f.pars <- make.pars.musse.split(k, n.part)
@@ -20,7 +20,7 @@ make.musse.split <- function(tree, states, k, nodes, split.t,
   ll <- function(pars, condition.surv=TRUE, root=ROOT.OBS,
                  root.p=NULL, intermediates=FALSE) {
     pars2 <- f.pars(pars)
-    ans <- all.branches(pars2, intermediates)
+    ans <- all_branches(pars2, intermediates)
     rootfunc(ans, pars2, condition.surv, root, root.p, intermediates)
   }
   

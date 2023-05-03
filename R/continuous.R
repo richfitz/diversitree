@@ -28,7 +28,7 @@ check.control.continuous <- function(control) {
   control
 }
 
-make.all.branches.continuous <- function(cache, control) {
+make.all_branches.continuous <- function(cache, control) {
   cache.C <- toC.cache.continuous(cache)
 
   br.name <- sprintf("branches_%s", cache$info$name)
@@ -75,7 +75,7 @@ toC.cache.continuous <- function(cache) {
   cache
 }
 
-make.all.branches.rescale.vcv <- function(cache, control) {
+make.all_branches.rescale.vcv <- function(cache, control) {
   n.tip <- cache$n.tip
   states <- cache$states
   states.sd <- cache$states.sd
@@ -95,7 +95,7 @@ make.all.branches.rescale.vcv <- function(cache, control) {
   }
 }
 
-make.all.branches.rescale.contrasts <- function(cache, control) {
+make.all_branches.rescale.contrasts <- function(cache, control) {
   if (any(cache$states.sd > 0))
     stop("Cannot (yet) do contrasts based bm models with state error")
 
@@ -131,7 +131,7 @@ make.all.branches.rescale.contrasts <- function(cache, control) {
     ## duplicated!
     root.x <- pgls.root.mean.bm(tree, cache$states)
 
-    ## This is the bit that is shared with all.branches.bm
+    ## This is the bit that is shared with all_branches.bm
     ll <- -(n * log(2 * pi * s2) +
             sum(log(V)) +
             log(V0) +

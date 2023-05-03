@@ -20,17 +20,17 @@ make.bd <- function(tree=NULL, sampling.f=NULL, unresolved=NULL,
   const <- cache$const
 
   if ( control$method == "nee" ) {
-    all.branches <- make.all.branches.bd.nee(cache, control)
+    all_branches <- make.all_branches.bd.nee(cache, control)
     rootfunc <- rootfunc.bd.nee
   } else {
-    all.branches <- make.all.branches.dtlik(cache, control,
+    all_branches <- make.all_branches.dtlik(cache, control,
                                             initial.conditions.bd.ode)
     rootfunc <- rootfunc.bd.ode
   }
 
   ll <- function(pars, condition.surv=TRUE, intermediates=FALSE) {
     check.pars.nonnegative(pars, 2)
-    ans <- all.branches(pars, intermediates)
+    ans <- all_branches(pars, intermediates)
     rootfunc(ans, pars, condition.surv, intermediates, const)
   }
   class(ll) <- c("bd", "dtlik", "function")
