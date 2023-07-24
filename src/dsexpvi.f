@@ -1,15 +1,17 @@
       subroutine DSEXPVI( n, m, t, lt, v, w, tol, anorm, ia, ja, a, nz,
-     .                   wsp,lwsp, iwsp,liwsp, itrace,iflag, scal)
+     .     wsp,lwsp, iwsp,liwsp, cwsp,lcwsp,
+     .     itrace,iflag, scal)
 
       implicit none
-      integer lt, n, m, lwsp, liwsp, itrace, iflag, iwsp(liwsp), nz, 
-     .     nzmax
+      integer lt, n, m, lwsp, liwsp, lcwsp, itrace, iflag, iwsp(liwsp),
+     .     nz, nzmax
       parameter( nzmax=139301 )
       integer ia(nzmax), ja(nzmax)
 *     TODO: the change from w(n) to w(lt * n) avoids bounds violation,
 *     but untested as I cannot trigger this on Mac (see v3 R-exts).
       double precision t(lt), tol, anorm, v(n), w(lt * n), wsp(lwsp), 
      .     a(nzmax), ww(n), scal
+      complex(kind=kind(0.0d0)) cwsp(lcwsp)
 
 *-----Purpose----------------------------------------------------------|
 *
@@ -207,7 +209,7 @@ C     where this is skipped, this should not matter (happy breakdown).
             wsp(iexph+i-1) = 0.0d0
          enddo
          wsp(iexph) = 1.0d0
-         call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),wsp(ifree+mx))
+         call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),cwsp(ifree+mx))
       endif
 
       continue

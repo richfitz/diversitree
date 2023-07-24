@@ -15,12 +15,14 @@
 
       integer nmax, nzmax, mmax
       parameter( nmax=1024, nzmax=102400, mmax=30 )
-      integer lwsp, liwsp
+      integer lwsp, liwsp, lcwsp
 *      parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax+2 )
       parameter(lwsp=nmax*(mmax+1)+nmax+5*(mmax+2)**2+7,liwsp=nmax+2)
+      parameter(lcwsp=lwsp)
 
       integer m, itrace, iflag, iwsp(liwsp)
       double precision tol, wsp(lwsp), scal
+      complex(kind=kind(0.0d0)) cwsp(lcwsp)
 
       double precision out(n)
 
@@ -36,8 +38,8 @@
       m = 15
 
       call DSEXPV(n, m, t, v, out, tol,
-     .     qnorm, ia, ja, Q, nz, wsp,lwsp, iwsp,liwsp, itrace,
-     .     iflag, scal)
+     .     qnorm, ia, ja, Q, nz, wsp,lwsp, iwsp,liwsp, cwsp,lcwsp,
+     .     itrace, iflag, scal)
 
       end
 
@@ -97,11 +99,13 @@
 
       integer nmax, mmax
       parameter( nmax=1024, mmax=30 )
-      integer lwsp, liwsp
+      integer lwsp, liwsp, lcwsp
       parameter(lwsp=nmax*(mmax+1)+nmax+5*(mmax+2)**2+7,liwsp=nmax+2)
+      parameter(lcwsp=lwsp)
 
       integer m, itrace, iflag, iwsp(liwsp)
       double precision tol, wsp(lwsp), scal
+      complex(kind=kind(0.0d0)) cwsp(lcwsp)
 
       double precision out(n*lt)
 
@@ -112,7 +116,7 @@
       m = 15
 
       call DSEXPVI(n, m, t,lt, v, out, tol,
-     .     qnorm, ia, ja, Q, nz, wsp,lwsp, iwsp,liwsp, itrace,
-     .     iflag, scal)
+     .     qnorm, ia, ja, Q, nz, wsp,lwsp, iwsp,liwsp, cwsp,lcwsp,
+     .     itrace, iflag, scal)
 
       end
