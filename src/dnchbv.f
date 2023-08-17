@@ -28,6 +28,7 @@
 *               length 2*m*(m+2) can be used as well when calling this
 *               routine (thus avoiding an idle complex array elsewhere)
 *
+*     (RGF: no longer true...)
 *----------------------------------------------------------------------|
 *     Roger B. Sidje (rbs@maths.uq.edu.au)
 *     EXPOKIT: Software Package for Computing Matrix Exponentials.

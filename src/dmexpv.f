@@ -1,12 +1,14 @@
 *----------------------------------------------------------------------|
       subroutine DMEXPV( n, m, t, v, w, tol, anorm, ia, ja, a, nz,
-     .                   wsp,lwsp, iwsp,liwsp, itrace,iflag)
+     .                   wsp,lwsp, iwsp,liwsp, cwsp,lcwsp, itrace,iflag)
 
       implicit none
-      integer n, m, lwsp, liwsp, itrace, iflag, iwsp(liwsp), nz, nzmax
+      integer n, m, lwsp, liwsp, lcwsp, itrace, iflag, iwsp(liwsp),
+     .     nz, nzmax
       parameter( nzmax=139301 )
       integer ia(nzmax), ja(nzmax)
       double precision t, tol, anorm, v(n), w(n), wsp(lwsp), a(nzmax)
+      complex(kind=kind(0.0d0)) cwsp(lcwsp)
 
 *-----Purpose----------------------------------------------------------|
 *
@@ -309,7 +311,7 @@ C     where this is skipped, this should not matter (happy breakdown).
             wsp(iexph+i-1) = 0.0d0
          enddo
          wsp(iexph) = 1.0d0
-         call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),wsp(ifree+mx))
+         call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),cwsp(ifree+mx))
       endif
 
       continue

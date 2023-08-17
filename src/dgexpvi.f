@@ -1,14 +1,15 @@
       subroutine DGEXPVI( n, m, t, lt, v, w, tol, anorm, ia, ja, a, nz,
-     .                   wsp,lwsp, iwsp,liwsp, itrace,iflag)
+     .                   wsp,lwsp, iwsp,liwsp, cwsp,lcwsp, itrace,iflag)
 
       implicit none
-      integer lt, n, m, lwsp, liwsp, itrace, iflag, iwsp(liwsp), nz, 
-     .     nzmax
+      integer lt, n, m, lwsp, liwsp, lcwsp, itrace, iflag, iwsp(liwsp),
+     .     nz, nzmax
 *     I think that this can be replaced with ia(*), ja(*) and a(*)?
       parameter( nzmax=139301 )
       integer ia(nzmax), ja(nzmax)
       double precision t(lt), tol, anorm, v(n), w(n), wsp(lwsp), 
      .     a(nzmax), ww(n)
+      complex(kind=kind(0.0d0)) cwsp(lcwsp)
 
 *-----Purpose----------------------------------------------------------|
 *
@@ -193,7 +194,7 @@ C     where this is skipped, this should not matter (happy breakdown).
             wsp(iexph+i-1) = 0.0d0
          enddo
          wsp(iexph) = 1.0d0
-         call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),wsp(ifree+mx))
+         call DNCHBV(mx,sgn*t_step,wsp(ih),mh,wsp(iexph),cwsp(ifree+mx))
       endif
 
       continue

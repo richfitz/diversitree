@@ -70,12 +70,14 @@
 
       integer nmax, nzmax, mmax
       parameter( nmax=20101, nzmax=139301, mmax=30 )
-      integer lwsp, liwsp
+      integer lwsp, liwsp, lcwsp
       parameter( lwsp = nmax*(mmax+2)+5*(mmax+2)**2+7, liwsp = nmax )
+      parameter( lcwsp = lwsp )
 
       integer d, i, n, nz, m, itrace, iflag
       integer ia(nzmax), ja(nzmax), iwsp(liwsp)
       double precision tol, anorm, v(nmax), wsp(lwsp), a(nzmax)
+      complex(kind=kind(0.0d0)) cwsp(lcwsp)
 
       itrace = 0
       iflag = 0
@@ -95,8 +97,8 @@
 
       do d=0,1
          call DSEXPVI(n, m, t, lt, v, w(d * lt * n + 1), tol,
-     .        anorm, ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
-     .        iflag, scal)
+     .        anorm, ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, cwsp,lcwsp,
+     .        itrace, iflag, scal)
          if ( iflag .lt. 0 ) then
 *     The trick here would be to return the number of successful
 *     times done and just restart from there, but that's not a very
@@ -105,8 +107,8 @@
 *     evaluations]
             do i=1,lt
                call DSEXPV( n, m, t(i), v, w((lt*d + i-1)*n+1), tol,
-     .              anorm,ia, ja, a, nz, wsp,lwsp, iwsp,liwsp, itrace,
-     .              iflag, scal)
+     .              anorm,ia, ja, a, nz, wsp,lwsp, iwsp,liwsp,
+     .              cwsp,lcwsp, itrace, iflag, scal)
                if ( iflag .lt. 0 ) then
                   return
                endif
