@@ -10,6 +10,8 @@ SEXP r_branches_mkn_expokit(SEXP Q, SEXP ia, SEXP ja, SEXP qnorm,
   int lwsp = nmax*(mmax+1)+nmax+5*(mmax+2)*(mmax+2)+7,liwsp=nmax+2;
   double * wsp = (double*) R_alloc(lwsp,  sizeof(double));
   int    *iwsp = (int   *) R_alloc(liwsp, sizeof(int));
+  Rcomplex *cwsp = (Rcomplex*) R_alloc(lwsp, sizeof(Rcomplex));
+
   int nt = LENGTH(t), nz = LENGTH(ia), itrace = 0, iflag = 0;
   double *cvals, *cscal, *vals_i, tot;
   SEXP ret, vals, scal;
@@ -33,7 +35,7 @@ SEXP r_branches_mkn_expokit(SEXP Q, SEXP ia, SEXP ja, SEXP qnorm,
 		    cvals,
 		    REAL(tol), REAL(qnorm),
 		    INTEGER(ia), INTEGER(ja), REAL(Q), &nz,
-		    wsp, &lwsp, iwsp, &liwsp, &itrace, &iflag);
+		    wsp, &lwsp, iwsp, &liwsp, cwsp, &lwsp, &itrace, &iflag);
 
   if ( iflag != 0 ) {
     if ( iflag == -42 )

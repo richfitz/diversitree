@@ -14,5 +14,7 @@ extern void F77_NAME(dgexpvi)(const int *n,
 			      const int *lwsp,
 			      int *iwsp,
 			      const int *liwsp,
+			      Rcomplex * cwsp,
+			      const int *lcwsp,
 			      int *itrace,
 			      int *iflag);
