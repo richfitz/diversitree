@@ -36,7 +36,7 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 
 void TimeMachine::set(std::vector<double> pars) {
   if (pars.size() != np_in)
-    error("Expected %d parameters, recieved %d", np_in, pars.size());
+    error("Expected %zu parameters, recieved %zu", np_in, pars.size());
   // Only go through the extra effort below if the parameters differ.
   if ( pars == p_in )
     return;
