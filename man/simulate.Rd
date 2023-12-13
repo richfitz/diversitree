@@ -56,7 +56,7 @@ prune(phy, to.drop=NULL)
 \arguments{
   \item{pars}{Vector of parameters.  The parameters must be in the same
     order as an unconstrained likelihood function returned by
-    \code{make.x}, for tree type {x}.  The MuSSE simulator automatically
+    \code{make.x}, for tree type \code{x}.  The MuSSE simulator automatically
     detects the appropriate number of states, given a parameter vector.}
   
   \item{type}{Type of tree to generate: May be "bisse" or "bd".}

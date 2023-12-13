@@ -82,9 +82,9 @@ make.mkn.meristic(tree, states, k, control=list())
       and return both values.  (Note that this will not give you a
       likelihood for use with ML or MCMC functions!).
     }
-    \item \code{root.p}{Vector of probabilities/weights to use when
+    \item \code{root.p}: Vector of probabilities/weights to use when
       \code{ROOT.GIVEN} is specified.  Must be of length \code{k} (2 for
-      \code{make.mk2}).}
+      \code{make.mk2}).
     
     % TODO: Undocumented:
     \item \code{intermediates}: Add intermediates to the returned value as
