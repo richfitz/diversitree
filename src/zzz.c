@@ -31,7 +31,6 @@ void initial_conditions_bm(int, double *, double *, double *, double, double *);
 static R_CallMethodDef R_CallDef[] = {
    CALLDEF(r_all_branches_cont, 2),
    CALLDEF(r_asr_marginal_mkn, 7),
-   CALLDEF(r_branches_mkn_expokit, 8),
    CALLDEF(r_check_ptr_not_null, 1),
    CALLDEF(r_descendants, 3),
    CALLDEF(r_descendants_flag, 3),
@@ -79,23 +78,8 @@ static R_CMethodDef R_CDef[] = {
   {NULL, NULL, 0, NULL}
 };
 
-// ddexpmv
-// dsexpmvi
-// dexpmf
-static R_FortranMethodDef R_FortranDef[] = {
-  {"f_bucexp",  (DL_FUNC) &F77_SUB(bucexp),  14, NULL},
-  {"f_bucexpl", (DL_FUNC) &F77_SUB(bucexpl), 19, NULL},
-  {"f_nucexp",  (DL_FUNC) &F77_SUB(nucexp),  18, NULL},
-  {"f_nucexpl", (DL_FUNC) &F77_SUB(nucexpl), 23, NULL},
-  //
-  {"f_ddexpmv",  (DL_FUNC) &F77_SUB(ddexpmv),   6, NULL},
-  {"f_dsexpmvi", (DL_FUNC) &F77_SUB(dsexpmvi), 12, NULL},
-  {"f_dexpmf",   (DL_FUNC) &F77_SUB(dexpmf),    5, NULL},
-  {NULL, NULL, 0, NULL}
-};
-
 void R_init_diversitree(DllInfo *dll) {
-  R_registerRoutines(dll, R_CDef, R_CallDef, R_FortranDef, NULL);
+  R_registerRoutines(dll, R_CDef, R_CallDef, NULL, NULL);
 #if defined(R_VERSION) && R_VERSION >= R_Version(3, 3, 0)
   R_useDynamicSymbols(dll, FALSE);
 #endif

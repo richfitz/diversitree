@@ -15,36 +15,7 @@
 ##        faster, sometimes slower.  Play around.
 nucexp <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
                    p1c, p1a, t, scal=1, tol=1e-10, m=15) {
-  stopifnot(all(c(la0, la1, mu0, mu1, q01, q10, p0c, p0a, p1c, p1a) >= 0))
-  lt <- length(t)
-  stopifnot(lt > 0)
-  stopifnot(scal >= 1)
-  stopifnot(m > 1)
-  n <- (nt*(nt+1)/2+1)
-  res <- .Fortran(f_nucexp,
-                  nt   = as.integer(nt),
-                  la0  = as.numeric(la0),
-                  la1  = as.numeric(la1),
-                  mu0  = as.numeric(mu0),
-                  mu1  = as.numeric(mu1),
-                  q01  = as.numeric(q01),
-                  q10  = as.numeric(q10),
-                  p0c  = as.numeric(p0c),
-                  p0a  = as.numeric(p0a),
-                  p1c  = as.numeric(p1c),
-                  p1a  = as.numeric(p1a),
-                  t    = as.numeric(t),
-                  lt   = as.integer(lt),
-                  scal = as.numeric(scal),
-                  tol  = as.numeric(tol),
-                  m    = as.integer(m),
-                  w    = numeric(2*n*lt),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-  array(res$w, c(n, lt, 2))
+  stop("Unresolved clade calculations no longer supported (since 0.10.0)")
 }
 
 ## This is more useful; given model parameters, and vectors of times
@@ -56,45 +27,7 @@ nucexp <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
 ## probabilities of extinction.
 nucexpl <- function(nt, la0, la1, mu0, mu1, q01, q10, p0c, p0a,
                     p1c, p1a, t, Nc, nsc, k, scal=1, tol=1e-10, m=15) {
-  tt <- sort(unique(t))
-  ti <- as.integer(factor(t))
-
-  lt <- length(tt)
-  lc <- length(Nc)
-  stopifnot(lc > 0, lt > 0, max(Nc) < nt,
-            length(Nc) == lc, length(nsc) == lc, length(k) == lc,
-            all(nsc <= Nc), all(nsc >= 0), all(k <= nsc),
-            scal >= 1, m > 1)
-
-  res <- .Fortran(f_nucexpl,
-                  nt   = as.integer(nt),
-                  la0  = as.numeric(la0),
-                  la1  = as.numeric(la1),
-                  mu0  = as.numeric(mu0),
-                  mu1  = as.numeric(mu1),
-                  q01  = as.numeric(q01),
-                  q10  = as.numeric(q10),
-                  p0c  = as.numeric(p0c),
-                  p0a  = as.numeric(p0a),
-                  p1c  = as.numeric(p1c),
-                  p1a  = as.numeric(p1a),
-                  t    = as.numeric(tt),
-                  lt   = as.integer(lt),
-                  ti   = as.integer(ti),
-                  Nc   = as.integer(Nc),
-                  nsc  = as.integer(nsc),
-                  k    = as.integer(k),
-                  lc   = as.integer(lc),
-                  scal = as.numeric(scal),
-                  tol  = as.numeric(tol),
-                  m   = as.integer(m),
-                  ans  = numeric(4*lc),
-                  flag = integer(1))
-  if ( res$flag < 0 )
-    stop("Failure in the Fortran code")
-  else if ( res$flag > 0 )
-    cat(sprintf("Flag: %d\n", res$flag))
-  matrix(res$ans, ncol=4)
+  stop("Unresolved clade calculations no longer supported (since 0.10.0)")
 }
 
 ## Construct the transition matrix.  Again, non-R style, as this was

@@ -104,6 +104,9 @@ make.bisseness(tree, states, unresolved=NULL, sampling.f=NULL,
 }
 
 \section{Unresolved clade information}{
+  Since 0.10.10 this is no longer supported. See the package README for
+  more information.
+  
   % Might be best to comment this out/delete until this is implemented?
   This must be a \code{\link{data.frame}} with at least the four columns
   \itemize{
@@ -176,83 +179,6 @@ startp <- starting.point.bisse(phy)
 t <- branching.times(phy)
 tryq <- 1/2 * startp[["q01"]] * sum(t)/length(t)
 p <- c(startp[1:4], startp[5:6]/2, p0c=tryq, p0a=0.5, p1c=tryq, p1a=0.5)
-
-## Start an ML search from this point.  This takes some time (~12s), so
-## is not run by default.
-\dontrun{
-fit <- find.mle(lik, p, method="subplex")
-logLik(fit) # -174.0104
-
-## Compare the fit to a constrained model that only allows the trait
-## to change along a lineage (anagenesis).  This also takes some time
-## (~12s)
-lik.no.clado <- constrain(lik, p0c ~ 0, p1c ~ 0)
-fit.no.clado <- find.mle(lik.no.clado,p[argnames(lik.no.clado)])
-logLik(fit.no.clado) # -174.0577
-
-## This is consistent with what BiSSE finds:
-likB <- make.bisse(phy, phy$tip.state)
-fitB <- find.mle(likB, startp, method="subplex")
-logLik(fitB) # -174.0576
-
-## With only this 50-species tree, there is no statistical support
-## for the more complicated BiSSE-ness model that allows cladogenesis:
-anova(fit, no.clado=fit.no.clado)
-## Note that anova() performs a likelihood ratio test here.
-
-## If the above is repeated with max.taxa=250, BiSSE-ness rejects the
-## constrained model in favor of one that allows cladogenetic change.
-
-## MCMC run: We use the ML estimate from the full model
-## as a starting point.
-##
-## We shift all very small numbers up to 1e-4 to allow the derivatives
-## to be calculated.
-ml.start.pt <- pmax(coef(fit), 1e-4)
-
-## Make exponential priors for the rate parameters and uniform priors
-## for the cladogenetic change probability prarameters.
-make.prior.exp_ness <- function(r, min=0, max=1) {
-  function(pars) {
-    sum(dexp(pars[1:6], rate=r, log=TRUE)) +
-      sum(dunif(pars[7:10], min, max, log=TRUE))
-  }
-}
-
-## Choosing the slice sampling parameter, w (affects speed):
-library(numDeriv)
-hess <- hessian(lik, ml.start.pt)
-vcv <- -solve(hess)
-sehess <- sqrt(abs(diag(vcv)))
-w <- 2 * pmin(sehess, .2)
-
-## Setting the priors
-r <- log(length(phy$tip.label))/max(branching.times(phy))
-prior <- make.prior.exp_ness(1/(2*r))
-prior(ml.start.pt)
-
-## Running the mcmc chain (only 10 steps are shown for illustration)
-steps <- 10
-set.seed(1) # For reproducibility
-output <- mcmc(lik, ml.start.pt, nsteps=steps, w=w, prior=prior)
-
-## Unresolved tip clade: Here we collapse one clade in the 50 species
-## tree (involving sister species sp70 and sp71) and illustrate the use
-## of BiSSEness with unresolved tip clades.
-slimphy <- drop.tip(phy,c("sp71"))
-states <- slimphy$tip.state[slimphy$tip.label]
-states["sp70"] <- NA
-unresolved <- data.frame(tip.label=c("sp70"), Nc=2, n0=2, n1=0)
-
-## This builds the likelihood of the data according to BiSSEness:
-lik.unresolved <- make.bisseness(slimphy, states, unresolved)
-## e.g., the likelihood of the true parameters is:
-lik.unresolved(pars) # -174.6575
-
-## ML search from the heuristic starting point used above:
-fit.unresolved <- find.mle(lik.unresolved, p, method="subplex")
-logLik(fit.unresolved) # -173.9136
-}
 }
 
 

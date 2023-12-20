@@ -40,6 +40,10 @@ If fftw is not found, installation will continue, but the (relatively)
 fast C based QuaSSE integration will not be available.  The R based
 fft integrator and the method-of-lines integrator will be available.
 
+## Unresolved clades
+
+As of version 0.10.0, diversitree can no longer work with unresolved clades (FitzJohn, Maddison and Otto 2009's method), due to the package being long in retirement from development and difficulties adapting the Fortran code to meet CRAN's requirements.  Users can install an older package from github (e.g., with `remotes::install_github("mrc-ide/diversitree@e587755")` to install the last released version that contained this code). This will require a working Fortran compiler. Alternatively, a suitably motivated person could restore the code (reverting changes contained in `aaaa`) and patch the code to work with the current version of `flang` as used by CRAN.
+
 ## Branches
 
 The "master" branch contains the bleeding edge version of diversitree.
