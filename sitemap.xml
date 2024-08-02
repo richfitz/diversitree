@@ -1,150 +1,52 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/argnames.html</loc>
-  </url>
-  <url>
-    <loc>/reference/asr-bisse.html</loc>
-  </url>
-  <url>
-    <loc>/reference/asr-mkn.html</loc>
-  </url>
-  <url>
-    <loc>/reference/asr.html</loc>
-  </url>
-  <url>
-    <loc>/reference/big.brother.html</loc>
-  </url>
-  <url>
-    <loc>/reference/check.html</loc>
-  </url>
-  <url>
-    <loc>/reference/combine.html</loc>
-  </url>
-  <url>
-    <loc>/reference/constants.html</loc>
-  </url>
-  <url>
-    <loc>/reference/constrain.html</loc>
-  </url>
-  <url>
-    <loc>/reference/diversitree-deprecated.html</loc>
-  </url>
-  <url>
-    <loc>/reference/diversitree-package.html</loc>
-  </url>
-  <url>
-    <loc>/reference/find.mle.html</loc>
-  </url>
-  <url>
-    <loc>/reference/history.from.sim.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bd.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bd.split.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bd.t.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bisse.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bisse.split.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bisse.td.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bisseness.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.bm.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.clade.tree.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.classe.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.geosse.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.geosse.split.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.geosse.t.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.mkn.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.musse.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.musse.multitrait.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.musse.split.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.musse.td.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.pgls.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.prior.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.quasse.html</loc>
-  </url>
-  <url>
-    <loc>/reference/make.quasse.split.html</loc>
-  </url>
-  <url>
-    <loc>/reference/mcmc.html</loc>
-  </url>
-  <url>
-    <loc>/reference/plot.history.html</loc>
-  </url>
-  <url>
-    <loc>/reference/profiles.plot.html</loc>
-  </url>
-  <url>
-    <loc>/reference/protect.html</loc>
-  </url>
-  <url>
-    <loc>/reference/quasse-common.html</loc>
-  </url>
-  <url>
-    <loc>/reference/set.defaults.html</loc>
-  </url>
-  <url>
-    <loc>/reference/sim.character.html</loc>
-  </url>
-  <url>
-    <loc>/reference/simulate.html</loc>
-  </url>
-  <url>
-    <loc>/reference/trait.plot.html</loc>
-  </url>
-  <url>
-    <loc>/reference/utils.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/reference/argnames.html</loc></url>
+<url><loc>/reference/asr-bisse.html</loc></url>
+<url><loc>/reference/asr-mkn.html</loc></url>
+<url><loc>/reference/asr.html</loc></url>
+<url><loc>/reference/big.brother.html</loc></url>
+<url><loc>/reference/check.html</loc></url>
+<url><loc>/reference/combine.html</loc></url>
+<url><loc>/reference/constants.html</loc></url>
+<url><loc>/reference/constrain.html</loc></url>
+<url><loc>/reference/diversitree-deprecated.html</loc></url>
+<url><loc>/reference/diversitree-package.html</loc></url>
+<url><loc>/reference/find.mle.html</loc></url>
+<url><loc>/reference/history.from.sim.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/make.bd.html</loc></url>
+<url><loc>/reference/make.bd.split.html</loc></url>
+<url><loc>/reference/make.bd.t.html</loc></url>
+<url><loc>/reference/make.bisse.html</loc></url>
+<url><loc>/reference/make.bisse.split.html</loc></url>
+<url><loc>/reference/make.bisse.td.html</loc></url>
+<url><loc>/reference/make.bisseness.html</loc></url>
+<url><loc>/reference/make.bm.html</loc></url>
+<url><loc>/reference/make.clade.tree.html</loc></url>
+<url><loc>/reference/make.classe.html</loc></url>
+<url><loc>/reference/make.geosse.html</loc></url>
+<url><loc>/reference/make.geosse.split.html</loc></url>
+<url><loc>/reference/make.geosse.t.html</loc></url>
+<url><loc>/reference/make.mkn.html</loc></url>
+<url><loc>/reference/make.musse.html</loc></url>
+<url><loc>/reference/make.musse.multitrait.html</loc></url>
+<url><loc>/reference/make.musse.split.html</loc></url>
+<url><loc>/reference/make.musse.td.html</loc></url>
+<url><loc>/reference/make.pgls.html</loc></url>
+<url><loc>/reference/make.prior.html</loc></url>
+<url><loc>/reference/make.quasse.html</loc></url>
+<url><loc>/reference/make.quasse.split.html</loc></url>
+<url><loc>/reference/mcmc.html</loc></url>
+<url><loc>/reference/plot.history.html</loc></url>
+<url><loc>/reference/profiles.plot.html</loc></url>
+<url><loc>/reference/protect.html</loc></url>
+<url><loc>/reference/quasse-common.html</loc></url>
+<url><loc>/reference/set.defaults.html</loc></url>
+<url><loc>/reference/sim.character.html</loc></url>
+<url><loc>/reference/simulate.html</loc></url>
+<url><loc>/reference/trait.plot.html</loc></url>
+<url><loc>/reference/utils.html</loc></url>
 </urlset>
+
