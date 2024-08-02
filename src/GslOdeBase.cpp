@@ -45,7 +45,7 @@ GslOdeBase::r_derivs(double t_, std::vector<double> y_, SEXP pars_) {
   // equivalent) so that pars are reset if the R call fails.
   if (y_.size() != size())
     Rf_error("Incorrect input length (expected %d, got %d)",
-	     size(), y_.size());
+	     (int)size(), (int)y_.size());
   set_pars(pars_);
 
   std::vector<double> ret(size());
@@ -99,8 +99,8 @@ void GslOdeBase::set_state(double t0, const std::vector<double> y_) {
   must_be_initialised();
 
   if ( y_.size() != size() )
-    Rf_error("Expected 'y' of size %d (recieved %d)", 
-	     size(), y_.size());
+    Rf_error("Expected 'y' of size %d (recieved %d)",
+	     (int)size(), (int)y_.size());
   t = t0;
   y = y_;
 
