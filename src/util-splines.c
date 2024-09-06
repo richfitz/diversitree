@@ -27,7 +27,7 @@ void RSRC_fmm_spline(int n, double *x, double *y,
   x--; y--; b--; c--; d--;
 
   if(n < 2) {
-    error("Too few points");
+    Rf_error("Too few points");
   }
 
   if(n < 3) {
@@ -135,14 +135,14 @@ void RSRC_fmm_spline_eval(int nu, double *u, double *v,
 dt_spline* make_dt_spline(int nx, double *x, double *y, int deriv) {
   double *b, *c, *d;
   int i;
-  dt_spline *obj = (dt_spline *)Calloc(1, dt_spline);
+  dt_spline *obj = (dt_spline *)R_Calloc(1, dt_spline);
   obj->nx = nx;
 
-  obj->x     = (double*) Calloc(nx, double);
-  obj->y     = (double*) Calloc(nx, double);
-  obj->b = b = (double*) Calloc(nx, double);
-  obj->c = c = (double*) Calloc(nx, double);
-  obj->d = d = (double*) Calloc(nx, double);
+  obj->x     = (double*) R_Calloc(nx, double);
+  obj->y     = (double*) R_Calloc(nx, double);
+  obj->b = b = (double*) R_Calloc(nx, double);
+  obj->c = c = (double*) R_Calloc(nx, double);
+  obj->d = d = (double*) R_Calloc(nx, double);
 
   memcpy(obj->x, x, nx * sizeof(double));
   memcpy(obj->y, y, nx * sizeof(double));
@@ -162,13 +162,13 @@ dt_spline* make_dt_spline(int nx, double *x, double *y, int deriv) {
 }
 
 void cleanup_dt_spline(dt_spline *obj) {
-  Free(obj->x);
-  Free(obj->y);
-  Free(obj->b);
-  Free(obj->c);
-  Free(obj->d);
+  R_Free(obj->x);
+  R_Free(obj->y);
+  R_Free(obj->b);
+  R_Free(obj->c);
+  R_Free(obj->d);
 
-  Free(obj);
+  R_Free(obj);
 }
 
 static void dt_spline_finalize(SEXP extPtr);
@@ -206,7 +206,7 @@ SEXP r_dt_spline_eval(SEXP extPtr, SEXP u) {
   dt_spline *obj = (dt_spline*)R_ExternalPtrAddr(extPtr);
   SEXP ret;
 
-  PROTECT(ret = allocVector(REALSXP, nu));
+  PROTECT(ret = Rf_allocVector(REALSXP, nu));
   dt_spline_eval(obj, REAL(u), nu, REAL(ret));
   UNPROTECT(1);
   return ret;

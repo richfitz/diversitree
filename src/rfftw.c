@@ -107,7 +107,7 @@ SEXP r_rfftw_forw(SEXP extPtr, SEXP r_x_in) {
 
   fftw_execute(obj->plan_f);
 
-  PROTECT(ret = allocVector(CPLXSXP, nyd));
+  PROTECT(ret = Rf_allocVector(CPLXSXP, nyd));
   /* TODO: There is a change that I should be using Rcomplex here */
   y_out = (fftw_complex*)COMPLEX(ret);
   for ( i = 0; i < nyd; i++ )
@@ -136,7 +136,7 @@ SEXP r_rfftw_back(SEXP extPtr, SEXP r_y_in) {
 
   fftw_execute(obj->plan_b);
 
-  PROTECT(ret = allocVector(REALSXP, nxd));
+  PROTECT(ret = Rf_allocVector(REALSXP, nxd));
   x_out = REAL(ret);
   for ( i = 0; i < nxd; i++ )
     x_out[i] = x[i];
@@ -149,7 +149,7 @@ SEXP r_rfftw_back(SEXP extPtr, SEXP r_y_in) {
 SEXP r_get_wisdom(void) {
   char *wisdom = fftw_export_wisdom_to_string();
   SEXP ret;
-  PROTECT(ret = allocVector(STRSXP, 1));
+  PROTECT(ret = Rf_allocVector(STRSXP, 1));
   SET_STRING_ELT(ret, 0, mkChar(wisdom));
   UNPROTECT(1);
   return ret;
@@ -158,7 +158,7 @@ SEXP r_get_wisdom(void) {
 SEXP r_set_wisdom(SEXP r_wisdom) {
   const char *wisdom = CHAR(STRING_ELT(r_wisdom, 0));
   SEXP ret;
-  PROTECT(ret = allocVector(LGLSXP, 1));
+  PROTECT(ret = Rf_allocVector(LGLSXP, 1));
   INTEGER(ret)[0] = fftw_import_wisdom_from_string(wisdom);
   UNPROTECT(1);
   return ret;

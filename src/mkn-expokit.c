@@ -18,13 +18,13 @@ SEXP r_branches_mkn_expokit(SEXP Q, SEXP ia, SEXP ja, SEXP qnorm,
   int i, j;
 
   if ( m >= n ) {
-    warning("Decreasing 'm' to %d", n-1);
+    Rf_warning("Decreasing 'm' to %d", n-1);
     m = n-1;
   }
 
-  PROTECT(ret  = allocVector(VECSXP, 2));
-  PROTECT(vals = allocMatrix(REALSXP, n, nt));
-  PROTECT(scal = allocVector(REALSXP, nt));
+  PROTECT(ret  = Rf_allocVector(VECSXP, 2));
+  PROTECT(vals = Rf_allocMatrix(REALSXP, n, nt));
+  PROTECT(scal = Rf_allocVector(REALSXP, nt));
   SET_VECTOR_ELT(ret, 0, scal);
   SET_VECTOR_ELT(ret, 1, vals);
   cvals = REAL(vals);
@@ -39,9 +39,9 @@ SEXP r_branches_mkn_expokit(SEXP Q, SEXP ia, SEXP ja, SEXP qnorm,
 
   if ( iflag != 0 ) {
     if ( iflag == -42 )
-      error("expokit failed, but I have no idea why -- try ode instead?");
+      Rf_error("expokit failed, but I have no idea why -- try ode instead?");
     else
-      error("expokit failed with flag %d\n", iflag);
+      Rf_error("expokit failed with flag %d\n", iflag);
   }
 
   for ( i = 0; i < nt; i++ ) {

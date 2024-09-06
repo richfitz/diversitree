@@ -177,7 +177,7 @@ void simulate_bisse(double *pars, int max_taxa, double max_t,
       }
     }
     if ( lineage < 0 )
-      error("Something terrible might happen here.");
+      Rf_error("Something terrible might happen here.");
 
     /* And pick a type of event */
     /* TODO: This copy is only necessary when directly using
@@ -267,15 +267,15 @@ SEXP simulate_bisse2(SEXP r_pars, SEXP r_max_taxa, SEXP r_max_t,
   SEXP ret;
   double t_start[1];
 
-  PROTECT(parent = allocVector(INTSXP, n));
-  PROTECT(states = allocVector(INTSXP, n));
-  PROTECT(extinct = allocVector(LGLSXP, n));
-  PROTECT(split = allocVector(LGLSXP, n));
+  PROTECT(parent = Rf_allocVector(INTSXP, n));
+  PROTECT(states = Rf_allocVector(INTSXP, n));
+  PROTECT(extinct = Rf_allocVector(LGLSXP, n));
+  PROTECT(split = Rf_allocVector(LGLSXP, n));
 
-  PROTECT(start = allocVector(INTSXP, n));
-  PROTECT(len = allocVector(INTSXP, n));
-  PROTECT(hist = allocVector(REALSXP, 3*n));
-  PROTECT(hist_t = allocVector(REALSXP, n));
+  PROTECT(start = Rf_allocVector(INTSXP, n));
+  PROTECT(len = Rf_allocVector(INTSXP, n));
+  PROTECT(hist = Rf_allocVector(REALSXP, 3*n));
+  PROTECT(hist_t = Rf_allocVector(REALSXP, n));
 
   n_entries = 1;
   t_start[0] = 0.0;
@@ -298,11 +298,11 @@ SEXP simulate_bisse2(SEXP r_pars, SEXP r_max_taxa, SEXP r_max_t,
 			       t_start);
 
     if ( t_start[0] < 0 ) {
-      error("need to do this still...");
+      Rf_error("need to do this still...");
     }
   }
 
-  PROTECT(ret = allocVector(VECSXP, 10));
+  PROTECT(ret = Rf_allocVector(VECSXP, 10));
   SET_VECTOR_ELT(ret, 1, len);
   SET_VECTOR_ELT(ret, 2, parent);
   SET_VECTOR_ELT(ret, 3, 

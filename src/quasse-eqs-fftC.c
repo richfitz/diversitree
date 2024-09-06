@@ -54,7 +54,7 @@ SEXP r_get_x(SEXP extPtr, SEXP r_nd) {
   quasse_fft *obj = (quasse_fft*)R_ExternalPtrAddr(extPtr);
   SEXP x;
   int nd = INTEGER(r_nd)[0];
-  PROTECT(x = allocMatrix(REALSXP, obj->nx, nd));
+  PROTECT(x = Rf_allocMatrix(REALSXP, obj->nx, nd));
   qf_copy_x(obj, REAL(x), nd, 0);
   UNPROTECT(1);
   return x;
@@ -70,7 +70,7 @@ SEXP r_propagate_t(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu, SEXP dt) {
 
   idx = lookup(nd, obj->nd, obj->n_fft);
   if ( idx < 0 )
-    error("Failed to find nd = %d\n", nd);
+    Rf_error("Failed to find nd = %d\n", nd);
 
   qf_copy_x(obj, REAL(vars), nd, 1);
 
@@ -86,7 +86,7 @@ SEXP r_propagate_t(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu, SEXP dt) {
   obj->lambda = NULL;
   obj->mu = NULL;
 
-  PROTECT(ret = allocMatrix(REALSXP, obj->nx, nd));
+  PROTECT(ret = Rf_allocMatrix(REALSXP, obj->nx, nd));
   qf_copy_x(obj, REAL(ret), nd, 0);
   UNPROTECT(1);
   return ret;
@@ -101,14 +101,14 @@ SEXP r_propagate_x(SEXP extPtr, SEXP vars, SEXP drift, SEXP diffusion,
 
   idx = lookup(nd, obj->nd, obj->n_fft);
   if ( idx < 0 )
-    error("Failed to find nd = %d\n", nd);
+    Rf_error("Failed to find nd = %d\n", nd);
 
   qf_copy_x(obj, REAL(vars), nd, 1);
   qf_setup_kern(obj, REAL(drift)[0], REAL(diffusion)[0], REAL(dt)[0],
 		nkl, nkr);
   propagate_x(obj, idx);
 
-  PROTECT(ret = allocMatrix(REALSXP, obj->nx, nd));
+  PROTECT(ret = Rf_allocMatrix(REALSXP, obj->nx, nd));
   qf_copy_x(obj, REAL(ret), nd, 0);
   UNPROTECT(1);
   return ret;
@@ -127,12 +127,12 @@ SEXP r_do_integrate(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
   double c_drift=REAL(drift)[0], c_diffusion=REAL(diffusion)[0];
   int i, idx, nd;
   if ( obj == NULL )
-    error("Corrupt QuaSSE integrator: ptr is NULL (are you using multicore?)");
+    Rf_error("Corrupt QuaSSE integrator: ptr is NULL (are you using multicore?)");
   nd = LENGTH(vars) / obj->nx;
   
   idx = lookup(nd, obj->nd, obj->n_fft);
   if ( idx < 0 )
-    error("Failed to find nd = %d\n", nd);
+    Rf_error("Failed to find nd = %d\n", nd);
 
   qf_copy_x(obj, REAL(vars), nd, 1);
 
@@ -148,7 +148,7 @@ SEXP r_do_integrate(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
   obj->lambda = NULL;
   obj->mu = NULL;
 
-  PROTECT(ret = allocMatrix(REALSXP, obj->nx, nd));
+  PROTECT(ret = Rf_allocMatrix(REALSXP, obj->nx, nd));
   qf_copy_x(obj, REAL(ret), nd, 0);
   UNPROTECT(1);
   
@@ -188,15 +188,15 @@ SEXP r_do_tips(SEXP extPtr, SEXP vars, SEXP lambda, SEXP mu,
   int n_fft = obj->n_fft, n_fft_m1 = obj->n_fft - 1;
 
   if ( (LENGTH(vars) / obj->nx) != obj->nd[0] )
-    error("Error 1\n");
+    Rf_error("Error 1\n");
 
   /* First; allocate space: All but the first cases will be nx * 2
      matrices, but the final one might be a matrix itself */
-  PROTECT(ret = allocVector(VECSXP, n_fft));
+  PROTECT(ret = Rf_allocVector(VECSXP, n_fft));
   for ( i = 0; i < n_fft_m1; i++ )
-    SET_VECTOR_ELT(ret, i, allocMatrix(REALSXP, nx, 2));
+    SET_VECTOR_ELT(ret, i, Rf_allocMatrix(REALSXP, nx, 2));
   SET_VECTOR_ELT(ret, n_fft_m1, 
-		 allocMatrix(REALSXP, nx, obj->nd[n_fft_m1]));
+		 Rf_allocMatrix(REALSXP, nx, obj->nd[n_fft_m1]));
 
   /* This bit proceeds exactly as r_do_integrate() */
   qf_copy_x(obj, REAL(vars), LENGTH(vars) / obj->nx, 1);
@@ -360,7 +360,7 @@ void do_integrate(quasse_fft *obj, int nt, int idx) {
     propagate_t(obj, idx);
     propagate_x(obj, idx);
     if ( ISNAN(obj->x[nkl]) )
-      error("Integration failure at step %d\n", i);
+      Rf_error("Integration failure at step %d\n", i);
   }
 }
 

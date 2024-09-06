@@ -26,7 +26,7 @@ SEXP GslOdeR::target(double t, SEXP y) {
 
 void GslOdeR::derivs(double t, const double y[], double dydt[]) {
   // It is possible that we could allocate the space at construction
-  // (though I think that allocVector could lead to eventual garbage
+  // (though I think that Rf_allocVector could lead to eventual garbage
   // collection as we can't protect it).  Alternatively,
   // Rcpp::NumericVector followed by Rcpp::wrap might be less ugly.
   // That would require a change in target() to return

@@ -42,7 +42,7 @@ SEXP r_smkn_scm_run(SEXP extPtr, SEXP len,
   hist_t = obj->hist_t;
   hist_s = obj->hist_to;
 
-  PROTECT(ret = allocMatrix(REALSXP, n_hist+1, 2));
+  PROTECT(ret = Rf_allocMatrix(REALSXP, n_hist+1, 2));
   out_t = REAL(ret);
   out_s = REAL(ret) + (n_hist + 1);
 
@@ -72,13 +72,13 @@ SEXP r_smkn_scm_run_all(SEXP extPtr, SEXP pars, SEXP r_len,
   int *hist_s;
 
   if ( LENGTH(r_state_beg) != n )
-    error("state_beg incorrect length");
+    Rf_error("state_beg incorrect length");
   if ( LENGTH(r_state_end) != n )
-    error("state_end incorrect length");
+    Rf_error("state_end incorrect length");
 
   smkn_set_pars(obj, REAL(pars));
 
-  PROTECT(ret = allocVector(VECSXP, n));
+  PROTECT(ret = Rf_allocVector(VECSXP, n));
 
   GetRNGstate();
 
@@ -93,7 +93,7 @@ SEXP r_smkn_scm_run_all(SEXP extPtr, SEXP pars, SEXP r_len,
     
     /* List assignment protects the result so explicit
        PROTECT/UNPROTECT not neededed */
-    SET_VECTOR_ELT(ret, i, allocMatrix(REALSXP, n_hist_out, 2));
+    SET_VECTOR_ELT(ret, i, Rf_allocMatrix(REALSXP, n_hist_out, 2));
     hist = VECTOR_ELT(ret, i);
     out_t = REAL(hist);
     out_s = REAL(hist) + n_hist_out;
@@ -133,16 +133,16 @@ SEXP smkn_slim(SEXP obj) {
   SEXP r_idx, hist, ret;
 
   for ( i = 0; i < n; i++ )
-    if ( nrows(VECTOR_ELT(obj, i)) > 0 )
+    if ( Rf_nrows(VECTOR_ELT(obj, i)) > 0 )
       nkeep++;
 
-  PROTECT(ret = allocVector(VECSXP, 2));
-  PROTECT(r_idx = allocVector(INTSXP, nkeep));
-  PROTECT(hist = allocVector(VECSXP, nkeep));
+  PROTECT(ret = Rf_allocVector(VECSXP, 2));
+  PROTECT(r_idx = Rf_allocVector(INTSXP, nkeep));
+  PROTECT(hist = Rf_allocVector(VECSXP, nkeep));
 
   idx = INTEGER(r_idx);
   for ( i = 0; i < n; i++ )
-    if ( nrows(VECTOR_ELT(obj, i)) > 0 ) {
+    if ( Rf_nrows(VECTOR_ELT(obj, i)) > 0 ) {
       idx[j] = i + 1;
       SET_VECTOR_ELT(hist, j, VECTOR_ELT(obj, i));
       j++;
@@ -157,25 +157,25 @@ SEXP smkn_slim(SEXP obj) {
 
 /* Functions required by _alloc() */
 smkn_info* smkn_alloc(int k, int n_hist) {
-  smkn_info *obj = Calloc(1, smkn_info);
+  smkn_info *obj = R_Calloc(1, smkn_info);
   int np = k*(k - 1);
 #ifdef VERBOSE
   Rprintf("Allocating with k = %d, n_hist = %d\n", k, n_hist);
 #endif
   obj->k = k;
 
-  obj->pars = Calloc(np,  double);
-  obj->r    = Calloc(k,   double);
-  obj->cp   = Calloc(np,  double);
-  obj->perm = Calloc(np,  int);
+  obj->pars = R_Calloc(np,  double);
+  obj->r    = R_Calloc(k,   double);
+  obj->cp   = R_Calloc(np,  double);
+  obj->perm = R_Calloc(np,  int);
 
   obj->n_hist = 0;
   obj->n_hist_max = n_hist;
 
-  obj->hist_from = Calloc(n_hist, int);
-  obj->hist_to   = Calloc(n_hist, int);
+  obj->hist_from = R_Calloc(n_hist, int);
+  obj->hist_to   = R_Calloc(n_hist, int);
 
-  obj->hist_t = Calloc(n_hist, double);
+  obj->hist_t = R_Calloc(n_hist, double);
 
   return obj;
 }
@@ -184,19 +184,19 @@ void smkn_cleanup(smkn_info *obj) {
 #ifdef VERBOSE
   Rprintf("Cleaning permanantly sized objects\n");
 #endif
-  Free(obj->pars);
-  Free(obj->r);
-  Free(obj->cp);
-  Free(obj->perm);
+  R_Free(obj->pars);
+  R_Free(obj->r);
+  R_Free(obj->cp);
+  R_Free(obj->perm);
 
 #ifdef VERBOSE
   Rprintf("Cleaning variably sized objects\n");
 #endif
-  Free(obj->hist_from);
-  Free(obj->hist_to);
-  Free(obj->hist_t);
+  R_Free(obj->hist_from);
+  R_Free(obj->hist_to);
+  R_Free(obj->hist_t);
 
-  Free(obj);
+  R_Free(obj);
 }
 
 static void smkn_info_finalize(SEXP extPtr) {
@@ -244,7 +244,7 @@ int smkn_scm_run(smkn_info *obj, double len,
   }
 
   if ( niter == SCM_MAX_ATTEMPTS )
-    error("Realisation failed (too many attempts)");
+    Rf_error("Realisation failed (too many attempts)");
   
   return 1;
 }
@@ -331,11 +331,11 @@ void smkn_grow_hist(smkn_info *obj) {
 	  obj->n_hist_max, n);
 #endif
   if ( n > SMKN_MAX_SIZE )
-    error("Exceeding maximum allowed history size");
+    Rf_error("Exceeding maximum allowed history size");
 
   obj->n_hist_max = n;
 
-  obj->hist_from = Realloc(obj->hist_from, n, int);
-  obj->hist_to   = Realloc(obj->hist_to,   n, int);
-  obj->hist_t    = Realloc(obj->hist_t,    n, double);
+  obj->hist_from = R_Realloc(obj->hist_from, n, int);
+  obj->hist_to   = R_Realloc(obj->hist_to,   n, int);
+  obj->hist_t    = R_Realloc(obj->hist_t,    n, double);
 }
