@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">diversitree</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9-23</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.10-0</span>
       </span>
     </div>
 
@@ -76,6 +76,11 @@
 <p>To install and specify the location of the fftw library in a non-standard place, a line like this is required: R CMD INSTALL diversitree –configure-args=‘–with-fftw=/path/to/fftw’ where the path will be the path so that the files /path/to/fftw/include/fftw3.h /path/to/fftw/lib/lib/fftw3.so exist.</p>
 <p>On Windows, set the environment variable LIB_FFTW to point to the directory that contains include/fftw.h, and install the package.</p>
 <p>If fftw is not found, installation will continue, but the (relatively) fast C based QuaSSE integration will not be available. The R based fft integrator and the method-of-lines integrator will be available.</p>
+</div>
+<div class="section level2">
+<h2 id="unresolved-clades">Unresolved clades<a class="anchor" aria-label="anchor" href="#unresolved-clades"></a>
+</h2>
+<p>As of version 0.10.0, diversitree can no longer work with unresolved clades (FitzJohn, Maddison and Otto 2009’s method), due to the package being long in retirement from development and difficulties adapting the Fortran code to meet CRAN’s requirements. Users can install an older package from github (e.g., with <code>remotes::install_github("mrc-ide/diversitree@e587755")</code> to install the last released version that contained this code). This will require a working Fortran compiler. Alternatively, a suitably motivated person could restore the code (reverting changes contained in <code>aaaa</code>) and patch the code to work with the current version of <code>flang</code> as used by CRAN.</p>
 </div>
 <div class="section level2">
 <h2 id="branches">Branches<a class="anchor" aria-label="anchor" href="#branches"></a>
@@ -136,7 +141,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>

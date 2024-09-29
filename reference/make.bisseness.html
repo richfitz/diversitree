@@ -21,7 +21,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">diversitree</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9-23</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.10-0</span>
       </span>
     </div>
 
@@ -152,7 +152,9 @@
 </ul></div>
     <div id="unresolved-clade-information">
     <h2>Unresolved clade information</h2>
-    <p><!-- % Might be best to comment this out/delete until this is implemented? -->
+    <p>Since 0.10.10 this is no longer supported. See the package README for
+  more information.</p>
+<p><!-- % Might be best to comment this out/delete until this is implemented? -->
   This must be a <code><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></code> with at least the four columns</p><ul><li><p><code>tip.label</code>, giving the name of the tip to which the data
     applies</p></li>
 <li><p><code>Nc</code>, giving the number of species in the clade</p></li>
@@ -248,83 +250,6 @@
 <span class="r-in"><span><span class="va">t</span> <span class="op">&lt;-</span> <span class="fu">branching.times</span><span class="op">(</span><span class="va">phy</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tryq</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span> <span class="op">*</span> <span class="va">startp</span><span class="op">[[</span><span class="st">"q01"</span><span class="op">]</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">startp</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="va">startp</span><span class="op">[</span><span class="fl">5</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span><span class="op">/</span><span class="fl">2</span>, p0c<span class="op">=</span><span class="va">tryq</span>, p0a<span class="op">=</span><span class="fl">0.5</span>, p1c<span class="op">=</span><span class="va">tryq</span>, p1a<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Start an ML search from this point.  This takes some time (~12s), so</span></span></span>
-<span class="r-in"><span><span class="co">## is not run by default.</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="find.mle.html">find.mle</a></span><span class="op">(</span><span class="va">lik</span>, <span class="va">p</span>, method<span class="op">=</span><span class="st">"subplex"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="co"># -174.0104</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Compare the fit to a constrained model that only allows the trait</span></span></span>
-<span class="r-in"><span><span class="co">## to change along a lineage (anagenesis).  This also takes some time</span></span></span>
-<span class="r-in"><span><span class="co">## (~12s)</span></span></span>
-<span class="r-in"><span><span class="va">lik.no.clado</span> <span class="op">&lt;-</span> <span class="fu"><a href="constrain.html">constrain</a></span><span class="op">(</span><span class="va">lik</span>, <span class="va">p0c</span> <span class="op">~</span> <span class="fl">0</span>, <span class="va">p1c</span> <span class="op">~</span> <span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit.no.clado</span> <span class="op">&lt;-</span> <span class="fu"><a href="find.mle.html">find.mle</a></span><span class="op">(</span><span class="va">lik.no.clado</span>,<span class="va">p</span><span class="op">[</span><span class="fu"><a href="argnames.html">argnames</a></span><span class="op">(</span><span class="va">lik.no.clado</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fit.no.clado</span><span class="op">)</span> <span class="co"># -174.0577</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## This is consistent with what BiSSE finds:</span></span></span>
-<span class="r-in"><span><span class="va">likB</span> <span class="op">&lt;-</span> <span class="fu"><a href="make.bisse.html">make.bisse</a></span><span class="op">(</span><span class="va">phy</span>, <span class="va">phy</span><span class="op">$</span><span class="va">tip.state</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fitB</span> <span class="op">&lt;-</span> <span class="fu"><a href="find.mle.html">find.mle</a></span><span class="op">(</span><span class="va">likB</span>, <span class="va">startp</span>, method<span class="op">=</span><span class="st">"subplex"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fitB</span><span class="op">)</span> <span class="co"># -174.0576</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## With only this 50-species tree, there is no statistical support</span></span></span>
-<span class="r-in"><span><span class="co">## for the more complicated BiSSE-ness model that allows cladogenesis:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">fit</span>, no.clado<span class="op">=</span><span class="va">fit.no.clado</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co">## Note that anova() performs a likelihood ratio test here.</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## If the above is repeated with max.taxa=250, BiSSE-ness rejects the</span></span></span>
-<span class="r-in"><span><span class="co">## constrained model in favor of one that allows cladogenetic change.</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## MCMC run: We use the ML estimate from the full model</span></span></span>
-<span class="r-in"><span><span class="co">## as a starting point.</span></span></span>
-<span class="r-in"><span><span class="co">##</span></span></span>
-<span class="r-in"><span><span class="co">## We shift all very small numbers up to 1e-4 to allow the derivatives</span></span></span>
-<span class="r-in"><span><span class="co">## to be calculated.</span></span></span>
-<span class="r-in"><span><span class="va">ml.start.pt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, <span class="fl">1e-4</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Make exponential priors for the rate parameters and uniform priors</span></span></span>
-<span class="r-in"><span><span class="co">## for the cladogenetic change probability prarameters.</span></span></span>
-<span class="r-in"><span><span class="va">make.prior.exp_ness</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">r</span>, <span class="va">min</span><span class="op">=</span><span class="fl">0</span>, <span class="va">max</span><span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="kw">function</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">dexp</a></span><span class="op">(</span><span class="va">pars</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>, rate<span class="op">=</span><span class="va">r</span>, log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>      <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">dunif</a></span><span class="op">(</span><span class="va">pars</span><span class="op">[</span><span class="fl">7</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span>, <span class="va">min</span>, <span class="va">max</span>, log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Choosing the slice sampling parameter, w (affects speed):</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://optimizer.r-forge.r-project.org/" class="external-link">numDeriv</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">hess</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/numDeriv/man/hessian.html" class="external-link">hessian</a></span><span class="op">(</span><span class="va">lik</span>, <span class="va">ml.start.pt</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">vcv</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve</a></span><span class="op">(</span><span class="va">hess</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">sehess</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">vcv</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="va">sehess</span>, <span class="fl">.2</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Setting the priors</span></span></span>
-<span class="r-in"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">phy</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu">branching.times</span><span class="op">(</span><span class="va">phy</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">prior</span> <span class="op">&lt;-</span> <span class="fu">make.prior.exp_ness</span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">2</span><span class="op">*</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">prior</span><span class="op">(</span><span class="va">ml.start.pt</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Running the mcmc chain (only 10 steps are shown for illustration)</span></span></span>
-<span class="r-in"><span><span class="va">steps</span> <span class="op">&lt;-</span> <span class="fl">10</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="co"># For reproducibility</span></span></span>
-<span class="r-in"><span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu"><a href="mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">lik</span>, <span class="va">ml.start.pt</span>, nsteps<span class="op">=</span><span class="va">steps</span>, w<span class="op">=</span><span class="va">w</span>, prior<span class="op">=</span><span class="va">prior</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Unresolved tip clade: Here we collapse one clade in the 50 species</span></span></span>
-<span class="r-in"><span><span class="co">## tree (involving sister species sp70 and sp71) and illustrate the use</span></span></span>
-<span class="r-in"><span><span class="co">## of BiSSEness with unresolved tip clades.</span></span></span>
-<span class="r-in"><span><span class="va">slimphy</span> <span class="op">&lt;-</span> <span class="fu">drop.tip</span><span class="op">(</span><span class="va">phy</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp71"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">states</span> <span class="op">&lt;-</span> <span class="va">slimphy</span><span class="op">$</span><span class="va">tip.state</span><span class="op">[</span><span class="va">slimphy</span><span class="op">$</span><span class="va">tip.label</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">states</span><span class="op">[</span><span class="st">"sp70"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
-<span class="r-in"><span><span class="va">unresolved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>tip.label<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sp70"</span><span class="op">)</span>, Nc<span class="op">=</span><span class="fl">2</span>, n0<span class="op">=</span><span class="fl">2</span>, n1<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## This builds the likelihood of the data according to BiSSEness:</span></span></span>
-<span class="r-in"><span><span class="va">lik.unresolved</span> <span class="op">&lt;-</span> <span class="fu">make.bisseness</span><span class="op">(</span><span class="va">slimphy</span>, <span class="va">states</span>, <span class="va">unresolved</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co">## e.g., the likelihood of the true parameters is:</span></span></span>
-<span class="r-in"><span><span class="fu">lik.unresolved</span><span class="op">(</span><span class="va">pars</span><span class="op">)</span> <span class="co"># -174.6575</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## ML search from the heuristic starting point used above:</span></span></span>
-<span class="r-in"><span><span class="va">fit.unresolved</span> <span class="op">&lt;-</span> <span class="fu"><a href="find.mle.html">find.mle</a></span><span class="op">(</span><span class="va">lik.unresolved</span>, <span class="va">p</span>, method<span class="op">=</span><span class="st">"subplex"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fit.unresolved</span><span class="op">)</span> <span class="co"># -173.9136</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -339,7 +264,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
