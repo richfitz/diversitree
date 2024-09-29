@@ -132,7 +132,7 @@ rootfunc.mkn <- function(res, pars, root, root.p, intermediates) {
 make.all_branches.mkn <- function(cache, control) {
   if ( control$method == "ode" ) {
     if ( !is.null(control$backend) && control$backend == "expokit" )
-      make.all_branches.mkn.expokit(cache, control)
+      stop("expokit no longer suppported")
     else
       make.all_branches.dtlik(cache, control, initial.conditions.mkn)
   } else { # method == "pij"

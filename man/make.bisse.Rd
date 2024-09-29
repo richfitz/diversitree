@@ -114,6 +114,9 @@ starting.point.bisse(tree, q.div=5, yule=FALSE)
 }
 
 \section{Unresolved clade information}{
+  Since 0.10.10 this is no longer supported. See the package README for
+  more information.
+  
   This must be a \code{\link{data.frame}} with at least the four columns
   \itemize{
     \item \code{tip.label}, giving the name of the tip to which the data

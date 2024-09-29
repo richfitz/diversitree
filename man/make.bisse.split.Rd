@@ -115,23 +115,6 @@ lik.s(pars4) - lik.b(pars)
 ## You can use the labelled nodes rather than indices:
 lik.s2 <- make.bisse.split(phy, phy$tip.state, nodes)
 identical(lik.s(pars4), lik.s2(pars4))
-
-## This also works where some tips are unresolved clades.  Here are a
-## few:
-unresolved <-
-  data.frame(tip.label=c("sp12", "sp32", "sp9", "sp22", "sp11"),
-             Nc=c(2,5,3,2,5), n0=c(1, 4, 3, 2, 4), n1=c(1, 1, 0, 0, 1))
-
-## Plain BiSSE with unresolved clades:
-lik.u.b <- make.bisse(phy, phy$tip.state, unresolved=unresolved)
-lik.u.b(pars) # -139.3688
-
-## Split BiSSE with unresolved clades:
-lik.u.s <- make.bisse.split(phy, phy$tip.state, nodes,
-                            unresolved=unresolved)
-lik.u.s(pars4) # -139.3688
-
-lik.u.b(pars) - lik.u.s(pars4) # numerical error only
 }
 
 \author{Richard G. FitzJohn}
