@@ -73,17 +73,17 @@ find.mle(func, x.init, method, ...)
   Different \code{method} arguments take different arguments passed
   through \code{...} to control their behaviour:
 
-  \code{method="optim"}: Uses \R's \code{\link{optim}} function for the
+  \code{method="optim"}: Uses \R's \code{optim} function for the
   optimisation.  This allows access to a variety of general purpose
   optimisation algorithms.  The method \emph{within} \code{optim} can be
   chosen via the argument \code{optim.method}, which is set to
   "L-BFGS-B" by default (box constrained quasi-Newton optimisation).
   This should be suitable for most uses.  See the \code{method} argument
-  of \code{\link{optim}} for other possibilities.  If \code{"L-BFGS-B"}
+  of \code{optim} for other possibilities.  If \code{"L-BFGS-B"}
   is used, then upper and lower bounds may be specified by the arguments
   \code{lower} and \code{upper}.  The argument \code{control} can be
   used to specify other control parameters for the algorithms - see
-  \code{\link{optim}} for details.  Most of the \code{optim} algorithms
+  \code{optim} for details.  Most of the \code{optim} algorithms
   require finite values be returned at every evaluated point.  This is
   often not possible (extreme values of parameters or particular
   combinations may have zero likelihood and therefore -Inf
@@ -99,13 +99,13 @@ find.mle(func, x.init, method, ...)
   approximation of derivatives and seems to find the global optimum more
   reliably (though often less precisely).  Additional arguments are
   \code{control} to control aspects of the search (see
-  \code{\link{subplex}} for details).  The argument \code{fail.value}
+  \code{subplex} for details).  The argument \code{fail.value}
   can be used as in \code{method="optim"}, but by default \code{-Inf}
   will be used on failure to evaluate, which is generally appropriate.
 
-  \code{method="nlminb"}: Uses the function \code{\link{nlminb}} for
+  \code{method="nlminb"}: Uses the function \code{nlminb} for
   optimisation, so that optimising a Mk2/Mkn likelihood function behaves
-  as similarly as possible to \code{ape}'s \code{\link{ace}} function.
+  as similarly as possible to \code{ape}'s \code{ace} function.
   As for \code{method="optim"}, lower and upper bounds on parameters may
   be specified via \code{lower} and \code{upper}.  \code{fail.value} can
   be used to control behaviour on evaluation failure, but like
@@ -114,24 +114,24 @@ find.mle(func, x.init, method, ...)
   - see \code{link{nlminb} for details}.  This function is not generally
   recommended for use.
 
-  \code{method="nlm"}: Uses the function \code{\link{nlm}} for
+  \code{method="nlm"}: Uses the function \code{nlm} for
   optimisation, so that optimising a birth-death likelihood function
   behaves as similarly as possible to \code{ape}'s
-  \code{\link{birthdeath}} function.  Takes the same additional
+  \code{\link[ape::birthdeath]{birthdeath}} function.  Takes the same additional
   arguments as \code{method="nlminb"} (except that \code{fail.value}
   behaves as for \code{method="optim"}).  Like \code{method="nlminb"},
   this is not recommended for general use.
 
   \code{code} and \code{logLik} methods exist for \code{fit.mle} objects
   so that parameters and log-likelihoods may be extracted.  This also
-  allows use with \code{\link{AIC}}.
+  allows use with \code{AIC}.
 
   Simple model comparison by way of likelihood ratio tests can be
-  performed with \code{\link{anova}}.  See Examples for usage.
+  performed with \code{anova}.  See Examples for usage.
 }
 
 \section{Model comparison}{
-  The \code{\link{anova}} function carries out likelihood ratio tests.
+  The \code{anova} function carries out likelihood ratio tests.
   There are a few possible configurations.
 
   First, the first fit provided could be the focal fit, and all other
@@ -146,7 +146,7 @@ find.mle(func, x.init, method, ...)
   strictly decreasing in parameters (D nested in C, C nested in B, ...).
 
   In both cases, nestedness is checked.  First, the "class" of the
-  fitted object must match.  Second, the \code{\link{argnames}} of the
+  fitted object must match.  Second, the \code{argnames} of the
   likelihood function of a sub model must all appear in the
   \code{argnames} of the parent model.  There are some cases where this
   second condition may not be satisfied and yet the comparison is valid
@@ -202,14 +202,14 @@ coef(fit)   # Named vector of six parameters
 logLik(fit) # -659.93
 AIC(fit)    # 1331.86
 
-## find.mle works with constrained models (see \link{constrain}).  Here
+## find.mle works with constrained models (see constrain).  Here
 ## the two speciation rates are constrained to be the same as each
 ## other.
 lik.l <- constrain(lik, lambda0 ~ lambda1)
 fit.l <- find.mle(lik.l, pars[-2])
 logLik(fit.l) # 663.41
 
-## Compare the models with \link{anova} - this shows that the more
+## Compare the models with anova - this shows that the more
 ## complicated model with two separate speciation rates fits
 ## significantly better than the simpler model with equal rates
 ## (p=0.008).
