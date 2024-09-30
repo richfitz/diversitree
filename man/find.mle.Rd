@@ -117,7 +117,7 @@ find.mle(func, x.init, method, ...)
   \code{method="nlm"}: Uses the function \code{nlm} for
   optimisation, so that optimising a birth-death likelihood function
   behaves as similarly as possible to \code{ape}'s
-  \code{\link[ape::birthdeath]{birthdeath}} function.  Takes the same additional
+  \code{birthdeath} function.  Takes the same additional
   arguments as \code{method="nlminb"} (except that \code{fail.value}
   behaves as for \code{method="optim"}).  Like \code{method="nlminb"},
   this is not recommended for general use.
