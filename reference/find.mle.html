@@ -19,7 +19,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">diversitree</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.10-0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.10-1</span>
       </span>
     </div>
 
@@ -125,17 +125,17 @@
 <span>  </span></code></pre></div><p>(see the Examples).</p>
 <p>Different <code>method</code> arguments take different arguments passed
   through <code>...</code> to control their behaviour:</p>
-<p><code>method="optim"</code>: Uses <span style="R">R</span>'s <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim</a></code> function for the
+<p><code>method="optim"</code>: Uses <span style="R">R</span>'s <code>optim</code> function for the
   optimisation.  This allows access to a variety of general purpose
   optimisation algorithms.  The method <em>within</em> <code>optim</code> can be
   chosen via the argument <code>optim.method</code>, which is set to
   "L-BFGS-B" by default (box constrained quasi-Newton optimisation).
   This should be suitable for most uses.  See the <code>method</code> argument
-  of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim</a></code> for other possibilities.  If <code>"L-BFGS-B"</code>
+  of <code>optim</code> for other possibilities.  If <code>"L-BFGS-B"</code>
   is used, then upper and lower bounds may be specified by the arguments
   <code>lower</code> and <code>upper</code>.  The argument <code>control</code> can be
   used to specify other control parameters for the algorithms - see
-  <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim</a></code> for details.  Most of the <code>optim</code> algorithms
+  <code>optim</code> for details.  Most of the <code>optim</code> algorithms
   require finite values be returned at every evaluated point.  This is
   often not possible (extreme values of parameters or particular
   combinations may have zero likelihood and therefore -Inf
@@ -153,7 +153,7 @@
   <code>subplex</code> for details).  The argument <code>fail.value</code>
   can be used as in <code>method="optim"</code>, but by default <code>-Inf</code>
   will be used on failure to evaluate, which is generally appropriate.</p>
-<p><code>method="nlminb"</code>: Uses the function <code><a href="https://rdrr.io/r/stats/nlminb.html" class="external-link">nlminb</a></code> for
+<p><code>method="nlminb"</code>: Uses the function <code>nlminb</code> for
   optimisation, so that optimising a Mk2/Mkn likelihood function behaves
   as similarly as possible to <code>ape</code>'s <code>ace</code> function.
   As for <code>method="optim"</code>, lower and upper bounds on parameters may
@@ -163,7 +163,7 @@
   cases.  Additional control parameters may be passed via <code>control</code>
   - see <code>link{nlminb} for details</code>.  This function is not generally
   recommended for use.</p>
-<p><code>method="nlm"</code>: Uses the function <code><a href="https://rdrr.io/r/stats/nlm.html" class="external-link">nlm</a></code> for
+<p><code>method="nlm"</code>: Uses the function <code>nlm</code> for
   optimisation, so that optimising a birth-death likelihood function
   behaves as similarly as possible to <code>ape</code>'s
   <code>birthdeath</code> function.  Takes the same additional
@@ -172,13 +172,13 @@
   this is not recommended for general use.</p>
 <p><code>code</code> and <code>logLik</code> methods exist for <code>fit.mle</code> objects
   so that parameters and log-likelihoods may be extracted.  This also
-  allows use with <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC</a></code>.</p>
+  allows use with <code>AIC</code>.</p>
 <p>Simple model comparison by way of likelihood ratio tests can be
-  performed with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></code>.  See Examples for usage.</p>
+  performed with <code>anova</code>.  See Examples for usage.</p>
     </div>
     <div id="model-comparison">
     <h2>Model comparison</h2>
-    <p>The <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></code> function carries out likelihood ratio tests.
+    <p>The <code>anova</code> function carries out likelihood ratio tests.
   There are a few possible configurations.</p>
 <p>First, the first fit provided could be the focal fit, and all other
   fits are either special cases of it (every additional model is nested
@@ -190,7 +190,7 @@
   increasing in parameters (A nested in B, B nested in C, ...) or
   strictly decreasing in parameters (D nested in C, C nested in B, ...).</p>
 <p>In both cases, nestedness is checked.  First, the "class" of the
-  fitted object must match.  Second, the <code><a href="argnames.html">argnames</a></code> of the
+  fitted object must match.  Second, the <code>argnames</code> of the
   likelihood function of a sub model must all appear in the
   <code>argnames</code> of the parent model.  There are some cases where this
   second condition may not be satisfied and yet the comparison is valid
@@ -250,14 +250,14 @@
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="co"># -659.93</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>    <span class="co"># 1331.86</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## find.mle works with constrained models (see \link{constrain}).  Here</span></span></span>
+<span class="r-in"><span><span class="co">## find.mle works with constrained models (see constrain).  Here</span></span></span>
 <span class="r-in"><span><span class="co">## the two speciation rates are constrained to be the same as each</span></span></span>
 <span class="r-in"><span><span class="co">## other.</span></span></span>
 <span class="r-in"><span><span class="va">lik.l</span> <span class="op">&lt;-</span> <span class="fu"><a href="constrain.html">constrain</a></span><span class="op">(</span><span class="va">lik</span>, <span class="va">lambda0</span> <span class="op">~</span> <span class="va">lambda1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit.l</span> <span class="op">&lt;-</span> <span class="fu">find.mle</span><span class="op">(</span><span class="va">lik.l</span>, <span class="va">pars</span><span class="op">[</span><span class="op">-</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fit.l</span><span class="op">)</span> <span class="co"># 663.41</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## Compare the models with \link{anova} - this shows that the more</span></span></span>
+<span class="r-in"><span><span class="co">## Compare the models with anova - this shows that the more</span></span></span>
 <span class="r-in"><span><span class="co">## complicated model with two separate speciation rates fits</span></span></span>
 <span class="r-in"><span><span class="co">## significantly better than the simpler model with equal rates</span></span></span>
 <span class="r-in"><span><span class="co">## (p=0.008).</span></span></span>
