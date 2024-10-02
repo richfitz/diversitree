@@ -1,9 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
 
-/* Ripped from the R code; I can probably use this to speed things up
-   later? - If I drop the permutations or save them in the main
-   section this will be a bit faster... */
 int ProbSampleOne_tmp(int n, double *p, int *perm) {
   double rU, tot = 0;
   int i, j;
@@ -43,7 +40,7 @@ SEXP r_sample(SEXP r_root_p) {
   ret = ProbSampleOne_tmp(k, pr, perm);
   PutRNGstate();
   
-  return ScalarInteger(ret);
+  return Rf_ScalarInteger(ret);
 }
 
 
@@ -66,7 +63,7 @@ SEXP r_do_asr_joint(SEXP r_k, SEXP r_order, SEXP r_parent,
   int idx, i, j, l;
 
   GetRNGstate();
-  PROTECT(ret = allocVector(INTSXP, len));
+  PROTECT(ret = Rf_allocVector(INTSXP, len));
   states = INTEGER(ret);
 
   /* Sample root */

@@ -119,14 +119,14 @@ SEXP r_asr_marginal_mkn(SEXP r_k, SEXP r_pars, SEXP r_nodes,
   int idx, i, j, k;
   double *vals;
 
-  if ( !isFunction(root_f) )
-    error("root_f must be a function");
-  if ( !isEnvironment(rho) )
-    error("rho must be a function");
+  if ( !Rf_isFunction(root_f) )
+    Rf_error("root_f must be a function");
+  if ( !Rf_isEnvironment(rho) )
+    Rf_error("rho must be a function");
 
-  PROTECT(ret = allocMatrix(REALSXP, n_states, n_nodes));
-  PROTECT(cpy_root_vals = allocVector(REALSXP, neq));
-  PROTECT(cpy_lq        = allocVector(REALSXP, n_out));
+  PROTECT(ret = Rf_allocMatrix(REALSXP, n_states, n_nodes));
+  PROTECT(cpy_root_vals = Rf_allocVector(REALSXP, neq));
+  PROTECT(cpy_lq        = Rf_allocVector(REALSXP, n_out));
 
   for ( i = 0; i < n_nodes; i++ ) {
     idx = nodes[i];
@@ -148,8 +148,8 @@ SEXP r_asr_marginal_mkn(SEXP r_k, SEXP r_pars, SEXP r_nodes,
 
       memcpy(REAL(cpy_root_vals), root_vals, neq   * sizeof(double));
       memcpy(REAL(cpy_lq),        lq,        n_out * sizeof(double));
-      PROTECT(R_fcall = lang4(root_f, r_pars, cpy_root_vals, cpy_lq));
-      PROTECT(tmp = eval(R_fcall, rho));
+      PROTECT(R_fcall = Rf_lang4(root_f, r_pars, cpy_root_vals, cpy_lq));
+      PROTECT(tmp = Rf_eval(R_fcall, rho));
       vals[j] = REAL(tmp)[0];
       UNPROTECT(2);
     }

@@ -36,7 +36,7 @@ TimeMachine::TimeMachine(std::vector<std::string> names,
 
 void TimeMachine::set(std::vector<double> pars) {
   if (pars.size() != np_in)
-    error("Expected %d parameters, recieved %d", (int)np_in, (int)pars.size());
+    Rf_error("Expected %d parameters, recieved %d", (int)np_in, (int)pars.size());
   // Only go through the extra effort below if the parameters differ.
   if ( pars == p_in )
     return;
@@ -178,9 +178,9 @@ TimeMachineFunction::TimeMachineFunction(std::string name_,
     f = &tm_fun_spline;
     np = 2;
     if ( spline == NULL )
-      error("Should not be able to get here!");
+      Rf_error("Should not be able to get here!");
   } else {
-    error("Unknown function type %s", func_name.c_str());
+    Rf_error("Unknown function type %s", func_name.c_str());
   }
 
   p_in.resize(np);
@@ -201,7 +201,7 @@ double TimeMachineFunction::check_ok(double x) {
     if ( truncate )
       x = 0;
     else if ( nonnegative )
-      error("Value of %s (%s) must be nonnegative", 
+      Rf_error("Value of %s (%s) must be nonnegative", 
 	    variable_name.c_str(), func_name.c_str());
   }
   return x;

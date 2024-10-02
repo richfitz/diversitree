@@ -1,5 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
+#include <float.h> /* for DBL_EPSILON */
 
 #include "util-splines.h"
 
@@ -21,7 +22,7 @@ SEXP r_hdr(SEXP x, SEXP y, SEXP alpha) {
   dat->w      = 1-a;
 
   xl = RSRC_Brent_fmin(0, a, fn, (void *)dat, tol);
-  PROTECT(ret = allocVector(REALSXP, 2));
+  PROTECT(ret = Rf_allocVector(REALSXP, 2));
   REAL(ret)[0] = dt_spline_eval1(dat->spline, xl);
   REAL(ret)[1] = dt_spline_eval1(dat->spline, xl+dat->w);
   UNPROTECT(1);

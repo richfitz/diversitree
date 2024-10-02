@@ -158,7 +158,7 @@ fit.mkn[1:2]
 ## These are the same (except for the naming of arguments)
 all.equal(fit.mkn[-7], fit.mk2[-7], check.attr=FALSE, tolerance=1e-7)
 
-## Equivalence to ape's \link{ace} function:
+## Equivalence to ape's ace function:
 model <- matrix(c(0, 2, 1, 0), 2)
 fit.ape <- ace(phy$tip.state, phy, "discrete", model=model, ip=p)
 

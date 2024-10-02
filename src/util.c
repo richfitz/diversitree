@@ -60,19 +60,19 @@ void r_gemm2(double *x, int *nrx, int *ncx,
 
 SEXP r_matrix_to_list(SEXP r_m) {
   SEXP ret, tmp;
-  int i, j, k, nr = nrows(r_m), nc = ncols(r_m);
+  int i, j, k, nr = Rf_nrows(r_m), nc = Rf_ncols(r_m);
   double *in, *out;
 
   in = REAL(r_m);
 
-  PROTECT(ret = allocVector(VECSXP, nr));
+  PROTECT(ret = Rf_allocVector(VECSXP, nr));
 
   for ( i = 0; i < nr; i++ ) {
     /*
       I believe that I don't have to protect agressively here;
       otherwise something like below would be needed.
 
-      PROTECT(tmp = allocVector(REALSXP, nc));
+      PROTECT(tmp = Rf_allocVector(REALSXP, nc));
       SET_VECTOR_ELT(ret, i, tmp);
       UNPROTECT(1);
       out = REAL(tmp);
@@ -80,7 +80,7 @@ SEXP r_matrix_to_list(SEXP r_m) {
       another option, which definitely does not need garbage
       collection, is:
 
-      SET_VECTOR_ELT(ret, i, allocVector(REALSXP, nc));
+      SET_VECTOR_ELT(ret, i, Rf_allocVector(REALSXP, nc));
       out = REAL(VECTOR_ELT(ret, i));
 
       which falls somewhere between the two approaches in speed.
@@ -88,7 +88,7 @@ SEXP r_matrix_to_list(SEXP r_m) {
       However, I've run this under gctorture, and it seems not to
       crash, which is a good sign.
     */
-    SET_VECTOR_ELT(ret, i, tmp = allocVector(REALSXP, nc));
+    SET_VECTOR_ELT(ret, i, tmp = Rf_allocVector(REALSXP, nc));
     out = REAL(tmp);
 
     for ( j = 0, k = i; j < nc; j++, k+= nr )
@@ -102,24 +102,24 @@ SEXP r_matrix_to_list(SEXP r_m) {
 /* Utility function for accessing list elements by name.  This is
    needed to stop the argument list getting out of control */
 SEXP getListElement(SEXP list, const char *str) {
-  SEXP elmt = R_NilValue, names = getAttrib(list, R_NamesSymbol);
+  SEXP elmt = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
   int i; 
-  for ( i = 0; i < length(list); i++ )
+  for ( i = 0; i < Rf_length(list); i++ )
     if ( strcmp(CHAR(STRING_ELT(names, i)), str) == 0 ) { 
       elmt = VECTOR_ELT(list, i); 
       break; 
     }
 
   if ( elmt == R_NilValue )
-    error("%s missing from list", str);
+    Rf_error("%s missing from list", str);
 
   return elmt;
 } 
 
 SEXP getListElementIfThere(SEXP list, const char *str) {
-  SEXP elmt = R_NilValue, names = getAttrib(list, R_NamesSymbol);
+  SEXP elmt = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
   int i; 
-  for ( i = 0; i < length(list); i++ )
+  for ( i = 0; i < Rf_length(list); i++ )
     if ( strcmp(CHAR(STRING_ELT(names, i)), str) == 0 ) { 
       elmt = VECTOR_ELT(list, i); 
       break; 
@@ -134,12 +134,12 @@ void descendants_flag(int node, int *edge, int nedge, int ntip,
 		      int *flag);
 
 SEXP r_descendants(SEXP node, SEXP edge, SEXP ntip) {
-  int nedge = nrows(edge), *desc = (int *)R_alloc(nedge, sizeof(int));
+  int nedge = Rf_nrows(edge), *desc = (int *)R_alloc(nedge, sizeof(int));
   int n, *ret_c, node_c = INTEGER(node)[0];
   SEXP ret;
   n = descendants(node_c, INTEGER(edge), nedge,
 		  INTEGER(ntip)[0], desc);
-  PROTECT(ret = allocVector(INTSXP, n+1));
+  PROTECT(ret = Rf_allocVector(INTSXP, n+1));
   ret_c = INTEGER(ret);
   ret_c[0] = node_c;
   memcpy(ret_c + 1, desc, n*sizeof(int));
@@ -166,11 +166,11 @@ int descendants(int node, int *edge, int nedge, int ntip, int *desc) {
 }
 
 SEXP r_descendants_flag(SEXP node, SEXP edge, SEXP ntip) {
-  int nedge = nrows(edge);
+  int nedge = Rf_nrows(edge);
   int i, *ret_c, node_c = INTEGER(node)[0];
   int *to = INTEGER(edge) + nedge;
   SEXP ret;
-  PROTECT(ret = allocVector(LGLSXP, nedge));
+  PROTECT(ret = Rf_allocVector(LGLSXP, nedge));
   ret_c = INTEGER(ret);
   for ( i = 0; i < nedge; i++ )
     ret_c[i] = to[i] == node_c;
@@ -194,7 +194,7 @@ void descendants_flag(int node, int *edge, int nedge, int ntip,
 }
 
 SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip) {
-  int nedge = nrows(edge);
+  int nedge = Rf_nrows(edge);
   SEXP ret, flag;
   int *flag_c, *tmp = (int*)R_alloc(nedge, sizeof(int));
   int i, n=0;
@@ -205,7 +205,7 @@ SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip) {
     if ( flag_c[i] )
       tmp[n++] = i + 1;
 
-  PROTECT(ret = allocVector(INTSXP, n));
+  PROTECT(ret = Rf_allocVector(INTSXP, n));
   memcpy(INTEGER(ret), tmp, n*sizeof(int));
   UNPROTECT(2);
 
@@ -214,10 +214,10 @@ SEXP r_descendants_idx(SEXP node, SEXP edge, SEXP ntip) {
 
 SEXP r_check_ptr_not_null(SEXP extPtr) {
   if ( TYPEOF(extPtr) != EXTPTRSXP )
-    error("Recieved non-pointer");
+    Rf_error("Recieved non-pointer");
   if ( R_ExternalPtrAddr(extPtr) == NULL )
-    error("Recieved NULL pointer");
-  return ScalarLogical(1);
+    Rf_error("Recieved NULL pointer");
+  return Rf_ScalarLogical(1);
 }
 
 void handler_pass_to_R(const char *reason,

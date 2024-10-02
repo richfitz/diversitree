@@ -19,7 +19,7 @@ SEXP r_make_dt_obj_cont(SEXP cache, SEXP r_ic, SEXP r_br) {
   dt_obj_cont *obj;
   SEXP extPtr;
 
-  obj = (dt_obj_cont *)Calloc(1, dt_obj_cont);
+  obj = (dt_obj_cont *)R_Calloc(1, dt_obj_cont);
   obj->neq  = neq;
   obj->n_out = LENGTH(getListElement(cache, "len"));
   obj->np   = np;
@@ -29,9 +29,9 @@ SEXP r_make_dt_obj_cont(SEXP cache, SEXP r_ic, SEXP r_br) {
   obj->br = br;
 
   /* Set up storage */
-  obj->init = (double *)Calloc(obj->n_out * neq, double);
-  obj->base = (double *)Calloc(obj->n_out * neq, double);
-  obj->lq   = (double *)Calloc(obj->n_out,       double);
+  obj->init = (double *)R_Calloc(obj->n_out * neq, double);
+  obj->base = (double *)R_Calloc(obj->n_out * neq, double);
+  obj->lq   = (double *)R_Calloc(obj->n_out,       double);
 
   /* Set up tips and internal branches */
   dt_cont_setup_tips(obj, cache);
@@ -49,22 +49,22 @@ SEXP r_make_dt_obj_cont(SEXP cache, SEXP r_ic, SEXP r_br) {
 static void dt_obj_cont_finalize(SEXP extPtr) {
   dt_obj_cont *obj = (dt_obj_cont*)R_ExternalPtrAddr(extPtr);
 
-  Free(obj->init);
-  Free(obj->base);
-  Free(obj->lq);
+  R_Free(obj->init);
+  R_Free(obj->base);
+  R_Free(obj->lq);
 
   /* tips */
-  Free(obj->tip_y);
-  Free(obj->tip_len);
-  Free(obj->tip_target);
+  R_Free(obj->tip_y);
+  R_Free(obj->tip_len);
+  R_Free(obj->tip_target);
 
   /* internals */
-  Free(obj->order);
-  Free(obj->children);
-  Free(obj->len);
-  Free(obj->depth);
+  R_Free(obj->order);
+  R_Free(obj->children);
+  R_Free(obj->len);
+  R_Free(obj->depth);
 
-  Free(obj);
+  R_Free(obj);
 }
 
 void dt_cont_setup_tips(dt_obj_cont *obj, SEXP cache) {
@@ -78,10 +78,10 @@ void dt_cont_setup_tips(dt_obj_cont *obj, SEXP cache) {
   tip_target   = INTEGER(tip_target_r);
   
   n_tip = obj->n_tip = LENGTH(tip_target_r);
-  if ( nrows(tip_y) != neq || ncols(tip_y) != n_tip )
-    error("Incorrect tip state dimensions");
+  if ( Rf_nrows(tip_y) != neq || Rf_ncols(tip_y) != n_tip )
+    Rf_error("Incorrect tip state dimensions");
 
-  obj->tip_target = (int *)Calloc(n_tip, int);
+  obj->tip_target = (int *)R_Calloc(n_tip, int);
   memcpy(obj->tip_target, tip_target, n_tip*sizeof(int));
 
   for ( i = 0; i < n_tip; i++ ) {
@@ -104,10 +104,10 @@ void dt_cont_setup_internal(dt_obj_cont *obj, SEXP cache) {
   n_out = obj->n_out;
   n_int = obj->n_int = LENGTH(order) - 1;
 
-  obj->order    = (int    *)Calloc(n_int,   int);
-  obj->children = (int    *)Calloc(n_out*2, int);
-  obj->len      = (double *)Calloc(n_out,   double);
-  obj->depth    = (double *)Calloc(n_out,   double);
+  obj->order    = (int    *)R_Calloc(n_int,   int);
+  obj->children = (int    *)R_Calloc(n_out*2, int);
+  obj->len      = (double *)R_Calloc(n_out,   double);
+  obj->depth    = (double *)R_Calloc(n_out,   double);
 
   memcpy(obj->order,    INTEGER(order),      n_int*sizeof(int));
   memcpy(obj->children, INTEGER(children), 2*n_out*sizeof(int));
@@ -130,7 +130,7 @@ SEXP r_all_branches_cont(SEXP extPtr, SEXP r_pars) {
   SEXP ret, ret_vals;
 
   if ( obj == NULL )
-    error("Corrupt pointer (are you using multicore?)");
+    Rf_error("Corrupt pointer (are you using multicore?)");
 
   ic = obj->ic;
   br = obj->br;
@@ -148,7 +148,7 @@ SEXP r_all_branches_cont(SEXP extPtr, SEXP r_pars) {
   lq = obj->lq;
 
   if ( LENGTH(r_pars) != obj->np )
-    error("Incorrect length parameters.  Expected %d, got %d",
+    Rf_error("Incorrect length parameters.  Expected %d, got %d",
 	  obj->np, LENGTH(r_pars));
 
   for ( i = 0; i < n_tip; i++ ) {
@@ -176,9 +176,9 @@ SEXP r_all_branches_cont(SEXP extPtr, SEXP r_pars) {
   for ( i = 0; i < obj->n_out; i++ )
     tot += lq[i];
 
-  PROTECT(ret = allocVector(VECSXP, 2));
-  PROTECT(ret_vals = allocVector(REALSXP, neq));
-  SET_VECTOR_ELT(ret, 0, ScalarReal(tot));
+  PROTECT(ret = Rf_allocVector(VECSXP, 2));
+  PROTECT(ret_vals = Rf_allocVector(REALSXP, neq));
+  SET_VECTOR_ELT(ret, 0, Rf_ScalarReal(tot));
   SET_VECTOR_ELT(ret, 1, ret_vals);
   memcpy(REAL(ret_vals), init + obj->root * neq, neq*sizeof(double));
   UNPROTECT(2);
@@ -193,11 +193,11 @@ SEXP r_get_vals_cont(SEXP extPtr) {
   int n_out = obj->n_out, neq = obj->neq;
   int i, idx;
 
-  PROTECT(ret = allocVector(VECSXP, 3));
-  PROTECT(r_init = allocMatrix(REALSXP, neq, n_out));
-  PROTECT(r_base = allocMatrix(REALSXP, neq, n_out));
+  PROTECT(ret = Rf_allocVector(VECSXP, 3));
+  PROTECT(r_init = Rf_allocMatrix(REALSXP, neq, n_out));
+  PROTECT(r_base = Rf_allocMatrix(REALSXP, neq, n_out));
 
-  PROTECT(lq   = allocVector(REALSXP, n_out));
+  PROTECT(lq   = Rf_allocVector(REALSXP, n_out));
   SET_VECTOR_ELT(ret, 0, r_init);
   SET_VECTOR_ELT(ret, 1, r_base);
   SET_VECTOR_ELT(ret, 2, lq);
@@ -325,7 +325,7 @@ SEXP r_dt_cont_reset_tips(SEXP extPtr, SEXP tip_y) {
   double *y = REAL(tip_y);
   int i, idx, neq = obj->neq, n_tip = obj->n_tip;
   if (LENGTH(tip_y) != neq * n_tip)
-    error("Wrong length tip_y - expected %d, got %d",
+    Rf_error("Wrong length tip_y - expected %d, got %d",
 	  neq * n_tip, LENGTH(tip_y));
 
   for (i = 0; i < n_tip; i++) {
