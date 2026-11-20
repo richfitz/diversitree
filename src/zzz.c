@@ -21,11 +21,11 @@ void derivs_mknpij_gslode(int, double, double*, const double *, double *);
 void derivs_musse_gslode(int, double, double*, const double *, double *);
 void derivs_musse_aux_gslode(int, double, double*, const double *, double *);
 
-void branches_bm(double *, double, double *, double, int, double *);
-void branches_ou_opt(double *, double, double *, double, int, double *);
-void branches_ou_noopt(double *, double, double *, double, int, double *);
-void branches_eb(double *, double, double *, double, int, double *);
-void branches_lambda(double *, double, double *, double, int, double *);
+double branches_bm(double *, double, double *, double, int, double *);
+double branches_ou_opt(double *, double, double *, double, int, double *);
+double branches_ou_noopt(double *, double, double *, double, int, double *);
+double branches_eb(double *, double, double *, double, int, double *);
+double branches_lambda(double *, double, double *, double, int, double *);
 void initial_conditions_bm(int, double *, double *, double *, double, double *);
 
 static R_CallMethodDef R_CallDef[] = {
